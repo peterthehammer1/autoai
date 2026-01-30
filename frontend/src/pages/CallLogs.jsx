@@ -74,6 +74,35 @@ export default function CallLogs() {
     }
   }
 
+  // Parse transcript into chat messages
+  const parseTranscript = (transcript) => {
+    if (!transcript) return []
+    
+    const lines = transcript.split('\n').filter(line => line.trim())
+    const messages = []
+    
+    for (const line of lines) {
+      // Match patterns like "Agent: message" or "User: message"
+      const match = line.match(/^(Agent|User|Customer|Caller|AI|Assistant):\s*(.+)$/i)
+      if (match) {
+        const speaker = match[1].toLowerCase()
+        const isAgent = ['agent', 'ai', 'assistant'].includes(speaker)
+        messages.push({
+          speaker: isAgent ? 'Alex' : 'Caller',
+          isAgent,
+          text: match[2].trim()
+        })
+      } else if (line.trim()) {
+        // If no speaker prefix, try to continue previous message or add as unknown
+        if (messages.length > 0) {
+          messages[messages.length - 1].text += ' ' + line.trim()
+        }
+      }
+    }
+    
+    return messages
+  }
+
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Header */}
@@ -393,16 +422,39 @@ export default function CallLogs() {
                 </div>
               )}
 
-              {/* Transcript */}
+              {/* Transcript - Chat Style */}
               {selectedCall.transcript && (
                 <div className="space-y-2">
                   <p className="text-sm font-medium flex items-center gap-1">
-                    <FileText className="h-4 w-4" /> Full Transcript
+                    <FileText className="h-4 w-4" /> Conversation
                   </p>
-                  <div className="rounded-lg bg-muted p-4 max-h-64 overflow-y-auto">
-                    <pre className="text-sm whitespace-pre-wrap font-sans">
-                      {selectedCall.transcript}
-                    </pre>
+                  <div className="rounded-lg bg-gray-100 dark:bg-gray-900 p-4 max-h-80 overflow-y-auto">
+                    <div className="space-y-3">
+                      {parseTranscript(selectedCall.transcript).map((msg, idx) => (
+                        <div 
+                          key={idx} 
+                          className={cn(
+                            'flex flex-col',
+                            msg.isAgent ? 'items-start' : 'items-end'
+                          )}
+                        >
+                          <span className={cn(
+                            'text-xs font-medium mb-1',
+                            msg.isAgent ? 'text-gray-500' : 'text-blue-600'
+                          )}>
+                            {msg.speaker}
+                          </span>
+                          <div className={cn(
+                            'max-w-[85%] rounded-2xl px-4 py-2 text-sm',
+                            msg.isAgent 
+                              ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-tl-md' 
+                              : 'bg-blue-500 text-white rounded-tr-md'
+                          )}>
+                            {msg.text}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
               )}
