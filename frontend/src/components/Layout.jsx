@@ -20,8 +20,8 @@ import {
 } from 'lucide-react'
 
 // Business phone number for AI agent
-const BUSINESS_PHONE = '+1 (833) 975-1880'
-const BUSINESS_PHONE_RAW = '+18339751880'
+const BUSINESS_PHONE = '(716) 412-2499'
+const BUSINESS_PHONE_RAW = '+17164122499'
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
@@ -78,7 +78,7 @@ export default function Layout() {
               <X className="h-4 w-4" />
             </Button>
           </div>
-          <nav className="flex flex-col gap-0.5 p-3">
+          <nav className="flex flex-col gap-0.5 p-3 flex-1">
             {navigation.map((item) => (
               <Link
                 key={item.name}
@@ -96,6 +96,22 @@ export default function Layout() {
               </Link>
             ))}
           </nav>
+          
+          {/* Mobile Phone Number */}
+          <div className="p-3 border-t border-slate-700/50">
+            <a 
+              href={`tel:${BUSINESS_PHONE_RAW}`}
+              className="flex items-center gap-3 rounded-lg bg-primary/10 border border-primary/20 p-3"
+            >
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
+                <PhoneCall className="h-4 w-4 text-white" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-white">{BUSINESS_PHONE}</p>
+                <p className="text-[11px] text-slate-400">AI Booking Line</p>
+              </div>
+            </a>
+          </div>
         </div>
       </div>
 
@@ -160,8 +176,23 @@ export default function Layout() {
             ))}
           </nav>
           
-          {/* AI Status */}
-          <div className="p-3 border-t border-slate-700/50">
+          {/* AI Status & Phone */}
+          <div className="p-3 border-t border-slate-700/50 space-y-3">
+            {/* Phone Number */}
+            <a 
+              href={`tel:${BUSINESS_PHONE_RAW}`}
+              className="flex items-center gap-3 rounded-lg bg-primary/10 border border-primary/20 p-3 hover:bg-primary/20 transition-colors group"
+            >
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
+                <PhoneCall className="h-4 w-4 text-white" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-white">{BUSINESS_PHONE}</p>
+                <p className="text-[11px] text-slate-400">AI Booking Line</p>
+              </div>
+            </a>
+            
+            {/* AI Status */}
             <div className="rounded-lg bg-slate-800 p-3">
               <div className="flex items-center gap-2 mb-1.5">
                 <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
@@ -203,39 +234,6 @@ export default function Layout() {
           
           {/* Right side */}
           <div className="flex items-center gap-2 sm:gap-3">
-            {/* Phone Number */}
-            <a 
-              href={`tel:${BUSINESS_PHONE_RAW}`}
-              className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 transition-colors"
-            >
-              <PhoneCall className="h-4 w-4 text-emerald-400" />
-              <span className="text-sm font-medium text-white">{BUSINESS_PHONE}</span>
-            </a>
-            
-            {/* Date */}
-            <div className="hidden lg:block text-right">
-              <p className="text-sm font-medium text-slate-900">
-                {new Date().toLocaleDateString('en-CA', {
-                  weekday: 'long',
-                })}
-              </p>
-              <p className="text-xs text-slate-500">
-                {new Date().toLocaleDateString('en-CA', {
-                  month: 'short',
-                  day: 'numeric',
-                  year: 'numeric',
-                })}
-              </p>
-            </div>
-            
-            {/* Mobile Phone Button */}
-            <a 
-              href={`tel:${BUSINESS_PHONE_RAW}`}
-              className="sm:hidden flex items-center justify-center h-9 w-9 rounded-lg bg-slate-900"
-            >
-              <PhoneCall className="h-4 w-4 text-emerald-400" />
-            </a>
-            
             {/* Notification button */}
             <Button variant="ghost" size="icon" className="h-9 w-9 relative">
               <Bell className="h-5 w-5 text-slate-500" />
