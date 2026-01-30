@@ -91,9 +91,24 @@ router.post('/retell/inbound', async (req, res) => {
       vehicleId = v.id;
     }
     
-    // Professional greeting with title for existing customers
-    const title = 'Mr.'; // Could be enhanced with gender detection later
-    const lastName = customer.last_name || customer.first_name;
+    // Build personalized greeting
+    // Only use title (Mr./Ms.) with LAST names, not first names
+    let nameGreeting;
+    if (customer.last_name) {
+      // We have a last name - use title + last name
+      const title = 'Mr.'; // Could be enhanced with gender detection later
+      nameGreeting = `${title} ${customer.last_name}`;
+    } else if (customer.first_name) {
+      // Only first name - use it without title
+      nameGreeting = customer.first_name;
+    } else {
+      nameGreeting = '';
+    }
+    
+    // Build greeting message
+    const greetingWithName = nameGreeting 
+      ? `${timeGreeting}, ${nameGreeting}! Thanks for calling Premier Auto Service, this is Amber. How can I help you today?`
+      : `${timeGreeting}! Thanks for calling Premier Auto Service, this is Amber. How can I help you today?`;
     
     // Return customer info as dynamic variables with professional greeting
     return res.json({
@@ -101,7 +116,7 @@ router.post('/retell/inbound', async (req, res) => {
         agent_override: {
           retell_llm: {
             start_speaker: "agent",
-            begin_message: `${timeGreeting}, ${title} ${lastName}! Thanks for calling Premier Auto Service, this is Amber. How can I help you today?`
+            begin_message: greetingWithName
           }
         },
         dynamic_variables: {
