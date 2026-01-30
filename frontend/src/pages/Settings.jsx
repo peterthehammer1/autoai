@@ -1,8 +1,10 @@
+import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Badge } from '@/components/ui/badge'
 import {
   Building,
   Clock,
@@ -13,17 +15,47 @@ import {
   Bell,
   Bot,
   Users,
+  Shield,
+  Eye,
+  EyeOff,
+  Lock,
 } from 'lucide-react'
+import { useAdminMode } from '@/components/PhoneNumber'
 
 export default function Settings() {
+  const { isAdmin, enableAdminMode, disableAdminMode } = useAdminMode()
+  const [adminPin, setAdminPin] = useState('')
+  const [pinError, setPinError] = useState('')
+  
+  // Simple PIN check - in production this should be server-side
+  const ADMIN_PIN = '2499' // Last 4 digits of the business phone
+  
+  const handleAdminLogin = () => {
+    if (adminPin === ADMIN_PIN) {
+      enableAdminMode(30) // 30 minutes
+      setAdminPin('')
+      setPinError('')
+    } else {
+      setPinError('Incorrect PIN')
+    }
+  }
+  
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Settings</h1>
-        <p className="text-muted-foreground">
-          Manage your business configuration
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Settings</h1>
+          <p className="text-muted-foreground">
+            Manage your business configuration
+          </p>
+        </div>
+        {isAdmin && (
+          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+            <Eye className="h-3 w-3 mr-1" />
+            Full Access Mode
+          </Badge>
+        )}
       </div>
 
       <Tabs defaultValue="business">
@@ -32,6 +64,7 @@ export default function Settings() {
           <TabsTrigger value="hours">Hours</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
           <TabsTrigger value="agent">AI Agent</TabsTrigger>
+          <TabsTrigger value="privacy">Privacy</TabsTrigger>
         </TabsList>
 
         <TabsContent value="business" className="space-y-6 mt-6">
@@ -253,14 +286,14 @@ export default function Settings() {
               <div className="space-y-4">
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Agent Name</label>
-                  <Input defaultValue="Alex" />
+                  <Input defaultValue="Amber" />
                   <p className="text-xs text-muted-foreground">
                     The name your AI agent uses when greeting callers
                   </p>
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Greeting</label>
-                  <Input defaultValue="Thanks for calling Premier Auto Service, this is Alex. How can I help you today?" />
+                  <Input defaultValue="Thanks for calling Premier Auto Service, this is Amber. How can I help you today?" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Retell Agent ID</label>
@@ -279,6 +312,108 @@ export default function Settings() {
               </div>
               <div className="flex justify-end">
                 <Button>Save Settings</Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="privacy" className="space-y-6 mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Shield className="h-5 w-5" />
+                Privacy & Access
+              </CardTitle>
+              <CardDescription>
+                Control visibility of customer information
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Current Status */}
+              <div className="rounded-lg border p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    {isAdmin ? (
+                      <Eye className="h-5 w-5 text-green-600" />
+                    ) : (
+                      <EyeOff className="h-5 w-5 text-slate-400" />
+                    )}
+                    <span className="font-medium">
+                      {isAdmin ? 'Full Access Mode Active' : 'Privacy Mode Active'}
+                    </span>
+                  </div>
+                  {isAdmin && (
+                    <Badge className="bg-green-100 text-green-700">Active</Badge>
+                  )}
+                </div>
+                <p className="text-sm text-slate-600">
+                  {isAdmin 
+                    ? 'All customer phone numbers and details are visible. Access expires in 30 minutes or when you log out.'
+                    : 'Customer phone numbers are masked (showing only last 4 digits). Click the eye icon next to any phone number to reveal it temporarily.'
+                  }
+                </p>
+              </div>
+
+              {/* Admin Login / Logout */}
+              {isAdmin ? (
+                <div className="space-y-4">
+                  <Separator />
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium">End Full Access Session</p>
+                      <p className="text-sm text-slate-600">
+                        Return to privacy mode and mask all phone numbers
+                      </p>
+                    </div>
+                    <Button variant="outline" onClick={disableAdminMode}>
+                      <Lock className="h-4 w-4 mr-2" />
+                      Lock Access
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <Separator />
+                  <div>
+                    <p className="font-medium mb-2">Enable Full Access (Admin)</p>
+                    <p className="text-sm text-slate-600 mb-4">
+                      Enter your PIN to view all customer information for 30 minutes
+                    </p>
+                    <div className="flex gap-2 max-w-xs">
+                      <Input
+                        type="password"
+                        placeholder="Enter PIN"
+                        value={adminPin}
+                        onChange={(e) => {
+                          setAdminPin(e.target.value)
+                          setPinError('')
+                        }}
+                        onKeyDown={(e) => e.key === 'Enter' && handleAdminLogin()}
+                        maxLength={4}
+                      />
+                      <Button onClick={handleAdminLogin}>
+                        <Eye className="h-4 w-4 mr-2" />
+                        Unlock
+                      </Button>
+                    </div>
+                    {pinError && (
+                      <p className="text-sm text-red-500 mt-2">{pinError}</p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <Separator />
+              
+              {/* Info */}
+              <div className="bg-slate-50 rounded-lg p-4 space-y-2">
+                <h4 className="font-medium text-sm">How Privacy Mode Works</h4>
+                <ul className="text-sm text-slate-600 space-y-1">
+                  <li>• Phone numbers are masked by default (•••-•••-1234)</li>
+                  <li>• Click the eye icon to reveal a number for 5 minutes</li>
+                  <li>• Full Access mode shows all numbers for 30 minutes</li>
+                  <li>• Revealed numbers auto-hide after the time expires</li>
+                </ul>
               </div>
             </CardContent>
           </Card>

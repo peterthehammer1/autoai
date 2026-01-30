@@ -38,7 +38,8 @@ import {
   MessageSquare,
   ExternalLink
 } from 'lucide-react'
-import { cn, formatPhone, getOutcomeColor } from '@/lib/utils'
+import { cn, getOutcomeColor } from '@/lib/utils'
+import PhoneNumber from '@/components/PhoneNumber'
 
 export default function CallLogs() {
   const [selectedCall, setSelectedCall] = useState(null)
@@ -210,7 +211,7 @@ export default function CallLogs() {
                       <p className="font-medium truncate">
                         {call.customer 
                           ? `${call.customer.first_name} ${call.customer.last_name}`
-                          : formatPhone(call.phone_number)
+                          : <PhoneNumber phone={call.phone_number} showRevealButton={false} />
                         }
                       </p>
                       <Badge className={cn('shrink-0 text-xs', getOutcomeColor(call.outcome))}>
@@ -300,7 +301,7 @@ export default function CallLogs() {
                         <span className="text-muted-foreground">Unknown</span>
                       )}
                     </TableCell>
-                    <TableCell>{formatPhone(call.phone_number)}</TableCell>
+                    <TableCell><PhoneNumber phone={call.phone_number} /></TableCell>
                     <TableCell>{formatDuration(call.duration_seconds)}</TableCell>
                     <TableCell>
                       <Badge className={getOutcomeColor(call.outcome)}>
@@ -358,7 +359,7 @@ export default function CallLogs() {
                   <p className="text-sm text-muted-foreground flex items-center gap-1">
                     <Phone className="h-4 w-4" /> Phone
                   </p>
-                  <p className="font-medium">{formatPhone(selectedCall.phone_number)}</p>
+                  <p className="font-medium"><PhoneNumber phone={selectedCall.phone_number} /></p>
                 </div>
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground flex items-center gap-1">

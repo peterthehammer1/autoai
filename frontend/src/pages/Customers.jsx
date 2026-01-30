@@ -16,7 +16,8 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Search, Plus, User, Phone, Car, ChevronRight } from 'lucide-react'
-import { formatPhone, cn } from '@/lib/utils'
+import { cn } from '@/lib/utils'
+import PhoneNumber from '@/components/PhoneNumber'
 
 export default function Customers() {
   const [searchTerm, setSearchTerm] = useState('')
@@ -95,7 +96,7 @@ export default function Customers() {
                         {customer.first_name} {customer.last_name}
                       </p>
                       <p className="text-sm text-slate-500">
-                        {formatPhone(customer.phone)}
+                        <PhoneNumber phone={customer.phone} showRevealButton={false} />
                       </p>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
@@ -138,7 +139,7 @@ export default function Customers() {
                       </div>
                     </TableCell>
                     <TableCell className="text-slate-600">
-                      {formatPhone(customer.phone)}
+                      <PhoneNumber phone={customer.phone} />
                     </TableCell>
                     <TableCell className="text-slate-500">
                       {customer.email || '-'}
