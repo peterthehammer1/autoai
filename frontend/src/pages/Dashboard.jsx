@@ -10,13 +10,12 @@ import {
   Phone,
   TrendingUp,
   DollarSign,
-  Clock,
   ArrowRight,
   ArrowUpRight,
-  Sparkles,
+  Zap,
   Users,
   CheckCircle2,
-  Zap,
+  Clock,
 } from 'lucide-react'
 import { cn, formatTime12Hour, getStatusColor, formatCurrency } from '@/lib/utils'
 
@@ -36,27 +35,24 @@ export default function Dashboard() {
       name: "Today's Appointments",
       value: overview?.today?.appointments ?? '0',
       change: '+12%',
-      changeType: 'positive',
       icon: Calendar,
-      color: 'text-blue-600',
+      iconColor: 'text-blue-600',
       bgClass: 'stat-blue',
     },
     {
       name: "AI Calls Handled",
       value: overview?.today?.calls ?? '0',
       change: '+8%',
-      changeType: 'positive',
       icon: Phone,
-      color: 'text-emerald-600',
+      iconColor: 'text-emerald-600',
       bgClass: 'stat-green',
     },
     {
       name: 'Conversion Rate',
       value: overview?.week?.conversion_rate ? `${overview.week.conversion_rate}%` : '0%',
       change: '+5%',
-      changeType: 'positive',
       icon: TrendingUp,
-      color: 'text-purple-600',
+      iconColor: 'text-violet-600',
       bgClass: 'stat-purple',
     },
     {
@@ -65,30 +61,23 @@ export default function Dashboard() {
         ? formatCurrency(overview.month.revenue_booked)
         : '$0',
       change: '+18%',
-      changeType: 'positive',
       icon: DollarSign,
-      color: 'text-amber-600',
+      iconColor: 'text-amber-600',
       bgClass: 'stat-amber',
     },
   ]
 
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-6 animate-fade-in">
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Dashboard</h1>
-            <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-xs font-semibold">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              Live
-            </span>
-          </div>
-          <p className="text-gray-500">
-            Welcome back! Here's what's happening with your business today.
+          <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
+          <p className="text-slate-500 mt-1">
+            Welcome back. Here's what's happening today.
           </p>
         </div>
-        <Button asChild className="gradient-primary shadow-glow border-0 h-11 px-6">
+        <Button asChild className="bg-primary hover:bg-primary/90">
           <Link to="/appointments">
             <Calendar className="mr-2 h-4 w-4" />
             New Appointment
@@ -102,25 +91,21 @@ export default function Dashboard() {
           <div
             key={stat.name}
             className={cn(
-              'rounded-2xl p-5 card-premium-hover',
+              'rounded-lg p-4 bg-white border border-slate-200 shadow-card',
               stat.bgClass
             )}
-            style={{ animationDelay: `${index * 0.1}s` }}
           >
-            <div className="flex items-start justify-between mb-4">
-              <div className={cn('rounded-xl p-2.5', 'bg-white/60')}>
-                <stat.icon className={cn('h-5 w-5', stat.color)} />
+            <div className="flex items-center justify-between mb-3">
+              <div className={cn('rounded-lg p-2 bg-white shadow-sm')}>
+                <stat.icon className={cn('h-5 w-5', stat.iconColor)} />
               </div>
-              <span className={cn(
-                'flex items-center gap-0.5 text-xs font-semibold',
-                stat.changeType === 'positive' ? 'text-emerald-600' : 'text-red-600'
-              )}>
+              <span className="flex items-center gap-0.5 text-xs font-semibold text-emerald-600">
                 <ArrowUpRight className="h-3 w-3" />
                 {stat.change}
               </span>
             </div>
-            <p className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">{stat.value}</p>
-            <p className="text-sm text-gray-600">{stat.name}</p>
+            <p className="text-2xl font-bold text-slate-900">{stat.value}</p>
+            <p className="text-sm text-slate-500 mt-0.5">{stat.name}</p>
           </div>
         ))}
       </div>
@@ -128,76 +113,68 @@ export default function Dashboard() {
       {/* Main Content Grid */}
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Today's Schedule */}
-        <div className="lg:col-span-2 card-premium rounded-2xl overflow-hidden">
-          <div className="flex items-center justify-between p-6 border-b border-gray-100">
+        <div className="lg:col-span-2 bg-white rounded-lg border border-slate-200 shadow-card overflow-hidden">
+          <div className="flex items-center justify-between p-4 sm:p-5 border-b border-slate-100">
             <div>
-              <h2 className="text-lg font-semibold text-gray-900">Today's Schedule</h2>
-              <p className="text-sm text-gray-500">
+              <h2 className="text-base font-semibold text-slate-900">Today's Schedule</h2>
+              <p className="text-sm text-slate-500">
                 {todayData?.summary?.total || 0} appointments scheduled
               </p>
             </div>
-            <Button variant="outline" size="sm" asChild className="rounded-xl">
+            <Button variant="outline" size="sm" asChild>
               <Link to="/appointments">
                 View All
                 <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
               </Link>
             </Button>
           </div>
-          <div className="p-4">
+          <div className="p-3 sm:p-4">
             {todayLoading ? (
               <div className="space-y-3">
                 {[1, 2, 3].map((i) => (
-                  <div
-                    key={i}
-                    className="h-20 animate-pulse rounded-xl bg-gray-100"
-                  />
+                  <div key={i} className="h-16 animate-pulse rounded-lg bg-slate-100" />
                 ))}
               </div>
             ) : todayData?.appointments?.length > 0 ? (
               <div className="space-y-2">
-                {todayData.appointments.slice(0, 5).map((apt, index) => (
+                {todayData.appointments.slice(0, 5).map((apt) => (
                   <Link
                     key={apt.id}
                     to={`/appointments/${apt.id}`}
-                    className="flex items-center gap-4 rounded-xl p-4 transition-all duration-200 hover:bg-gray-50 group"
-                    style={{ animationDelay: `${index * 0.05}s` }}
+                    className="flex items-center gap-3 sm:gap-4 rounded-lg p-3 transition-colors hover:bg-slate-50 group"
                   >
-                    <div className="flex h-14 w-14 flex-col items-center justify-center rounded-xl bg-gray-100 group-hover:bg-white group-hover:shadow-soft transition-all">
-                      <span className="text-lg font-bold text-gray-900">
+                    <div className="flex h-12 w-14 flex-col items-center justify-center rounded-lg bg-slate-100 group-hover:bg-white group-hover:shadow-sm transition-all">
+                      <span className="text-base font-bold text-slate-900">
                         {formatTime12Hour(apt.scheduled_time).split(':')[0]}
                       </span>
-                      <span className="text-[10px] font-medium text-gray-500 uppercase">
+                      <span className="text-[10px] font-medium text-slate-500 uppercase">
                         {formatTime12Hour(apt.scheduled_time).includes('PM') ? 'PM' : 'AM'}
                       </span>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-gray-900 truncate">
+                      <p className="font-medium text-slate-900 truncate">
                         {apt.customer?.first_name} {apt.customer?.last_name}
                       </p>
-                      <p className="text-sm text-gray-500 truncate">
+                      <p className="text-sm text-slate-500 truncate">
                         {apt.vehicle?.year} {apt.vehicle?.make} {apt.vehicle?.model}
-                      </p>
-                      <p className="text-xs text-gray-400 truncate mt-0.5">
-                        {apt.appointment_services?.map((s) => s.service_name).join(', ')}
                       </p>
                     </div>
                     <Badge className={cn(
-                      'shrink-0 rounded-lg font-medium',
+                      'shrink-0 text-xs font-medium',
                       getStatusColor(apt.status)
                     )}>
                       {apt.status.replace('_', ' ')}
                     </Badge>
-                    <ArrowRight className="h-4 w-4 text-gray-300 group-hover:text-gray-500 group-hover:translate-x-1 transition-all" />
                   </Link>
                 ))}
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center py-12 text-center">
-                <div className="rounded-2xl bg-gray-100 p-4 mb-4">
-                  <Calendar className="h-8 w-8 text-gray-400" />
+                <div className="rounded-lg bg-slate-100 p-3 mb-3">
+                  <Calendar className="h-6 w-6 text-slate-400" />
                 </div>
-                <p className="font-medium text-gray-900 mb-1">No appointments today</p>
-                <p className="text-sm text-gray-500">Your schedule is clear</p>
+                <p className="font-medium text-slate-900">No appointments today</p>
+                <p className="text-sm text-slate-500">Your schedule is clear</p>
               </div>
             )}
           </div>
@@ -206,33 +183,33 @@ export default function Dashboard() {
         {/* Right Column */}
         <div className="space-y-6">
           {/* AI Performance Card */}
-          <div className="card-premium rounded-2xl overflow-hidden">
-            <div className="p-6 border-b border-gray-100">
-              <div className="flex items-center gap-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg gradient-primary">
-                  <Sparkles className="h-4 w-4 text-white" />
+          <div className="bg-slate-900 rounded-lg overflow-hidden shadow-card">
+            <div className="p-4 sm:p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+                  <Zap className="h-4 w-4 text-white" />
                 </div>
-                <h2 className="text-lg font-semibold text-gray-900">AI Performance</h2>
+                <h2 className="text-base font-semibold text-white">AI Performance</h2>
               </div>
-            </div>
-            <div className="p-6 space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Calls Handled</span>
-                <span className="font-semibold text-gray-900">{overview?.week?.calls ?? 0}</span>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-slate-400">Calls Handled</span>
+                  <span className="font-semibold text-white">{overview?.week?.calls ?? 0}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-slate-400">Bookings Made</span>
+                  <span className="font-semibold text-white">{overview?.week?.ai_bookings ?? 0}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-slate-400">Success Rate</span>
+                  <span className="font-semibold text-emerald-400">
+                    {overview?.week?.conversion_rate ?? 0}%
+                  </span>
+                </div>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Bookings Made</span>
-                <span className="font-semibold text-gray-900">{overview?.week?.ai_bookings ?? 0}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Success Rate</span>
-                <span className="font-semibold text-emerald-600">
-                  {overview?.week?.conversion_rate ?? 0}%
-                </span>
-              </div>
-              <div className="pt-2 border-t border-gray-100">
-                <div className="flex items-center gap-2 text-xs text-gray-500">
-                  <Zap className="h-3.5 w-3.5 text-amber-500" />
+              <div className="mt-4 pt-3 border-t border-slate-700">
+                <div className="flex items-center gap-2 text-xs text-slate-400">
+                  <span className="flex h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
                   <span>AI agent is handling calls 24/7</span>
                 </div>
               </div>
@@ -240,25 +217,25 @@ export default function Dashboard() {
           </div>
 
           {/* Status Breakdown */}
-          <div className="card-premium rounded-2xl overflow-hidden">
-            <div className="p-6 border-b border-gray-100">
-              <h2 className="text-lg font-semibold text-gray-900">Today's Summary</h2>
-              <p className="text-sm text-gray-500">Appointment status breakdown</p>
+          <div className="bg-white rounded-lg border border-slate-200 shadow-card overflow-hidden">
+            <div className="p-4 sm:p-5 border-b border-slate-100">
+              <h2 className="text-base font-semibold text-slate-900">Today's Summary</h2>
+              <p className="text-sm text-slate-500">Status breakdown</p>
             </div>
-            <div className="p-6 space-y-3">
+            <div className="p-4 sm:p-5 space-y-3">
               {[
                 { label: 'Completed', color: 'bg-emerald-500', count: todayData?.by_status?.completed?.length || 0 },
-                { label: 'In Progress', color: 'bg-purple-500', count: todayData?.by_status?.in_progress?.length || 0 },
-                { label: 'Checked In', color: 'bg-amber-500', count: todayData?.by_status?.checked_in?.length || 0 },
-                { label: 'Confirmed', color: 'bg-blue-500', count: todayData?.by_status?.confirmed?.length || 0 },
-                { label: 'Scheduled', color: 'bg-gray-400', count: todayData?.by_status?.scheduled?.length || 0 },
+                { label: 'In Progress', color: 'bg-amber-500', count: todayData?.by_status?.in_progress?.length || 0 },
+                { label: 'Checked In', color: 'bg-blue-500', count: todayData?.by_status?.checked_in?.length || 0 },
+                { label: 'Confirmed', color: 'bg-violet-500', count: todayData?.by_status?.confirmed?.length || 0 },
+                { label: 'Scheduled', color: 'bg-slate-400', count: todayData?.by_status?.scheduled?.length || 0 },
               ].map((item) => (
                 <div key={item.label} className="flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
-                    <div className={cn('h-2.5 w-2.5 rounded-full', item.color)} />
-                    <span className="text-sm text-gray-600">{item.label}</span>
+                    <div className={cn('h-2 w-2 rounded-full', item.color)} />
+                    <span className="text-sm text-slate-600">{item.label}</span>
                   </div>
-                  <span className="font-semibold text-gray-900">{item.count}</span>
+                  <span className="font-semibold text-slate-900">{item.count}</span>
                 </div>
               ))}
             </div>
@@ -273,31 +250,31 @@ export default function Dashboard() {
             icon: CheckCircle2,
             label: 'AI Bookings This Week',
             value: overview?.week?.ai_bookings ?? 0,
-            color: 'text-emerald-600',
-            bg: 'bg-emerald-50',
+            iconColor: 'text-emerald-600',
+            bgColor: 'bg-emerald-50',
           },
           {
             icon: Phone,
             label: 'Total Calls This Week',
             value: overview?.week?.calls ?? 0,
-            color: 'text-blue-600',
-            bg: 'bg-blue-50',
+            iconColor: 'text-blue-600',
+            bgColor: 'bg-blue-50',
           },
           {
             icon: Users,
             label: 'New Customers This Week',
             value: overview?.week?.new_customers ?? 0,
-            color: 'text-purple-600',
-            bg: 'bg-purple-50',
+            iconColor: 'text-violet-600',
+            bgColor: 'bg-violet-50',
           },
         ].map((item) => (
-          <div key={item.label} className="card-premium rounded-2xl p-5 flex items-center gap-4">
-            <div className={cn('rounded-xl p-3', item.bg)}>
-              <item.icon className={cn('h-6 w-6', item.color)} />
+          <div key={item.label} className="bg-white rounded-lg border border-slate-200 shadow-card p-4 flex items-center gap-4">
+            <div className={cn('rounded-lg p-2.5', item.bgColor)}>
+              <item.icon className={cn('h-5 w-5', item.iconColor)} />
             </div>
             <div>
-              <p className="text-2xl font-bold text-gray-900">{item.value}</p>
-              <p className="text-sm text-gray-500">{item.label}</p>
+              <p className="text-xl font-bold text-slate-900">{item.value}</p>
+              <p className="text-sm text-slate-500">{item.label}</p>
             </div>
           </div>
         ))}

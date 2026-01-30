@@ -2,58 +2,59 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Import Inter font for premium feel */
+/* Import Inter font for professional feel */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 @layer base {
   :root {
-    --background: 220 20% 97%;
-    --foreground: 224 71% 4%;
+    /* Salesforce-inspired professional palette */
+    --background: 210 20% 98%;
+    --foreground: 222 47% 11%;
     --card: 0 0% 100%;
-    --card-foreground: 224 71% 4%;
+    --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
-    --popover-foreground: 224 71% 4%;
-    --primary: 220 90% 56%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 213 94% 40%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 220 14% 96%;
-    --secondary-foreground: 224 71% 4%;
-    --muted: 220 14% 96%;
-    --muted-foreground: 220 9% 46%;
-    --accent: 220 14% 96%;
-    --accent-foreground: 224 71% 4%;
-    --destructive: 0 84% 60%;
+    --secondary: 214 20% 94%;
+    --secondary-foreground: 222 47% 11%;
+    --muted: 214 20% 94%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 214 20% 94%;
+    --accent-foreground: 222 47% 11%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 220 90% 56%;
-    --radius: 0.75rem;
+    --border: 214 20% 88%;
+    --input: 214 20% 88%;
+    --ring: 213 94% 40%;
+    --radius: 0.5rem;
     
-    /* Premium accent colors */
-    --success: 160 84% 39%;
-    --warning: 38 92% 50%;
-    --info: 199 89% 48%;
+    /* Professional accent colors */
+    --success: 158 64% 32%;
+    --warning: 32 95% 44%;
+    --info: 213 94% 40%;
   }
 
   .dark {
-    --background: 224 71% 4%;
-    --foreground: 220 14% 96%;
-    --card: 224 47% 8%;
-    --card-foreground: 220 14% 96%;
-    --popover: 224 47% 8%;
-    --popover-foreground: 220 14% 96%;
-    --primary: 220 90% 56%;
+    --background: 222 47% 8%;
+    --foreground: 210 20% 98%;
+    --card: 222 47% 11%;
+    --card-foreground: 210 20% 98%;
+    --popover: 222 47% 11%;
+    --popover-foreground: 210 20% 98%;
+    --primary: 213 94% 50%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 224 47% 12%;
-    --secondary-foreground: 220 14% 96%;
-    --muted: 224 47% 12%;
-    --muted-foreground: 220 9% 60%;
-    --accent: 224 47% 12%;
-    --accent-foreground: 220 14% 96%;
-    --destructive: 0 62% 30%;
+    --secondary: 222 30% 18%;
+    --secondary-foreground: 210 20% 98%;
+    --muted: 222 30% 18%;
+    --muted-foreground: 215 16% 60%;
+    --accent: 222 30% 18%;
+    --accent-foreground: 210 20% 98%;
+    --destructive: 0 62% 40%;
     --destructive-foreground: 0 0% 100%;
-    --border: 224 47% 16%;
-    --input: 224 47% 16%;
-    --ring: 220 90% 56%;
+    --border: 222 30% 22%;
+    --input: 222 30% 22%;
+    --ring: 213 94% 50%;
   }
 }
 
@@ -72,27 +73,22 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     font-feature-settings: "cv11", "ss01";
-    font-variation-settings: "opsz" 32;
   }
   
-  /* Premium heading styles */
   h1, h2, h3, h4, h5, h6 {
     @apply font-semibold tracking-tight;
   }
   
-  /* Prevent zoom on input focus on iOS */
   @media screen and (max-width: 768px) {
     input, select, textarea {
       font-size: 16px !important;
     }
   }
   
-  /* Better touch targets */
   button, a, [role="button"] {
     touch-action: manipulation;
   }
   
-  /* Hide scrollbar on mobile */
   @media screen and (max-width: 768px) {
     ::-webkit-scrollbar {
       display: none;
@@ -104,7 +100,7 @@
   }
 }
 
-/* Premium scrollbar */
+/* Professional scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -123,143 +119,104 @@
   background: hsl(var(--muted-foreground) / 0.35);
 }
 
-/* Premium utility classes */
 @layer utilities {
-  /* Glass morphism effect */
-  .glass {
-    @apply bg-white/80 backdrop-blur-xl border border-white/20;
-  }
-  
-  .glass-dark {
-    @apply bg-black/40 backdrop-blur-xl border border-white/10;
-  }
-  
-  /* Premium shadows */
+  /* Professional shadows */
   .shadow-soft {
-    box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.05), 
-                0 4px 16px -4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 
+                0 1px 2px -1px rgba(0, 0, 0, 0.1);
   }
   
   .shadow-soft-lg {
-    box-shadow: 0 4px 12px -4px rgba(0, 0, 0, 0.05), 
-                0 8px 32px -8px rgba(0, 0, 0, 0.12);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 
+                0 2px 4px -2px rgba(0, 0, 0, 0.1);
   }
   
-  .shadow-glow {
-    box-shadow: 0 0 0 1px hsl(var(--primary) / 0.1),
-                0 4px 24px -4px hsl(var(--primary) / 0.25);
+  .shadow-card {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 
+                0 1px 2px rgba(0, 0, 0, 0.06);
   }
   
-  /* Gradient backgrounds */
+  /* Salesforce-style gradient */
   .gradient-primary {
-    background: linear-gradient(135deg, hsl(220 90% 56%) 0%, hsl(240 90% 60%) 100%);
+    background: linear-gradient(135deg, #0176D3 0%, #032D60 100%);
   }
   
-  .gradient-subtle {
-    background: linear-gradient(180deg, hsl(var(--background)) 0%, hsl(220 20% 95%) 100%);
+  .gradient-header {
+    background: linear-gradient(90deg, #032D60 0%, #0176D3 100%);
   }
   
-  /* Premium text gradient */
-  .text-gradient {
-    @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, hsl(220 90% 50%) 0%, hsl(260 90% 55%) 100%);
-  }
-  
-  /* Hover lift effect */
-  .hover-lift {
-    @apply transition-all duration-300;
-  }
-  
-  .hover-lift:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.15);
-  }
-  
-  /* Premium card styles */
-  .card-premium {
-    @apply bg-white rounded-xl border border-gray-100 shadow-soft;
-  }
-  
-  .card-premium-hover {
-    @apply card-premium transition-all duration-300;
-  }
-  
-  .card-premium-hover:hover {
-    @apply shadow-soft-lg border-gray-200;
-    transform: translateY(-1px);
-  }
-  
-  /* Stat card gradient backgrounds */
+  /* Professional stat card backgrounds - subtle, not pastel */
   .stat-blue {
-    background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%);
+    background: linear-gradient(135deg, #F4F6F9 0%, #EEF1F6 100%);
+    border-left: 3px solid #0176D3;
   }
   
   .stat-green {
-    background: linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%);
+    background: linear-gradient(135deg, #F4F6F9 0%, #EEF1F6 100%);
+    border-left: 3px solid #2E844A;
   }
   
   .stat-purple {
-    background: linear-gradient(135deg, #F5F3FF 0%, #EDE9FE 100%);
+    background: linear-gradient(135deg, #F4F6F9 0%, #EEF1F6 100%);
+    border-left: 3px solid #5A1BA9;
   }
   
   .stat-amber {
-    background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%);
+    background: linear-gradient(135deg, #F4F6F9 0%, #EEF1F6 100%);
+    border-left: 3px solid #DD7A01;
   }
   
-  .stat-rose {
-    background: linear-gradient(135deg, #FFF1F2 0%, #FFE4E6 100%);
+  .stat-slate {
+    background: linear-gradient(135deg, #F4F6F9 0%, #EEF1F6 100%);
+    border-left: 3px solid #5C6A7A;
+  }
+  
+  /* Professional card styles */
+  .card-professional {
+    @apply bg-white rounded-lg border border-slate-200 shadow-card;
+  }
+  
+  .card-professional-hover {
+    @apply card-professional transition-all duration-200;
+  }
+  
+  .card-professional-hover:hover {
+    @apply shadow-soft-lg border-slate-300;
   }
   
   /* Navigation active indicator */
-  .nav-active {
+  .nav-active-bar {
     @apply relative;
   }
   
-  .nav-active::before {
+  .nav-active-bar::before {
     content: '';
-    @apply absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 rounded-full;
-    background: linear-gradient(180deg, hsl(220 90% 56%) 0%, hsl(260 90% 60%) 100%);
+    @apply absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-6 rounded-r-full bg-primary;
   }
   
-  /* Animated gradient border */
-  .border-gradient {
-    position: relative;
-    background: linear-gradient(white, white) padding-box,
-                linear-gradient(135deg, hsl(220 90% 56%), hsl(260 90% 60%)) border-box;
-    border: 2px solid transparent;
-  }
+  /* Status colors - professional */
+  .status-scheduled { @apply bg-slate-100 text-slate-700; }
+  .status-confirmed { @apply bg-blue-50 text-blue-700; }
+  .status-in-progress { @apply bg-amber-50 text-amber-700; }
+  .status-completed { @apply bg-emerald-50 text-emerald-700; }
+  .status-cancelled { @apply bg-red-50 text-red-700; }
 }
 
-/* Premium animations */
+/* Professional animations */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
+  from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes slideIn {
-  from { opacity: 0; transform: translateX(-8px); }
+  from { opacity: 0; transform: translateX(-4px); }
   to { opacity: 1; transform: translateX(0); }
 }
 
-@keyframes pulse-soft {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
-}
-
 .animate-fade-in {
-  animation: fadeIn 0.4s ease-out forwards;
+  animation: fadeIn 0.3s ease-out forwards;
 }
 
 .animate-slide-in {
-  animation: slideIn 0.3s ease-out forwards;
+  animation: slideIn 0.25s ease-out forwards;
 }
-
-.animate-pulse-soft {
-  animation: pulse-soft 2s ease-in-out infinite;
-}
-
-/* Stagger animation delays */
-.stagger-1 { animation-delay: 0.05s; }
-.stagger-2 { animation-delay: 0.1s; }
-.stagger-3 { animation-delay: 0.15s; }
-.stagger-4 { animation-delay: 0.2s; }
