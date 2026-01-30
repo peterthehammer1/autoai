@@ -24,6 +24,23 @@ app.use(cors());
 app.use(morgan('combined'));
 app.use(express.json());
 
+// Root endpoint - API info
+app.get('/', (req, res) => {
+  res.json({
+    name: 'Premier Auto Service Booking API',
+    version: '1.0.0',
+    status: 'online',
+    description: 'AI-powered voice booking system for automotive service centers',
+    endpoints: {
+      health: '/health',
+      retell_functions: '/api/retell/*',
+      dashboard_api: '/api/*'
+    },
+    documentation: 'https://github.com/peterthehammer1/autoai',
+    powered_by: 'Retell AI + Supabase'
+  });
+});
+
 // Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
