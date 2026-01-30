@@ -68,7 +68,7 @@ export default function CallLogs() {
 
   const getSentimentColor = (sentiment) => {
     switch (sentiment) {
-      case 'positive': return 'text-green-600'
+      case 'positive': return 'text-emerald-600'
       case 'negative': return 'text-red-600'
       default: return 'text-gray-500'
     }
