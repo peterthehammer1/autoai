@@ -14,6 +14,7 @@ import appointmentRoutes from './routes/appointments.js';
 import availabilityRoutes from './routes/availability.js';
 import webhookRoutes from './routes/webhooks.js';
 import analyticsRoutes from './routes/analytics.js';
+import callLogRoutes from './routes/call-logs.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -53,6 +54,7 @@ app.use('/api/appointments', appointmentRoutes);
 app.use('/api/availability', availabilityRoutes);
 app.use('/api/webhooks', webhookRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/call-logs', callLogRoutes);
 
 // Retell Function Endpoints (simplified paths for function calling)
 app.use('/api/retell', (await import('./routes/retell-functions.js')).default);

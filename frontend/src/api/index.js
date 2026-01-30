@@ -116,15 +116,16 @@ export const analytics = {
   },
 }
 
-// Call Logs (we'll need to add this endpoint to the backend)
+// Call Logs
 export const callLogs = {
   list: (params = {}) => {
     const query = new URLSearchParams(params).toString()
-    // This endpoint doesn't exist yet - we'll add it
     return fetchAPI(`/call-logs${query ? `?${query}` : ''}`)
   },
   
   get: (id) => fetchAPI(`/call-logs/${id}`),
+  
+  stats: (period = 'week') => fetchAPI(`/call-logs/stats/summary?period=${period}`),
 }
 
 export default {
