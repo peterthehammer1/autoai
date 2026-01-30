@@ -703,7 +703,7 @@ router.post('/book_appointment', async (req, res, next) => {
         vehicle: vehicleDescription,
         duration_minutes: totalDuration
       },
-      message: `Perfect, ${customerName}! I've booked your ${serviceNames} appointment for ${dayName}, ${monthDay} at ${timeFormatted}${vehicleDescription ? ` for your ${vehicleDescription}` : ''}. We'll send you a confirmation text shortly. Is there anything else I can help you with?`
+      message: `Perfect, ${customerName}! You're all set for ${dayName}. We'll text you the details shortly. Is there anything else I can help with?`
     });
 
   } catch (error) {

@@ -49,6 +49,12 @@ router.post('/retell/inbound', async (req, res) => {
       .eq('phone_normalized', normalizedPhone)
       .single();
     
+    // Get time-based greeting
+    const hour = new Date().getHours();
+    let timeGreeting = 'Good afternoon';
+    if (hour < 12) timeGreeting = 'Good morning';
+    else if (hour >= 17) timeGreeting = 'Good evening';
+    
     if (error || !customer) {
       console.log('Customer not found, new caller');
       // New customer - pass info so agent knows
@@ -57,13 +63,14 @@ router.post('/retell/inbound', async (req, res) => {
           agent_override: {
             retell_llm: {
               start_speaker: "agent",
-              begin_message: "Thanks for calling Premier Auto Service, this is Alex. How can I help you today?"
+              begin_message: `${timeGreeting}! Thanks for calling Premier Auto Service, this is Amber. How can I help you today?`
             }
           },
           dynamic_variables: {
             is_existing_customer: 'false',
             customer_name: '',
             customer_first_name: '',
+            customer_last_name: '',
             customer_phone: from_number,
             customer_id: '',
             vehicle_info: '',
@@ -84,13 +91,17 @@ router.post('/retell/inbound', async (req, res) => {
       vehicleId = v.id;
     }
     
-    // Return customer info as dynamic variables with personalized greeting
+    // Professional greeting with title for existing customers
+    const title = 'Mr.'; // Could be enhanced with gender detection later
+    const lastName = customer.last_name || customer.first_name;
+    
+    // Return customer info as dynamic variables with professional greeting
     return res.json({
       call_inbound: {
         agent_override: {
           retell_llm: {
             start_speaker: "agent",
-            begin_message: `Hey ${customer.first_name}! Thanks for calling Premier Auto Service, this is Alex. How can I help you today?`
+            begin_message: `${timeGreeting}, ${title} ${lastName}! Thanks for calling Premier Auto Service, this is Amber. How can I help you today?`
           }
         },
         dynamic_variables: {
