@@ -621,6 +621,15 @@ router.post('/book_appointment', async (req, res, next) => {
       appointmentTime: appointment_time,
       services: serviceNames,
       vehicleDescription
+    }).then(result => {
+      if (result.success) {
+        // Mark confirmation as sent
+        supabase
+          .from('appointments')
+          .update({ confirmation_sent_at: new Date().toISOString() })
+          .eq('id', appointment.id)
+          .then(() => console.log('[SMS] Confirmation sent for appointment', appointment.id));
+      }
     }).catch(err => console.error('SMS confirmation error:', err));
 
     res.json({

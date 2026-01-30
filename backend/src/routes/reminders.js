@@ -25,7 +25,7 @@ router.post('/send-24h', async (req, res, next) => {
         id,
         scheduled_date,
         scheduled_time,
-        reminder_sent,
+        reminder_sent_at,
         customer:customers (
           id,
           first_name,
@@ -42,7 +42,7 @@ router.post('/send-24h', async (req, res, next) => {
       `)
       .eq('scheduled_date', tomorrowDate)
       .in('status', ['scheduled', 'confirmed'])
-      .or('reminder_sent.is.null,reminder_sent.eq.false');
+      .is('reminder_sent_at', null);
 
     if (error) throw error;
 
@@ -80,11 +80,11 @@ router.post('/send-24h', async (req, res, next) => {
         vehicleDescription
       });
 
-      // Mark as reminded
+      // Mark as reminded with timestamp
       if (smsResult.success) {
         await supabase
           .from('appointments')
-          .update({ reminder_sent: true })
+          .update({ reminder_sent_at: new Date().toISOString() })
           .eq('id', apt.id);
       }
 
@@ -127,7 +127,7 @@ router.get('/pending', async (req, res, next) => {
         id,
         scheduled_date,
         scheduled_time,
-        reminder_sent,
+        reminder_sent_at,
         customer:customers (
           first_name,
           last_name,
@@ -136,7 +136,7 @@ router.get('/pending', async (req, res, next) => {
       `)
       .eq('scheduled_date', tomorrowDate)
       .in('status', ['scheduled', 'confirmed'])
-      .or('reminder_sent.is.null,reminder_sent.eq.false');
+      .is('reminder_sent_at', null);
 
     if (error) throw error;
 
