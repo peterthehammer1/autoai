@@ -70,21 +70,22 @@ export async function sendConfirmationSMS({
   const formattedDate = format(date, 'EEEE, MMMM d, yyyy');
   const formattedTime = formatTime12Hour(appointmentTime);
 
-  const message = `Premier Auto Service - Appointment Confirmed ✓
+  const message = `PREMIER AUTO SERVICE
+Appointment Confirmed
 
-Hi ${customerName || 'there'}!
+${customerName ? `Hi ${customerName},\n\n` : ''}Your appointment has been scheduled.
 
-Thank you for booking with us. Here are your appointment details:
+Date: ${formattedDate}
+Time: ${formattedTime}
+Service: ${services}${vehicleDescription ? `\nVehicle: ${vehicleDescription}` : ''}
 
-📅 ${formattedDate}
-⏰ ${formattedTime}
-🔧 ${services}${vehicleDescription ? `\n🚗 ${vehicleDescription}` : ''}
+Location:
+1250 Industrial Boulevard
+Automotive City
 
-📍 1250 Industrial Boulevard, Automotive City
+To reschedule or cancel, please call (716) 412-2499
 
-Need to reschedule? Call us at (716) 412-2499
-
-See you soon!`;
+Thank you for choosing Premier Auto Service.`;
 
   return sendSMS(customerPhone, message);
 }
@@ -104,21 +105,22 @@ export async function sendReminderSMS({
   const formattedDate = format(date, 'EEEE, MMMM d');
   const formattedTime = formatTime12Hour(appointmentTime);
 
-  const message = `Premier Auto Service - Appointment Reminder
+  const message = `PREMIER AUTO SERVICE
+Appointment Reminder
 
-Hi ${customerName || 'there'}! 👋
+${customerName ? `Hi ${customerName},\n\n` : ''}This is a reminder about your appointment tomorrow.
 
-Just a friendly reminder about your appointment tomorrow:
+Date: ${formattedDate}
+Time: ${formattedTime}
+Service: ${services}${vehicleDescription ? `\nVehicle: ${vehicleDescription}` : ''}
 
-📅 ${formattedDate}
-⏰ ${formattedTime}
-🔧 ${services}${vehicleDescription ? `\n🚗 ${vehicleDescription}` : ''}
+Location:
+1250 Industrial Boulevard
+Automotive City
 
-📍 1250 Industrial Boulevard, Automotive City
+Unable to make it? Please call (716) 412-2499 to reschedule.
 
-Can't make it? Please call (716) 412-2499 to reschedule.
-
-We look forward to seeing you!`;
+We look forward to seeing you.`;
 
   return sendSMS(customerPhone, message);
 }
