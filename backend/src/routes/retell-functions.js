@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { supabase, normalizePhone, formatPhone } from '../config/database.js';
 import { format, parseISO, addDays } from 'date-fns';
 import { sendConfirmationSMS } from '../services/sms.js';
+import { sendConfirmationEmail } from '../services/email.js';
 
 const router = Router();
 
@@ -498,12 +499,14 @@ router.post('/book_appointment', async (req, res, next) => {
     // 1. Find or create customer
     let { data: customer } = await supabase
       .from('customers')
-      .select('id, first_name')
+      .select('id, first_name, email')
       .eq('phone_normalized', normalizedPhone)
       .single();
 
+    let customerEmail = customer_email;
+
     if (!customer) {
-      console.log('Creating new customer:', { customer_first_name, customer_last_name, customer_phone });
+      console.log('Creating new customer:', { customer_first_name, customer_last_name, customer_phone, customer_email });
       const { data: newCustomer, error } = await supabase
         .from('customers')
         .insert({
@@ -512,7 +515,7 @@ router.post('/book_appointment', async (req, res, next) => {
           last_name: customer_last_name,
           email: customer_email
         })
-        .select('id, first_name')
+        .select('id, first_name, email')
         .single();
 
       if (error) {
@@ -520,6 +523,18 @@ router.post('/book_appointment', async (req, res, next) => {
         throw error;
       }
       customer = newCustomer;
+    } else {
+      // Existing customer - update email if we have a new one and they didn't have one
+      if (customer_email && !customer.email) {
+        console.log('Updating existing customer with email:', customer_email);
+        await supabase
+          .from('customers')
+          .update({ email: customer_email })
+          .eq('id', customer.id);
+        customer.email = customer_email;
+      }
+      // Use existing email if we don't have a new one
+      customerEmail = customer_email || customer.email;
     }
 
     // 2. Handle vehicle
@@ -689,6 +704,25 @@ router.post('/book_appointment', async (req, res, next) => {
           .then(() => console.log('[SMS] Confirmation sent for appointment', appointment.id));
       }
     }).catch(err => console.error('SMS confirmation error:', err));
+
+    // 10. Send confirmation email if we have an email address
+    if (customerEmail) {
+      const fullName = [customer_first_name || customer.first_name, customer_last_name].filter(Boolean).join(' ');
+      sendConfirmationEmail({
+        to: customerEmail,
+        customerName: fullName || customerName,
+        appointmentDate: appointment_date,
+        appointmentTime: appointment_time,
+        services: serviceNames,
+        vehicle: vehicleDescription,
+        customerId: customer.id,
+        appointmentId: appointment.id
+      }).then(result => {
+        if (result.success) {
+          console.log('[Email] Confirmation sent for appointment', appointment.id);
+        }
+      }).catch(err => console.error('Email confirmation error:', err));
+    }
 
     res.json({
       success: true,
