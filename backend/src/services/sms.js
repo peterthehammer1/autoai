@@ -70,10 +70,7 @@ export async function sendConfirmationSMS({
   const formattedDate = format(date, 'EEEE, MMMM d, yyyy');
   const formattedTime = formatTime12Hour(appointmentTime);
 
-  const message = `PREMIER AUTO SERVICE
-Appointment Confirmed
-
-${customerName ? `Hi ${customerName},\n\n` : ''}Your appointment has been scheduled.
+  const message = `${customerName ? `Hi ${customerName},\n\n` : ''}Your appointment has been scheduled.
 
 Date: ${formattedDate}
 Time: ${formattedTime}
@@ -105,10 +102,7 @@ export async function sendReminderSMS({
   const formattedDate = format(date, 'EEEE, MMMM d');
   const formattedTime = formatTime12Hour(appointmentTime);
 
-  const message = `PREMIER AUTO SERVICE
-Appointment Reminder
-
-${customerName ? `Hi ${customerName},\n\n` : ''}This is a reminder about your appointment tomorrow.
+  const message = `${customerName ? `Hi ${customerName},\n\n` : ''}This is a reminder about your appointment tomorrow.
 
 Date: ${formattedDate}
 Time: ${formattedTime}
