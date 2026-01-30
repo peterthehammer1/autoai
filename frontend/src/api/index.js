@@ -59,6 +59,11 @@ export const customers = {
     body: JSON.stringify(data),
   }),
   
+  update: (id, data) => fetchAPI(`/customers/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  }),
+  
   getAppointments: (id, status = 'all') => 
     fetchAPI(`/customers/${id}/appointments?status=${status}`),
   
