@@ -130,7 +130,7 @@ export async function sendConfirmationEmail({
   const timeStr = formatTime12Hour(appointmentTime);
   const firstName = customerName?.split(' ')[0] || 'there';
 
-  const subject = `Your Appointment at Premier Auto Service - ${dateStr}`;
+  const subject = `Appointment Confirmed - ${dateStr} at ${timeStr}`;
 
   const html = `
 <!DOCTYPE html>
@@ -139,79 +139,94 @@ export async function sendConfirmationEmail({
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-  
-  <div style="background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%); padding: 30px; border-radius: 12px 12px 0 0; text-align: center;">
-    <h1 style="color: white; margin: 0; font-size: 24px;">Premier Auto Service</h1>
-    <p style="color: rgba(255,255,255,0.9); margin: 5px 0 0 0;">Appointment Confirmed</p>
-  </div>
-  
-  <div style="background: #f8fafc; padding: 30px; border: 1px solid #e2e8f0; border-top: none;">
-    <p style="font-size: 16px; margin-top: 0;">Hi ${firstName},</p>
-    
-    <p>Your appointment has been confirmed. Here are the details:</p>
-    
-    <div style="background: white; border-radius: 8px; padding: 20px; margin: 20px 0; border: 1px solid #e2e8f0;">
-      <table style="width: 100%; border-collapse: collapse;">
-        <tr>
-          <td style="padding: 10px 0; border-bottom: 1px solid #f1f5f9;">
-            <strong style="color: #64748b;">Date</strong>
-          </td>
-          <td style="padding: 10px 0; border-bottom: 1px solid #f1f5f9; text-align: right;">
-            ${dateStr}
-          </td>
-        </tr>
-        <tr>
-          <td style="padding: 10px 0; border-bottom: 1px solid #f1f5f9;">
-            <strong style="color: #64748b;">Time</strong>
-          </td>
-          <td style="padding: 10px 0; border-bottom: 1px solid #f1f5f9; text-align: right;">
-            ${timeStr}
-          </td>
-        </tr>
-        <tr>
-          <td style="padding: 10px 0; border-bottom: 1px solid #f1f5f9;">
-            <strong style="color: #64748b;">Service</strong>
-          </td>
-          <td style="padding: 10px 0; border-bottom: 1px solid #f1f5f9; text-align: right;">
-            ${services}
-          </td>
-        </tr>
-        ${vehicle ? `
-        <tr>
-          <td style="padding: 10px 0;">
-            <strong style="color: #64748b;">Vehicle</strong>
-          </td>
-          <td style="padding: 10px 0; text-align: right;">
-            ${vehicle}
-          </td>
-        </tr>
-        ` : ''}
-      </table>
-    </div>
-    
-    <div style="background: #eff6ff; border-radius: 8px; padding: 15px; margin: 20px 0; border-left: 4px solid #2563eb;">
-      <p style="margin: 0; font-size: 14px;">
-        <strong>Location:</strong><br>
-        Premier Auto Service<br>
-        1250 Industrial Boulevard<br>
-        Automotive City
-      </p>
-    </div>
-    
-    <p style="color: #64748b; font-size: 14px;">
-      Need to reschedule or cancel? Just give us a call at <strong>(716) 412-2499</strong>.
-    </p>
-    
-    <p style="margin-bottom: 0;">See you soon!</p>
-    <p style="margin-top: 5px; color: #64748b;">The Premier Auto Service Team</p>
-  </div>
-  
-  <div style="text-align: center; padding: 20px; color: #94a3b8; font-size: 12px;">
-    <p style="margin: 0;">Premier Auto Service</p>
-    <p style="margin: 5px 0 0 0;">(716) 412-2499 | fixmycar.app</p>
-  </div>
-  
+<body style="margin: 0; padding: 0; background-color: #f4f4f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f4f4f5;">
+    <tr>
+      <td align="center" style="padding: 40px 20px;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 480px; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+          
+          <!-- Header -->
+          <tr>
+            <td style="background-color: #1e293b; padding: 32px 40px; text-align: center;">
+              <h1 style="margin: 0; color: #ffffff; font-size: 20px; font-weight: 600; letter-spacing: -0.5px;">Premier Auto Service</h1>
+            </td>
+          </tr>
+          
+          <!-- Confirmation Badge -->
+          <tr>
+            <td style="padding: 32px 40px 24px; text-align: center;">
+              <div style="display: inline-block; background-color: #dcfce7; color: #166534; font-size: 13px; font-weight: 600; padding: 8px 16px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px;">
+                Confirmed
+              </div>
+            </td>
+          </tr>
+          
+          <!-- Greeting -->
+          <tr>
+            <td style="padding: 0 40px 24px; text-align: center;">
+              <p style="margin: 0; color: #374151; font-size: 16px;">Hi ${firstName}, your appointment is scheduled.</p>
+            </td>
+          </tr>
+          
+          <!-- Appointment Details Card -->
+          <tr>
+            <td style="padding: 0 40px 32px;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <tr>
+                  <td style="padding: 24px;">
+                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                      <tr>
+                        <td style="padding-bottom: 16px;">
+                          <p style="margin: 0 0 4px; color: #64748b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Date & Time</p>
+                          <p style="margin: 0; color: #1e293b; font-size: 16px; font-weight: 600;">${dateStr}</p>
+                          <p style="margin: 4px 0 0; color: #1e293b; font-size: 16px; font-weight: 600;">${timeStr}</p>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="padding-bottom: ${vehicle ? '16px' : '0'}; border-top: 1px solid #e2e8f0; padding-top: 16px;">
+                          <p style="margin: 0 0 4px; color: #64748b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Service</p>
+                          <p style="margin: 0; color: #1e293b; font-size: 15px;">${services}</p>
+                        </td>
+                      </tr>
+                      ${vehicle ? `
+                      <tr>
+                        <td style="border-top: 1px solid #e2e8f0; padding-top: 16px;">
+                          <p style="margin: 0 0 4px; color: #64748b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Vehicle</p>
+                          <p style="margin: 0; color: #1e293b; font-size: 15px;">${vehicle}</p>
+                        </td>
+                      </tr>
+                      ` : ''}
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          
+          <!-- Help Text -->
+          <tr>
+            <td style="padding: 0 40px 32px; text-align: center;">
+              <p style="margin: 0; color: #64748b; font-size: 14px; line-height: 1.5;">
+                Need to reschedule? Call us at<br>
+                <a href="tel:+17164122499" style="color: #1e293b; font-weight: 600; text-decoration: none;">(716) 412-2499</a>
+              </p>
+            </td>
+          </tr>
+          
+          <!-- Footer -->
+          <tr>
+            <td style="background-color: #f8fafc; padding: 24px 40px; border-top: 1px solid #e2e8f0; text-align: center;">
+              <p style="margin: 0; color: #94a3b8; font-size: 12px;">
+                Premier Auto Service<br>
+                <a href="https://fixmycar.app" style="color: #94a3b8; text-decoration: none;">fixmycar.app</a>
+              </p>
+            </td>
+          </tr>
+          
+        </table>
+      </td>
+    </tr>
+  </table>
 </body>
 </html>
   `;
@@ -243,7 +258,7 @@ export async function sendReminderEmail({
   const timeStr = formatTime12Hour(appointmentTime);
   const firstName = customerName?.split(' ')[0] || 'there';
 
-  const subject = `Reminder: Your Appointment Tomorrow at ${timeStr}`;
+  const subject = `Reminder: Tomorrow at ${timeStr}`;
 
   const html = `
 <!DOCTYPE html>
@@ -252,38 +267,72 @@ export async function sendReminderEmail({
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-  
-  <div style="background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%); padding: 30px; border-radius: 12px 12px 0 0; text-align: center;">
-    <h1 style="color: white; margin: 0; font-size: 24px;">Premier Auto Service</h1>
-    <p style="color: rgba(255,255,255,0.9); margin: 5px 0 0 0;">Appointment Reminder</p>
-  </div>
-  
-  <div style="background: #f8fafc; padding: 30px; border: 1px solid #e2e8f0; border-top: none;">
-    <p style="font-size: 16px; margin-top: 0;">Hi ${firstName},</p>
-    
-    <p>Just a friendly reminder about your appointment <strong>tomorrow</strong>:</p>
-    
-    <div style="background: white; border-radius: 8px; padding: 20px; margin: 20px 0; border: 1px solid #e2e8f0;">
-      <p style="margin: 0; font-size: 18px; text-align: center;">
-        <strong>${dateStr}</strong> at <strong>${timeStr}</strong>
-      </p>
-      <p style="margin: 10px 0 0 0; text-align: center; color: #64748b;">
-        ${services}${vehicle ? ` • ${vehicle}` : ''}
-      </p>
-    </div>
-    
-    <p style="color: #64748b; font-size: 14px;">
-      Need to reschedule? Call us at <strong>(716) 412-2499</strong>.
-    </p>
-    
-    <p style="margin-bottom: 0;">See you tomorrow!</p>
-  </div>
-  
-  <div style="text-align: center; padding: 20px; color: #94a3b8; font-size: 12px;">
-    <p style="margin: 0;">Premier Auto Service | (716) 412-2499</p>
-  </div>
-  
+<body style="margin: 0; padding: 0; background-color: #f4f4f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f4f4f5;">
+    <tr>
+      <td align="center" style="padding: 40px 20px;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 480px; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+          
+          <!-- Header -->
+          <tr>
+            <td style="background-color: #1e293b; padding: 32px 40px; text-align: center;">
+              <h1 style="margin: 0; color: #ffffff; font-size: 20px; font-weight: 600; letter-spacing: -0.5px;">Premier Auto Service</h1>
+            </td>
+          </tr>
+          
+          <!-- Reminder Badge -->
+          <tr>
+            <td style="padding: 32px 40px 24px; text-align: center;">
+              <div style="display: inline-block; background-color: #fef3c7; color: #92400e; font-size: 13px; font-weight: 600; padding: 8px 16px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px;">
+                Tomorrow
+              </div>
+            </td>
+          </tr>
+          
+          <!-- Greeting -->
+          <tr>
+            <td style="padding: 0 40px 24px; text-align: center;">
+              <p style="margin: 0; color: #374151; font-size: 16px;">Hi ${firstName}, just a quick reminder about your appointment.</p>
+            </td>
+          </tr>
+          
+          <!-- Appointment Details -->
+          <tr>
+            <td style="padding: 0 40px 32px;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <tr>
+                  <td style="padding: 24px; text-align: center;">
+                    <p style="margin: 0; color: #1e293b; font-size: 18px; font-weight: 600;">${dateStr}</p>
+                    <p style="margin: 4px 0 0; color: #1e293b; font-size: 18px; font-weight: 600;">${timeStr}</p>
+                    <p style="margin: 12px 0 0; color: #64748b; font-size: 14px;">${services}${vehicle ? ` · ${vehicle}` : ''}</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          
+          <!-- Help Text -->
+          <tr>
+            <td style="padding: 0 40px 32px; text-align: center;">
+              <p style="margin: 0; color: #64748b; font-size: 14px;">
+                Need to reschedule? Call <a href="tel:+17164122499" style="color: #1e293b; font-weight: 600; text-decoration: none;">(716) 412-2499</a>
+              </p>
+            </td>
+          </tr>
+          
+          <!-- Footer -->
+          <tr>
+            <td style="background-color: #f8fafc; padding: 24px 40px; border-top: 1px solid #e2e8f0; text-align: center;">
+              <p style="margin: 0; color: #94a3b8; font-size: 12px;">
+                Premier Auto Service · <a href="https://fixmycar.app" style="color: #94a3b8; text-decoration: none;">fixmycar.app</a>
+              </p>
+            </td>
+          </tr>
+          
+        </table>
+      </td>
+    </tr>
+  </table>
 </body>
 </html>
   `;

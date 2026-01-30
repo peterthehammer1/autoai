@@ -1,7 +1,24 @@
 import { Router } from 'express';
 import { supabase, normalizePhone } from '../config/database.js';
+import { toZonedTime } from 'date-fns-tz';
 
 const router = Router();
+
+/**
+ * Get time-based greeting in EST timezone
+ * Morning: 12:00 AM - 11:59 AM
+ * Afternoon: 12:00 PM - 5:59 PM
+ * Evening: 6:00 PM - 11:59 PM
+ */
+function getTimeGreeting() {
+  const timezone = 'America/New_York';
+  const now = toZonedTime(new Date(), timezone);
+  const hour = now.getHours();
+  
+  if (hour < 12) return 'Good morning';
+  if (hour < 18) return 'Good afternoon';
+  return 'Good evening';
+}
 
 /**
  * POST /api/webhooks/retell/inbound
@@ -49,11 +66,8 @@ router.post('/retell/inbound', async (req, res) => {
       .eq('phone_normalized', normalizedPhone)
       .single();
     
-    // Get time-based greeting
-    const hour = new Date().getHours();
-    let timeGreeting = 'Good afternoon';
-    if (hour < 12) timeGreeting = 'Good morning';
-    else if (hour >= 17) timeGreeting = 'Good evening';
+    // Get time-based greeting (EST timezone)
+    const timeGreeting = getTimeGreeting();
     
     if (error || !customer) {
       console.log('Customer not found, new caller');
