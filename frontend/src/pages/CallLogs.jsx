@@ -301,7 +301,7 @@ export default function CallLogs() {
                         <span className="text-muted-foreground">Unknown</span>
                       )}
                     </TableCell>
-                    <TableCell><PhoneNumber phone={call.phone_number} /></TableCell>
+                    <TableCell><PhoneNumber phone={call.phone_number} showRevealButton={false} /></TableCell>
                     <TableCell>{formatDuration(call.duration_seconds)}</TableCell>
                     <TableCell>
                       <Badge className={getOutcomeColor(call.outcome)}>
@@ -359,7 +359,7 @@ export default function CallLogs() {
                   <p className="text-sm text-muted-foreground flex items-center gap-1">
                     <Phone className="h-4 w-4" /> Phone
                   </p>
-                  <p className="font-medium"><PhoneNumber phone={selectedCall.phone_number} /></p>
+                  <p className="font-medium"><PhoneNumber phone={selectedCall.phone_number} showRevealButton={false} /></p>
                 </div>
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground flex items-center gap-1">

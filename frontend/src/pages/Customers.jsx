@@ -139,7 +139,7 @@ export default function Customers() {
                       </div>
                     </TableCell>
                     <TableCell className="text-slate-600">
-                      <PhoneNumber phone={customer.phone} />
+                      <PhoneNumber phone={customer.phone} showRevealButton={false} />
                     </TableCell>
                     <TableCell className="text-slate-500">
                       {customer.email || '-'}

@@ -57,11 +57,11 @@ import {
 import {
   cn,
   formatTime12Hour,
-  formatPhone,
   formatDuration,
   getStatusColor,
 } from '@/lib/utils'
 import NewAppointmentModal from '@/components/NewAppointmentModal'
+import PhoneNumber from '@/components/PhoneNumber'
 
 export default function Appointments() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -272,7 +272,7 @@ export default function Appointments() {
                                 {formatDuration(apt.estimated_duration_minutes)}
                               </span>
                               {apt.customer?.phone && (
-                                <span>{formatPhone(apt.customer.phone)}</span>
+                                <PhoneNumber phone={apt.customer.phone} showRevealButton={false} />
                               )}
                             </div>
                           </div>
@@ -619,7 +619,7 @@ export default function Appointments() {
                               {apt.customer?.first_name} {apt.customer?.last_name}
                             </p>
                             <p className="text-sm text-slate-500">
-                              {formatPhone(apt.customer?.phone)}
+                              <PhoneNumber phone={apt.customer?.phone} showRevealButton={false} />
                             </p>
                           </div>
                         </TableCell>

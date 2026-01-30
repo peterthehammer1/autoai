@@ -21,6 +21,7 @@ import {
   User,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import PhoneNumber, { maskPhone } from '@/components/PhoneNumber'
 
 export default function SmsLogs() {
   const [selectedSms, setSelectedSms] = useState(null)
@@ -82,17 +83,7 @@ export default function SmsLogs() {
     }
   }
 
-  const formatPhone = (phone) => {
-    if (!phone) return ''
-    const cleaned = phone.replace(/\D/g, '')
-    if (cleaned.length === 11 && cleaned.startsWith('1')) {
-      return `(${cleaned.slice(1, 4)}) ${cleaned.slice(4, 7)}-${cleaned.slice(7)}`
-    }
-    if (cleaned.length === 10) {
-      return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6)}`
-    }
-    return phone
-  }
+  // Use maskPhone from PhoneNumber component for privacy
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -217,7 +208,7 @@ export default function SmsLogs() {
                         </span>
                       ) : (
                         <span className="font-medium text-slate-900">
-                          {formatPhone(sms.to_phone)}
+                          <PhoneNumber phone={sms.to_phone} showRevealButton={false} />
                         </span>
                       )}
                       {getTypeBadge(sms.message_type)}
@@ -263,8 +254,8 @@ export default function SmsLogs() {
                   <User className="h-4 w-4 text-slate-400" />
                   <span className="text-slate-900">
                     {selectedSms.customer 
-                      ? `${selectedSms.customer.first_name} ${selectedSms.customer.last_name} - ${formatPhone(selectedSms.to_phone)}`
-                      : formatPhone(selectedSms.to_phone)
+                      ? <>{selectedSms.customer.first_name} {selectedSms.customer.last_name} - <PhoneNumber phone={selectedSms.to_phone} showRevealButton={false} /></>
+                      : <PhoneNumber phone={selectedSms.to_phone} showRevealButton={false} />
                     }
                   </span>
                 </div>

@@ -24,12 +24,12 @@ import {
 import {
   cn,
   formatTime12Hour,
-  formatPhone,
   formatDuration,
   formatCurrency,
   getStatusColor,
 } from '@/lib/utils'
 import { useToast } from '@/hooks/use-toast'
+import PhoneNumber from '@/components/PhoneNumber'
 
 export default function AppointmentDetail() {
   const { id } = useParams()
@@ -197,7 +197,7 @@ export default function AppointmentDetail() {
             <div className="space-y-2 text-sm">
               <div className="flex items-center gap-2">
                 <Phone className="h-4 w-4 text-muted-foreground" />
-                <span>{formatPhone(apt.customer?.phone)}</span>
+                <PhoneNumber phone={apt.customer?.phone} showRevealButton={false} />
               </div>
               {apt.customer?.email && (
                 <div className="flex items-center gap-2">
