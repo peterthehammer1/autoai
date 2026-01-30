@@ -100,8 +100,12 @@ router.post('/lookup_customer', async (req, res, next) => {
         model: v.model
       })) || [],
       message: customer.first_name 
-        ? `Welcome back, ${customer.first_name}! I see you have a ${vehicleDescription || 'vehicle'} on file.`
-        : `I found your account. ${vehicleDescription ? `I see you have a ${vehicleDescription} on file.` : ''}`
+        ? (vehicleDescription 
+            ? `Welcome back, ${customer.first_name}! I see you have a ${vehicleDescription} on file.`
+            : `Welcome back, ${customer.first_name}!`)
+        : (vehicleDescription 
+            ? `I found your account. I see you have a ${vehicleDescription} on file.`
+            : `I found your account.`)
     });
 
   } catch (error) {
@@ -477,12 +481,16 @@ router.post('/book_appointment', async (req, res, next) => {
     let vehicleId = vehicle_id;
     let vehicleDescription = '';
 
-    if (!vehicleId && vehicle_year && vehicle_make && vehicle_model) {
+    // Only create vehicle if we have valid year (> 1900), make, and model
+    const validYear = vehicle_year && parseInt(vehicle_year) > 1900;
+    
+    if (!vehicleId && validYear && vehicle_make && vehicle_model) {
+      console.log('Creating new vehicle:', { vehicle_year, vehicle_make, vehicle_model });
       const { data: newVehicle, error } = await supabase
         .from('vehicles')
         .insert({
           customer_id: customer.id,
-          year: vehicle_year,
+          year: parseInt(vehicle_year),
           make: vehicle_make,
           model: vehicle_model,
           mileage: vehicle_mileage,
@@ -494,6 +502,9 @@ router.post('/book_appointment', async (req, res, next) => {
       if (!error && newVehicle) {
         vehicleId = newVehicle.id;
         vehicleDescription = `${newVehicle.year} ${newVehicle.make} ${newVehicle.model}`;
+        console.log('Vehicle created:', vehicleDescription);
+      } else {
+        console.log('Vehicle creation failed:', error);
       }
     } else if (vehicleId) {
       const { data: vehicle } = await supabase
