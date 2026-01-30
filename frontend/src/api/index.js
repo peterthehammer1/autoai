@@ -29,6 +29,8 @@ export const appointments = {
   
   today: () => fetchAPI('/appointments/today'),
   
+  upcoming: (limit = 50) => fetchAPI(`/appointments/upcoming?limit=${limit}`),
+  
   get: (id) => fetchAPI(`/appointments/${id}`),
   
   create: (data) => fetchAPI('/appointments', {

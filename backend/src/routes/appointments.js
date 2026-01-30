@@ -326,6 +326,58 @@ router.get('/', async (req, res, next) => {
 });
 
 /**
+ * GET /api/appointments/upcoming
+ * Get all upcoming appointments (today and future)
+ */
+router.get('/upcoming', async (req, res, next) => {
+  try {
+    const { limit = 50, status } = req.query;
+    const today = format(new Date(), 'yyyy-MM-dd');
+
+    let query = supabase
+      .from('appointments')
+      .select(`
+        *,
+        customer:customers (id, first_name, last_name, phone, email),
+        vehicle:vehicles (year, make, model, color),
+        bay:service_bays (name),
+        appointment_services (service_name, duration_minutes)
+      `)
+      .gte('scheduled_date', today)
+      .not('status', 'in', '("cancelled","no_show","completed")')
+      .order('scheduled_date', { ascending: true })
+      .order('scheduled_time', { ascending: true })
+      .limit(parseInt(limit));
+
+    if (status) {
+      query = query.eq('status', status);
+    }
+
+    const { data: appointments, error } = await query;
+
+    if (error) throw error;
+
+    // Group by date for display
+    const byDate = {};
+    for (const apt of appointments) {
+      if (!byDate[apt.scheduled_date]) {
+        byDate[apt.scheduled_date] = [];
+      }
+      byDate[apt.scheduled_date].push(apt);
+    }
+
+    res.json({
+      appointments,
+      by_date: byDate,
+      total: appointments.length
+    });
+
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
  * GET /api/appointments/today
  * Get today's appointments
  */
