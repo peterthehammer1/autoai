@@ -131,7 +131,11 @@ export const callLogs = {
 // SMS Logs
 export const smsLogs = {
   list: (params = {}) => {
-    const query = new URLSearchParams(params).toString()
+    // Filter out undefined/null/empty values
+    const cleanParams = Object.fromEntries(
+      Object.entries(params).filter(([_, v]) => v != null && v !== '')
+    )
+    const query = new URLSearchParams(cleanParams).toString()
     return fetchAPI(`/sms-logs${query ? `?${query}` : ''}`)
   },
   
