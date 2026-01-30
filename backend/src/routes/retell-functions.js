@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { supabase, normalizePhone, formatPhone } from '../config/database.js';
 import { format, parseISO, addDays } from 'date-fns';
+import { sendConfirmationSMS } from '../services/sms.js';
 
 const router = Router();
 
@@ -611,6 +612,16 @@ router.post('/book_appointment', async (req, res, next) => {
     const serviceNames = services.map(s => s.name).join(' and ');
 
     const customerName = customer.first_name || customer_first_name || 'there';
+
+    // 9. Send confirmation SMS (async, don't block response)
+    sendConfirmationSMS({
+      customerPhone: customer_phone,
+      customerName,
+      appointmentDate: appointment_date,
+      appointmentTime: appointment_time,
+      services: serviceNames,
+      vehicleDescription
+    }).catch(err => console.error('SMS confirmation error:', err));
 
     res.json({
       success: true,
