@@ -77,7 +77,9 @@ router.post('/send-24h', async (req, res, next) => {
         appointmentDate: apt.scheduled_date,
         appointmentTime: apt.scheduled_time,
         services,
-        vehicleDescription
+        vehicleDescription,
+        customerId: apt.customer.id,
+        appointmentId: apt.id
       });
 
       // Mark as reminded with timestamp

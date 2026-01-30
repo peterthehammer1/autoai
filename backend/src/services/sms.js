@@ -1,5 +1,6 @@
 import twilio from 'twilio';
 import { format, parseISO } from 'date-fns';
+import { supabase } from '../config/database.js';
 
 // Initialize Twilio client
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
@@ -11,6 +12,27 @@ let twilioClient = null;
 // Only initialize if credentials are provided
 if (accountSid && authToken && accountSid !== 'your-account-sid') {
   twilioClient = twilio(accountSid, authToken);
+}
+
+/**
+ * Log SMS to database
+ */
+async function logSMS({ toPhone, body, messageType, twilioSid, status, errorMessage, customerId, appointmentId }) {
+  try {
+    await supabase.from('sms_logs').insert({
+      to_phone: toPhone,
+      from_phone: fromNumber,
+      message_body: body,
+      message_type: messageType,
+      twilio_sid: twilioSid,
+      status: status || 'queued',
+      error_message: errorMessage,
+      customer_id: customerId,
+      appointment_id: appointmentId
+    });
+  } catch (err) {
+    console.error('[SMS] Failed to log SMS:', err.message);
+  }
 }
 
 /**
@@ -26,21 +48,33 @@ function formatTime12Hour(timeStr) {
 /**
  * Send SMS message
  */
-export async function sendSMS(to, body) {
+export async function sendSMS(to, body, options = {}) {
+  const { messageType = 'custom', customerId, appointmentId } = options;
+  
+  // Format phone number for Twilio (needs +1 prefix for US/Canada)
+  let formattedTo = to.replace(/\D/g, '');
+  if (formattedTo.length === 10) {
+    formattedTo = '+1' + formattedTo;
+  } else if (!formattedTo.startsWith('+')) {
+    formattedTo = '+' + formattedTo;
+  }
+
   if (!twilioClient) {
     console.log('[SMS] Twilio not configured. Would have sent to', to, ':', body);
+    // Still log the attempt
+    await logSMS({ 
+      toPhone: formattedTo, 
+      body, 
+      messageType, 
+      status: 'failed', 
+      errorMessage: 'Twilio not configured',
+      customerId,
+      appointmentId
+    });
     return { success: false, error: 'Twilio not configured' };
   }
 
   try {
-    // Format phone number for Twilio (needs +1 prefix for US/Canada)
-    let formattedTo = to.replace(/\D/g, '');
-    if (formattedTo.length === 10) {
-      formattedTo = '+1' + formattedTo;
-    } else if (!formattedTo.startsWith('+')) {
-      formattedTo = '+' + formattedTo;
-    }
-
     const message = await twilioClient.messages.create({
       body,
       from: fromNumber,
@@ -48,9 +82,33 @@ export async function sendSMS(to, body) {
     });
 
     console.log('[SMS] Sent successfully:', message.sid);
+    
+    // Log successful SMS
+    await logSMS({ 
+      toPhone: formattedTo, 
+      body, 
+      messageType, 
+      twilioSid: message.sid,
+      status: 'sent',
+      customerId,
+      appointmentId
+    });
+    
     return { success: true, messageId: message.sid };
   } catch (error) {
     console.error('[SMS] Error sending:', error.message);
+    
+    // Log failed SMS
+    await logSMS({ 
+      toPhone: formattedTo, 
+      body, 
+      messageType, 
+      status: 'failed', 
+      errorMessage: error.message,
+      customerId,
+      appointmentId
+    });
+    
     return { success: false, error: error.message };
   }
 }
@@ -64,7 +122,9 @@ export async function sendConfirmationSMS({
   appointmentDate, 
   appointmentTime, 
   services,
-  vehicleDescription 
+  vehicleDescription,
+  customerId,
+  appointmentId
 }) {
   const date = typeof appointmentDate === 'string' ? parseISO(appointmentDate) : appointmentDate;
   const formattedDate = format(date, 'EEEE, MMMM d, yyyy');
@@ -84,7 +144,11 @@ To reschedule or cancel, please call (716) 412-2499
 
 Thank you for choosing Premier Auto Service.`;
 
-  return sendSMS(customerPhone, message);
+  return sendSMS(customerPhone, message, { 
+    messageType: 'confirmation', 
+    customerId, 
+    appointmentId 
+  });
 }
 
 /**
@@ -96,7 +160,9 @@ export async function sendReminderSMS({
   appointmentDate, 
   appointmentTime, 
   services,
-  vehicleDescription 
+  vehicleDescription,
+  customerId,
+  appointmentId
 }) {
   const date = typeof appointmentDate === 'string' ? parseISO(appointmentDate) : appointmentDate;
   const formattedDate = format(date, 'EEEE, MMMM d');
@@ -116,7 +182,11 @@ Unable to make it? Please call (716) 412-2499 to reschedule.
 
 We look forward to seeing you.`;
 
-  return sendSMS(customerPhone, message);
+  return sendSMS(customerPhone, message, { 
+    messageType: 'reminder', 
+    customerId, 
+    appointmentId 
+  });
 }
 
 export default {

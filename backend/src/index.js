@@ -16,6 +16,7 @@ import webhookRoutes from './routes/webhooks.js';
 import analyticsRoutes from './routes/analytics.js';
 import callLogRoutes from './routes/call-logs.js';
 import reminderRoutes from './routes/reminders.js';
+import smsLogRoutes from './routes/sms-logs.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -57,6 +58,7 @@ app.use('/api/webhooks', webhookRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/call-logs', callLogRoutes);
 app.use('/api/reminders', reminderRoutes);
+app.use('/api/sms-logs', smsLogRoutes);
 
 // Retell Function Endpoints (simplified paths for function calling)
 app.use('/api/retell', (await import('./routes/retell-functions.js')).default);

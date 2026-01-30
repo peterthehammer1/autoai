@@ -620,7 +620,9 @@ router.post('/book_appointment', async (req, res, next) => {
       appointmentDate: appointment_date,
       appointmentTime: appointment_time,
       services: serviceNames,
-      vehicleDescription
+      vehicleDescription,
+      customerId: customer.id,
+      appointmentId: appointment.id
     }).then(result => {
       if (result.success) {
         // Mark confirmation as sent

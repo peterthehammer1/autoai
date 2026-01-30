@@ -128,6 +128,16 @@ export const callLogs = {
   stats: (period = 'week') => fetchAPI(`/call-logs/stats/summary?period=${period}`),
 }
 
+// SMS Logs
+export const smsLogs = {
+  list: (params = {}) => {
+    const query = new URLSearchParams(params).toString()
+    return fetchAPI(`/sms-logs${query ? `?${query}` : ''}`)
+  },
+  
+  stats: (period = 'week') => fetchAPI(`/sms-logs/stats?period=${period}`),
+}
+
 export default {
   appointments,
   customers,
@@ -135,4 +145,5 @@ export default {
   availability,
   analytics,
   callLogs,
+  smsLogs,
 }

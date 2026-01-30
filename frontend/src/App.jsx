@@ -7,6 +7,7 @@ import AppointmentDetail from '@/pages/AppointmentDetail'
 import Customers from '@/pages/Customers'
 import CustomerDetail from '@/pages/CustomerDetail'
 import CallLogs from '@/pages/CallLogs'
+import SmsLogs from '@/pages/SmsLogs'
 import Analytics from '@/pages/Analytics'
 import Services from '@/pages/Services'
 import Settings from '@/pages/Settings'
@@ -23,6 +24,7 @@ function App() {
           <Route path="customers" element={<Customers />} />
           <Route path="customers/:id" element={<CustomerDetail />} />
           <Route path="call-logs" element={<CallLogs />} />
+          <Route path="sms-logs" element={<SmsLogs />} />
           <Route path="analytics" element={<Analytics />} />
           <Route path="services" element={<Services />} />
           <Route path="settings" element={<Settings />} />

@@ -7,6 +7,7 @@ import {
   Calendar,
   Users,
   Phone,
+  MessageSquare,
   BarChart3,
   Wrench,
   Settings,
@@ -28,6 +29,7 @@ const navigation = [
   { name: 'Appointments', href: '/appointments', icon: Calendar },
   { name: 'Customers', href: '/customers', icon: Users },
   { name: 'Call Logs', href: '/call-logs', icon: Phone },
+  { name: 'SMS Messages', href: '/sms-logs', icon: MessageSquare },
   { name: 'Analytics', href: '/analytics', icon: BarChart3 },
   { name: 'Services', href: '/services', icon: Wrench },
   { name: 'Settings', href: '/settings', icon: Settings },
@@ -134,7 +136,7 @@ export default function Layout() {
             <p className="px-3 py-2 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
               Main
             </p>
-            {navigation.slice(0, 4).map((item) => (
+            {navigation.slice(0, 5).map((item) => (
               <Link
                 key={item.name}
                 to={item.href}
@@ -156,7 +158,7 @@ export default function Layout() {
             <p className="px-3 py-2 mt-4 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
               Settings
             </p>
-            {navigation.slice(4).map((item) => (
+            {navigation.slice(5).map((item) => (
               <Link
                 key={item.name}
                 to={item.href}
