@@ -16,7 +16,12 @@ import {
   Bell,
   Search,
   ChevronRight,
+  PhoneCall,
 } from 'lucide-react'
+
+// Business phone number for AI agent
+const BUSINESS_PHONE = '+1 (833) 975-1880'
+const BUSINESS_PHONE_RAW = '+18339751880'
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
@@ -198,8 +203,17 @@ export default function Layout() {
           
           {/* Right side */}
           <div className="flex items-center gap-2 sm:gap-3">
+            {/* Phone Number */}
+            <a 
+              href={`tel:${BUSINESS_PHONE_RAW}`}
+              className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 transition-colors"
+            >
+              <PhoneCall className="h-4 w-4 text-emerald-400" />
+              <span className="text-sm font-medium text-white">{BUSINESS_PHONE}</span>
+            </a>
+            
             {/* Date */}
-            <div className="hidden md:block text-right">
+            <div className="hidden lg:block text-right">
               <p className="text-sm font-medium text-slate-900">
                 {new Date().toLocaleDateString('en-CA', {
                   weekday: 'long',
@@ -213,6 +227,14 @@ export default function Layout() {
                 })}
               </p>
             </div>
+            
+            {/* Mobile Phone Button */}
+            <a 
+              href={`tel:${BUSINESS_PHONE_RAW}`}
+              className="sm:hidden flex items-center justify-center h-9 w-9 rounded-lg bg-slate-900"
+            >
+              <PhoneCall className="h-4 w-4 text-emerald-400" />
+            </a>
             
             {/* Notification button */}
             <Button variant="ghost" size="icon" className="h-9 w-9 relative">
