@@ -4,6 +4,57 @@ import { supabase, normalizePhone, formatPhone } from '../config/database.js';
 const router = Router();
 
 /**
+ * GET /api/customers
+ * List all customers
+ */
+router.get('/', async (req, res, next) => {
+  try {
+    const { limit = 50, offset = 0, search } = req.query;
+
+    let query = supabase
+      .from('customers')
+      .select(`
+        id,
+        first_name,
+        last_name,
+        phone,
+        email,
+        total_visits,
+        created_at,
+        vehicles (id)
+      `, { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .range(parseInt(offset), parseInt(offset) + parseInt(limit) - 1);
+
+    // Search by name or phone
+    if (search) {
+      query = query.or(`first_name.ilike.%${search}%,last_name.ilike.%${search}%,phone.ilike.%${search}%`);
+    }
+
+    const { data: customers, error, count } = await query;
+
+    if (error) throw error;
+
+    res.json({
+      customers: customers.map(c => ({
+        ...c,
+        vehicle_count: c.vehicles?.length || 0,
+        vehicles: undefined
+      })),
+      pagination: {
+        total: count,
+        limit: parseInt(limit),
+        offset: parseInt(offset),
+        has_more: (parseInt(offset) + customers.length) < count
+      }
+    });
+
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
  * GET /api/customers/lookup
  * Look up a customer by phone number
  * Query params: phone

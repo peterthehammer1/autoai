@@ -50,6 +50,14 @@ export const appointments = {
 
 // Customers
 export const customers = {
+  list: (params = {}) => {
+    const cleanParams = Object.fromEntries(
+      Object.entries(params).filter(([_, v]) => v != null && v !== '')
+    )
+    const query = new URLSearchParams(cleanParams).toString()
+    return fetchAPI(`/customers${query ? `?${query}` : ''}`)
+  },
+  
   lookup: (phone) => fetchAPI(`/customers/lookup?phone=${encodeURIComponent(phone)}`),
   
   get: (id) => fetchAPI(`/customers/${id}`),
