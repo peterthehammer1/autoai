@@ -29,7 +29,7 @@ import {
   formatTime12Hour,
   getStatusColor,
 } from '@/lib/utils'
-import PhoneNumber from '@/components/PhoneNumber'
+import PhoneNumber, { Email } from '@/components/PhoneNumber'
 
 export default function CustomerDetail() {
   const { id } = useParams()
@@ -181,7 +181,7 @@ export default function CustomerDetail() {
               {customer.email && (
                 <div className="flex items-center gap-2 text-slate-600">
                   <Mail className="h-4 w-4 text-slate-400" />
-                  {customer.email}
+                  <Email email={customer.email} />
                 </div>
               )}
             </div>

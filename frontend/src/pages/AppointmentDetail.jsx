@@ -29,7 +29,7 @@ import {
   getStatusColor,
 } from '@/lib/utils'
 import { useToast } from '@/hooks/use-toast'
-import PhoneNumber from '@/components/PhoneNumber'
+import PhoneNumber, { Email } from '@/components/PhoneNumber'
 
 export default function AppointmentDetail() {
   const { id } = useParams()
@@ -202,7 +202,7 @@ export default function AppointmentDetail() {
               {apt.customer?.email && (
                 <div className="flex items-center gap-2">
                   <Mail className="h-4 w-4 text-muted-foreground" />
-                  <span>{apt.customer?.email}</span>
+                  <Email email={apt.customer?.email} />
                 </div>
               )}
             </div>

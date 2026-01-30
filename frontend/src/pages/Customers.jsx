@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/table'
 import { Search, Plus, User, Phone, Car, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import PhoneNumber from '@/components/PhoneNumber'
+import PhoneNumber, { Email } from '@/components/PhoneNumber'
 
 export default function Customers() {
   const [searchTerm, setSearchTerm] = useState('')
@@ -142,7 +142,7 @@ export default function Customers() {
                       <PhoneNumber phone={customer.phone} showRevealButton={false} />
                     </TableCell>
                     <TableCell className="text-slate-500">
-                      {customer.email || '-'}
+                      {customer.email ? <Email email={customer.email} /> : '-'}
                     </TableCell>
                     <TableCell className="text-center">
                       {customer.vehicle_count > 0 ? (
