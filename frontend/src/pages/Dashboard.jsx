@@ -65,14 +65,14 @@ export default function Dashboard() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground text-sm sm:text-base">
             Welcome back! Here's what's happening today.
           </p>
         </div>
-        <Button asChild>
+        <Button asChild className="w-full sm:w-auto">
           <Link to="/appointments">
             View All Appointments
             <ArrowRight className="ml-2 h-4 w-4" />
@@ -81,17 +81,17 @@ export default function Dashboard() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         {stats.map((stat) => (
           <Card key={stat.name}>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className={cn('rounded-full p-3', stat.bgColor)}>
-                  <stat.icon className={cn('h-5 w-5', stat.color)} />
+            <CardContent className="p-4 sm:p-6">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+                <div className={cn('rounded-full p-2 sm:p-3 w-fit', stat.bgColor)}>
+                  <stat.icon className={cn('h-4 w-4 sm:h-5 sm:w-5', stat.color)} />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">{stat.name}</p>
-                  <p className="text-2xl font-bold">{stat.value}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">{stat.name}</p>
+                  <p className="text-xl sm:text-2xl font-bold">{stat.value}</p>
                 </div>
               </div>
             </CardContent>
@@ -229,14 +229,14 @@ export default function Dashboard() {
       </div>
 
       {/* Week Stats */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-4 sm:p-6">
             <div className="flex items-center gap-3">
-              <CheckCircle2 className="h-8 w-8 text-green-600" />
-              <div>
-                <p className="text-sm text-muted-foreground">AI Bookings This Week</p>
-                <p className="text-2xl font-bold">
+              <CheckCircle2 className="h-6 w-6 sm:h-8 sm:w-8 text-green-600 shrink-0" />
+              <div className="min-w-0">
+                <p className="text-xs sm:text-sm text-muted-foreground truncate">AI Bookings This Week</p>
+                <p className="text-xl sm:text-2xl font-bold">
                   {overview?.week?.ai_bookings ?? '-'}
                 </p>
               </div>
@@ -244,12 +244,12 @@ export default function Dashboard() {
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-4 sm:p-6">
             <div className="flex items-center gap-3">
-              <Phone className="h-8 w-8 text-blue-600" />
-              <div>
-                <p className="text-sm text-muted-foreground">Calls This Week</p>
-                <p className="text-2xl font-bold">
+              <Phone className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600 shrink-0" />
+              <div className="min-w-0">
+                <p className="text-xs sm:text-sm text-muted-foreground truncate">Calls This Week</p>
+                <p className="text-xl sm:text-2xl font-bold">
                   {overview?.week?.calls ?? '-'}
                 </p>
               </div>
@@ -257,12 +257,12 @@ export default function Dashboard() {
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-4 sm:p-6">
             <div className="flex items-center gap-3">
-              <Calendar className="h-8 w-8 text-purple-600" />
-              <div>
-                <p className="text-sm text-muted-foreground">Appointments This Week</p>
-                <p className="text-2xl font-bold">
+              <Calendar className="h-6 w-6 sm:h-8 sm:w-8 text-purple-600 shrink-0" />
+              <div className="min-w-0">
+                <p className="text-xs sm:text-sm text-muted-foreground truncate">Appointments This Week</p>
+                <p className="text-xl sm:text-2xl font-bold">
                   {overview?.week?.appointments ?? '-'}
                 </p>
               </div>

@@ -72,16 +72,16 @@ export default function Appointments() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Appointments</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Appointments</h1>
+          <p className="text-muted-foreground text-sm hidden sm:block">
             Manage service appointments and scheduling
           </p>
         </div>
-        <Button onClick={() => setIsNewModalOpen(true)}>
+        <Button onClick={() => setIsNewModalOpen(true)} className="w-full sm:w-auto">
           <Plus className="mr-2 h-4 w-4" />
           New Appointment
         </Button>
@@ -89,18 +89,19 @@ export default function Appointments() {
 
       {/* Filters */}
       <Card>
-        <CardContent className="p-4">
-          <div className="flex flex-wrap items-center gap-4">
+        <CardContent className="p-3 sm:p-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
             {/* Date Navigation */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 sm:gap-2">
               <Button
                 variant="outline"
                 size="icon"
+                className="h-9 w-9 sm:h-10 sm:w-10"
                 onClick={() => handleDateChange(-1)}
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
-              <Button variant="outline" onClick={handleToday}>
+              <Button variant="outline" onClick={handleToday} className="h-9 sm:h-10 px-2 sm:px-3 text-sm">
                 Today
               </Button>
               <Input
@@ -109,61 +110,123 @@ export default function Appointments() {
                 onChange={(e) =>
                   setSearchParams({ date: e.target.value, status: statusFilter })
                 }
-                className="w-40"
+                className="w-[130px] sm:w-40 h-9 sm:h-10 text-sm"
               />
               <Button
                 variant="outline"
                 size="icon"
+                className="h-9 w-9 sm:h-10 sm:w-10"
                 onClick={() => handleDateChange(1)}
               >
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
 
-            {/* Status Filter */}
-            <Select value={statusFilter || 'all'} onValueChange={handleStatusChange}>
-              <SelectTrigger className="w-40">
-                <SelectValue placeholder="All Statuses" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="scheduled">Scheduled</SelectItem>
-                <SelectItem value="confirmed">Confirmed</SelectItem>
-                <SelectItem value="checked_in">Checked In</SelectItem>
-                <SelectItem value="in_progress">In Progress</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-                <SelectItem value="cancelled">Cancelled</SelectItem>
-                <SelectItem value="no_show">No Show</SelectItem>
-              </SelectContent>
-            </Select>
+            {/* Status Filter & View Toggle Row */}
+            <div className="flex items-center gap-2 sm:gap-4 sm:flex-1">
+              <Select value={statusFilter || 'all'} onValueChange={handleStatusChange}>
+                <SelectTrigger className="w-[130px] sm:w-40 h-9 sm:h-10">
+                  <SelectValue placeholder="All Statuses" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="scheduled">Scheduled</SelectItem>
+                  <SelectItem value="confirmed">Confirmed</SelectItem>
+                  <SelectItem value="checked_in">Checked In</SelectItem>
+                  <SelectItem value="in_progress">In Progress</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
+                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                  <SelectItem value="no_show">No Show</SelectItem>
+                </SelectContent>
+              </Select>
 
-            {/* View Toggle */}
-            <div className="ml-auto">
-              <Tabs value={view} onValueChange={setView}>
-                <TabsList>
-                  <TabsTrigger value="list">List</TabsTrigger>
-                  <TabsTrigger value="calendar">Calendar</TabsTrigger>
-                </TabsList>
-              </Tabs>
+              {/* View Toggle - Hidden on mobile, default to card view */}
+              <div className="ml-auto hidden sm:block">
+                <Tabs value={view} onValueChange={setView}>
+                  <TabsList>
+                    <TabsTrigger value="list">List</TabsTrigger>
+                    <TabsTrigger value="calendar">Calendar</TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              </div>
             </div>
           </div>
         </CardContent>
       </Card>
 
       {/* Date Header */}
-      <div className="flex items-center gap-2">
-        <Calendar className="h-5 w-5 text-muted-foreground" />
-        <h2 className="text-lg font-semibold">
-          {format(new Date(dateFilter), 'EEEE, MMMM d, yyyy')}
+      <div className="flex flex-wrap items-center gap-2">
+        <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
+        <h2 className="text-base sm:text-lg font-semibold">
+          {format(new Date(dateFilter), 'EEE, MMM d')}
+          <span className="hidden sm:inline">, {format(new Date(dateFilter), 'yyyy')}</span>
         </h2>
-        <Badge variant="secondary" className="ml-2">
-          {data?.appointments?.length || 0} appointments
+        <Badge variant="secondary" className="text-xs">
+          {data?.appointments?.length || 0} appts
         </Badge>
       </div>
 
-      {/* Appointments Table */}
+      {/* Appointments - Mobile Card View */}
+      <div className="sm:hidden space-y-3">
+        {isLoading ? (
+          Array.from({ length: 3 }).map((_, i) => (
+            <Card key={i}>
+              <CardContent className="p-4">
+                <div className="h-20 animate-pulse rounded bg-muted" />
+              </CardContent>
+            </Card>
+          ))
+        ) : data?.appointments?.length > 0 ? (
+          data.appointments.map((apt) => (
+            <Link key={apt.id} to={`/appointments/${apt.id}`}>
+              <Card className="active:bg-muted/50 transition-colors">
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-14 w-16 flex-col items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
+                      <span className="text-sm font-bold">
+                        {formatTime12Hour(apt.scheduled_time).split(' ')[0]}
+                      </span>
+                      <span className="text-xs">
+                        {formatTime12Hour(apt.scheduled_time).split(' ')[1]}
+                      </span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="font-medium truncate">
+                          {apt.customer?.first_name} {apt.customer?.last_name}
+                        </p>
+                        <Badge className={cn('shrink-0 text-xs', getStatusColor(apt.status))}>
+                          {apt.status.replace('_', ' ')}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground truncate mt-0.5">
+                        {apt.vehicle ? `${apt.vehicle.year} ${apt.vehicle.make} ${apt.vehicle.model}` : '-'}
+                      </p>
+                      <p className="text-sm text-muted-foreground truncate">
+                        {apt.appointment_services?.map((s) => s.service_name).join(', ') || '-'}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {formatDuration(apt.estimated_duration_minutes)} • {formatPhone(apt.customer?.phone)}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+          ))
+        ) : (
+          <Card>
+            <CardContent className="p-8 text-center text-muted-foreground">
+              <Calendar className="h-10 w-10 mx-auto mb-2 opacity-50" />
+              <p>No appointments for this date</p>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+
+      {/* Appointments Table - Desktop Only */}
       {view === 'list' && (
-        <Card>
+        <Card className="hidden sm:block">
           <Table>
             <TableHeader>
               <TableRow>
@@ -247,10 +310,10 @@ export default function Appointments() {
         </Card>
       )}
 
-      {/* Calendar View (simplified) */}
+      {/* Calendar View (simplified) - Desktop Only */}
       {view === 'calendar' && (
-        <Card>
-          <CardContent className="p-6">
+        <Card className="hidden sm:block">
+          <CardContent className="p-4 sm:p-6">
             <div className="grid grid-cols-1 gap-3">
               {isLoading ? (
                 <div className="h-64 animate-pulse rounded bg-muted" />
@@ -269,20 +332,20 @@ export default function Appointments() {
                         {formatTime12Hour(apt.scheduled_time).split(' ')[1]}
                       </span>
                     </div>
-                    <div className="flex-1">
-                      <p className="font-medium">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate">
                         {apt.customer?.first_name} {apt.customer?.last_name}
                       </p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-sm text-muted-foreground truncate">
                         {apt.vehicle?.year} {apt.vehicle?.make} {apt.vehicle?.model}
                       </p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-sm text-muted-foreground truncate">
                         {apt.appointment_services
                           ?.map((s) => s.service_name)
                           .join(', ')}
                       </p>
                     </div>
-                    <div className="text-right">
+                    <div className="text-right shrink-0">
                       <Badge className={getStatusColor(apt.status)}>
                         {apt.status.replace('_', ' ')}
                       </Badge>

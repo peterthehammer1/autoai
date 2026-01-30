@@ -115,18 +115,27 @@ export default function Layout() {
       {/* Main content */}
       <div className="lg:pl-64">
         {/* Top bar */}
-        <div className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b bg-white px-4 lg:px-6">
+        <div className="sticky top-0 z-40 flex h-14 sm:h-16 items-center gap-2 sm:gap-4 border-b bg-white px-3 sm:px-4 lg:px-6">
           <Button
             variant="ghost"
             size="icon"
-            className="lg:hidden"
+            className="lg:hidden h-9 w-9"
             onClick={() => setSidebarOpen(true)}
           >
             <Menu className="h-5 w-5" />
           </Button>
           <div className="flex-1" />
           <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">
+            {/* Short date on mobile */}
+            <span className="text-xs sm:text-sm text-muted-foreground sm:hidden">
+              {new Date().toLocaleDateString('en-CA', {
+                weekday: 'short',
+                month: 'short',
+                day: 'numeric',
+              })}
+            </span>
+            {/* Full date on desktop */}
+            <span className="text-sm text-muted-foreground hidden sm:inline">
               {new Date().toLocaleDateString('en-CA', {
                 weekday: 'long',
                 year: 'numeric',
@@ -138,7 +147,7 @@ export default function Layout() {
         </div>
 
         {/* Page content */}
-        <main className="p-4 lg:p-6">
+        <main className="p-3 sm:p-4 lg:p-6">
           <Outlet />
         </main>
       </div>
