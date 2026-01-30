@@ -1,14 +1,15 @@
 import { format, parseISO } from 'date-fns';
 import { supabase } from '../config/database.js';
 
-// Resend API key
-const RESEND_API_KEY = process.env.RESEND_API_KEY;
-const FROM_EMAIL = process.env.FROM_EMAIL || 'Premier Auto Service <noreply@fixmycar.app>';
+// SendGrid API key
+const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
+const FROM_EMAIL = process.env.FROM_EMAIL || 'noreply@fixmycar.app';
+const FROM_NAME = process.env.FROM_NAME || 'Premier Auto Service';
 
 /**
  * Log email to database
  */
-async function logEmail({ toEmail, subject, body, emailType, resendId, status, errorMessage, customerId, appointmentId }) {
+async function logEmail({ toEmail, subject, body, emailType, sendgridId, status, errorMessage, customerId, appointmentId }) {
   try {
     await supabase.from('email_logs').insert({
       to_email: toEmail,
@@ -16,7 +17,7 @@ async function logEmail({ toEmail, subject, body, emailType, resendId, status, e
       subject,
       body,
       email_type: emailType,
-      resend_id: resendId,
+      sendgrid_id: sendgridId,
       status: status || 'queued',
       error_message: errorMessage,
       customer_id: customerId,
@@ -38,59 +39,60 @@ function formatTime12Hour(timeStr) {
 }
 
 /**
- * Send email using Resend
+ * Send email using SendGrid
  */
 export async function sendEmail(to, subject, html, options = {}) {
   const { emailType = 'custom', customerId, appointmentId } = options;
 
-  if (!RESEND_API_KEY) {
-    console.log('[Email] No RESEND_API_KEY - skipping email send');
+  if (!SENDGRID_API_KEY) {
+    console.log('[Email] No SENDGRID_API_KEY - skipping email send');
     return { success: false, error: 'Email not configured' };
   }
 
   try {
-    const response = await fetch('https://api.resend.com/emails', {
+    const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${RESEND_API_KEY}`,
+        'Authorization': `Bearer ${SENDGRID_API_KEY}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        from: FROM_EMAIL,
-        to: [to],
+        personalizations: [{ to: [{ email: to }] }],
+        from: { email: FROM_EMAIL, name: FROM_NAME },
         subject,
-        html
+        content: [{ type: 'text/html', value: html }]
       })
     });
 
-    const data = await response.json();
-
-    if (response.ok) {
-      console.log(`[Email] Sent ${emailType} email to ${to}, ID: ${data.id}`);
+    // SendGrid returns 202 Accepted on success with no body
+    if (response.status === 202) {
+      const messageId = response.headers.get('x-message-id');
+      console.log(`[Email] Sent ${emailType} email to ${to}, ID: ${messageId || 'accepted'}`);
       await logEmail({
         toEmail: to,
         subject,
         body: html,
         emailType,
-        resendId: data.id,
+        sendgridId: messageId,
         status: 'sent',
         customerId,
         appointmentId
       });
-      return { success: true, id: data.id };
+      return { success: true, id: messageId };
     } else {
-      console.error('[Email] Failed to send:', data);
+      const data = await response.json().catch(() => ({}));
+      console.error('[Email] Failed to send:', response.status, data);
       await logEmail({
         toEmail: to,
         subject,
         body: html,
         emailType,
         status: 'failed',
-        errorMessage: data.message || 'Unknown error',
+        errorMessage: data.errors?.[0]?.message || `HTTP ${response.status}`,
         customerId,
         appointmentId
       });
-      return { success: false, error: data.message };
+      return { success: false, error: data.errors?.[0]?.message || 'Unknown error' };
     }
   } catch (error) {
     console.error('[Email] Error:', error.message);
