@@ -586,6 +586,18 @@ router.post('/book_appointment', async (req, res, next) => {
         duration_minutes: s.duration_minutes
       })));
 
+    // 6b. Link customer to call log if this came from a call
+    if (call_id) {
+      await supabase
+        .from('call_logs')
+        .update({ 
+          customer_id: customer.id,
+          appointment_id: appointment.id,
+          outcome: 'booked'
+        })
+        .eq('retell_call_id', call_id);
+    }
+
     // 7. Mark slots as booked
     const slotsNeeded = Math.ceil(totalDuration / 30);
     const slotTimes = [];

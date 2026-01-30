@@ -225,18 +225,45 @@ async function handleCallAnalyzed(call) {
     transcript, 
     recording_url,
     call_summary,
-    sentiment
+    sentiment,
+    from_number
   } = call;
+
+  // Get current call log to check if customer is linked
+  const { data: callLog } = await supabase
+    .from('call_logs')
+    .select('customer_id, phone_normalized')
+    .eq('retell_call_id', call_id)
+    .single();
+
+  // Build update object
+  const updateData = {
+    transcript,
+    recording_url,
+    transcript_summary: call_summary,
+    sentiment: sentiment || 'neutral'
+  };
+
+  // If no customer linked yet, try to find one (may have been created during call)
+  if (callLog && !callLog.customer_id) {
+    const phoneToCheck = callLog.phone_normalized || normalizePhone(from_number);
+    if (phoneToCheck) {
+      const { data: customer } = await supabase
+        .from('customers')
+        .select('id')
+        .eq('phone_normalized', phoneToCheck)
+        .single();
+      
+      if (customer) {
+        updateData.customer_id = customer.id;
+      }
+    }
+  }
 
   // Update call log with analysis
   await supabase
     .from('call_logs')
-    .update({
-      transcript,
-      recording_url,
-      transcript_summary: call_summary,
-      sentiment: sentiment || 'neutral'
-    })
+    .update(updateData)
     .eq('retell_call_id', call_id);
 }
 
