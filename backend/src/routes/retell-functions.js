@@ -341,7 +341,7 @@ router.post('/check_availability', async (req, res, next) => {
         seen.add(key);
         uniqueSlots.push(slot);
       }
-      if (uniqueSlots.length >= 5) break;
+      if (uniqueSlots.length >= 4) break; // Keep 4 for backup options
     }
 
     if (uniqueSlots.length === 0) {
@@ -365,13 +365,16 @@ router.post('/check_availability', async (req, res, next) => {
       };
     });
 
-    // Build voice-friendly message
-    const slotDescriptions = formattedSlots.slice(0, 3).map(s => s.formatted);
-    let message = `I have availability on ${slotDescriptions.join(', or ')}.`;
-    if (formattedSlots.length > 3) {
-      message += ` I have ${formattedSlots.length - 3} more options if those don't work.`;
+    // Build voice-friendly message - only offer 2 options at a time
+    const slotDescriptions = formattedSlots.slice(0, 2).map(s => s.formatted);
+    let message = `I have ${slotDescriptions[0]}`;
+    if (slotDescriptions.length > 1) {
+      message += `, or ${slotDescriptions[1]}`;
     }
-    message += ' Which would you prefer?';
+    message += '. Which works better for you?';
+    if (formattedSlots.length > 2) {
+      message += ' I have more options if neither works.';
+    }
 
     res.json({
       success: true,
@@ -398,27 +401,41 @@ router.post('/check_availability', async (req, res, next) => {
  */
 router.post('/book_appointment', async (req, res, next) => {
   try {
-    const {
-      customer_phone,
-      customer_first_name,
-      customer_last_name,
-      customer_email,
-      vehicle_year,
-      vehicle_make,
-      vehicle_model,
-      vehicle_mileage,
-      vehicle_id,
-      service_ids,
-      appointment_date,
-      appointment_time,
-      loaner_requested,
-      shuttle_requested,
-      notes,
-      call_id
-    } = req.body;
+    console.log('book_appointment received:', JSON.stringify(req.body));
+    
+    // Helper to clean "null" strings from Retell
+    const cleanNull = (val) => (val === 'null' || val === null || val === undefined || val === '') ? null : val;
+    
+    // Handle both direct params and nested args from Retell
+    const body = req.body.args || req.body;
+    
+    const customer_phone = cleanNull(body.customer_phone);
+    const customer_first_name = cleanNull(body.customer_first_name);
+    const customer_last_name = cleanNull(body.customer_last_name);
+    const customer_email = cleanNull(body.customer_email);
+    const vehicle_year = cleanNull(body.vehicle_year);
+    const vehicle_make = cleanNull(body.vehicle_make);
+    const vehicle_model = cleanNull(body.vehicle_model);
+    const vehicle_mileage = cleanNull(body.vehicle_mileage);
+    const vehicle_id = cleanNull(body.vehicle_id);
+    const service_ids = body.service_ids;
+    const appointment_date = cleanNull(body.appointment_date);
+    const appointment_time = cleanNull(body.appointment_time);
+    const loaner_requested = body.loaner_requested;
+    const shuttle_requested = body.shuttle_requested;
+    const notes = cleanNull(body.notes);
+    const call_id = cleanNull(body.call_id);
+
+    console.log('Parsed values:', { customer_phone, service_ids, appointment_date, appointment_time, vehicle_year, vehicle_make, vehicle_model });
 
     // Validate required fields
     if (!customer_phone || !service_ids || !appointment_date || !appointment_time) {
+      console.log('Validation failed:', { 
+        has_phone: !!customer_phone, 
+        has_services: !!service_ids, 
+        has_date: !!appointment_date, 
+        has_time: !!appointment_time 
+      });
       return res.json({
         success: false,
         booked: false,
@@ -437,6 +454,7 @@ router.post('/book_appointment', async (req, res, next) => {
       .single();
 
     if (!customer) {
+      console.log('Creating new customer:', { customer_first_name, customer_last_name, customer_phone });
       const { data: newCustomer, error } = await supabase
         .from('customers')
         .insert({
@@ -448,7 +466,10 @@ router.post('/book_appointment', async (req, res, next) => {
         .select('id, first_name')
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error creating customer:', error);
+        throw error;
+      }
       customer = newCustomer;
     }
 
