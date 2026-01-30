@@ -136,7 +136,8 @@ router.post('/get_services', async (req, res, next) => {
         duration_minutes,
         price_display,
         is_popular,
-        mileage_interval
+        mileage_interval,
+        category:service_categories(name)
       `)
       .eq('is_active', true);
 
@@ -166,7 +167,8 @@ router.post('/get_services', async (req, res, next) => {
       name: s.name,
       duration: `${s.duration_minutes} minutes`,
       price: s.price_display,
-      description: s.description
+      description: s.description,
+      category: s.category?.name
     }));
 
     // Mileage-based recommendations
@@ -182,13 +184,55 @@ router.post('/get_services', async (req, res, next) => {
         }));
     }
 
+    // If no services found and we had a search term, get popular services as suggestions
+    let suggestions = [];
+    let notFoundMessage = null;
+    
+    if (services.length === 0 && search) {
+      // Get popular services to suggest instead
+      const { data: popularServices } = await supabase
+        .from('services')
+        .select(`
+          id,
+          name,
+          description,
+          duration_minutes,
+          price_display,
+          category:service_categories(name)
+        `)
+        .eq('is_active', true)
+        .eq('is_popular', true)
+        .limit(5);
+
+      suggestions = (popularServices || []).map(s => ({
+        id: s.id,
+        name: s.name,
+        duration: `${s.duration_minutes} minutes`,
+        price: s.price_display,
+        category: s.category?.name
+      }));
+
+      // Get all category names for reference
+      const { data: categories } = await supabase
+        .from('service_categories')
+        .select('name')
+        .eq('is_active', true);
+
+      const categoryNames = (categories || []).map(c => c.name).join(', ');
+      
+      notFoundMessage = `I'm sorry, we don't currently offer "${search}" as a service. Our service categories include: ${categoryNames}. Would any of these work for you, or would you like me to list our most popular services?`;
+    }
+
     res.json({
       success: true,
       services: serviceList,
       recommendations,
+      suggestions,
+      service_not_found: services.length === 0 && search ? true : false,
+      searched_for: search || null,
       message: services.length > 0 
         ? `I found ${services.length} services. ${services.slice(0, 3).map(s => s.name).join(', ')}${services.length > 3 ? ', and more' : ''}.`
-        : 'I couldn\'t find any services matching that. Would you like me to list our most popular services?'
+        : notFoundMessage || 'Would you like me to list our available services?'
     });
 
   } catch (error) {
