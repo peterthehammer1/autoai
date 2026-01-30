@@ -10,17 +10,22 @@ const router = Router();
  */
 router.post('/lookup_customer', async (req, res, next) => {
   try {
-    const { phone_number } = req.body;
+    console.log('lookup_customer received:', JSON.stringify(req.body));
+    
+    // Handle both direct params and nested args from Retell
+    const phone_number = req.body.phone_number || req.body.args?.phone_number;
 
     if (!phone_number) {
+      console.log('No phone_number found in request');
       return res.json({
         success: false,
         found: false,
-        message: 'Phone number is required'
+        message: 'No customer found with this phone number. This appears to be a new customer.'
       });
     }
 
     const normalizedPhone = normalizePhone(phone_number);
+    console.log('Looking up normalized phone:', normalizedPhone);
 
     const { data: customer, error } = await supabase
       .from('customers')
@@ -197,14 +202,17 @@ router.post('/get_services', async (req, res, next) => {
  */
 router.post('/check_availability', async (req, res, next) => {
   try {
-    const { 
-      service_ids, 
-      preferred_date, 
-      preferred_time,
-      days_to_check = 7
-    } = req.body;
+    console.log('check_availability received:', JSON.stringify(req.body));
+    
+    // Handle both direct params and nested args from Retell
+    const service_ids = req.body.service_ids || req.body.args?.service_ids;
+    const preferred_date = req.body.preferred_date || req.body.args?.preferred_date;
+    const preferred_time = req.body.preferred_time || req.body.args?.preferred_time;
+    const days_to_check = req.body.days_to_check || req.body.args?.days_to_check || 7;
 
+    // Validate service_ids
     if (!service_ids || (Array.isArray(service_ids) && service_ids.length === 0)) {
+      console.log('No service_ids found');
       return res.json({
         success: false,
         available: false,
@@ -213,12 +221,15 @@ router.post('/check_availability', async (req, res, next) => {
     }
 
     const serviceIdList = Array.isArray(service_ids) ? service_ids : [service_ids];
+    console.log('Looking for services:', serviceIdList);
 
     // Get services
     const { data: services, error: serviceError } = await supabase
       .from('services')
       .select('id, name, duration_minutes, required_bay_type')
       .in('id', serviceIdList);
+
+    console.log('Services found:', services?.length, 'Error:', serviceError);
 
     if (serviceError || !services || services.length === 0) {
       return res.json({
@@ -230,6 +241,7 @@ router.post('/check_availability', async (req, res, next) => {
 
     const totalDuration = services.reduce((sum, s) => sum + s.duration_minutes, 0);
     const primaryBayType = services[0].required_bay_type;
+    console.log('Total duration:', totalDuration, 'Bay type:', primaryBayType);
 
     // Get compatible bays
     const { data: bays } = await supabase
@@ -248,9 +260,18 @@ router.post('/check_availability', async (req, res, next) => {
 
     const bayIds = bays.map(b => b.id);
 
-    // Determine date range
-    const startDate = preferred_date ? parseISO(preferred_date) : new Date();
+    // Determine date range - ALWAYS start from today or future, never past
+    const today = new Date();
+    let startDate = today;
+    
+    if (preferred_date) {
+      const requestedDate = parseISO(preferred_date);
+      // If requested date is in the past, use today instead
+      startDate = requestedDate > today ? requestedDate : today;
+    }
+    
     const endDate = addDays(startDate, parseInt(days_to_check, 10));
+    console.log('Date range:', format(startDate, 'yyyy-MM-dd'), 'to', format(endDate, 'yyyy-MM-dd'));
 
     // Time filter
     let timeStart = '07:00';
