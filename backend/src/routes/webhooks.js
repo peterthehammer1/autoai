@@ -4,6 +4,118 @@ import { supabase, normalizePhone } from '../config/database.js';
 const router = Router();
 
 /**
+ * POST /api/webhooks/retell/inbound
+ * Handle Retell inbound call webhook - called BEFORE call connects
+ * Used to look up caller by phone number and pass dynamic variables
+ */
+router.post('/retell/inbound', async (req, res) => {
+  try {
+    const { event, call_inbound } = req.body;
+    
+    console.log('Retell inbound webhook:', JSON.stringify(req.body));
+    
+    if (event !== 'call_inbound' || !call_inbound) {
+      return res.json({ call_inbound: {} });
+    }
+    
+    const { from_number, agent_id } = call_inbound;
+    
+    if (!from_number) {
+      console.log('No from_number in inbound webhook');
+      return res.json({ call_inbound: {} });
+    }
+    
+    // Look up customer by phone number
+    const normalizedPhone = normalizePhone(from_number);
+    console.log('Looking up customer for:', normalizedPhone);
+    
+    const { data: customer, error } = await supabase
+      .from('customers')
+      .select(`
+        id,
+        first_name,
+        last_name,
+        phone,
+        email,
+        total_visits,
+        vehicles (
+          id,
+          year,
+          make,
+          model,
+          license_plate
+        )
+      `)
+      .eq('phone_normalized', normalizedPhone)
+      .single();
+    
+    if (error || !customer) {
+      console.log('Customer not found, new caller');
+      // New customer - pass info so agent knows
+      return res.json({
+        call_inbound: {
+          agent_override: {
+            retell_llm: {
+              start_speaker: "agent",
+              begin_message: "Thanks for calling Premier Auto Service, this is Alex. How can I help you today?"
+            }
+          },
+          dynamic_variables: {
+            is_existing_customer: 'false',
+            customer_name: '',
+            customer_first_name: '',
+            customer_phone: from_number,
+            customer_id: '',
+            vehicle_info: '',
+            vehicle_id: ''
+          }
+        }
+      });
+    }
+    
+    console.log('Found customer:', customer.first_name, customer.last_name);
+    
+    // Build vehicle info string
+    let vehicleInfo = '';
+    let vehicleId = '';
+    if (customer.vehicles && customer.vehicles.length > 0) {
+      const v = customer.vehicles[0]; // Primary vehicle
+      vehicleInfo = `${v.year} ${v.make} ${v.model}`;
+      vehicleId = v.id;
+    }
+    
+    // Return customer info as dynamic variables with personalized greeting
+    return res.json({
+      call_inbound: {
+        agent_override: {
+          retell_llm: {
+            start_speaker: "agent",
+            begin_message: `Hey ${customer.first_name}! Thanks for calling Premier Auto Service, this is Alex. How can I help you today?`
+          }
+        },
+        dynamic_variables: {
+          is_existing_customer: 'true',
+          customer_name: `${customer.first_name} ${customer.last_name}`,
+          customer_first_name: customer.first_name,
+          customer_last_name: customer.last_name,
+          customer_phone: from_number,
+          customer_id: customer.id,
+          customer_email: customer.email || '',
+          total_visits: String(customer.total_visits || 0),
+          vehicle_info: vehicleInfo,
+          vehicle_id: vehicleId
+        }
+      }
+    });
+    
+  } catch (error) {
+    console.error('Inbound webhook error:', error);
+    // Return empty response to allow call to proceed
+    return res.json({ call_inbound: {} });
+  }
+});
+
+/**
  * POST /api/webhooks/retell
  * Handle Retell AI webhook events
  * Events: call_started, call_ended, call_analyzed
