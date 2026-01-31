@@ -17,12 +17,14 @@ export function formatPhone(phone) {
   return phone
 }
 
-export function formatCurrency(amount) {
-  if (amount === null || amount === undefined) return '-'
-  return new Intl.NumberFormat('en-CA', {
+export function formatCurrency(cents) {
+  if (cents === null || cents === undefined) return '-'
+  // Convert cents to dollars
+  const dollars = cents / 100
+  return new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency: 'CAD',
-  }).format(amount)
+    currency: 'USD',
+  }).format(dollars)
 }
 
 export function formatDuration(minutes) {
