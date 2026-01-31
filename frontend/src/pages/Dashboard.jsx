@@ -91,22 +91,6 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
-          <p className="text-slate-500 mt-1">
-            Welcome back. Here's what's happening today.
-          </p>
-        </div>
-        <Button asChild className="bg-primary hover:bg-primary/90">
-          <Link to="/appointments">
-            <Calendar className="mr-2 h-4 w-4" />
-            New Appointment
-          </Link>
-        </Button>
-      </div>
-
       {/* Stats Grid */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {stats.map((stat, index) => (
