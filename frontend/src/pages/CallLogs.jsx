@@ -1,8 +1,7 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { format } from 'date-fns'
+import { format, formatDistanceToNow } from 'date-fns'
 import { callLogs } from '@/api'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -30,35 +29,52 @@ import {
   Phone, 
   Clock, 
   TrendingUp, 
-  TrendingDown, 
   Play, 
   FileText,
   User,
   Calendar,
   MessageSquare,
-  ExternalLink
+  ChevronLeft,
+  ChevronRight,
+  PhoneCall,
+  PhoneIncoming,
+  CheckCircle2,
+  XCircle,
+  ArrowUpRight,
+  Sparkles,
+  BarChart3,
 } from 'lucide-react'
 import { cn, getOutcomeColor } from '@/lib/utils'
 import PhoneNumber from '@/components/PhoneNumber'
+import { Link } from 'react-router-dom'
+
+const ITEMS_PER_PAGE = 10
 
 export default function CallLogs() {
   const [selectedCall, setSelectedCall] = useState(null)
   const [outcomeFilter, setOutcomeFilter] = useState('all')
+  const [currentPage, setCurrentPage] = useState(1)
   
-  // Fetch call stats
   const { data: stats } = useQuery({
     queryKey: ['call-logs', 'stats'],
     queryFn: () => callLogs.stats('week'),
   })
 
-  // Fetch call list
   const { data: callData, isLoading } = useQuery({
     queryKey: ['call-logs', 'list', outcomeFilter],
     queryFn: () => callLogs.list({ 
-      limit: 50,
+      limit: 200,
       ...(outcomeFilter !== 'all' && { outcome: outcomeFilter })
     }),
   })
+
+  // Pagination logic
+  const allCalls = callData?.calls || []
+  const totalItems = allCalls.length
+  const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE)
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE
+  const endIndex = startIndex + ITEMS_PER_PAGE
+  const paginatedCalls = allCalls.slice(startIndex, endIndex)
 
   const formatDuration = (seconds) => {
     if (!seconds) return '-'
@@ -67,260 +83,284 @@ export default function CallLogs() {
     return `${mins}:${String(secs).padStart(2, '0')}`
   }
 
-  const getSentimentColor = (sentiment) => {
+  const getSentimentBadge = (sentiment) => {
     switch (sentiment) {
-      case 'positive': return 'text-emerald-600'
-      case 'negative': return 'text-red-600'
-      default: return 'text-gray-500'
+      case 'positive':
+        return <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100">Positive</Badge>
+      case 'negative':
+        return <Badge className="bg-red-100 text-red-700 hover:bg-red-100">Negative</Badge>
+      default:
+        return <Badge className="bg-slate-100 text-slate-600 hover:bg-slate-100">Neutral</Badge>
     }
   }
 
-  // Parse transcript into chat messages
+  const getOutcomeBadge = (outcome) => {
+    const config = {
+      booked: { bg: 'bg-emerald-100 text-emerald-700', label: 'Booked' },
+      inquiry: { bg: 'bg-blue-100 text-blue-700', label: 'Inquiry' },
+      transferred: { bg: 'bg-amber-100 text-amber-700', label: 'Transferred' },
+      abandoned: { bg: 'bg-red-100 text-red-700', label: 'Abandoned' },
+    }
+    const c = config[outcome] || { bg: 'bg-slate-100 text-slate-600', label: outcome || 'Unknown' }
+    return <Badge className={`${c.bg} hover:${c.bg}`}>{c.label}</Badge>
+  }
+
   const parseTranscript = (transcript) => {
     if (!transcript) return []
-    
     const lines = transcript.split('\n').filter(line => line.trim())
     const messages = []
-    
     for (const line of lines) {
-      // Match patterns like "Agent: message" or "User: message"
-      const match = line.match(/^(Agent|User|Customer|Caller|AI|Assistant):\s*(.+)$/i)
+      const match = line.match(/^(Agent|User|Customer|Caller|AI|Assistant|Amber):\s*(.+)$/i)
       if (match) {
         const speaker = match[1].toLowerCase()
-        const isAgent = ['agent', 'ai', 'assistant'].includes(speaker)
-        messages.push({
-          speaker: isAgent ? 'Alex' : 'Caller',
-          isAgent,
-          text: match[2].trim()
-        })
-      } else if (line.trim()) {
-        // If no speaker prefix, try to continue previous message or add as unknown
-        if (messages.length > 0) {
-          messages[messages.length - 1].text += ' ' + line.trim()
-        }
+        const isAgent = ['agent', 'ai', 'assistant', 'amber'].includes(speaker)
+        messages.push({ speaker: isAgent ? 'Amber' : 'Caller', isAgent, text: match[2].trim() })
+      } else if (line.trim() && messages.length > 0) {
+        messages[messages.length - 1].text += ' ' + line.trim()
       }
     }
-    
     return messages
   }
 
+  const handleFilterChange = (filter) => {
+    setOutcomeFilter(filter)
+    setCurrentPage(1)
+  }
+
+  const conversionRate = stats?.summary?.total_calls 
+    ? Math.round((stats.summary.by_outcome?.booked || 0) / stats.summary.total_calls * 100) 
+    : 0
+
   return (
-    <div className="space-y-4 sm:space-y-6">
-      {/* Stats */}
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-        <Card>
-          <CardContent className="p-4 sm:p-6">
-            <div className="flex items-center gap-3">
-              <Phone className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600 shrink-0" />
-              <div>
-                <p className="text-xs sm:text-sm text-muted-foreground">Total Calls</p>
-                <p className="text-xl sm:text-2xl font-bold">
-                  {stats?.summary?.total_calls ?? '-'}
-                </p>
+    <div className="space-y-6 animate-fade-in">
+      {/* Hero Stats Section */}
+      <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-xl p-6 text-white relative overflow-hidden">
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500 rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2" />
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-blue-500 rounded-full blur-3xl transform -translate-x-1/2 translate-y-1/2" />
+        </div>
+        
+        <div className="relative">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-2 bg-white/10 rounded-lg backdrop-blur">
+              <PhoneCall className="h-5 w-5" />
+            </div>
+            <div>
+              <h1 className="text-lg font-semibold">AI Call Center</h1>
+              <p className="text-sm text-slate-400">Voice agent performance & history</p>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-white/5 backdrop-blur rounded-lg p-4 border border-white/10">
+              <div className="flex items-center gap-2 mb-2">
+                <PhoneIncoming className="h-4 w-4 text-slate-400" />
+                <span className="text-xs text-slate-400 uppercase tracking-wider">Total Calls</span>
+              </div>
+              <p className="text-3xl font-bold">{stats?.summary?.total_calls ?? 0}</p>
+              <p className="text-xs text-slate-400 mt-1">This week</p>
+            </div>
+            
+            <div className="bg-white/5 backdrop-blur rounded-lg p-4 border border-white/10">
+              <div className="flex items-center gap-2 mb-2">
+                <Clock className="h-4 w-4 text-violet-400" />
+                <span className="text-xs text-slate-400 uppercase tracking-wider">Avg Duration</span>
+              </div>
+              <p className="text-3xl font-bold">{formatDuration(stats?.summary?.avg_duration_seconds)}</p>
+              <p className="text-xs text-slate-400 mt-1">Per call</p>
+            </div>
+            
+            <div className="bg-white/5 backdrop-blur rounded-lg p-4 border border-white/10">
+              <div className="flex items-center gap-2 mb-2">
+                <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+                <span className="text-xs text-slate-400 uppercase tracking-wider">Bookings</span>
+              </div>
+              <p className="text-3xl font-bold">{stats?.summary?.by_outcome?.booked ?? 0}</p>
+              <p className="text-xs text-slate-400 mt-1">Appointments made</p>
+            </div>
+            
+            <div className="bg-white/5 backdrop-blur rounded-lg p-4 border border-white/10">
+              <div className="flex items-center gap-2 mb-2">
+                <BarChart3 className="h-4 w-4 text-blue-400" />
+                <span className="text-xs text-slate-400 uppercase tracking-wider">Conversion</span>
+              </div>
+              <p className="text-3xl font-bold">{conversionRate}%</p>
+              <div className="mt-2 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-to-r from-emerald-400 to-emerald-500 rounded-full transition-all"
+                  style={{ width: `${conversionRate}%` }}
+                />
               </div>
             </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 sm:p-6">
-            <div className="flex items-center gap-3">
-              <Clock className="h-6 w-6 sm:h-8 sm:w-8 text-purple-600 shrink-0" />
-              <div>
-                <p className="text-xs sm:text-sm text-muted-foreground">Avg Duration</p>
-                <p className="text-xl sm:text-2xl font-bold">
-                  {formatDuration(stats?.summary?.avg_duration_seconds)}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 sm:p-6">
-            <div className="flex items-center gap-3">
-              <TrendingUp className="h-6 w-6 sm:h-8 sm:w-8 text-green-600 shrink-0" />
-              <div>
-                <p className="text-xs sm:text-sm text-muted-foreground">Booked</p>
-                <p className="text-xl sm:text-2xl font-bold">
-                  {stats?.summary?.by_outcome?.booked ?? 0}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 sm:p-6">
-            <div className="flex items-center gap-3">
-              <TrendingDown className="h-6 w-6 sm:h-8 sm:w-8 text-red-600 shrink-0" />
-              <div>
-                <p className="text-xs sm:text-sm text-muted-foreground">Abandoned</p>
-                <p className="text-xl sm:text-2xl font-bold">
-                  {stats?.summary?.by_outcome?.abandoned ?? 0}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
 
-      {/* Filter */}
-      <div className="flex items-center gap-3">
-        <span className="text-sm text-muted-foreground">Filter:</span>
-        <Select value={outcomeFilter} onValueChange={setOutcomeFilter}>
-          <SelectTrigger className="w-[150px]">
-            <SelectValue placeholder="All Outcomes" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Outcomes</SelectItem>
-            <SelectItem value="booked">Booked</SelectItem>
-            <SelectItem value="inquiry">Inquiry</SelectItem>
-            <SelectItem value="transferred">Transferred</SelectItem>
-            <SelectItem value="abandoned">Abandoned</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      {/* Filter & Pagination Controls */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-slate-500">Filter by outcome:</span>
+          <Select value={outcomeFilter} onValueChange={handleFilterChange}>
+            <SelectTrigger className="w-[150px] bg-white">
+              <SelectValue placeholder="All Outcomes" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Outcomes</SelectItem>
+              <SelectItem value="booked">Booked</SelectItem>
+              <SelectItem value="inquiry">Inquiry</SelectItem>
+              <SelectItem value="transferred">Transferred</SelectItem>
+              <SelectItem value="abandoned">Abandoned</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
-      {/* Mobile Card View */}
-      <div className="sm:hidden space-y-3">
-        {isLoading ? (
-          Array.from({ length: 3 }).map((_, i) => (
-            <Card key={i}>
-              <CardContent className="p-4">
-                <div className="h-24 animate-pulse rounded bg-muted" />
-              </CardContent>
-            </Card>
-          ))
-        ) : callData?.calls?.length > 0 ? (
-          callData.calls.map((call) => (
-            <Card 
-              key={call.id} 
-              className="cursor-pointer active:bg-muted/50 transition-colors"
-              onClick={() => setSelectedCall(call)}
-            >
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <p className="font-medium truncate">
-                        {call.customer 
-                          ? `${call.customer.first_name} ${call.customer.last_name}`
-                          : <PhoneNumber phone={call.phone_number} showRevealButton={false} />
-                        }
-                      </p>
-                      <Badge className={cn('shrink-0 text-xs', getOutcomeColor(call.outcome))}>
-                        {call.outcome || 'unknown'}
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      {call.started_at 
-                        ? format(new Date(call.started_at), 'MMM d, h:mm a')
-                        : '-'
-                      }
-                      {' • '}
-                      {formatDuration(call.duration_seconds)}
-                    </p>
-                    {call.transcript_summary && (
-                      <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                        {call.transcript_summary}
-                      </p>
-                    )}
-                  </div>
-                  <span className={cn('text-xs capitalize shrink-0', getSentimentColor(call.sentiment))}>
-                    {call.sentiment || 'neutral'}
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-          ))
-        ) : (
-          <Card>
-            <CardContent className="p-8 text-center text-muted-foreground">
-              <Phone className="h-10 w-10 mx-auto mb-2 opacity-50" />
-              <p>No calls found</p>
-            </CardContent>
-          </Card>
+        {totalItems > 0 && (
+          <div className="text-sm text-slate-500">
+            Showing <span className="font-medium text-slate-900">{startIndex + 1}</span> to{' '}
+            <span className="font-medium text-slate-900">{Math.min(endIndex, totalItems)}</span> of{' '}
+            <span className="font-medium text-slate-900">{totalItems}</span> calls
+          </div>
         )}
       </div>
 
-      {/* Desktop Table View */}
-      <Card className="hidden sm:block">
-        <CardHeader>
-          <CardTitle>Recent Calls</CardTitle>
-          <CardDescription>
-            Click a row to view full transcript and details
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Time</TableHead>
-                <TableHead>Customer</TableHead>
-                <TableHead>Phone</TableHead>
-                <TableHead>Duration</TableHead>
-                <TableHead>Outcome</TableHead>
-                <TableHead>Sentiment</TableHead>
-                <TableHead>Summary</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                Array.from({ length: 5 }).map((_, i) => (
-                  <TableRow key={i}>
-                    <TableCell colSpan={7}>
-                      <div className="h-12 animate-pulse rounded bg-muted" />
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : callData?.calls?.length > 0 ? (
-                callData.calls.map((call) => (
+      {/* Call Logs Table */}
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        {isLoading ? (
+          <div className="p-12 text-center">
+            <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-4" />
+            <p className="text-slate-500">Loading calls...</p>
+          </div>
+        ) : !allCalls.length ? (
+          <div className="p-12 text-center">
+            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Phone className="h-8 w-8 text-slate-400" />
+            </div>
+            <p className="font-semibold text-slate-900 mb-1">No calls yet</p>
+            <p className="text-sm text-slate-500">Call logs will appear here once calls are made</p>
+          </div>
+        ) : (
+          <>
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-slate-50/50">
+                  <TableHead className="w-[180px]">Date & Time</TableHead>
+                  <TableHead>Caller</TableHead>
+                  <TableHead className="w-[100px]">Duration</TableHead>
+                  <TableHead className="w-[110px]">Outcome</TableHead>
+                  <TableHead className="w-[100px]">Sentiment</TableHead>
+                  <TableHead className="hidden lg:table-cell">Summary</TableHead>
+                  <TableHead className="w-[50px]"></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {paginatedCalls.map((call) => (
                   <TableRow 
-                    key={call.id} 
-                    className="cursor-pointer hover:bg-muted/50"
+                    key={call.id}
+                    className="cursor-pointer hover:bg-slate-50 transition-colors"
                     onClick={() => setSelectedCall(call)}
                   >
-                    <TableCell className="whitespace-nowrap">
-                      {call.started_at 
-                        ? format(new Date(call.started_at), 'MMM d, h:mm a')
-                        : '-'
-                      }
+                    <TableCell>
+                      <div className="text-sm font-medium text-slate-900">
+                        {call.started_at ? format(new Date(call.started_at), 'MMM d, yyyy') : '-'}
+                      </div>
+                      <div className="text-xs text-slate-400">
+                        {call.started_at ? format(new Date(call.started_at), 'h:mm a') : ''}
+                      </div>
                     </TableCell>
                     <TableCell>
-                      {call.customer ? (
-                        <span className="font-medium">
-                          {call.customer.first_name} {call.customer.last_name}
-                        </span>
-                      ) : (
-                        <span className="text-muted-foreground">Unknown</span>
-                      )}
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center">
+                          <User className="h-4 w-4 text-slate-500" />
+                        </div>
+                        <div>
+                          <div className="font-medium text-slate-900">
+                            {call.customer 
+                              ? `${call.customer.first_name} ${call.customer.last_name}`
+                              : <PhoneNumber phone={call.phone_number} showRevealButton={false} />
+                            }
+                          </div>
+                          {call.customer && (
+                            <div className="text-xs text-slate-400">
+                              <PhoneNumber phone={call.phone_number} showRevealButton={false} />
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </TableCell>
-                    <TableCell><PhoneNumber phone={call.phone_number} showRevealButton={false} /></TableCell>
-                    <TableCell>{formatDuration(call.duration_seconds)}</TableCell>
                     <TableCell>
-                      <Badge className={getOutcomeColor(call.outcome)}>
-                        {call.outcome || 'unknown'}
-                      </Badge>
+                      <div className="flex items-center gap-1.5 text-slate-600">
+                        <Clock className="h-3.5 w-3.5 text-slate-400" />
+                        {formatDuration(call.duration_seconds)}
+                      </div>
+                    </TableCell>
+                    <TableCell>{getOutcomeBadge(call.outcome)}</TableCell>
+                    <TableCell>{getSentimentBadge(call.sentiment)}</TableCell>
+                    <TableCell className="hidden lg:table-cell">
+                      <p className="text-sm text-slate-600 truncate max-w-xs">
+                        {call.transcript_summary || '-'}
+                      </p>
                     </TableCell>
                     <TableCell>
-                      <span className={cn('capitalize', getSentimentColor(call.sentiment))}>
-                        {call.sentiment || 'neutral'}
-                      </span>
-                    </TableCell>
-                    <TableCell className="max-w-xs truncate">
-                      {call.transcript_summary || '-'}
+                      <ChevronRight className="h-4 w-4 text-slate-400" />
                     </TableCell>
                   </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={7} className="h-32 text-center text-muted-foreground">
-                    No calls found
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+                ))}
+              </TableBody>
+            </Table>
+
+            {/* Pagination Footer */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between px-4 py-3 border-t border-slate-200 bg-slate-50/50">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronLeft className="h-4 w-4 mr-1" />
+                  Previous
+                </Button>
+                
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNum
+                    if (totalPages <= 5) {
+                      pageNum = i + 1
+                    } else if (currentPage <= 3) {
+                      pageNum = i + 1
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNum = totalPages - 4 + i
+                    } else {
+                      pageNum = currentPage - 2 + i
+                    }
+                    return (
+                      <Button
+                        key={pageNum}
+                        variant={currentPage === pageNum ? 'default' : 'ghost'}
+                        size="sm"
+                        className="w-8 h-8 p-0"
+                        onClick={() => setCurrentPage(pageNum)}
+                      >
+                        {pageNum}
+                      </Button>
+                    )
+                  })}
+                </div>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  Next
+                  <ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
+              </div>
+            )}
+          </>
+        )}
+      </div>
 
       {/* Call Detail Modal */}
       <Dialog open={!!selectedCall} onOpenChange={() => setSelectedCall(null)}>
@@ -334,54 +374,65 @@ export default function CallLogs() {
           
           {selectedCall && (
             <div className="space-y-6">
-              {/* Call Info */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground flex items-center gap-1">
-                    <User className="h-4 w-4" /> Customer
-                  </p>
-                  <p className="font-medium">
-                    {selectedCall.customer 
-                      ? `${selectedCall.customer.first_name} ${selectedCall.customer.last_name}`
-                      : 'Unknown'
-                    }
+              {/* Caller Info Card */}
+              <div className="bg-slate-50 rounded-lg p-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm">
+                    <User className="h-6 w-6 text-slate-400" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-semibold text-slate-900">
+                      {selectedCall.customer 
+                        ? `${selectedCall.customer.first_name} ${selectedCall.customer.last_name}`
+                        : 'Unknown Caller'
+                      }
+                    </p>
+                    <p className="text-sm text-slate-500">
+                      <PhoneNumber phone={selectedCall.phone_number} showRevealButton={true} />
+                    </p>
+                  </div>
+                  {selectedCall.customer && (
+                    <Button variant="outline" size="sm" asChild>
+                      <Link to={`/customers/${selectedCall.customer.id}`}>
+                        View Profile
+                        <ArrowUpRight className="h-4 w-4 ml-1" />
+                      </Link>
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              {/* Call Metadata */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div className="bg-white border border-slate-200 rounded-lg p-3">
+                  <p className="text-xs text-slate-500 mb-1">Date</p>
+                  <p className="font-medium text-sm">
+                    {selectedCall.started_at ? format(new Date(selectedCall.started_at), 'MMM d, yyyy') : '-'}
                   </p>
                 </div>
-                <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground flex items-center gap-1">
-                    <Phone className="h-4 w-4" /> Phone
-                  </p>
-                  <p className="font-medium"><PhoneNumber phone={selectedCall.phone_number} showRevealButton={false} /></p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground flex items-center gap-1">
-                    <Calendar className="h-4 w-4" /> Date & Time
-                  </p>
-                  <p className="font-medium">
-                    {selectedCall.started_at 
-                      ? format(new Date(selectedCall.started_at), 'MMM d, yyyy h:mm a')
-                      : '-'
-                    }
+                <div className="bg-white border border-slate-200 rounded-lg p-3">
+                  <p className="text-xs text-slate-500 mb-1">Time</p>
+                  <p className="font-medium text-sm">
+                    {selectedCall.started_at ? format(new Date(selectedCall.started_at), 'h:mm a') : '-'}
                   </p>
                 </div>
-                <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground flex items-center gap-1">
-                    <Clock className="h-4 w-4" /> Duration
-                  </p>
-                  <p className="font-medium">{formatDuration(selectedCall.duration_seconds)}</p>
+                <div className="bg-white border border-slate-200 rounded-lg p-3">
+                  <p className="text-xs text-slate-500 mb-1">Duration</p>
+                  <p className="font-medium text-sm">{formatDuration(selectedCall.duration_seconds)}</p>
+                </div>
+                <div className="bg-white border border-slate-200 rounded-lg p-3">
+                  <p className="text-xs text-slate-500 mb-1">Direction</p>
+                  <p className="font-medium text-sm capitalize">{selectedCall.direction || 'Inbound'}</p>
                 </div>
               </div>
 
               {/* Status Badges */}
               <div className="flex flex-wrap gap-2">
-                <Badge className={getOutcomeColor(selectedCall.outcome)}>
-                  {selectedCall.outcome || 'unknown'}
-                </Badge>
-                <Badge variant="outline" className={getSentimentColor(selectedCall.sentiment)}>
-                  {selectedCall.sentiment || 'neutral'} sentiment
-                </Badge>
+                {getOutcomeBadge(selectedCall.outcome)}
+                {getSentimentBadge(selectedCall.sentiment)}
                 {selectedCall.appointment && (
-                  <Badge variant="outline" className="text-green-600 border-green-600">
+                  <Badge className="bg-emerald-100 text-emerald-700">
+                    <CheckCircle2 className="h-3 w-3 mr-1" />
                     Appointment Booked
                   </Badge>
                 )}
@@ -390,14 +441,10 @@ export default function CallLogs() {
               {/* Recording */}
               {selectedCall.recording_url && (
                 <div className="space-y-2">
-                  <p className="text-sm font-medium flex items-center gap-1">
+                  <p className="text-sm font-medium flex items-center gap-1.5">
                     <Play className="h-4 w-4" /> Recording
                   </p>
-                  <audio 
-                    controls 
-                    className="w-full"
-                    src={selectedCall.recording_url}
-                  >
+                  <audio controls className="w-full" src={selectedCall.recording_url}>
                     Your browser does not support audio playback.
                   </audio>
                 </div>
@@ -406,42 +453,39 @@ export default function CallLogs() {
               {/* Summary */}
               {selectedCall.transcript_summary && (
                 <div className="space-y-2">
-                  <p className="text-sm font-medium flex items-center gap-1">
-                    <MessageSquare className="h-4 w-4" /> Call Summary
+                  <p className="text-sm font-medium flex items-center gap-1.5">
+                    <MessageSquare className="h-4 w-4" /> AI Summary
                   </p>
-                  <div className="rounded-lg bg-muted p-4">
-                    <p className="text-sm">{selectedCall.transcript_summary}</p>
+                  <div className="bg-gradient-to-r from-slate-50 to-slate-100 rounded-lg p-4 border border-slate-200">
+                    <p className="text-sm text-slate-700">{selectedCall.transcript_summary}</p>
                   </div>
                 </div>
               )}
 
-              {/* Transcript - Chat Style */}
+              {/* Transcript */}
               {selectedCall.transcript && (
                 <div className="space-y-2">
-                  <p className="text-sm font-medium flex items-center gap-1">
+                  <p className="text-sm font-medium flex items-center gap-1.5">
                     <FileText className="h-4 w-4" /> Conversation
                   </p>
-                  <div className="rounded-lg bg-gray-100 dark:bg-gray-900 p-4 max-h-80 overflow-y-auto">
+                  <div className="bg-slate-100 rounded-lg p-4 max-h-80 overflow-y-auto">
                     <div className="space-y-3">
                       {parseTranscript(selectedCall.transcript).map((msg, idx) => (
                         <div 
                           key={idx} 
-                          className={cn(
-                            'flex flex-col',
-                            msg.isAgent ? 'items-start' : 'items-end'
-                          )}
+                          className={cn('flex flex-col', msg.isAgent ? 'items-start' : 'items-end')}
                         >
                           <span className={cn(
                             'text-xs font-medium mb-1',
-                            msg.isAgent ? 'text-gray-500' : 'text-blue-600'
+                            msg.isAgent ? 'text-slate-500' : 'text-blue-600'
                           )}>
                             {msg.speaker}
                           </span>
                           <div className={cn(
                             'max-w-[85%] rounded-2xl px-4 py-2 text-sm',
                             msg.isAgent 
-                              ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-tl-md' 
-                              : 'bg-blue-500 text-white rounded-tr-md'
+                              ? 'bg-white text-slate-900 rounded-tl-sm shadow-sm' 
+                              : 'bg-blue-500 text-white rounded-tr-sm'
                           )}>
                             {msg.text}
                           </div>
@@ -454,14 +498,12 @@ export default function CallLogs() {
 
               {/* Appointment Link */}
               {selectedCall.appointment && (
-                <div className="pt-4 border-t">
-                  <Button variant="outline" asChild>
-                    <a href={`/appointments/${selectedCall.appointment.id}`}>
-                      <ExternalLink className="h-4 w-4 mr-2" />
-                      View Booked Appointment
-                    </a>
-                  </Button>
-                </div>
+                <Button variant="outline" className="w-full" asChild>
+                  <Link to={`/appointments/${selectedCall.appointment.id}`}>
+                    View Booked Appointment
+                    <ArrowUpRight className="h-4 w-4 ml-2" />
+                  </Link>
+                </Button>
               )}
             </div>
           )}
