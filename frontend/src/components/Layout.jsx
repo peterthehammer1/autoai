@@ -60,8 +60,8 @@ export default function Layout() {
           'fixed inset-y-0 left-0 w-72 bg-slate-900 shadow-xl transition-transform duration-300 ease-out',
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         )}>
-          <div className="flex h-16 items-center justify-between px-4 border-b border-slate-700">
-            <img src="/logo-dark.png" alt="Premier Auto Service" className="h-10 w-auto object-contain" />
+          <div className="flex h-20 items-center justify-between px-4 border-b border-slate-700">
+            <img src="/logo-dark.png" alt="Premier Auto Service" className="h-14 w-auto object-contain" />
             <Button
               variant="ghost"
               size="icon"
@@ -112,8 +112,8 @@ export default function Layout() {
       <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col">
         <div className="flex flex-col flex-grow bg-slate-900">
           {/* Logo */}
-          <div className="flex h-16 items-center justify-center px-4 border-b border-slate-700/50">
-            <img src="/logo-dark.png" alt="Premier Auto Service" className="h-11 w-auto object-contain" />
+          <div className="flex h-24 items-center justify-center px-3 border-b border-slate-700/50">
+            <img src="/logo-dark.png" alt="Premier Auto Service" className="h-[72px] w-auto object-contain" />
           </div>
           
           {/* Navigation */}
