@@ -60,8 +60,10 @@ export default function Layout() {
           'fixed inset-y-0 left-0 w-72 shadow-xl transition-transform duration-300 ease-out',
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         )} style={{ backgroundColor: '#082438' }}>
-          <div className="flex h-14 items-center justify-between pl-3 pr-2">
-            <img src="/logo-dark.png" alt="Premier Auto Service" className="w-40 object-contain" />
+          <div className="flex h-14 items-center justify-between px-2 overflow-hidden">
+            <div className="h-14 w-44 overflow-hidden flex items-center justify-center">
+              <img src="/logo-dark.png" alt="Premier Auto Service" className="w-44 scale-[1.8]" />
+            </div>
             <Button
               variant="ghost"
               size="icon"
@@ -111,9 +113,9 @@ export default function Layout() {
       {/* Desktop sidebar */}
       <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col">
         <div className="flex flex-col flex-grow" style={{ backgroundColor: '#082438' }}>
-          {/* Logo */}
-          <div className="flex items-center justify-center px-4 py-4">
-            <img src="/logo-dark.png" alt="Premier Auto Service" className="w-48 object-contain" />
+          {/* Logo - cropped to show only the logo without extra background space */}
+          <div className="h-16 overflow-hidden flex items-center justify-center">
+            <img src="/logo-dark.png" alt="Premier Auto Service" className="w-56 scale-[1.8]" />
           </div>
           
           {/* Navigation */}
