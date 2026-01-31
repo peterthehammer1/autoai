@@ -86,7 +86,7 @@ TWILIO_ACCOUNT_SID=your-sid
 TWILIO_AUTH_TOKEN=your-token
 TWILIO_PHONE_NUMBER=+15551234567
 
-RETELL_API_KEY=your-retell-key
+NUCLEUS_API_KEY=your-nucleus-key
 
 TIMEZONE=America/Toronto
 ```

@@ -171,7 +171,7 @@ TIMEZONE=America/Toronto
 TWILIO_ACCOUNT_SID=xxx
 TWILIO_AUTH_TOKEN=xxx
 TWILIO_PHONE_NUMBER=+1xxx
-RETELL_API_KEY=xxx
+NUCLEUS_API_KEY=xxx
 ```
 
 ## Frontend Requirements (TODO)
