@@ -14,13 +14,18 @@ import {
   Cell,
   LineChart,
   Line,
+  AreaChart,
+  Area,
+  Legend,
 } from 'recharts'
 import { analytics } from '@/api'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { formatCurrency } from '@/lib/utils'
+import { formatCurrency, cn } from '@/lib/utils'
+import { TrendingUp, Clock, Phone, Smile, Meh, Frown } from 'lucide-react'
 
 const COLORS = ['#3b82f6', '#22c55e', '#eab308', '#ef4444', '#8b5cf6', '#ec4899']
+const SENTIMENT_COLORS = { positive: '#22c55e', neutral: '#64748b', negative: '#ef4444' }
 
 export default function Analytics() {
   const [period, setPeriod] = useState('week')
@@ -48,6 +53,11 @@ export default function Analytics() {
   const { data: bayStats } = useQuery({
     queryKey: ['analytics', 'bay-utilization'],
     queryFn: () => analytics.bayUtilization(),
+  })
+
+  const { data: callTrends } = useQuery({
+    queryKey: ['analytics', 'call-trends', period],
+    queryFn: () => analytics.callTrends(period),
   })
 
   // Transform data for charts
@@ -235,6 +245,225 @@ export default function Analytics() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Sentiment Trend */}
+      {callTrends?.sentiment_trend?.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Smile className="h-5 w-5 text-emerald-500" />
+              Call Sentiment Trends
+            </CardTitle>
+            <CardDescription>
+              Customer sentiment analysis over time
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={callTrends.sentiment_trend}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                  <XAxis 
+                    dataKey="date" 
+                    tickFormatter={(d) => format(new Date(d), 'MMM d')}
+                    stroke="#94a3b8"
+                  />
+                  <YAxis stroke="#94a3b8" />
+                  <Tooltip 
+                    labelFormatter={(d) => format(new Date(d), 'MMM d, yyyy')}
+                    contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0' }}
+                  />
+                  <Legend />
+                  <Area 
+                    type="monotone" 
+                    dataKey="positive" 
+                    stackId="1" 
+                    stroke="#22c55e" 
+                    fill="#22c55e" 
+                    fillOpacity={0.6}
+                    name="Positive"
+                  />
+                  <Area 
+                    type="monotone" 
+                    dataKey="neutral" 
+                    stackId="1" 
+                    stroke="#64748b" 
+                    fill="#64748b" 
+                    fillOpacity={0.6}
+                    name="Neutral"
+                  />
+                  <Area 
+                    type="monotone" 
+                    dataKey="negative" 
+                    stackId="1" 
+                    stroke="#ef4444" 
+                    fill="#ef4444" 
+                    fillOpacity={0.6}
+                    name="Negative"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Hourly Call Heatmap */}
+      {callTrends?.hourly_heatmap && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Clock className="h-5 w-5 text-blue-500" />
+              Call Volume Heatmap
+            </CardTitle>
+            <CardDescription>
+              When calls come in by day and hour • Peak time: {callTrends.peak_hour_label}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <div className="min-w-[600px]">
+                {/* Hour labels */}
+                <div className="flex mb-1">
+                  <div className="w-12" />
+                  {[6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19].map((hour) => (
+                    <div key={hour} className="flex-1 text-center text-xs text-slate-400">
+                      {hour === 12 ? '12p' : hour > 12 ? `${hour - 12}p` : `${hour}a`}
+                    </div>
+                  ))}
+                </div>
+                {/* Heatmap rows */}
+                {callTrends.day_labels.map((day, dayIdx) => {
+                  const maxValue = Math.max(...callTrends.hourly_heatmap.flat(), 1)
+                  return (
+                    <div key={day} className="flex items-center mb-1">
+                      <div className="w-12 text-xs text-slate-500 font-medium">{day}</div>
+                      {[6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19].map((hour) => {
+                        const value = callTrends.hourly_heatmap[dayIdx]?.[hour] || 0
+                        const intensity = value / maxValue
+                        return (
+                          <div
+                            key={hour}
+                            className="flex-1 aspect-square mx-0.5 rounded-sm flex items-center justify-center text-xs font-medium transition-colors"
+                            style={{
+                              backgroundColor: value === 0 
+                                ? '#f1f5f9' 
+                                : `rgba(59, 130, 246, ${0.2 + intensity * 0.8})`,
+                              color: intensity > 0.5 ? 'white' : '#64748b'
+                            }}
+                            title={`${day} ${hour}:00 - ${value} calls`}
+                          >
+                            {value > 0 ? value : ''}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )
+                })}
+                {/* Legend */}
+                <div className="flex items-center justify-end gap-2 mt-4 text-xs text-slate-500">
+                  <span>Less</span>
+                  <div className="flex gap-0.5">
+                    {[0.1, 0.3, 0.5, 0.7, 0.9].map((intensity) => (
+                      <div
+                        key={intensity}
+                        className="w-4 h-4 rounded-sm"
+                        style={{ backgroundColor: `rgba(59, 130, 246, ${intensity})` }}
+                      />
+                    ))}
+                  </div>
+                  <span>More</span>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Call Duration Trend */}
+      {callTrends?.duration_trend?.length > 0 && (
+        <div className="grid gap-6 md:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Phone className="h-5 w-5 text-violet-500" />
+                Average Call Duration
+              </CardTitle>
+              <CardDescription>
+                Duration trends in seconds
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-48">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={callTrends.duration_trend}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                    <XAxis 
+                      dataKey="date" 
+                      tickFormatter={(d) => format(new Date(d), 'MMM d')}
+                      stroke="#94a3b8"
+                    />
+                    <YAxis stroke="#94a3b8" />
+                    <Tooltip 
+                      labelFormatter={(d) => format(new Date(d), 'MMM d, yyyy')}
+                      formatter={(value) => [`${value}s`, 'Avg Duration']}
+                      contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0' }}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="avg_duration" 
+                      stroke="#8b5cf6" 
+                      strokeWidth={2}
+                      dot={{ fill: '#8b5cf6', strokeWidth: 0 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Quick Stats */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="h-5 w-5 text-emerald-500" />
+                AI Performance Summary
+              </CardTitle>
+              <CardDescription>
+                Key metrics at a glance
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="rounded-lg bg-slate-50 p-4 text-center">
+                  <p className="text-3xl font-bold text-slate-900">{callTrends?.total_calls || 0}</p>
+                  <p className="text-sm text-slate-500">Total Calls</p>
+                </div>
+                <div className="rounded-lg bg-emerald-50 p-4 text-center">
+                  <p className="text-3xl font-bold text-emerald-600">
+                    {overview?.week?.conversion_rate || 0}%
+                  </p>
+                  <p className="text-sm text-slate-500">Conversion Rate</p>
+                </div>
+                <div className="rounded-lg bg-blue-50 p-4 text-center">
+                  <p className="text-3xl font-bold text-blue-600">
+                    {callStats?.summary?.avg_duration_seconds 
+                      ? `${Math.round(callStats.summary.avg_duration_seconds / 60)}m`
+                      : '0m'}
+                  </p>
+                  <p className="text-sm text-slate-500">Avg Duration</p>
+                </div>
+                <div className="rounded-lg bg-violet-50 p-4 text-center">
+                  <p className="text-3xl font-bold text-violet-600">
+                    {callTrends?.peak_hour_label || '-'}
+                  </p>
+                  <p className="text-sm text-slate-500">Peak Hour</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Bay Utilization */}
       <Card>

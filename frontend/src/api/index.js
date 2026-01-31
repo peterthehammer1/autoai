@@ -129,6 +129,13 @@ export const analytics = {
     const query = date ? `?date=${date}` : ''
     return fetchAPI(`/analytics/bay-utilization${query}`)
   },
+  
+  insights: () => fetchAPI('/analytics/insights'),
+  
+  customerHealth: (customerId) => fetchAPI(`/analytics/customer-health/${customerId}`),
+  
+  callTrends: (period = 'week') => 
+    fetchAPI(`/analytics/call-trends?period=${period}`),
 }
 
 // Call Logs

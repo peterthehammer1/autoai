@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { format } from 'date-fns'
-import { customers } from '@/api'
+import { format, formatDistanceToNow } from 'date-fns'
+import { customers, analytics } from '@/api'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -24,10 +24,20 @@ import {
   Plus,
   Edit,
   Loader2,
+  Heart,
+  TrendingUp,
+  Calendar,
+  DollarSign,
+  AlertCircle,
+  CheckCircle2,
+  Wrench,
+  Target,
 } from 'lucide-react'
 import {
   formatTime12Hour,
   getStatusColor,
+  formatCurrency,
+  cn,
 } from '@/lib/utils'
 import PhoneNumber, { Email } from '@/components/PhoneNumber'
 
@@ -56,6 +66,12 @@ export default function CustomerDetail() {
   const { data: appointmentsData } = useQuery({
     queryKey: ['customer', id, 'appointments'],
     queryFn: () => customers.getAppointments(id),
+    enabled: !!id,
+  })
+
+  const { data: healthData } = useQuery({
+    queryKey: ['customer', id, 'health'],
+    queryFn: () => analytics.customerHealth(id),
     enabled: !!id,
   })
 
@@ -188,8 +204,125 @@ export default function CustomerDetail() {
           </CardContent>
         </Card>
 
+        {/* Customer Health Score Card */}
+        {healthData && (
+          <Card className="md:col-span-2">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <Heart className="h-5 w-5 text-rose-500" />
+                  Customer Health Score
+                </CardTitle>
+                <Badge className={cn(
+                  'text-sm font-semibold',
+                  healthData.health_color === 'green' ? 'bg-emerald-100 text-emerald-700' :
+                  healthData.health_color === 'blue' ? 'bg-blue-100 text-blue-700' :
+                  healthData.health_color === 'yellow' ? 'bg-amber-100 text-amber-700' :
+                  'bg-red-100 text-red-700'
+                )}>
+                  {healthData.health_status}
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Score Display */}
+              <div className="flex items-center gap-6">
+                <div className="relative">
+                  <svg className="w-20 h-20 transform -rotate-90">
+                    <circle
+                      cx="40"
+                      cy="40"
+                      r="36"
+                      fill="none"
+                      stroke="#e2e8f0"
+                      strokeWidth="8"
+                    />
+                    <circle
+                      cx="40"
+                      cy="40"
+                      r="36"
+                      fill="none"
+                      stroke={
+                        healthData.health_color === 'green' ? '#10b981' :
+                        healthData.health_color === 'blue' ? '#3b82f6' :
+                        healthData.health_color === 'yellow' ? '#f59e0b' :
+                        '#ef4444'
+                      }
+                      strokeWidth="8"
+                      strokeLinecap="round"
+                      strokeDasharray={`${(healthData.health_score / 100) * 226} 226`}
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-2xl font-bold text-slate-900">{healthData.health_score}</span>
+                  </div>
+                </div>
+
+                {/* Score Breakdown */}
+                <div className="flex-1 grid grid-cols-2 gap-3 text-sm">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-slate-400" />
+                    <span className="text-slate-600">Recency:</span>
+                    <span className="font-semibold">{healthData.score_breakdown.recency}/30</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4 text-slate-400" />
+                    <span className="text-slate-600">Frequency:</span>
+                    <span className="font-semibold">{healthData.score_breakdown.frequency}/30</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <DollarSign className="h-4 w-4 text-slate-400" />
+                    <span className="text-slate-600">Value:</span>
+                    <span className="font-semibold">{healthData.score_breakdown.value}/20</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Heart className="h-4 w-4 text-slate-400" />
+                    <span className="text-slate-600">Loyalty:</span>
+                    <span className="font-semibold">{healthData.score_breakdown.loyalty}/20</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Stats Row */}
+              <div className="grid grid-cols-3 gap-4 pt-3 border-t border-slate-100">
+                <div className="text-center">
+                  <p className="text-lg font-bold text-slate-900">{healthData.stats.total_visits}</p>
+                  <p className="text-xs text-slate-500">Total Visits</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-lg font-bold text-slate-900">{formatCurrency(healthData.stats.total_spend)}</p>
+                  <p className="text-xs text-slate-500">Total Spend</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-lg font-bold text-slate-900">
+                    {healthData.stats.last_visit 
+                      ? formatDistanceToNow(new Date(healthData.stats.last_visit), { addSuffix: true })
+                      : 'Never'}
+                  </p>
+                  <p className="text-xs text-slate-500">Last Visit</p>
+                </div>
+              </div>
+
+              {/* Recommendations */}
+              {healthData.recommendations?.length > 0 && (
+                <div className="pt-3 border-t border-slate-100 space-y-2">
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">AI Recommendations</p>
+                  {healthData.recommendations.map((rec, idx) => (
+                    <div key={idx} className="flex items-start gap-2 text-sm">
+                      {rec.type === 'action' && <AlertCircle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />}
+                      {rec.type === 'service' && <Wrench className="h-4 w-4 text-blue-500 shrink-0 mt-0.5" />}
+                      {rec.type === 'upsell' && <Target className="h-4 w-4 text-violet-500 shrink-0 mt-0.5" />}
+                      <p className="text-slate-600">{rec.message}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
         {/* Vehicles */}
-        <Card className="md:col-span-2">
+        <Card className="md:col-span-3">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Vehicles</CardTitle>
             <Button size="sm" onClick={() => setIsAddVehicleOpen(true)}>
