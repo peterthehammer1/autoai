@@ -13,7 +13,6 @@ import {
   Settings,
   Menu,
   X,
-  Zap,
   Bell,
   Search,
   ChevronRight,
@@ -63,12 +62,10 @@ export default function Layout() {
         )}>
           <div className="flex h-16 items-center justify-between px-5 border-b border-slate-700">
             <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-                <Zap className="h-5 w-5 text-white" />
-              </div>
+              <img src="/logo.svg" alt="Premier Auto Service" className="h-10 w-10" />
               <div>
                 <span className="text-base font-bold text-white">Premier Auto</span>
-                <span className="block text-[10px] font-medium text-slate-400 uppercase tracking-wider">Service Platform</span>
+                <span className="block text-[10px] font-medium text-slate-400 uppercase tracking-wider">AI Service Platform</span>
               </div>
             </div>
             <Button
@@ -122,12 +119,10 @@ export default function Layout() {
         <div className="flex flex-col flex-grow bg-slate-900">
           {/* Logo */}
           <div className="flex h-16 items-center gap-3 px-5 border-b border-slate-700/50">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-              <Zap className="h-5 w-5 text-white" />
-            </div>
+            <img src="/logo.svg" alt="Premier Auto Service" className="h-10 w-10" />
             <div>
               <span className="text-base font-bold text-white">Premier Auto</span>
-              <span className="block text-[10px] font-medium text-slate-400 uppercase tracking-wider">Service Platform</span>
+              <span className="block text-[10px] font-medium text-slate-400 uppercase tracking-wider">AI Service Platform</span>
             </div>
           </div>
           
