@@ -142,36 +142,28 @@ export default function Appointments() {
 
   return (
     <div className="space-y-4 sm:space-y-6 animate-fade-in">
-      {/* Header */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Appointments</h1>
-          <p className="text-slate-500 text-sm hidden sm:block">
-            Manage service appointments and scheduling
-          </p>
-        </div>
-        <Button onClick={() => setIsNewModalOpen(true)} className="w-full sm:w-auto">
-          <Plus className="mr-2 h-4 w-4" />
-          New Appointment
-        </Button>
-      </div>
-
-      {/* View Tabs */}
+      {/* View Tabs with New Appointment Button */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="w-full sm:w-auto">
-          <TabsTrigger value="upcoming" className="flex-1 sm:flex-none">
-            <CalendarDays className="h-4 w-4 mr-2" />
-            Upcoming
-          </TabsTrigger>
-          <TabsTrigger value="calendar" className="flex-1 sm:flex-none">
-            <Grid3X3 className="h-4 w-4 mr-2" />
-            Calendar
-          </TabsTrigger>
-          <TabsTrigger value="by-date" className="flex-1 sm:flex-none">
-            <Calendar className="h-4 w-4 mr-2" />
-            By Date
-          </TabsTrigger>
-        </TabsList>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <TabsList className="w-full sm:w-auto">
+            <TabsTrigger value="upcoming" className="flex-1 sm:flex-none">
+              <CalendarDays className="h-4 w-4 mr-2" />
+              Upcoming
+            </TabsTrigger>
+            <TabsTrigger value="calendar" className="flex-1 sm:flex-none">
+              <Grid3X3 className="h-4 w-4 mr-2" />
+              Calendar
+            </TabsTrigger>
+            <TabsTrigger value="by-date" className="flex-1 sm:flex-none">
+              <Calendar className="h-4 w-4 mr-2" />
+              By Date
+            </TabsTrigger>
+          </TabsList>
+          <Button onClick={() => setIsNewModalOpen(true)} className="w-full sm:w-auto">
+            <Plus className="mr-2 h-4 w-4" />
+            New Appointment
+          </Button>
+        </div>
 
         {/* Upcoming Appointments Tab */}
         <TabsContent value="upcoming" className="mt-4 space-y-4">

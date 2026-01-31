@@ -82,14 +82,8 @@ export default function Analytics() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Analytics</h1>
-          <p className="text-muted-foreground">
-            Performance metrics and insights
-          </p>
-        </div>
+      {/* Period Selector */}
+      <div className="flex justify-end">
         <Tabs value={period} onValueChange={setPeriod}>
           <TabsList>
             <TabsTrigger value="day">Today</TabsTrigger>

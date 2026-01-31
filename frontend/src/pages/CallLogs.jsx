@@ -106,14 +106,6 @@ export default function CallLogs() {
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Call Logs</h1>
-        <p className="text-muted-foreground text-sm">
-          AI voice agent call history and analytics
-        </p>
-      </div>
-
       {/* Stats */}
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <Card>

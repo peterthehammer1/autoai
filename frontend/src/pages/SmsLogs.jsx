@@ -87,14 +87,6 @@ export default function SmsLogs() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">SMS Messages</h1>
-        <p className="text-slate-500 mt-1">
-          View all outgoing text messages
-        </p>
-      </div>
-
       {/* Stats */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <div className="bg-white rounded-lg border border-slate-200 shadow-card p-4">

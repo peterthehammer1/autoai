@@ -28,30 +28,6 @@ export default function Services() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Services</h1>
-          <p className="text-muted-foreground">
-            Manage your service catalog and pricing
-          </p>
-        </div>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Service
-        </Button>
-      </div>
-
-      {/* Search */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input placeholder="Search services..." className="pl-9" />
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Categories Overview */}
       <div className="grid gap-4 md:grid-cols-4">
         {categories?.categories?.slice(0, 4).map((cat) => (
