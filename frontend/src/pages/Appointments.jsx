@@ -66,7 +66,7 @@ import PhoneNumber from '@/components/PhoneNumber'
 export default function Appointments() {
   const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
-  const [activeTab, setActiveTab] = useState('upcoming')
+  const [activeTab, setActiveTab] = useState('calendar')
   const [isNewModalOpen, setIsNewModalOpen] = useState(false)
   const [calendarMonth, setCalendarMonth] = useState(new Date())
   
