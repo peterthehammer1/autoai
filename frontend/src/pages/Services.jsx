@@ -93,7 +93,12 @@ export default function Services() {
                         {formatDuration(service.duration_minutes)}
                       </div>
                     </TableCell>
-                    <TableCell>{service.price_display || '-'}</TableCell>
+                    <TableCell>
+                      {service.price_min > 0 
+                        ? `$${service.price_min.toLocaleString()}`
+                        : (service.price_display || 'Free')
+                      }
+                    </TableCell>
                     <TableCell>
                       <Badge variant="secondary">
                         {service.required_bay_type?.replace('_', ' ') || '-'}

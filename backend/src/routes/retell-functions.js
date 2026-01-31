@@ -126,7 +126,7 @@ router.post('/lookup_customer', async (req, res, next) => {
  */
 router.post('/get_services', async (req, res, next) => {
   try {
-    const { category, search, mileage } = req.body;
+    const { category, search, mileage } = req.body.args || req.body;
 
     let query = supabase
       .from('services')
@@ -135,6 +135,7 @@ router.post('/get_services', async (req, res, next) => {
         name,
         description,
         duration_minutes,
+        price_min,
         price_display,
         is_popular,
         mileage_interval,
@@ -158,16 +159,46 @@ router.post('/get_services', async (req, res, next) => {
       query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%`);
     }
 
-    const { data: services, error } = await query.order('is_popular', { ascending: false }).limit(10);
+    const { data: services, error } = await query.order('is_popular', { ascending: false }).limit(15);
 
     if (error) throw error;
 
-    // Format for voice agent
+    // Check if this is a service type with multiple options (like "oil change")
+    const searchLower = (search || '').toLowerCase();
+    const oilChangeTerms = ['oil change', 'oil', 'oil service'];
+    const isOilChangeSearch = oilChangeTerms.some(term => searchLower.includes(term));
+    
+    // Find oil change options if searching for oil change
+    let oilChangeOptions = [];
+    let needsClarification = false;
+    
+    if (isOilChangeSearch) {
+      const { data: oilServices } = await supabase
+        .from('services')
+        .select('id, name, price_min, price_display, description')
+        .eq('is_active', true)
+        .ilike('name', '%Oil Change%')
+        .not('name', 'ilike', '%Diesel%') // Exclude diesel for standard cars
+        .order('price_min');
+      
+      if (oilServices && oilServices.length > 1) {
+        oilChangeOptions = oilServices.map(s => ({
+          id: s.id,
+          name: s.name,
+          price: s.price_display, // Voice-friendly price
+          description: s.description
+        }));
+        needsClarification = true;
+      }
+    }
+
+    // Format for voice agent - use voice-friendly price_display
     const serviceList = services.map(s => ({
       id: s.id,
       name: s.name,
       duration: `${s.duration_minutes} minutes`,
-      price: s.price_display,
+      price: s.price_display, // This is now voice-friendly like "forty dollars"
+      price_numeric: s.price_min,
       description: s.description,
       category: s.category?.name
     }));
@@ -190,7 +221,6 @@ router.post('/get_services', async (req, res, next) => {
     let notFoundMessage = null;
     
     if (services.length === 0 && search) {
-      // Get popular services to suggest instead
       const { data: popularServices } = await supabase
         .from('services')
         .select(`
@@ -213,7 +243,6 @@ router.post('/get_services', async (req, res, next) => {
         category: s.category?.name
       }));
 
-      // Get all category names for reference
       const { data: categories } = await supabase
         .from('service_categories')
         .select('name')
@@ -224,16 +253,28 @@ router.post('/get_services', async (req, res, next) => {
       notFoundMessage = `I'm sorry, we don't currently offer "${search}" as a service. Our service categories include: ${categoryNames}. Would any of these work for you, or would you like me to list our most popular services?`;
     }
 
+    // Build message - if oil change, ask for clarification
+    let message;
+    if (needsClarification && oilChangeOptions.length > 0) {
+      // Build a clear clarification message
+      const optionsList = oilChangeOptions.map(o => `${o.name} is ${o.price}`).join('. ');
+      message = `We have a few oil change options. ${optionsList}. Which type would you prefer?`;
+    } else if (services.length > 0) {
+      message = `I found ${services.length} services. ${services.slice(0, 3).map(s => s.name).join(', ')}${services.length > 3 ? ', and more' : ''}.`;
+    } else {
+      message = notFoundMessage || 'Would you like me to list our available services?';
+    }
+
     res.json({
       success: true,
       services: serviceList,
       recommendations,
       suggestions,
+      needs_clarification: needsClarification,
+      clarification_options: oilChangeOptions,
       service_not_found: services.length === 0 && search ? true : false,
       searched_for: search || null,
-      message: services.length > 0 
-        ? `I found ${services.length} services. ${services.slice(0, 3).map(s => s.name).join(', ')}${services.length > 3 ? ', and more' : ''}.`
-        : notFoundMessage || 'Would you like me to list our available services?'
+      message
     });
 
   } catch (error) {
