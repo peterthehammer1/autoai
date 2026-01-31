@@ -219,6 +219,21 @@ export default function Layout() {
           </div>
           
           <div className="flex-1" />
+          
+          {/* Powered by Nucleus */}
+          <a 
+            href="https://nucleus.com" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-slate-50 transition-colors group"
+          >
+            <span className="text-xs text-slate-400 group-hover:text-slate-500 transition-colors">Powered by</span>
+            <img 
+              src="/nucleus-logo.svg" 
+              alt="Nucleus" 
+              className="h-4 opacity-70 group-hover:opacity-100 transition-opacity"
+            />
+          </a>
         </div>
 
         {/* Page content */}
