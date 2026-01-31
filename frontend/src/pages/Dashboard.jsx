@@ -105,58 +105,140 @@ export default function Dashboard() {
     },
   ]
 
-  return (
-    <div className="space-y-6 animate-fade-in">
-      {/* AI Insights Panel - Top of Dashboard */}
-      {insightsData?.insights?.length > 0 && (
-        <div className="bg-gradient-to-r from-slate-900 to-slate-800 rounded-lg overflow-hidden shadow-card">
-          <div className="p-4 sm:p-5">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-purple-600">
-                <Sparkles className="h-4 w-4 text-white" />
-              </div>
-              <div>
-                <h2 className="text-base font-semibold text-white">AI Insights</h2>
-                <p className="text-xs text-slate-400">Powered by your data</p>
-              </div>
+  // AI Insights Panel Component (reusable)
+  const AIInsightsPanel = () => (
+    insightsData?.insights?.length > 0 ? (
+      <div className="bg-gradient-to-r from-slate-900 to-slate-800 rounded-lg overflow-hidden shadow-card">
+        <div className="p-4 sm:p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-purple-600">
+              <Sparkles className="h-4 w-4 text-white" />
             </div>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {insightsData.insights.slice(0, 6).map((insight, idx) => {
-                const config = insightConfig[insight.type] || insightConfig.info
-                const Icon = config.icon
-                return (
-                  <div
-                    key={idx}
-                    className="bg-white/5 backdrop-blur rounded-lg p-3 border border-white/10 hover:bg-white/10 transition-colors"
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className={cn('rounded-lg p-1.5 shrink-0', config.bg)}>
-                        <Icon className={cn('h-4 w-4', config.color)} />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center justify-between gap-2">
-                          <p className="text-sm font-medium text-white truncate">{insight.title}</p>
-                          {insight.value && (
-                            <span className={cn(
-                              'text-xs font-bold shrink-0',
-                              insight.type === 'trend_up' || insight.type === 'success' ? 'text-emerald-400' :
-                              insight.type === 'trend_down' || insight.type === 'warning' ? 'text-amber-400' :
-                              'text-blue-400'
-                            )}>
-                              {insight.value}
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-xs text-slate-400 mt-0.5 line-clamp-2">{insight.message}</p>
-                      </div>
-                    </div>
-                  </div>
-                )
-              })}
+            <div>
+              <h2 className="text-base font-semibold text-white">AI Insights</h2>
+              <p className="text-xs text-slate-400">Powered by your data</p>
             </div>
           </div>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {insightsData.insights.slice(0, 6).map((insight, idx) => {
+              const config = insightConfig[insight.type] || insightConfig.info
+              const Icon = config.icon
+              return (
+                <div
+                  key={idx}
+                  className="bg-white/5 backdrop-blur rounded-lg p-3 border border-white/10 hover:bg-white/10 transition-colors"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className={cn('rounded-lg p-1.5 shrink-0', config.bg)}>
+                      <Icon className={cn('h-4 w-4', config.color)} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-sm font-medium text-white truncate">{insight.title}</p>
+                        {insight.value && (
+                          <span className={cn(
+                            'text-xs font-bold shrink-0',
+                            insight.type === 'trend_up' || insight.type === 'success' ? 'text-emerald-400' :
+                            insight.type === 'trend_down' || insight.type === 'warning' ? 'text-amber-400' :
+                            'text-blue-400'
+                          )}>
+                            {insight.value}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-slate-400 mt-0.5 line-clamp-2">{insight.message}</p>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
         </div>
-      )}
+      </div>
+    ) : null
+  )
+
+  // Sentiment Chart Component (reusable)
+  const SentimentChart = () => (
+    callTrends?.sentiment_trend?.length > 0 ? (
+      <Card className="shadow-card">
+        <CardHeader className="pb-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100">
+                <Smile className="h-4 w-4 text-emerald-600" />
+              </div>
+              <div>
+                <CardTitle className="text-base">Customer Sentiment</CardTitle>
+                <CardDescription>Call sentiment analysis this week</CardDescription>
+              </div>
+            </div>
+            <Button variant="ghost" size="sm" asChild>
+              <Link to="/analytics">
+                View Details
+                <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+              </Link>
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="h-52">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={callTrends.sentiment_trend}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                <XAxis 
+                  dataKey="date" 
+                  tickFormatter={(d) => format(new Date(d), 'MMM d')}
+                  stroke="#94a3b8"
+                  fontSize={12}
+                />
+                <YAxis stroke="#94a3b8" fontSize={12} />
+                <Tooltip 
+                  labelFormatter={(d) => format(new Date(d), 'MMM d, yyyy')}
+                  contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '12px' }}
+                />
+                <Legend wrapperStyle={{ fontSize: '12px' }} />
+                <Area 
+                  type="monotone" 
+                  dataKey="positive" 
+                  stackId="1" 
+                  stroke="#22c55e" 
+                  fill="#22c55e" 
+                  fillOpacity={0.6}
+                  name="Positive"
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="neutral" 
+                  stackId="1" 
+                  stroke="#64748b" 
+                  fill="#64748b" 
+                  fillOpacity={0.6}
+                  name="Neutral"
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="negative" 
+                  stackId="1" 
+                  stroke="#ef4444" 
+                  fill="#ef4444" 
+                  fillOpacity={0.6}
+                  name="Negative"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
+    ) : null
+  )
+
+  return (
+    <div className="flex flex-col gap-6 animate-fade-in">
+      {/* AI Insights - Hidden on mobile, shown on desktop at top */}
+      <div className="hidden sm:block">
+        <AIInsightsPanel />
+      </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
@@ -183,78 +265,10 @@ export default function Dashboard() {
         ))}
       </div>
 
-      {/* Sentiment Trend Chart */}
-      {callTrends?.sentiment_trend?.length > 0 && (
-        <Card className="shadow-card">
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100">
-                  <Smile className="h-4 w-4 text-emerald-600" />
-                </div>
-                <div>
-                  <CardTitle className="text-base">Customer Sentiment</CardTitle>
-                  <CardDescription>Call sentiment analysis this week</CardDescription>
-                </div>
-              </div>
-              <Button variant="ghost" size="sm" asChild>
-                <Link to="/analytics">
-                  View Details
-                  <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
-                </Link>
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="h-52">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={callTrends.sentiment_trend}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                  <XAxis 
-                    dataKey="date" 
-                    tickFormatter={(d) => format(new Date(d), 'MMM d')}
-                    stroke="#94a3b8"
-                    fontSize={12}
-                  />
-                  <YAxis stroke="#94a3b8" fontSize={12} />
-                  <Tooltip 
-                    labelFormatter={(d) => format(new Date(d), 'MMM d, yyyy')}
-                    contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '12px' }}
-                  />
-                  <Legend wrapperStyle={{ fontSize: '12px' }} />
-                  <Area 
-                    type="monotone" 
-                    dataKey="positive" 
-                    stackId="1" 
-                    stroke="#22c55e" 
-                    fill="#22c55e" 
-                    fillOpacity={0.6}
-                    name="Positive"
-                  />
-                  <Area 
-                    type="monotone" 
-                    dataKey="neutral" 
-                    stackId="1" 
-                    stroke="#64748b" 
-                    fill="#64748b" 
-                    fillOpacity={0.6}
-                    name="Neutral"
-                  />
-                  <Area 
-                    type="monotone" 
-                    dataKey="negative" 
-                    stackId="1" 
-                    stroke="#ef4444" 
-                    fill="#ef4444" 
-                    fillOpacity={0.6}
-                    name="Negative"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      {/* Sentiment Chart - Hidden on mobile, shown on desktop */}
+      <div className="hidden sm:block">
+        <SentimentChart />
+      </div>
 
       {/* Main Content Grid */}
       <div className="grid gap-6 lg:grid-cols-3">
@@ -424,6 +438,16 @@ export default function Dashboard() {
             </div>
           </div>
         ))}
+      </div>
+
+      {/* Mobile Only: Sentiment Chart at bottom */}
+      <div className="sm:hidden">
+        <SentimentChart />
+      </div>
+
+      {/* Mobile Only: AI Insights at bottom */}
+      <div className="sm:hidden">
+        <AIInsightsPanel />
       </div>
     </div>
   )
