@@ -60,14 +60,8 @@ export default function Layout() {
           'fixed inset-y-0 left-0 w-72 bg-slate-900 shadow-xl transition-transform duration-300 ease-out',
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         )}>
-          <div className="flex h-16 items-center justify-between px-5 border-b border-slate-700">
-            <div className="flex items-center gap-3">
-              <img src="/logo.svg" alt="Premier Auto Service" className="h-10 w-10" />
-              <div>
-                <span className="text-base font-bold text-white">Premier Auto</span>
-                <span className="block text-[10px] font-medium text-slate-400 uppercase tracking-wider">AI Service Platform</span>
-              </div>
-            </div>
+          <div className="flex h-16 items-center justify-between px-4 border-b border-slate-700">
+            <img src="/logo-dark.png" alt="Premier Auto Service" className="h-10 w-auto object-contain" />
             <Button
               variant="ghost"
               size="icon"
@@ -118,12 +112,8 @@ export default function Layout() {
       <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col">
         <div className="flex flex-col flex-grow bg-slate-900">
           {/* Logo */}
-          <div className="flex h-16 items-center gap-3 px-5 border-b border-slate-700/50">
-            <img src="/logo.svg" alt="Premier Auto Service" className="h-10 w-10" />
-            <div>
-              <span className="text-base font-bold text-white">Premier Auto</span>
-              <span className="block text-[10px] font-medium text-slate-400 uppercase tracking-wider">AI Service Platform</span>
-            </div>
+          <div className="flex h-16 items-center justify-center px-4 border-b border-slate-700/50">
+            <img src="/logo-dark.png" alt="Premier Auto Service" className="h-11 w-auto object-contain" />
           </div>
           
           {/* Navigation */}
