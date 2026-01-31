@@ -13,7 +13,6 @@ import {
   Settings,
   Menu,
   X,
-  Bell,
   Search,
   ChevronRight,
   PhoneCall,
@@ -219,21 +218,7 @@ export default function Layout() {
             </div>
           </div>
           
-          <div className="flex-1 sm:flex-none" />
-          
-          {/* Right side */}
-          <div className="flex items-center gap-2 sm:gap-3">
-            {/* Notification button */}
-            <Button variant="ghost" size="icon" className="h-9 w-9 relative">
-              <Bell className="h-5 w-5 text-slate-500" />
-              <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-red-500" />
-            </Button>
-            
-            {/* Avatar */}
-            <div className="h-9 w-9 rounded-lg bg-slate-700 flex items-center justify-center text-white font-semibold text-sm">
-              PA
-            </div>
-          </div>
+          <div className="flex-1" />
         </div>
 
         {/* Page content */}
