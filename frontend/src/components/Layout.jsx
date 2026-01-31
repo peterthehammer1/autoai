@@ -13,7 +13,6 @@ import {
   Settings,
   Menu,
   X,
-  Search,
   ChevronRight,
   PhoneCall,
 } from 'lucide-react'
@@ -237,18 +236,6 @@ export default function Layout() {
           >
             <Menu className="h-5 w-5 text-slate-600" />
           </Button>
-          
-          {/* Search bar */}
-          <div className="hidden sm:flex flex-1 max-w-md">
-            <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-              <input 
-                type="text"
-                placeholder="Search..."
-                className="w-full h-9 pl-9 pr-4 rounded-lg bg-slate-100 border-0 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-white transition-all"
-              />
-            </div>
-          </div>
           
           <div className="flex-1" />
           
