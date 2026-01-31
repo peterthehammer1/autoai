@@ -22,14 +22,14 @@ function getTimeGreeting() {
 
 /**
  * POST /api/webhooks/retell/inbound
- * Handle Retell inbound call webhook - called BEFORE call connects
+ * Handle Nucleus AI inbound call webhook - called BEFORE call connects
  * Used to look up caller by phone number and pass dynamic variables
  */
 router.post('/retell/inbound', async (req, res) => {
   try {
     const { event, call_inbound } = req.body;
     
-    console.log('Retell inbound webhook:', JSON.stringify(req.body));
+    console.log('Nucleus inbound webhook:', JSON.stringify(req.body));
     
     if (event !== 'call_inbound' || !call_inbound) {
       return res.json({ call_inbound: {} });
@@ -157,14 +157,14 @@ router.post('/retell/inbound', async (req, res) => {
 
 /**
  * POST /api/webhooks/retell
- * Handle Retell AI webhook events
+ * Handle Nucleus AI webhook events
  * Events: call_started, call_ended, call_analyzed
  */
 router.post('/retell', async (req, res, next) => {
   try {
     const { event, call } = req.body;
 
-    console.log(`Retell webhook: ${event}`, call?.call_id);
+    console.log(`Nucleus webhook: ${event}`, call?.call_id);
 
     switch (event) {
       case 'call_started':

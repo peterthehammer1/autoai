@@ -8,13 +8,13 @@ const router = Router();
 
 /**
  * POST /api/retell/lookup_customer
- * Retell function: Look up customer by phone
+ * Nucleus AI function: Look up customer by phone
  */
 router.post('/lookup_customer', async (req, res, next) => {
   try {
     console.log('lookup_customer received:', JSON.stringify(req.body));
     
-    // Handle both direct params and nested args from Retell
+    // Handle both direct params and nested args from Nucleus AI
     const phone_number = req.body.phone_number || req.body.args?.phone_number;
 
     if (!phone_number) {
@@ -122,7 +122,7 @@ router.post('/lookup_customer', async (req, res, next) => {
 
 /**
  * POST /api/retell/get_services
- * Retell function: Get available services
+ * Nucleus AI function: Get available services
  */
 router.post('/get_services', async (req, res, next) => {
   try {
@@ -248,13 +248,13 @@ router.post('/get_services', async (req, res, next) => {
 
 /**
  * POST /api/retell/check_availability
- * Retell function: Check appointment availability
+ * Nucleus AI function: Check appointment availability
  */
 router.post('/check_availability', async (req, res, next) => {
   try {
     console.log('check_availability received:', JSON.stringify(req.body));
     
-    // Handle both direct params and nested args from Retell
+    // Handle both direct params and nested args from Nucleus AI
     const service_ids = req.body.service_ids || req.body.args?.service_ids;
     const preferred_date = req.body.preferred_date || req.body.args?.preferred_date;
     const preferred_time = req.body.preferred_time || req.body.args?.preferred_time;
@@ -447,16 +447,16 @@ router.post('/check_availability', async (req, res, next) => {
 
 /**
  * POST /api/retell/book_appointment
- * Retell function: Book an appointment
+ * Nucleus AI function: Book an appointment
  */
 router.post('/book_appointment', async (req, res, next) => {
   try {
     console.log('book_appointment received:', JSON.stringify(req.body));
     
-    // Helper to clean "null" strings from Retell
+    // Helper to clean "null" strings from Nucleus AI
     const cleanNull = (val) => (val === 'null' || val === null || val === undefined || val === '') ? null : val;
     
-    // Handle both direct params and nested args from Retell
+    // Handle both direct params and nested args from Nucleus AI
     const body = req.body.args || req.body;
     
     const customer_phone = cleanNull(body.customer_phone);
@@ -752,7 +752,7 @@ router.post('/book_appointment', async (req, res, next) => {
 
 /**
  * POST /api/retell/get_customer_appointments
- * Retell function: Get customer's appointments
+ * Nucleus AI function: Get customer's appointments
  */
 router.post('/get_customer_appointments', async (req, res, next) => {
   try {
@@ -852,7 +852,7 @@ router.post('/get_customer_appointments', async (req, res, next) => {
 
 /**
  * POST /api/retell/modify_appointment
- * Retell function: Cancel or reschedule appointment
+ * Nucleus AI function: Cancel or reschedule appointment
  */
 router.post('/modify_appointment', async (req, res, next) => {
   try {

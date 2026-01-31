@@ -238,7 +238,7 @@ export default function Settings() {
                 AI Voice Agent
               </CardTitle>
               <CardDescription>
-                Configure your Retell AI agent settings
+                Configure your Nucleus AI voice agent settings
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -255,17 +255,17 @@ export default function Settings() {
                   <Input defaultValue="Thanks for calling Premier Auto Service, this is Amber. How can I help you today?" />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Retell Agent ID</label>
+                  <label className="text-sm font-medium">Nucleus Agent ID</label>
                   <Input placeholder="agent_xxxxxx" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Webhook URL</label>
                   <Input
-                    defaultValue="https://your-api.com/api/webhooks/retell"
+                    defaultValue="https://your-api.com/api/webhooks/nucleus"
                     readOnly
                   />
                   <p className="text-xs text-muted-foreground">
-                    Configure this URL in your Retell dashboard
+                    Configure this URL in your Nucleus dashboard
                   </p>
                 </div>
               </div>

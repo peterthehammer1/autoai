@@ -264,7 +264,7 @@ CREATE TABLE appointments (
     
     -- Tracking
     created_by VARCHAR(50) DEFAULT 'ai_agent', -- ai_agent, dashboard, phone, web
-    call_id VARCHAR(100),                 -- Retell call ID
+    call_id VARCHAR(100),                 -- Nucleus call ID
     confirmation_sent_at TIMESTAMPTZ,
     reminder_sent_at TIMESTAMPTZ,
     checked_in_at TIMESTAMPTZ,
@@ -370,7 +370,7 @@ CREATE TABLE call_logs (
     services_discussed TEXT[],
     
     -- Metadata
-    agent_id VARCHAR(100),                -- Retell agent ID
+    agent_id VARCHAR(100),                -- Nucleus agent ID
     llm_model VARCHAR(50),
     
     created_at TIMESTAMPTZ DEFAULT NOW()

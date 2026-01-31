@@ -36,11 +36,11 @@ app.get('/', (req, res) => {
     description: 'AI-powered voice booking system for automotive service centers',
     endpoints: {
       health: '/health',
-      retell_functions: '/api/retell/*',
+      nucleus_functions: '/api/retell/*',
       dashboard_api: '/api/*'
     },
     documentation: 'https://github.com/peterthehammer1/autoai',
-    powered_by: 'Retell AI + Supabase'
+    powered_by: 'Nucleus AI + Supabase'
   });
 });
 
@@ -60,7 +60,7 @@ app.use('/api/call-logs', callLogRoutes);
 app.use('/api/reminders', reminderRoutes);
 app.use('/api/sms-logs', smsLogRoutes);
 
-// Retell Function Endpoints (simplified paths for function calling)
+// Nucleus AI Function Endpoints (simplified paths for function calling)
 app.use('/api/retell', (await import('./routes/retell-functions.js')).default);
 
 // Error handling middleware
