@@ -218,9 +218,9 @@ export default function Dashboard() {
                     </div>
                     <Badge className={cn(
                       'shrink-0 text-xs font-medium',
-                      getStatusColor(apt.status)
+                      getStatusColor(apt.display_status || apt.status)
                     )}>
-                      {apt.status.replace('_', ' ')}
+                      {(apt.display_status || apt.status).replace('_', ' ')}
                     </Badge>
                   </Link>
                 ))}

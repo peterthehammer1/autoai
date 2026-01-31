@@ -310,8 +310,12 @@ router.get('/', async (req, res, next) => {
 
     if (error) throw error;
 
+    // Enrich appointments with dynamic status
+    const now = new Date();
+    const enrichedAppointments = appointments.map(apt => enrichAppointmentWithDynamicStatus(apt, now));
+
     res.json({
-      appointments,
+      appointments: enrichedAppointments,
       pagination: {
         total: count,
         limit: parseInt(limit),
@@ -379,11 +383,12 @@ router.get('/upcoming', async (req, res, next) => {
 
 /**
  * GET /api/appointments/today
- * Get today's appointments
+ * Get today's appointments with dynamic status calculation
  */
 router.get('/today', async (req, res, next) => {
   try {
-    const today = format(new Date(), 'yyyy-MM-dd');
+    const now = new Date();
+    const today = format(now, 'yyyy-MM-dd');
 
     const { data: appointments, error } = await supabase
       .from('appointments')
@@ -399,32 +404,40 @@ router.get('/today', async (req, res, next) => {
 
     if (error) throw error;
 
-    // Group by status
+    // Enrich appointments with dynamic status
+    const enrichedAppointments = appointments.map(apt => enrichAppointmentWithDynamicStatus(apt, now));
+
+    // Group by dynamic display status
     const byStatus = {
       scheduled: [],
       confirmed: [],
       checked_in: [],
       in_progress: [],
+      checking_out: [],
       completed: [],
       cancelled: [],
       no_show: []
     };
 
-    for (const apt of appointments) {
-      if (byStatus[apt.status]) {
-        byStatus[apt.status].push(apt);
+    for (const apt of enrichedAppointments) {
+      const statusKey = apt.display_status;
+      if (byStatus[statusKey]) {
+        byStatus[statusKey].push(apt);
       }
     }
 
     res.json({
       date: today,
-      appointments,
+      current_time: format(now, 'HH:mm'),
+      appointments: enrichedAppointments,
       by_status: byStatus,
       summary: {
-        total: appointments.length,
-        active: appointments.filter(a => 
-          ['scheduled', 'confirmed', 'checked_in', 'in_progress'].includes(a.status)
+        total: enrichedAppointments.length,
+        active: enrichedAppointments.filter(a => 
+          ['scheduled', 'confirmed', 'checked_in', 'in_progress'].includes(a.display_status)
         ).length,
+        in_progress: byStatus.in_progress.length,
+        checking_out: byStatus.checking_out.length,
         completed: byStatus.completed.length,
         cancelled: byStatus.cancelled.length + byStatus.no_show.length
       }
@@ -613,6 +626,83 @@ function formatTime12Hour(timeStr) {
   const period = hours >= 12 ? 'PM' : 'AM';
   const hour12 = hours % 12 || 12;
   return `${hour12}:${String(mins).padStart(2, '0')} ${period}`;
+}
+
+/**
+ * Calculate dynamic status based on scheduled time, duration, and current time
+ * Only applies to appointments scheduled for today
+ */
+function calculateDynamicStatus(appointment, now = new Date()) {
+  const today = format(now, 'yyyy-MM-dd');
+  
+  // Only calculate dynamic status for today's appointments
+  if (appointment.scheduled_date !== today) {
+    return appointment.status;
+  }
+  
+  // Don't override terminal statuses
+  const terminalStatuses = ['completed', 'cancelled', 'no_show', 'invoiced', 'paid'];
+  if (terminalStatuses.includes(appointment.status)) {
+    return appointment.status;
+  }
+  
+  // Parse scheduled time
+  const [hours, mins] = appointment.scheduled_time.split(':').map(Number);
+  const scheduledStart = new Date(now);
+  scheduledStart.setHours(hours, mins, 0, 0);
+  
+  // Calculate end time based on estimated duration (default 60 min if not set)
+  const durationMinutes = appointment.estimated_duration_minutes || 60;
+  const scheduledEnd = new Date(scheduledStart.getTime() + durationMinutes * 60 * 1000);
+  
+  // Add a 15-minute "checking out" buffer after completion
+  const checkoutEnd = new Date(scheduledEnd.getTime() + 15 * 60 * 1000);
+  
+  const currentTime = now.getTime();
+  const startTime = scheduledStart.getTime();
+  const endTime = scheduledEnd.getTime();
+  const checkoutEndTime = checkoutEnd.getTime();
+  
+  // Determine dynamic status
+  if (currentTime < startTime) {
+    // Before appointment - keep original status
+    return appointment.status;
+  } else if (currentTime >= startTime && currentTime < endTime) {
+    // During appointment
+    return 'in_progress';
+  } else if (currentTime >= endTime && currentTime < checkoutEndTime) {
+    // Just finished - checking out period
+    return 'checking_out';
+  } else {
+    // Past checkout window - completed
+    return 'completed';
+  }
+}
+
+/**
+ * Add dynamic status and estimated end time to appointments
+ */
+function enrichAppointmentWithDynamicStatus(appointment, now = new Date()) {
+  const dynamicStatus = calculateDynamicStatus(appointment, now);
+  
+  // Calculate estimated end time
+  let estimatedEndTime = null;
+  if (appointment.scheduled_time && appointment.estimated_duration_minutes) {
+    const [hours, mins] = appointment.scheduled_time.split(':').map(Number);
+    const startMinutes = hours * 60 + mins;
+    const endMinutes = startMinutes + appointment.estimated_duration_minutes;
+    const endHours = Math.floor(endMinutes / 60);
+    const endMins = endMinutes % 60;
+    estimatedEndTime = `${String(endHours).padStart(2, '0')}:${String(endMins).padStart(2, '0')}`;
+  }
+  
+  return {
+    ...appointment,
+    display_status: dynamicStatus,
+    original_status: appointment.status,
+    estimated_end_time: estimatedEndTime,
+    estimated_end_time_formatted: estimatedEndTime ? formatTime12Hour(estimatedEndTime) : null
+  };
 }
 
 export default router;

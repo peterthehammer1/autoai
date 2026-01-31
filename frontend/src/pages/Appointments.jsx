@@ -242,8 +242,8 @@ export default function Appointments() {
                                   {apt.customer?.first_name} {apt.customer?.last_name}
                                 </span>
                               </div>
-                              <Badge className={cn('shrink-0', getStatusColor(apt.status))}>
-                                {apt.status.replace('_', ' ')}
+                              <Badge className={cn('shrink-0', getStatusColor(apt.display_status || apt.status))}>
+                                {(apt.display_status || apt.status).replace('_', ' ')}
                               </Badge>
                             </div>
                             
@@ -262,6 +262,7 @@ export default function Appointments() {
                               <span className="flex items-center gap-1">
                                 <Clock className="h-3 w-3" />
                                 {formatDuration(apt.estimated_duration_minutes)}
+                                {apt.estimated_end_time_formatted && ` • Est. done ${apt.estimated_end_time_formatted}`}
                               </span>
                               {apt.customer?.phone && (
                                 <PhoneNumber phone={apt.customer.phone} showRevealButton={false} />
@@ -360,9 +361,10 @@ export default function Appointments() {
                                   key={apt.id}
                                   className={cn(
                                     'text-[10px] sm:text-xs px-1 py-0.5 rounded truncate',
-                                    apt.status === 'completed' ? 'bg-emerald-100 text-emerald-700' :
-                                    apt.status === 'cancelled' ? 'bg-red-100 text-red-700' :
-                                    apt.status === 'in_progress' ? 'bg-amber-100 text-amber-700' :
+                                    (apt.display_status || apt.status) === 'completed' ? 'bg-emerald-100 text-emerald-700' :
+                                    (apt.display_status || apt.status) === 'checking_out' ? 'bg-purple-100 text-purple-700' :
+                                    (apt.display_status || apt.status) === 'cancelled' ? 'bg-red-100 text-red-700' :
+                                    (apt.display_status || apt.status) === 'in_progress' ? 'bg-amber-100 text-amber-700' :
                                     'bg-blue-100 text-blue-700'
                                   )}
                                 >
@@ -405,8 +407,8 @@ export default function Appointments() {
                                   <span className="font-medium text-slate-900">
                                     {formatTime12Hour(apt.scheduled_time)}
                                   </span>
-                                  <Badge className={cn('text-xs', getStatusColor(apt.status))}>
-                                    {apt.status.replace('_', ' ')}
+                                  <Badge className={cn('text-xs', getStatusColor(apt.display_status || apt.status))}>
+                                    {(apt.display_status || apt.status).replace('_', ' ')}
                                   </Badge>
                                 </div>
                                 <p className="text-sm font-medium text-slate-700">
@@ -570,8 +572,8 @@ export default function Appointments() {
                             <p className="font-medium truncate">
                               {apt.customer?.first_name} {apt.customer?.last_name}
                             </p>
-                            <Badge className={cn('shrink-0 text-xs', getStatusColor(apt.status))}>
-                              {apt.status.replace('_', ' ')}
+                            <Badge className={cn('shrink-0 text-xs', getStatusColor(apt.display_status || apt.status))}>
+                              {(apt.display_status || apt.status).replace('_', ' ')}
                             </Badge>
                           </div>
                           <p className="text-sm text-slate-500 truncate">
@@ -580,6 +582,9 @@ export default function Appointments() {
                           <p className="text-sm text-slate-500 truncate">
                             {apt.appointment_services?.map((s) => s.service_name).join(', ')}
                           </p>
+                          {apt.estimated_end_time_formatted && (
+                            <p className="text-xs text-slate-400">Est. done {apt.estimated_end_time_formatted}</p>
+                          )}
                         </div>
                       </div>
                     </Link>
@@ -628,11 +633,16 @@ export default function Appointments() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          {formatDuration(apt.estimated_duration_minutes)}
+                          <div>
+                            {formatDuration(apt.estimated_duration_minutes)}
+                            {apt.estimated_end_time_formatted && (
+                              <div className="text-xs text-slate-400">Done {apt.estimated_end_time_formatted}</div>
+                            )}
+                          </div>
                         </TableCell>
                         <TableCell>
-                          <Badge className={getStatusColor(apt.status)}>
-                            {apt.status.replace('_', ' ')}
+                          <Badge className={getStatusColor(apt.display_status || apt.status)}>
+                            {(apt.display_status || apt.status).replace('_', ' ')}
                           </Badge>
                         </TableCell>
                         <TableCell>
