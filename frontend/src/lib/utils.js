@@ -17,14 +17,22 @@ export function formatPhone(phone) {
   return phone
 }
 
-export function formatCurrency(cents) {
-  if (cents === null || cents === undefined) return '-'
-  // Convert cents to dollars
-  const dollars = cents / 100
+// Format dollar amounts (for service prices stored as dollars)
+export function formatCurrency(dollars) {
+  if (dollars === null || dollars === undefined) return '-'
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
   }).format(dollars)
+}
+
+// Format cent amounts (for appointment totals stored as cents)
+export function formatCents(cents) {
+  if (cents === null || cents === undefined) return '-'
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+  }).format(cents / 100)
 }
 
 export function formatDuration(minutes) {

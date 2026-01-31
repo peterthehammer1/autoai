@@ -23,7 +23,7 @@ import {
   Target,
   Sparkles,
 } from 'lucide-react'
-import { cn, formatTime12Hour, getStatusColor, formatCurrency } from '@/lib/utils'
+import { cn, formatTime12Hour, getStatusColor, formatCents } from '@/lib/utils'
 
 // Insight icon and color mapping
 const insightConfig = {
@@ -80,7 +80,7 @@ export default function Dashboard() {
     {
       name: 'Revenue (MTD)',
       value: overview?.month?.revenue_booked
-        ? formatCurrency(overview.month.revenue_booked)
+        ? formatCents(overview.month.revenue_booked)
         : '$0',
       change: '+18%',
       icon: DollarSign,

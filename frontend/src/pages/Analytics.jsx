@@ -21,7 +21,7 @@ import {
 import { analytics } from '@/api'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { formatCurrency, cn } from '@/lib/utils'
+import { formatCents, cn } from '@/lib/utils'
 import { TrendingUp, Clock, Phone, Smile, Meh, Frown } from 'lucide-react'
 
 const COLORS = ['#3b82f6', '#22c55e', '#eab308', '#ef4444', '#8b5cf6', '#ec4899']
@@ -123,7 +123,7 @@ export default function Analytics() {
           <CardContent className="p-6">
             <p className="text-sm text-muted-foreground">Revenue Booked</p>
             <p className="text-3xl font-bold">
-              {formatCurrency(overview?.month?.revenue_booked ?? 0)}
+              {formatCents(overview?.month?.revenue_booked ?? 0)}
             </p>
           </CardContent>
         </Card>

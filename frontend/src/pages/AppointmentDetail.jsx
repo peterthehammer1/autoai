@@ -25,7 +25,7 @@ import {
   cn,
   formatTime12Hour,
   formatDuration,
-  formatCurrency,
+  formatCents,
   getStatusColor,
 } from '@/lib/utils'
 import { useToast } from '@/hooks/use-toast'
@@ -323,14 +323,14 @@ export default function AppointmentDetail() {
                     </p>
                   </div>
                   <p className="font-medium">
-                    {formatCurrency(svc.quoted_price)}
+                    {formatCents(svc.quoted_price)}
                   </p>
                 </div>
               ))}
               <Separator />
               <div className="flex items-center justify-between font-medium">
                 <span>Total</span>
-                <span>{formatCurrency(apt.quoted_total)}</span>
+                <span>{formatCents(apt.quoted_total)}</span>
               </div>
             </div>
           </CardContent>

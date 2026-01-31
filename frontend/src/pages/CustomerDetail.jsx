@@ -36,7 +36,7 @@ import {
 import {
   formatTime12Hour,
   getStatusColor,
-  formatCurrency,
+  formatCents,
   cn,
 } from '@/lib/utils'
 import PhoneNumber, { Email } from '@/components/PhoneNumber'
@@ -290,7 +290,7 @@ export default function CustomerDetail() {
                   <p className="text-xs text-slate-500">Total Visits</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-lg font-bold text-slate-900">{formatCurrency(healthData.stats.total_spend)}</p>
+                  <p className="text-lg font-bold text-slate-900">{formatCents(healthData.stats.total_spend)}</p>
                   <p className="text-xs text-slate-500">Total Spend</p>
                 </div>
                 <div className="text-center">
