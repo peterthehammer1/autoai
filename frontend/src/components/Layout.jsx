@@ -57,11 +57,11 @@ export default function Layout() {
         
         {/* Mobile sidebar */}
         <div className={cn(
-          'fixed inset-y-0 left-0 w-72 bg-slate-900 shadow-xl transition-transform duration-300 ease-out',
+          'fixed inset-y-0 left-0 w-72 shadow-xl transition-transform duration-300 ease-out',
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        )}>
-          <div className="flex h-20 items-center justify-between px-4 border-b border-slate-700">
-            <img src="/logo-dark.png" alt="Premier Auto Service" className="h-14 w-auto object-contain" />
+        )} style={{ backgroundColor: '#082438' }}>
+          <div className="flex h-28 items-center justify-between px-3">
+            <img src="/logo-dark.png" alt="Premier Auto Service" className="h-20 w-auto object-contain" />
             <Button
               variant="ghost"
               size="icon"
@@ -110,10 +110,10 @@ export default function Layout() {
 
       {/* Desktop sidebar */}
       <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col">
-        <div className="flex flex-col flex-grow bg-slate-900">
+        <div className="flex flex-col flex-grow" style={{ backgroundColor: '#082438' }}>
           {/* Logo */}
-          <div className="flex h-24 items-center justify-center px-3 border-b border-slate-700/50">
-            <img src="/logo-dark.png" alt="Premier Auto Service" className="h-[72px] w-auto object-contain" />
+          <div className="flex h-32 items-center justify-center px-2">
+            <img src="/logo-dark.png" alt="Premier Auto Service" className="h-24 w-auto object-contain" />
           </div>
           
           {/* Navigation */}
