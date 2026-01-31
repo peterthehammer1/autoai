@@ -50,7 +50,7 @@ export default function Settings() {
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Email</label>
-                  <Input defaultValue="service@premierauto.com" />
+                  <Input defaultValue="pete@nucleus.com" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Website</label>
