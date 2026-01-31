@@ -106,6 +106,23 @@ export default function Layout() {
               </div>
             </a>
           </div>
+          
+          {/* Mobile Powered by Nucleus */}
+          <div className="p-3 border-t border-slate-700/50">
+            <a 
+              href="https://nucleus.com" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 py-2 opacity-60 hover:opacity-100 transition-opacity"
+            >
+              <span className="text-[11px] text-slate-400">Powered by</span>
+              <img 
+                src="/nucleus-logo.svg" 
+                alt="Nucleus" 
+                className="h-3.5 brightness-0 invert opacity-70"
+              />
+            </a>
+          </div>
         </div>
       </div>
 
@@ -189,6 +206,21 @@ export default function Layout() {
               <p className="text-sm font-medium text-white">Voice Agent Online</p>
               <p className="text-xs text-slate-400">Handling calls 24/7</p>
             </div>
+            
+            {/* Desktop Powered by Nucleus */}
+            <a 
+              href="https://nucleus.com" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 py-2 mt-2 opacity-50 hover:opacity-100 transition-opacity"
+            >
+              <span className="text-[11px] text-slate-400">Powered by</span>
+              <img 
+                src="/nucleus-logo.svg" 
+                alt="Nucleus" 
+                className="h-3.5 brightness-0 invert opacity-70"
+              />
+            </a>
           </div>
         </div>
       </div>
