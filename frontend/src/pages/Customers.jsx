@@ -56,12 +56,25 @@ export default function Customers() {
       )
     }
     
-    // Sort by last name alphabetically
+    // Sort by last name alphabetically, customers without last names go to the end
     return [...filtered].sort((a, b) => {
-      const lastNameA = (a.last_name || '').toLowerCase()
-      const lastNameB = (b.last_name || '').toLowerCase()
+      const lastNameA = (a.last_name || '').trim().toLowerCase()
+      const lastNameB = (b.last_name || '').trim().toLowerCase()
+      
+      // Push customers without last names to the end
+      if (!lastNameA && lastNameB) return 1
+      if (lastNameA && !lastNameB) return -1
+      if (!lastNameA && !lastNameB) {
+        // Both have no last name, sort by first name
+        const firstNameA = (a.first_name || '').toLowerCase()
+        const firstNameB = (b.first_name || '').toLowerCase()
+        return firstNameA.localeCompare(firstNameB)
+      }
+      
+      // Normal alphabetical sort by last name
       if (lastNameA < lastNameB) return -1
       if (lastNameA > lastNameB) return 1
+      
       // If last names are equal, sort by first name
       const firstNameA = (a.first_name || '').toLowerCase()
       const firstNameB = (b.first_name || '').toLowerCase()
