@@ -46,7 +46,7 @@ export default function Settings() {
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Phone Number</label>
-                  <Input defaultValue="(555) 123-4567" />
+                  <Input defaultValue="(519) 804-0969" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Email</label>
@@ -54,7 +54,7 @@ export default function Settings() {
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Website</label>
-                  <Input defaultValue="https://premierauto.com" />
+                  <Input defaultValue="https://fixmycar.app" />
                 </div>
               </div>
               <Separator />
@@ -65,19 +65,9 @@ export default function Settings() {
                     <label className="text-sm font-medium">Street Address</label>
                     <Input defaultValue="1250 Industrial Boulevard" />
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-2 md:col-span-2">
                     <label className="text-sm font-medium">City</label>
                     <Input defaultValue="Automotive City" />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Province</label>
-                      <Input defaultValue="ON" />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Postal Code</label>
-                      <Input defaultValue="N2N 3P4" />
-                    </div>
                   </div>
                 </div>
               </div>
