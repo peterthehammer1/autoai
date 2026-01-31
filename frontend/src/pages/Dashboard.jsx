@@ -91,32 +91,7 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        {stats.map((stat, index) => (
-          <div
-            key={stat.name}
-            className={cn(
-              'rounded-lg p-4 bg-white border border-slate-200 shadow-card',
-              stat.bgClass
-            )}
-          >
-            <div className="flex items-center justify-between mb-3">
-              <div className={cn('rounded-lg p-2 bg-white shadow-sm')}>
-                <stat.icon className={cn('h-5 w-5', stat.iconColor)} />
-              </div>
-              <span className="flex items-center gap-0.5 text-xs font-semibold text-emerald-600">
-                <ArrowUpRight className="h-3 w-3" />
-                {stat.change}
-              </span>
-            </div>
-            <p className="text-2xl font-bold text-slate-900">{stat.value}</p>
-            <p className="text-sm text-slate-500 mt-0.5">{stat.name}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* AI Insights Panel */}
+      {/* AI Insights Panel - Top of Dashboard */}
       {insightsData?.insights?.length > 0 && (
         <div className="bg-gradient-to-r from-slate-900 to-slate-800 rounded-lg overflow-hidden shadow-card">
           <div className="p-4 sm:p-5">
@@ -166,6 +141,31 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        {stats.map((stat, index) => (
+          <div
+            key={stat.name}
+            className={cn(
+              'rounded-lg p-4 bg-white border border-slate-200 shadow-card',
+              stat.bgClass
+            )}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <div className={cn('rounded-lg p-2 bg-white shadow-sm')}>
+                <stat.icon className={cn('h-5 w-5', stat.iconColor)} />
+              </div>
+              <span className="flex items-center gap-0.5 text-xs font-semibold text-emerald-600">
+                <ArrowUpRight className="h-3 w-3" />
+                {stat.change}
+              </span>
+            </div>
+            <p className="text-2xl font-bold text-slate-900">{stat.value}</p>
+            <p className="text-sm text-slate-500 mt-0.5">{stat.name}</p>
+          </div>
+        ))}
+      </div>
 
       {/* Main Content Grid */}
       <div className="grid gap-6 lg:grid-cols-3">

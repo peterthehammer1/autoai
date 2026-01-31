@@ -573,6 +573,89 @@ router.get('/insights', async (req, res, next) => {
       });
     }
 
+    // 8. Monthly revenue tracking
+    const monthStart = format(startOfMonth(today), 'yyyy-MM-dd');
+    const { data: monthRevenue } = await supabase
+      .from('appointments')
+      .select('quoted_total')
+      .gte('scheduled_date', monthStart)
+      .not('status', 'in', '("cancelled","no_show")');
+
+    const totalRevenue = monthRevenue?.reduce((sum, apt) => sum + (apt.quoted_total || 0), 0) || 0;
+    if (totalRevenue > 0) {
+      const formattedRevenue = totalRevenue >= 100000 
+        ? `$${(totalRevenue / 100000).toFixed(0)}K` 
+        : `$${(totalRevenue / 100).toFixed(0)}`;
+      insights.push({
+        type: 'success',
+        category: 'revenue',
+        title: 'Monthly Revenue',
+        message: `${formattedRevenue} in booked services this month`,
+        value: formattedRevenue,
+        priority: 'low'
+      });
+    }
+
+    // 9. Average call duration
+    const { data: callDurations } = await supabase
+      .from('call_logs')
+      .select('duration_seconds')
+      .gte('started_at', `${weekStart}T00:00:00`)
+      .not('duration_seconds', 'is', null);
+
+    if (callDurations?.length > 5) {
+      const avgDuration = Math.round(callDurations.reduce((sum, c) => sum + c.duration_seconds, 0) / callDurations.length);
+      const minutes = Math.floor(avgDuration / 60);
+      const seconds = avgDuration % 60;
+      insights.push({
+        type: 'info',
+        category: 'efficiency',
+        title: 'Avg Call Time',
+        message: `Average call duration is ${minutes}m ${seconds}s — AI handles calls efficiently`,
+        value: `${minutes}:${seconds.toString().padStart(2, '0')}`,
+        priority: 'low'
+      });
+    }
+
+    // 10. Positive sentiment rate
+    const { count: positiveCalls } = await supabase
+      .from('call_logs')
+      .select('*', { count: 'exact', head: true })
+      .gte('started_at', `${weekStart}T00:00:00`)
+      .eq('sentiment', 'positive');
+
+    if (thisWeekCalls > 5) {
+      const sentimentRate = Math.round((positiveCalls / thisWeekCalls) * 100);
+      if (sentimentRate >= 70) {
+        insights.push({
+          type: 'success',
+          category: 'satisfaction',
+          title: 'Customer Satisfaction',
+          message: `${sentimentRate}% of calls have positive sentiment — customers love the service`,
+          value: `${sentimentRate}%`,
+          priority: 'low'
+        });
+      }
+    }
+
+    // 11. Today's workload
+    const { count: todayAppts } = await supabase
+      .from('appointments')
+      .select('*', { count: 'exact', head: true })
+      .eq('scheduled_date', todayStr)
+      .not('status', 'in', '("cancelled","no_show")');
+
+    if (todayAppts > 0) {
+      insights.push({
+        type: 'info',
+        category: 'today',
+        title: 'Today\'s Workload',
+        message: `${todayAppts} appointment${todayAppts > 1 ? 's' : ''} scheduled for today — stay on track`,
+        value: todayAppts.toString(),
+        priority: 'medium'
+      });
+    }
+
     // Sort by priority
     const priorityOrder = { high: 0, medium: 1, low: 2 };
     insights.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
