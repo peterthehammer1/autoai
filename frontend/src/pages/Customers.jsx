@@ -1,20 +1,21 @@
 import { useState, useMemo } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { Link } from 'react-router-dom'
-import { format } from 'date-fns'
-import { customers } from '@/api'
-import { Card, CardContent } from '@/components/ui/card'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { format, formatDistanceToNow } from 'date-fns'
+import { customers, analytics } from '@/api'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
+import { Label } from '@/components/ui/label'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog'
 import { 
   Search, 
   User, 
@@ -23,20 +24,99 @@ import {
   Users,
   Car,
   CalendarCheck,
+  Phone,
+  Mail,
+  Plus,
+  Edit,
+  Loader2,
+  Heart,
+  TrendingUp,
+  Calendar,
+  DollarSign,
+  AlertCircle,
+  Wrench,
+  Target,
+  Clock,
+  FileText,
+  PhoneCall,
+  X,
+  Star,
+  MapPin,
 } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { cn, formatTime12Hour, getStatusColor, formatCents } from '@/lib/utils'
 import PhoneNumber, { Email } from '@/components/PhoneNumber'
+import { Link } from 'react-router-dom'
 
-const ITEMS_PER_PAGE = 10
+const ITEMS_PER_PAGE = 50
 
 export default function Customers() {
+  const queryClient = useQueryClient()
   const [searchTerm, setSearchTerm] = useState('')
-  const [currentPage, setCurrentPage] = useState(1)
+  const [selectedCustomerId, setSelectedCustomerId] = useState(null)
+  const [isEditOpen, setIsEditOpen] = useState(false)
+  const [isAddVehicleOpen, setIsAddVehicleOpen] = useState(false)
+  const [editForm, setEditForm] = useState({})
+  const [vehicleForm, setVehicleForm] = useState({
+    year: '',
+    make: '',
+    model: '',
+    color: '',
+    license_plate: '',
+    mileage: '',
+    is_primary: false,
+  })
 
   // Fetch all customers
   const { data, isLoading } = useQuery({
     queryKey: ['customers', 'list'],
     queryFn: () => customers.list({ limit: 500 }),
+  })
+
+  // Fetch selected customer details
+  const { data: customerData, isLoading: isLoadingCustomer } = useQuery({
+    queryKey: ['customer', selectedCustomerId],
+    queryFn: () => customers.get(selectedCustomerId),
+    enabled: !!selectedCustomerId,
+  })
+
+  // Fetch customer appointments
+  const { data: appointmentsData } = useQuery({
+    queryKey: ['customer', selectedCustomerId, 'appointments'],
+    queryFn: () => customers.getAppointments(selectedCustomerId),
+    enabled: !!selectedCustomerId,
+  })
+
+  // Fetch customer health data
+  const { data: healthData } = useQuery({
+    queryKey: ['customer', selectedCustomerId, 'health'],
+    queryFn: () => analytics.customerHealth(selectedCustomerId),
+    enabled: !!selectedCustomerId,
+  })
+
+  const updateMutation = useMutation({
+    mutationFn: (data) => customers.update(selectedCustomerId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['customer', selectedCustomerId])
+      queryClient.invalidateQueries(['customers', 'list'])
+      setIsEditOpen(false)
+    },
+  })
+
+  const addVehicleMutation = useMutation({
+    mutationFn: (data) => customers.addVehicle(selectedCustomerId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['customer', selectedCustomerId])
+      setIsAddVehicleOpen(false)
+      setVehicleForm({
+        year: '',
+        make: '',
+        model: '',
+        color: '',
+        license_plate: '',
+        mileage: '',
+        is_primary: false,
+      })
+    },
   })
 
   // Sort alphabetically by last name and filter by search
@@ -45,7 +125,6 @@ export default function Customers() {
     
     let filtered = data.customers
     
-    // Filter by search term
     if (searchTerm) {
       const term = searchTerm.toLowerCase()
       filtered = filtered.filter(c => 
@@ -56,280 +135,729 @@ export default function Customers() {
       )
     }
     
-    // Sort by last name alphabetically, customers without last names go to the end
     return [...filtered].sort((a, b) => {
       const lastNameA = (a.last_name || '').trim().toLowerCase()
       const lastNameB = (b.last_name || '').trim().toLowerCase()
       
-      // Push customers without last names to the end
       if (!lastNameA && lastNameB) return 1
       if (lastNameA && !lastNameB) return -1
       if (!lastNameA && !lastNameB) {
-        // Both have no last name, sort by first name
         const firstNameA = (a.first_name || '').toLowerCase()
         const firstNameB = (b.first_name || '').toLowerCase()
         return firstNameA.localeCompare(firstNameB)
       }
       
-      // Normal alphabetical sort by last name
       if (lastNameA < lastNameB) return -1
       if (lastNameA > lastNameB) return 1
       
-      // If last names are equal, sort by first name
       const firstNameA = (a.first_name || '').toLowerCase()
       const firstNameB = (b.first_name || '').toLowerCase()
       return firstNameA.localeCompare(firstNameB)
     })
   }, [data?.customers, searchTerm])
 
-  // Pagination
-  const totalItems = sortedAndFilteredCustomers.length
-  const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE)
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE
-  const endIndex = startIndex + ITEMS_PER_PAGE
-  const paginatedCustomers = sortedAndFilteredCustomers.slice(startIndex, endIndex)
-
-  // Reset to page 1 when search changes
-  const handleSearch = (value) => {
-    setSearchTerm(value)
-    setCurrentPage(1)
-  }
-
-  // Calculate stats
+  const selectedCustomer = customerData?.customer
   const totalVehicles = data?.customers?.reduce((sum, c) => sum + (c.vehicle_count || 0), 0) || 0
   const totalVisits = data?.customers?.reduce((sum, c) => sum + (c.total_visits || 0), 0) || 0
 
+  const handleEditOpen = () => {
+    if (selectedCustomer) {
+      setEditForm({
+        first_name: selectedCustomer.first_name || '',
+        last_name: selectedCustomer.last_name || '',
+        email: selectedCustomer.email || '',
+        phone: selectedCustomer.phone || '',
+      })
+      setIsEditOpen(true)
+    }
+  }
+
+  const handleEditSubmit = (e) => {
+    e.preventDefault()
+    updateMutation.mutate(editForm)
+  }
+
+  const handleAddVehicleSubmit = (e) => {
+    e.preventDefault()
+    addVehicleMutation.mutate({
+      ...vehicleForm,
+      year: vehicleForm.year ? parseInt(vehicleForm.year) : null,
+      mileage: vehicleForm.mileage ? parseInt(vehicleForm.mileage) : null,
+    })
+  }
+
+  // Get initials for avatar
+  const getInitials = (firstName, lastName) => {
+    return `${(firstName || '')[0] || ''}${(lastName || '')[0] || ''}`.toUpperCase() || '?'
+  }
+
+  // Get avatar color based on name
+  const getAvatarColor = (name) => {
+    const colors = [
+      'bg-blue-500', 'bg-emerald-500', 'bg-violet-500', 'bg-amber-500', 
+      'bg-rose-500', 'bg-cyan-500', 'bg-indigo-500', 'bg-pink-500'
+    ]
+    const index = (name || '').charCodeAt(0) % colors.length
+    return colors[index]
+  }
+
   return (
-    <div className="space-y-6 animate-fade-in">
-      {/* Hero Stats Section */}
-      <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-xl p-6 text-white relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500 rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2" />
-          <div className="absolute bottom-0 left-0 w-48 h-48 bg-violet-500 rounded-full blur-3xl transform -translate-x-1/2 translate-y-1/2" />
-        </div>
-        
-        <div className="relative">
-          <div className="flex items-center gap-3 mb-6">
+    <div className="h-[calc(100vh-6rem)] flex flex-col animate-fade-in">
+      {/* Top Stats Bar */}
+      <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 rounded-xl p-4 mb-4 text-white">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
             <div className="p-2 bg-white/10 rounded-lg backdrop-blur">
               <Users className="h-5 w-5" />
             </div>
             <div>
-              <h1 className="text-lg font-semibold">Customer Directory</h1>
-              <p className="text-sm text-slate-400">Manage your customer database</p>
+              <h1 className="text-lg font-semibold">Customer Management</h1>
+              <p className="text-sm text-slate-400">CRM Dashboard</p>
             </div>
           </div>
           
-          <div className="grid grid-cols-3 gap-4">
-            <div className="bg-white/5 backdrop-blur rounded-lg p-4 border border-white/10">
-              <div className="flex items-center gap-2 mb-2">
-                <Users className="h-4 w-4 text-slate-400" />
-                <span className="text-xs text-slate-400 uppercase tracking-wider">Customers</span>
-              </div>
-              <p className="text-3xl font-bold">{data?.customers?.length || 0}</p>
+          <div className="flex items-center gap-6">
+            <div className="text-center">
+              <p className="text-2xl font-bold">{data?.customers?.length || 0}</p>
+              <p className="text-xs text-slate-400">Customers</p>
             </div>
-            
-            <div className="bg-white/5 backdrop-blur rounded-lg p-4 border border-white/10">
-              <div className="flex items-center gap-2 mb-2">
-                <Car className="h-4 w-4 text-blue-400" />
-                <span className="text-xs text-slate-400 uppercase tracking-wider">Vehicles</span>
-              </div>
-              <p className="text-3xl font-bold">{totalVehicles}</p>
+            <div className="h-8 w-px bg-white/20" />
+            <div className="text-center">
+              <p className="text-2xl font-bold">{totalVehicles}</p>
+              <p className="text-xs text-slate-400">Vehicles</p>
             </div>
-            
-            <div className="bg-white/5 backdrop-blur rounded-lg p-4 border border-white/10">
-              <div className="flex items-center gap-2 mb-2">
-                <CalendarCheck className="h-4 w-4 text-emerald-400" />
-                <span className="text-xs text-slate-400 uppercase tracking-wider">Total Visits</span>
-              </div>
-              <p className="text-3xl font-bold">{totalVisits}</p>
+            <div className="h-8 w-px bg-white/20" />
+            <div className="text-center">
+              <p className="text-2xl font-bold">{totalVisits}</p>
+              <p className="text-xs text-slate-400">Total Visits</p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Search & Pagination Info */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="relative w-full sm:w-80">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-          <Input
-            placeholder="Search by name, phone, or email..."
-            value={searchTerm}
-            onChange={(e) => handleSearch(e.target.value)}
-            className="pl-9 bg-white"
-          />
-        </div>
-
-        {totalItems > 0 && (
-          <div className="text-sm text-slate-500">
-            Showing <span className="font-medium text-slate-900">{startIndex + 1}</span> to{' '}
-            <span className="font-medium text-slate-900">{Math.min(endIndex, totalItems)}</span> of{' '}
-            <span className="font-medium text-slate-900">{totalItems}</span> customers
-          </div>
-        )}
-      </div>
-
-      {/* Customer List */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        {isLoading ? (
-          <div className="p-12 text-center">
-            <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-4" />
-            <p className="text-slate-500">Loading customers...</p>
-          </div>
-        ) : !sortedAndFilteredCustomers.length ? (
-          <div className="p-12 text-center">
-            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <User className="h-8 w-8 text-slate-400" />
+      {/* Main Content - Master/Detail Layout */}
+      <div className="flex-1 flex gap-4 min-h-0">
+        {/* Left Panel - Customer List */}
+        <div className="w-80 flex flex-col bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+          {/* Search Header */}
+          <div className="p-3 border-b border-slate-200 bg-slate-50">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <Input
+                placeholder="Search customers..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9 bg-white h-9 text-sm"
+              />
             </div>
-            <p className="font-semibold text-slate-900 mb-1">No Customers Found</p>
-            <p className="text-sm text-slate-500">
-              {searchTerm ? `No customers match "${searchTerm}"` : 'No customers in the system yet.'}
+            <p className="text-xs text-slate-500 mt-2">
+              {sortedAndFilteredCustomers.length} customers
             </p>
           </div>
-        ) : (
-          <>
-            {/* Mobile Card View */}
-            <div className="sm:hidden divide-y divide-slate-100">
-              {paginatedCustomers.map((customer) => (
-                <Link
-                  key={customer.id}
-                  to={`/customers/${customer.id}`}
-                  className="block p-4 hover:bg-slate-50 transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 shrink-0">
-                      <User className="h-5 w-5 text-primary" />
+
+          {/* Customer List */}
+          <ScrollArea className="flex-1">
+            {isLoading ? (
+              <div className="p-8 text-center">
+                <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full mx-auto mb-2" />
+                <p className="text-sm text-slate-500">Loading...</p>
+              </div>
+            ) : sortedAndFilteredCustomers.length === 0 ? (
+              <div className="p-8 text-center">
+                <User className="h-8 w-8 text-slate-300 mx-auto mb-2" />
+                <p className="text-sm text-slate-500">No customers found</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-slate-100">
+                {sortedAndFilteredCustomers.map((customer) => (
+                  <button
+                    key={customer.id}
+                    onClick={() => setSelectedCustomerId(customer.id)}
+                    className={cn(
+                      "w-full p-3 text-left hover:bg-slate-50 transition-colors flex items-center gap-3",
+                      selectedCustomerId === customer.id && "bg-blue-50 border-l-2 border-l-blue-500"
+                    )}
+                  >
+                    <div className={cn(
+                      "h-10 w-10 rounded-full flex items-center justify-center text-white font-medium text-sm shrink-0",
+                      getAvatarColor(customer.first_name)
+                    )}>
+                      {getInitials(customer.first_name, customer.last_name)}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-slate-900 truncate">
-                        {customer.last_name}, {customer.first_name}
+                        {customer.first_name} {customer.last_name}
                       </p>
-                      <p className="text-sm text-slate-500">
-                        <PhoneNumber phone={customer.phone} showRevealButton={false} />
+                      <p className="text-xs text-slate-500 truncate">
+                        {customer.phone || 'No phone'}
                       </p>
                     </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      {customer.vehicle_count > 0 && (
-                        <Badge variant="secondary" className="text-xs">
-                          {customer.vehicle_count} car{customer.vehicle_count !== 1 ? 's' : ''}
-                        </Badge>
-                      )}
-                      <ChevronRight className="h-4 w-4 text-slate-400" />
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-
-            {/* Desktop Table View */}
-            <Table className="hidden sm:table">
-              <TableHeader>
-                <TableRow className="bg-slate-50/50">
-                  <TableHead className="w-[250px]">Customer</TableHead>
-                  <TableHead>Phone</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead className="text-center w-[100px]">Vehicles</TableHead>
-                  <TableHead className="text-center w-[80px]">Visits</TableHead>
-                  <TableHead className="w-[120px]">Added</TableHead>
-                  <TableHead className="w-[50px]"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paginatedCustomers.map((customer) => (
-                  <TableRow 
-                    key={customer.id}
-                    className="cursor-pointer hover:bg-slate-50 transition-colors"
-                    onClick={() => window.location.href = `/customers/${customer.id}`}
-                  >
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10">
-                          <User className="h-4 w-4 text-primary" />
-                        </div>
-                        <span className="font-medium text-slate-900">
-                          {customer.last_name}, {customer.first_name}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-slate-600">
-                      <PhoneNumber phone={customer.phone} showRevealButton={false} />
-                    </TableCell>
-                    <TableCell className="text-slate-500">
-                      {customer.email ? <Email email={customer.email} /> : '-'}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {customer.vehicle_count > 0 ? (
-                        <Badge variant="secondary">{customer.vehicle_count}</Badge>
-                      ) : (
-                        <span className="text-slate-400">0</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-center text-slate-600">
-                      {customer.total_visits || 0}
-                    </TableCell>
-                    <TableCell className="text-slate-500 text-sm">
-                      {format(new Date(customer.created_at), 'MMM d, yyyy')}
-                    </TableCell>
-                    <TableCell>
-                      <ChevronRight className="h-4 w-4 text-slate-400" />
-                    </TableCell>
-                  </TableRow>
+                    {customer.total_visits > 0 && (
+                      <Badge variant="secondary" className="text-xs shrink-0">
+                        {customer.total_visits}
+                      </Badge>
+                    )}
+                  </button>
                 ))}
-              </TableBody>
-            </Table>
-
-            {/* Pagination Footer */}
-            {totalPages > 1 && (
-              <div className="flex items-center justify-between px-4 py-3 border-t border-slate-200 bg-slate-50/50">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                  disabled={currentPage === 1}
-                >
-                  <ChevronLeft className="h-4 w-4 mr-1" />
-                  Previous
-                </Button>
-                
-                <div className="flex items-center gap-1">
-                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                    let pageNum
-                    if (totalPages <= 5) {
-                      pageNum = i + 1
-                    } else if (currentPage <= 3) {
-                      pageNum = i + 1
-                    } else if (currentPage >= totalPages - 2) {
-                      pageNum = totalPages - 4 + i
-                    } else {
-                      pageNum = currentPage - 2 + i
-                    }
-                    return (
-                      <Button
-                        key={pageNum}
-                        variant={currentPage === pageNum ? 'default' : 'ghost'}
-                        size="sm"
-                        className="w-8 h-8 p-0"
-                        onClick={() => setCurrentPage(pageNum)}
-                      >
-                        {pageNum}
-                      </Button>
-                    )
-                  })}
-                </div>
-
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                  disabled={currentPage === totalPages}
-                >
-                  Next
-                  <ChevronRight className="h-4 w-4 ml-1" />
-                </Button>
               </div>
             )}
-          </>
-        )}
+          </ScrollArea>
+        </div>
+
+        {/* Right Panel - Customer Details */}
+        <div className="flex-1 flex flex-col min-h-0">
+          {!selectedCustomerId ? (
+            <div className="flex-1 flex items-center justify-center bg-white rounded-xl border border-slate-200">
+              <div className="text-center">
+                <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <User className="h-10 w-10 text-slate-300" />
+                </div>
+                <h3 className="text-lg font-semibold text-slate-900 mb-1">Select a Customer</h3>
+                <p className="text-sm text-slate-500">Choose a customer from the list to view their details</p>
+              </div>
+            </div>
+          ) : isLoadingCustomer ? (
+            <div className="flex-1 flex items-center justify-center bg-white rounded-xl border border-slate-200">
+              <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full" />
+            </div>
+          ) : selectedCustomer ? (
+            <div className="flex-1 flex flex-col bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+              {/* Customer Header */}
+              <div className="bg-gradient-to-r from-slate-50 to-white p-6 border-b border-slate-200">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className={cn(
+                      "h-16 w-16 rounded-full flex items-center justify-center text-white font-bold text-xl",
+                      getAvatarColor(selectedCustomer.first_name)
+                    )}>
+                      {getInitials(selectedCustomer.first_name, selectedCustomer.last_name)}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h2 className="text-2xl font-bold text-slate-900">
+                          {selectedCustomer.first_name} {selectedCustomer.last_name}
+                        </h2>
+                        {healthData && (
+                          <Badge className={cn(
+                            'text-xs',
+                            healthData.health_color === 'green' ? 'bg-emerald-100 text-emerald-700' :
+                            healthData.health_color === 'blue' ? 'bg-blue-100 text-blue-700' :
+                            healthData.health_color === 'yellow' ? 'bg-amber-100 text-amber-700' :
+                            'bg-red-100 text-red-700'
+                          )}>
+                            {healthData.health_status}
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-4 mt-1 text-sm text-slate-500">
+                        <span className="flex items-center gap-1">
+                          <Phone className="h-3.5 w-3.5" />
+                          <PhoneNumber phone={selectedCustomer.phone} showRevealButton={false} />
+                        </span>
+                        {selectedCustomer.email && (
+                          <span className="flex items-center gap-1">
+                            <Mail className="h-3.5 w-3.5" />
+                            <Email email={selectedCustomer.email} />
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-slate-400 mt-1">
+                        Customer since {format(new Date(selectedCustomer.created_at), 'MMMM yyyy')}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button variant="outline" size="sm" onClick={handleEditOpen}>
+                      <Edit className="h-4 w-4 mr-1" />
+                      Edit
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => setSelectedCustomerId(null)}>
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Quick Stats */}
+                <div className="grid grid-cols-4 gap-4 mt-6">
+                  <div className="bg-white rounded-lg p-3 border border-slate-200 shadow-sm">
+                    <div className="flex items-center gap-2 text-slate-500 text-xs mb-1">
+                      <CalendarCheck className="h-3.5 w-3.5" />
+                      Total Visits
+                    </div>
+                    <p className="text-xl font-bold text-slate-900">
+                      {healthData?.stats?.total_visits || selectedCustomer.total_visits || 0}
+                    </p>
+                  </div>
+                  <div className="bg-white rounded-lg p-3 border border-slate-200 shadow-sm">
+                    <div className="flex items-center gap-2 text-slate-500 text-xs mb-1">
+                      <DollarSign className="h-3.5 w-3.5" />
+                      Total Spend
+                    </div>
+                    <p className="text-xl font-bold text-slate-900">
+                      {healthData?.stats?.total_spend ? formatCents(healthData.stats.total_spend) : '$0'}
+                    </p>
+                  </div>
+                  <div className="bg-white rounded-lg p-3 border border-slate-200 shadow-sm">
+                    <div className="flex items-center gap-2 text-slate-500 text-xs mb-1">
+                      <Car className="h-3.5 w-3.5" />
+                      Vehicles
+                    </div>
+                    <p className="text-xl font-bold text-slate-900">
+                      {selectedCustomer.vehicles?.length || 0}
+                    </p>
+                  </div>
+                  <div className="bg-white rounded-lg p-3 border border-slate-200 shadow-sm">
+                    <div className="flex items-center gap-2 text-slate-500 text-xs mb-1">
+                      <Heart className="h-3.5 w-3.5" />
+                      Health Score
+                    </div>
+                    <p className="text-xl font-bold text-slate-900">
+                      {healthData?.health_score || '-'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Tabbed Content */}
+              <Tabs defaultValue="overview" className="flex-1 flex flex-col min-h-0">
+                <TabsList className="w-full justify-start rounded-none border-b border-slate-200 bg-slate-50 p-0 h-auto">
+                  <TabsTrigger 
+                    value="overview" 
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent py-3 px-4"
+                  >
+                    Overview
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="vehicles" 
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent py-3 px-4"
+                  >
+                    Vehicles ({selectedCustomer.vehicles?.length || 0})
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="appointments" 
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent py-3 px-4"
+                  >
+                    Appointments ({appointmentsData?.appointments?.length || 0})
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="insights" 
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent py-3 px-4"
+                  >
+                    AI Insights
+                  </TabsTrigger>
+                </TabsList>
+
+                <ScrollArea className="flex-1">
+                  {/* Overview Tab */}
+                  <TabsContent value="overview" className="m-0 p-6">
+                    <div className="grid grid-cols-2 gap-6">
+                      {/* Health Score Card */}
+                      {healthData && (
+                        <div className="bg-gradient-to-br from-slate-50 to-white rounded-xl border border-slate-200 p-5">
+                          <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                            <Heart className="h-4 w-4 text-rose-500" />
+                            Customer Health
+                          </h3>
+                          <div className="flex items-center gap-6">
+                            <div className="relative">
+                              <svg className="w-24 h-24 transform -rotate-90">
+                                <circle cx="48" cy="48" r="40" fill="none" stroke="#e2e8f0" strokeWidth="8" />
+                                <circle
+                                  cx="48" cy="48" r="40" fill="none"
+                                  stroke={
+                                    healthData.health_color === 'green' ? '#10b981' :
+                                    healthData.health_color === 'blue' ? '#3b82f6' :
+                                    healthData.health_color === 'yellow' ? '#f59e0b' : '#ef4444'
+                                  }
+                                  strokeWidth="8" strokeLinecap="round"
+                                  strokeDasharray={`${(healthData.health_score / 100) * 251} 251`}
+                                />
+                              </svg>
+                              <div className="absolute inset-0 flex items-center justify-center">
+                                <span className="text-2xl font-bold text-slate-900">{healthData.health_score}</span>
+                              </div>
+                            </div>
+                            <div className="flex-1 space-y-2">
+                              <div className="flex justify-between text-sm">
+                                <span className="text-slate-500">Recency</span>
+                                <span className="font-medium">{healthData.score_breakdown.recency}/30</span>
+                              </div>
+                              <div className="flex justify-between text-sm">
+                                <span className="text-slate-500">Frequency</span>
+                                <span className="font-medium">{healthData.score_breakdown.frequency}/30</span>
+                              </div>
+                              <div className="flex justify-between text-sm">
+                                <span className="text-slate-500">Value</span>
+                                <span className="font-medium">{healthData.score_breakdown.value}/20</span>
+                              </div>
+                              <div className="flex justify-between text-sm">
+                                <span className="text-slate-500">Loyalty</span>
+                                <span className="font-medium">{healthData.score_breakdown.loyalty}/20</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Recent Activity */}
+                      <div className="bg-gradient-to-br from-slate-50 to-white rounded-xl border border-slate-200 p-5">
+                        <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                          <Clock className="h-4 w-4 text-blue-500" />
+                          Recent Activity
+                        </h3>
+                        <div className="space-y-3">
+                          {healthData?.stats?.last_visit && (
+                            <div className="flex items-center gap-3">
+                              <div className="h-8 w-8 rounded-full bg-emerald-100 flex items-center justify-center">
+                                <CalendarCheck className="h-4 w-4 text-emerald-600" />
+                              </div>
+                              <div>
+                                <p className="text-sm font-medium text-slate-900">Last Visit</p>
+                                <p className="text-xs text-slate-500">
+                                  {formatDistanceToNow(new Date(healthData.stats.last_visit), { addSuffix: true })}
+                                </p>
+                              </div>
+                            </div>
+                          )}
+                          {appointmentsData?.appointments?.[0] && (
+                            <div className="flex items-center gap-3">
+                              <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
+                                <Calendar className="h-4 w-4 text-blue-600" />
+                              </div>
+                              <div>
+                                <p className="text-sm font-medium text-slate-900">Next Appointment</p>
+                                <p className="text-xs text-slate-500">
+                                  {format(new Date(appointmentsData.appointments[0].scheduled_date), 'MMM d, yyyy')}
+                                </p>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Primary Vehicle */}
+                      {selectedCustomer.vehicles?.length > 0 && (
+                        <div className="col-span-2 bg-gradient-to-br from-slate-50 to-white rounded-xl border border-slate-200 p-5">
+                          <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                            <Car className="h-4 w-4 text-slate-500" />
+                            Primary Vehicle
+                          </h3>
+                          <div className="flex items-center gap-4">
+                            <div className="h-16 w-16 rounded-xl bg-slate-200 flex items-center justify-center">
+                              <Car className="h-8 w-8 text-slate-400" />
+                            </div>
+                            <div>
+                              <p className="text-lg font-semibold text-slate-900">
+                                {selectedCustomer.vehicles[0].year} {selectedCustomer.vehicles[0].make} {selectedCustomer.vehicles[0].model}
+                              </p>
+                              <p className="text-sm text-slate-500">
+                                {selectedCustomer.vehicles[0].color && `${selectedCustomer.vehicles[0].color} • `}
+                                {selectedCustomer.vehicles[0].mileage 
+                                  ? `${selectedCustomer.vehicles[0].mileage.toLocaleString()} km`
+                                  : 'Mileage not recorded'}
+                                {selectedCustomer.vehicles[0].license_plate && ` • ${selectedCustomer.vehicles[0].license_plate}`}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </TabsContent>
+
+                  {/* Vehicles Tab */}
+                  <TabsContent value="vehicles" className="m-0 p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="font-semibold text-slate-900">Registered Vehicles</h3>
+                      <Button size="sm" onClick={() => setIsAddVehicleOpen(true)}>
+                        <Plus className="h-4 w-4 mr-1" />
+                        Add Vehicle
+                      </Button>
+                    </div>
+                    {selectedCustomer.vehicles?.length > 0 ? (
+                      <div className="grid grid-cols-2 gap-4">
+                        {selectedCustomer.vehicles.map((vehicle) => (
+                          <div
+                            key={vehicle.id}
+                            className="bg-white rounded-xl border border-slate-200 p-4 hover:shadow-md transition-shadow"
+                          >
+                            <div className="flex items-start gap-4">
+                              <div className="h-12 w-12 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
+                                <Car className="h-6 w-6 text-slate-400" />
+                              </div>
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2">
+                                  <p className="font-semibold text-slate-900">
+                                    {vehicle.year} {vehicle.make} {vehicle.model}
+                                  </p>
+                                  {vehicle.is_primary && (
+                                    <Badge className="bg-amber-100 text-amber-700 text-xs">Primary</Badge>
+                                  )}
+                                </div>
+                                <p className="text-sm text-slate-500 mt-1">
+                                  {vehicle.color && `${vehicle.color} • `}
+                                  {vehicle.mileage 
+                                    ? `${vehicle.mileage.toLocaleString()} km`
+                                    : 'Mileage unknown'}
+                                </p>
+                                {vehicle.license_plate && (
+                                  <p className="text-xs text-slate-400 mt-1 font-mono">
+                                    {vehicle.license_plate}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-12 bg-slate-50 rounded-xl">
+                        <Car className="h-12 w-12 text-slate-300 mx-auto mb-3" />
+                        <p className="text-slate-500">No vehicles registered</p>
+                        <Button size="sm" variant="outline" className="mt-3" onClick={() => setIsAddVehicleOpen(true)}>
+                          <Plus className="h-4 w-4 mr-1" />
+                          Add First Vehicle
+                        </Button>
+                      </div>
+                    )}
+                  </TabsContent>
+
+                  {/* Appointments Tab */}
+                  <TabsContent value="appointments" className="m-0 p-6">
+                    <h3 className="font-semibold text-slate-900 mb-4">Appointment History</h3>
+                    {appointmentsData?.appointments?.length > 0 ? (
+                      <div className="space-y-3">
+                        {appointmentsData.appointments.map((apt) => (
+                          <Link
+                            key={apt.id}
+                            to={`/appointments/${apt.id}`}
+                            className="block bg-white rounded-xl border border-slate-200 p-4 hover:shadow-md transition-shadow"
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-4">
+                                <div className="text-center bg-slate-100 rounded-lg px-3 py-2">
+                                  <p className="text-lg font-bold text-slate-900">
+                                    {format(new Date(apt.scheduled_date), 'd')}
+                                  </p>
+                                  <p className="text-xs text-slate-500 uppercase">
+                                    {format(new Date(apt.scheduled_date), 'MMM')}
+                                  </p>
+                                </div>
+                                <div>
+                                  <p className="font-medium text-slate-900">
+                                    {apt.appointment_services?.map((s) => s.service_name).join(', ') || 'Service'}
+                                  </p>
+                                  <p className="text-sm text-slate-500">
+                                    {formatTime12Hour(apt.scheduled_time)}
+                                    {apt.vehicle && ` • ${apt.vehicle.year} ${apt.vehicle.make} ${apt.vehicle.model}`}
+                                  </p>
+                                </div>
+                              </div>
+                              <Badge className={getStatusColor(apt.status)}>
+                                {apt.status.replace('_', ' ')}
+                              </Badge>
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-12 bg-slate-50 rounded-xl">
+                        <Calendar className="h-12 w-12 text-slate-300 mx-auto mb-3" />
+                        <p className="text-slate-500">No appointment history</p>
+                      </div>
+                    )}
+                  </TabsContent>
+
+                  {/* AI Insights Tab */}
+                  <TabsContent value="insights" className="m-0 p-6">
+                    <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                      <Target className="h-4 w-4 text-violet-500" />
+                      AI-Powered Recommendations
+                    </h3>
+                    {healthData?.recommendations?.length > 0 ? (
+                      <div className="space-y-4">
+                        {healthData.recommendations.map((rec, idx) => (
+                          <div
+                            key={idx}
+                            className={cn(
+                              "rounded-xl border p-4 flex items-start gap-3",
+                              rec.type === 'action' && "bg-amber-50 border-amber-200",
+                              rec.type === 'service' && "bg-blue-50 border-blue-200",
+                              rec.type === 'upsell' && "bg-violet-50 border-violet-200"
+                            )}
+                          >
+                            {rec.type === 'action' && <AlertCircle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />}
+                            {rec.type === 'service' && <Wrench className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />}
+                            {rec.type === 'upsell' && <Target className="h-5 w-5 text-violet-500 shrink-0 mt-0.5" />}
+                            <div>
+                              <p className="font-medium text-slate-900 capitalize">{rec.type}</p>
+                              <p className="text-sm text-slate-600 mt-1">{rec.message}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-12 bg-slate-50 rounded-xl">
+                        <Target className="h-12 w-12 text-slate-300 mx-auto mb-3" />
+                        <p className="text-slate-500">No recommendations available yet</p>
+                        <p className="text-xs text-slate-400 mt-1">More data needed to generate insights</p>
+                      </div>
+                    )}
+                  </TabsContent>
+                </ScrollArea>
+              </Tabs>
+            </div>
+          ) : null}
+        </div>
       </div>
+
+      {/* Edit Customer Dialog */}
+      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Customer</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleEditSubmit}>
+            <div className="space-y-4 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="first_name">First Name</Label>
+                  <Input
+                    id="first_name"
+                    value={editForm.first_name}
+                    onChange={(e) => setEditForm({ ...editForm, first_name: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="last_name">Last Name</Label>
+                  <Input
+                    id="last_name"
+                    value={editForm.last_name}
+                    onChange={(e) => setEditForm({ ...editForm, last_name: e.target.value })}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="phone">Phone</Label>
+                <Input
+                  id="phone"
+                  value={editForm.phone}
+                  onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={editForm.email}
+                  onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setIsEditOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={updateMutation.isPending}>
+                {updateMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Save Changes
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Vehicle Dialog */}
+      <Dialog open={isAddVehicleOpen} onOpenChange={setIsAddVehicleOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Vehicle</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleAddVehicleSubmit}>
+            <div className="space-y-4 py-4">
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="year">Year</Label>
+                  <Input
+                    id="year"
+                    type="number"
+                    placeholder="2024"
+                    value={vehicleForm.year}
+                    onChange={(e) => setVehicleForm({ ...vehicleForm, year: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="make">Make</Label>
+                  <Input
+                    id="make"
+                    placeholder="Toyota"
+                    value={vehicleForm.make}
+                    onChange={(e) => setVehicleForm({ ...vehicleForm, make: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="model">Model</Label>
+                  <Input
+                    id="model"
+                    placeholder="Camry"
+                    value={vehicleForm.model}
+                    onChange={(e) => setVehicleForm({ ...vehicleForm, model: e.target.value })}
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="color">Color</Label>
+                  <Input
+                    id="color"
+                    placeholder="Silver"
+                    value={vehicleForm.color}
+                    onChange={(e) => setVehicleForm({ ...vehicleForm, color: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="license_plate">License Plate</Label>
+                  <Input
+                    id="license_plate"
+                    placeholder="ABC 123"
+                    value={vehicleForm.license_plate}
+                    onChange={(e) => setVehicleForm({ ...vehicleForm, license_plate: e.target.value })}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="mileage">Mileage (km)</Label>
+                <Input
+                  id="mileage"
+                  type="number"
+                  placeholder="50000"
+                  value={vehicleForm.mileage}
+                  onChange={(e) => setVehicleForm({ ...vehicleForm, mileage: e.target.value })}
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="is_primary"
+                  checked={vehicleForm.is_primary}
+                  onChange={(e) => setVehicleForm({ ...vehicleForm, is_primary: e.target.checked })}
+                  className="h-4 w-4 rounded border-slate-300"
+                />
+                <Label htmlFor="is_primary" className="font-normal">Set as primary vehicle</Label>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setIsAddVehicleOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={addVehicleMutation.isPending}>
+                {addVehicleMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Add Vehicle
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
