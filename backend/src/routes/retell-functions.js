@@ -1641,10 +1641,13 @@ router.post('/send_confirmation', async (req, res, next) => {
         message: 'I\'ve sent you a confirmation text with all the details.'
       });
     } else {
-      return res.json({
+      const payload = {
         success: false,
         message: 'I wasn\'t able to send the text right now, but your appointment is confirmed. You can write down the details if you\'d like.'
-      });
+      };
+      // Expose underlying reason for tests/ops (e.g. "Twilio not configured" or Twilio API error)
+      if (result.error) payload.error_detail = result.error;
+      return res.json(payload);
     }
 
   } catch (error) {
