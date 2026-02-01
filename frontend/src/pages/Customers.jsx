@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { format, formatDistanceToNow } from 'date-fns'
 import { customers, analytics } from '@/api'
@@ -155,6 +155,13 @@ export default function Customers() {
       return firstNameA.localeCompare(firstNameB)
     })
   }, [data?.customers, searchTerm])
+
+  // Auto-select first customer when data loads
+  useEffect(() => {
+    if (sortedAndFilteredCustomers.length > 0 && !selectedCustomerId) {
+      setSelectedCustomerId(sortedAndFilteredCustomers[0].id)
+    }
+  }, [sortedAndFilteredCustomers, selectedCustomerId])
 
   const selectedCustomer = customerData?.customer
   const totalVehicles = data?.customers?.reduce((sum, c) => sum + (c.vehicle_count || 0), 0) || 0
