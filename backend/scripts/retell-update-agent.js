@@ -1,12 +1,12 @@
 /**
- * Update Retell agent, LLM (general_tools + URLs), and phone number inbound webhook
- * to match retell/retell-config.json (backend www.alignedai.dev).
+ * Update Retell agent, LLM (general_tools + URLs + prompt), and phone number inbound webhook
+ * to match retell/retell-config.json and retell/agent-prompt-slim.md (backend www.alignedai.dev).
  *
  * Run from project root:
  *   NUCLEUS_API_KEY=your_key node backend/scripts/retell-update-agent.js
  *
  * Uses: agent_id, llm_id from retell-config.json; updates agent webhook_url,
- * LLM general_tools, and all phone numbers bound to this agent (inbound_webhook_url).
+ * LLM general_tools + general_prompt, and all phone numbers bound to this agent (inbound_webhook_url).
  */
 
 import { Retell } from 'retell-sdk';
@@ -17,6 +17,7 @@ import path from 'path';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(__dirname, '../..');
 const configPath = path.join(projectRoot, 'retell/retell-config.json');
+const promptPath = path.join(projectRoot, 'retell/agent-prompt-slim.md');
 
 const API_KEY = process.env.NUCLEUS_API_KEY || process.env.RETELL_API_KEY;
 if (!API_KEY) {
@@ -47,20 +48,35 @@ async function main() {
     throw e;
   }
 
-  // 2. Update LLM: general_tools (all function URLs from config)
+  // 2. Update LLM: general_tools (all function URLs from config) and general_prompt
   const generalTools = config.general_tools;
-  if (!generalTools || !generalTools.length) {
-    console.log('No general_tools in config, skipping LLM update.');
-  } else {
+  let prompt;
+  try {
+    prompt = readFileSync(promptPath, 'utf8');
+  } catch (e) {
+    console.warn('Could not read prompt file:', e.message);
+  }
+
+  const llmUpdate = {};
+  if (generalTools && generalTools.length) {
+    llmUpdate.general_tools = generalTools;
+  }
+  if (prompt) {
+    llmUpdate.general_prompt = prompt;
+  }
+
+  if (Object.keys(llmUpdate).length > 0) {
     try {
-      await client.llm.update(llmId, {
-        general_tools: generalTools,
-      });
-      console.log('OK LLM general_tools updated (%d tools)', generalTools.length);
+      await client.llm.update(llmId, llmUpdate);
+      console.log('OK LLM updated:');
+      if (llmUpdate.general_tools) console.log('   - general_tools: %d tools', llmUpdate.general_tools.length);
+      if (llmUpdate.general_prompt) console.log('   - general_prompt: %d chars from agent-prompt-slim.md', llmUpdate.general_prompt.length);
     } catch (e) {
       console.error('Failed to update LLM:', e.message);
       throw e;
     }
+  } else {
+    console.log('No LLM updates to apply.');
   }
 
   // 3. List phone numbers and set inbound webhook for those using this agent
