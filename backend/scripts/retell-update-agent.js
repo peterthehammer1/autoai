@@ -109,6 +109,15 @@ async function main() {
     }
   }
 
+  // 4. Publish the agent to make changes live
+  try {
+    await client.agent.publish(agentId);
+    console.log('OK Agent published');
+  } catch (e) {
+    // Some accounts may not have versioning enabled, so publish may fail
+    console.warn('Could not publish agent (versioning may not be enabled):', e.message);
+  }
+
   console.log('\nDone. Agent, LLM, and phone inbound webhook point to www.alignedai.dev.');
 }
 
