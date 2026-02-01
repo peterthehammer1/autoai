@@ -114,12 +114,12 @@ API will be running at `http://localhost:3001`
 
 | Endpoint | Description |
 |----------|-------------|
-| `POST /api/retell/lookup_customer` | Find customer by phone |
-| `POST /api/retell/get_services` | Get available services |
-| `POST /api/retell/check_availability` | Check appointment slots |
-| `POST /api/retell/book_appointment` | Book an appointment |
-| `POST /api/retell/get_customer_appointments` | Get customer's appointments |
-| `POST /api/retell/modify_appointment` | Cancel or reschedule |
+| `POST /api/voice/lookup_customer` | Find customer by phone |
+| `POST /api/voice/get_services` | Get available services |
+| `POST /api/voice/check_availability` | Check appointment slots |
+| `POST /api/voice/book_appointment` | Book an appointment |
+| `POST /api/voice/get_customer_appointments` | Get customer's appointments |
+| `POST /api/voice/modify_appointment` | Cancel or reschedule |
 
 ### Dashboard API
 
@@ -139,7 +139,7 @@ API will be running at `http://localhost:3001`
 
 | Endpoint | Description |
 |----------|-------------|
-| `POST /api/webhooks/retell` | Retell call events |
+| `POST /api/webhooks/voice` | Retell call events |
 | `POST /api/webhooks/twilio/sms` | Inbound SMS |
 
 ## Database Schema
@@ -171,7 +171,7 @@ When setting up functions in Retell, use these configurations:
 ```json
 {
   "name": "lookup_customer",
-  "url": "https://your-api.com/api/retell/lookup_customer",
+  "url": "https://your-api.com/api/voice/lookup_customer",
   "method": "POST",
   "parameters": {
     "phone_number": {
@@ -187,7 +187,7 @@ When setting up functions in Retell, use these configurations:
 ```json
 {
   "name": "check_availability", 
-  "url": "https://your-api.com/api/retell/check_availability",
+  "url": "https://your-api.com/api/voice/check_availability",
   "method": "POST",
   "parameters": {
     "service_ids": {
@@ -211,7 +211,7 @@ When setting up functions in Retell, use these configurations:
 ```json
 {
   "name": "book_appointment",
-  "url": "https://your-api.com/api/retell/book_appointment", 
+  "url": "https://your-api.com/api/voice/book_appointment", 
   "method": "POST",
   "parameters": {
     "customer_phone": { "type": "string", "required": true },
@@ -270,21 +270,21 @@ curl http://localhost:3001/health
 
 ### Look up customer
 ```bash
-curl -X POST http://localhost:3001/api/retell/lookup_customer \
+curl -X POST http://localhost:3001/api/voice/lookup_customer \
   -H "Content-Type: application/json" \
   -d '{"phone_number": "555-234-5678"}'
 ```
 
 ### Get popular services
 ```bash
-curl -X POST http://localhost:3001/api/retell/get_services \
+curl -X POST http://localhost:3001/api/voice/get_services \
   -H "Content-Type: application/json" \
   -d '{}'
 ```
 
 ### Check availability
 ```bash
-curl -X POST http://localhost:3001/api/retell/check_availability \
+curl -X POST http://localhost:3001/api/voice/check_availability \
   -H "Content-Type: application/json" \
   -d '{
     "service_ids": ["SERVICE_ID_HERE"],

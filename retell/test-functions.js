@@ -84,7 +84,7 @@ async function runTests() {
   // Test 2: lookup_customer - Existing
   const test2 = await testEndpoint(
     'lookup_customer (existing: John Smith)',
-    '/api/retell/lookup_customer',
+    '/api/voice/lookup_customer',
     { phone_number: '555-234-5678' },
     'Find existing customer by phone'
   );
@@ -93,7 +93,7 @@ async function runTests() {
   // Test 3: lookup_customer - New
   const test3 = await testEndpoint(
     'lookup_customer (new customer)',
-    '/api/retell/lookup_customer',
+    '/api/voice/lookup_customer',
     { phone_number: '555-999-0000' },
     'Handle unknown phone number'
   );
@@ -102,7 +102,7 @@ async function runTests() {
   // Test 4: get_services - Popular
   const test4 = await testEndpoint(
     'get_services (popular)',
-    '/api/retell/get_services',
+    '/api/voice/get_services',
     {},
     'Get popular services list'
   );
@@ -114,7 +114,7 @@ async function runTests() {
   // Test 5: get_services - Search
   const test5 = await testEndpoint(
     'get_services (search)',
-    '/api/retell/get_services',
+    '/api/voice/get_services',
     { search: 'oil change' },
     'Search for specific service'
   );
@@ -128,7 +128,7 @@ async function runTests() {
   // Test 6: get_services - Category
   const test6 = await testEndpoint(
     'get_services (category)',
-    '/api/retell/get_services',
+    '/api/voice/get_services',
     { category: 'Brakes' },
     'Filter services by category'
   );
@@ -137,7 +137,7 @@ async function runTests() {
   // Test 7: get_services - With Mileage
   const test7 = await testEndpoint(
     'get_services (with mileage)',
-    '/api/retell/get_services',
+    '/api/voice/get_services',
     { mileage: 45000 },
     'Get services with mileage recommendations'
   );
@@ -150,7 +150,7 @@ async function runTests() {
   
   const test8 = await testEndpoint(
     'check_availability (morning)',
-    '/api/retell/check_availability',
+    '/api/voice/check_availability',
     { 
       service_ids: serviceId ? [serviceId] : ['test-id'],
       preferred_date: tomorrowStr,
@@ -163,7 +163,7 @@ async function runTests() {
   // Test 9: check_availability - Afternoon
   const test9 = await testEndpoint(
     'check_availability (afternoon)',
-    '/api/retell/check_availability',
+    '/api/voice/check_availability',
     { 
       service_ids: serviceId ? [serviceId] : ['test-id'],
       preferred_time: 'afternoon',
@@ -176,7 +176,7 @@ async function runTests() {
   // Test 10: get_customer_appointments - Existing
   const test10 = await testEndpoint(
     'get_customer_appointments (existing)',
-    '/api/retell/get_customer_appointments',
+    '/api/voice/get_customer_appointments',
     { customer_phone: '555-234-5678', status: 'upcoming' },
     'Get upcoming appointments for customer'
   );
@@ -185,7 +185,7 @@ async function runTests() {
   // Test 11: get_customer_appointments - New
   const test11 = await testEndpoint(
     'get_customer_appointments (new customer)',
-    '/api/retell/get_customer_appointments',
+    '/api/voice/get_customer_appointments',
     { customer_phone: '555-000-0000' },
     'Handle customer with no appointments'
   );
@@ -233,7 +233,7 @@ For detailed instructions, see: retell/SETUP.md
   console.log(`
 To test booking (creates real data):
 
-curl -X POST ${BASE_URL}/api/retell/book_appointment \\
+curl -X POST ${BASE_URL}/api/voice/book_appointment \\
   -H "Content-Type: application/json" \\
   -d '{
     "customer_phone": "555-TEST-999",

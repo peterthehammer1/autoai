@@ -298,9 +298,8 @@ ON c.phone = v.phone;
 -- ============================================================================
 
 -- This creates 30-minute slots for each bay during business hours
--- Monday-Friday: 7:00 AM - 6:00 PM (22 slots per day)
--- Saturday: 8:00 AM - 4:00 PM (16 slots per day)
--- Sunday: Closed
+-- Service department: Monday-Friday only, 7:00 AM - 4:00 PM (18 slots per day, last start 3:30 PM)
+-- Saturday and Sunday: Closed (no slots)
 
 INSERT INTO time_slots (slot_date, start_time, end_time, bay_id, is_available)
 SELECT 
@@ -322,12 +321,12 @@ FROM
         INTERVAL '1 day'
     ) AS d(date)
 CROSS JOIN 
-    -- Generate time slots based on day of week
+    -- Time slots: 7:00 to 15:30 (last start 3:30 PM; service closes at 4 PM)
     (
         SELECT slot_time::TIME
         FROM generate_series(
             '07:00'::TIME,
-            '17:30'::TIME,
+            '15:30'::TIME,
             INTERVAL '30 minutes'
         ) AS slot_time
     ) AS t
@@ -335,15 +334,10 @@ CROSS JOIN
     service_bays b
 WHERE 
     b.is_active = true
-    AND (
-        -- Monday-Friday: 7:00 - 18:00
-        (EXTRACT(DOW FROM d.date) BETWEEN 1 AND 5 AND t.slot_time >= '07:00' AND t.slot_time < '18:00')
-        OR
-        -- Saturday: 8:00 - 16:00
-        (EXTRACT(DOW FROM d.date) = 6 AND t.slot_time >= '08:00' AND t.slot_time < '16:00')
-    )
-    -- Exclude Sundays
-    AND EXTRACT(DOW FROM d.date) != 0;
+    -- Monday-Friday only (1=Monday, 5=Friday); exclude Saturday (6) and Sunday (0)
+    AND EXTRACT(DOW FROM d.date) BETWEEN 1 AND 5
+    AND t.slot_time >= '07:00'
+    AND t.slot_time < '16:00';
 
 -- Block lunch slots (12:00-13:00) for some bays to simulate real schedule
 UPDATE time_slots

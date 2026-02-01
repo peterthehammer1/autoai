@@ -103,7 +103,7 @@ call_logs: id, retell_call_id, phone_number, outcome, duration_seconds, transcri
 
 ## API Endpoints
 
-### Retell Functions (POST /api/retell/*)
+### Retell Functions (POST /api/voice/*)
 ```
 /lookup_customer     - {phone_number} → customer + vehicles
 /get_services        - {category?, search?, mileage?} → services[]
@@ -268,7 +268,7 @@ cd backend && npm run dev
 
 # Test API
 curl http://localhost:3001/health
-curl -X POST http://localhost:3001/api/retell/lookup_customer \
+curl -X POST http://localhost:3001/api/voice/lookup_customer \
   -H "Content-Type: application/json" \
   -d '{"phone_number": "555-234-5678"}'
 

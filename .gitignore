@@ -37,6 +37,9 @@ coverage/
 # Vercel
 .vercel
 
+# Retell call export (may contain PII)
+retell/latest-call.json
+
 # Misc
 *.tgz
 .cache/

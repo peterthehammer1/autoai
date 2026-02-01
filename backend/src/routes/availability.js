@@ -64,17 +64,17 @@ router.get('/check', async (req, res, next) => {
     const startDate = date ? parseISO(date) : new Date();
     const endDate = addDays(startDate, parseInt(days_to_check, 10));
 
-    // Time preference filter
-    let timeFilter = { start: '07:00', end: '18:00' };
+    // Service department hours: Mon-Fri 7am-4pm only (no evenings, no weekends)
+    let timeFilter = { start: '07:00', end: '16:00' };
     if (time_preference === 'morning') {
       timeFilter = { start: '07:00', end: '12:00' };
     } else if (time_preference === 'afternoon') {
-      timeFilter = { start: '12:00', end: '18:00' };
+      timeFilter = { start: '12:00', end: '16:00' };
     } else if (/^\d{2}:\d{2}$/.test(time_preference)) {
-      // Specific time requested - look for slots within 2 hours
+      // Specific time requested - look for slots within 2 hours (cap at 4pm close)
       const [hours, mins] = time_preference.split(':').map(Number);
       const startHour = Math.max(7, hours - 1);
-      const endHour = Math.min(18, hours + 2);
+      const endHour = Math.min(16, hours + 2);
       timeFilter = { 
         start: `${String(startHour).padStart(2, '0')}:00`,
         end: `${String(endHour).padStart(2, '0')}:00`
@@ -120,11 +120,19 @@ router.get('/check', async (req, res, next) => {
 
     if (slotError) throw slotError;
 
+    // Service department: weekdays only (no Saturday or Sunday)
+    const isWeekday = (dateStr) => {
+      const d = new Date(dateStr + 'T12:00:00');
+      const day = d.getDay(); // 0=Sun, 6=Sat
+      return day >= 1 && day <= 5;
+    };
+    const weekdaySlots = (slots || []).filter(s => isWeekday(s.slot_date));
+
     // Group slots by date and bay, then find consecutive available slots
     const availableAppointments = [];
     const slotsByDateBay = {};
 
-    for (const slot of slots) {
+    for (const slot of weekdaySlots) {
       const key = `${slot.slot_date}_${slot.bay_id}`;
       if (!slotsByDateBay[key]) {
         slotsByDateBay[key] = [];
@@ -341,19 +349,26 @@ router.get('/next', async (req, res, next) => {
       return res.json({ available: false, message: 'No compatible bays found' });
     }
 
-    // Find next available slot
+    // Find next available slot (service department: Mon-Fri 7am-4pm only)
     const today = format(new Date(), 'yyyy-MM-dd');
-    
-    const { data: nextSlot } = await supabase
+    const isWeekday = (dateStr) => {
+      const d = new Date(dateStr + 'T12:00:00');
+      const day = d.getDay();
+      return day >= 1 && day <= 5;
+    };
+
+    const { data: slots } = await supabase
       .from('time_slots')
       .select('slot_date, start_time, bay_id')
       .in('bay_id', bayIds)
       .eq('is_available', true)
       .gte('slot_date', today)
+      .lt('start_time', '16:00')
       .order('slot_date')
       .order('start_time')
-      .limit(1)
-      .single();
+      .limit(200);
+
+    const nextSlot = (slots || []).find(s => isWeekday(s.slot_date));
 
     if (!nextSlot) {
       return res.json({ available: false, message: 'No availability in the next 60 days' });

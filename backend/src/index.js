@@ -17,6 +17,7 @@ import analyticsRoutes from './routes/analytics.js';
 import callLogRoutes from './routes/call-logs.js';
 import reminderRoutes from './routes/reminders.js';
 import smsLogRoutes from './routes/sms-logs.js';
+import callCenterRoutes from './routes/call-center.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -36,7 +37,7 @@ app.get('/', (req, res) => {
     description: 'AI-powered voice booking system for automotive service centers',
     endpoints: {
       health: '/health',
-      nucleus_functions: '/api/retell/*',
+      voice_functions: '/api/voice/*',
       dashboard_api: '/api/*'
     },
     documentation: 'https://github.com/peterthehammer1/autoai',
@@ -59,9 +60,10 @@ app.use('/api/analytics', analyticsRoutes);
 app.use('/api/call-logs', callLogRoutes);
 app.use('/api/reminders', reminderRoutes);
 app.use('/api/sms-logs', smsLogRoutes);
+app.use('/api/call-center', callCenterRoutes);
 
-// Nucleus AI Function Endpoints (simplified paths for function calling)
-app.use('/api/retell', (await import('./routes/retell-functions.js')).default);
+// Voice AI function endpoints (used by voice agent for booking, etc.)
+app.use('/api/voice', (await import('./routes/retell-functions.js')).default);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

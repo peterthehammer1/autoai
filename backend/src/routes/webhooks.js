@@ -1,8 +1,41 @@
 import { Router } from 'express';
+import { Retell } from 'retell-sdk';
 import { supabase, normalizePhone } from '../config/database.js';
-import { toZonedTime } from 'date-fns-tz';
+import { toZonedTime, format as formatTz } from 'date-fns-tz';
+import { format, addDays } from 'date-fns';
 
 const router = Router();
+
+// Retell API key for webhook verification
+const RETELL_API_KEY = process.env.RETELL_API_KEY;
+
+/**
+ * Verify Retell webhook signature for security
+ * Returns true if valid, false if invalid
+ */
+function verifyRetellSignature(req) {
+  if (!RETELL_API_KEY) {
+    console.warn('RETELL_API_KEY not set - skipping webhook verification');
+    return true; // Allow in development
+  }
+  
+  const signature = req.headers['x-retell-signature'];
+  if (!signature) {
+    console.warn('No x-retell-signature header present');
+    return false;
+  }
+  
+  try {
+    return Retell.verify(
+      JSON.stringify(req.body),
+      RETELL_API_KEY,
+      signature
+    );
+  } catch (error) {
+    console.error('Webhook verification error:', error);
+    return false;
+  }
+}
 
 /**
  * Get time-based greeting in EST timezone
@@ -21,12 +54,43 @@ function getTimeGreeting() {
 }
 
 /**
- * POST /api/webhooks/retell/inbound
- * Handle Nucleus AI inbound call webhook - called BEFORE call connects
+ * Get current date info in EST timezone for AI context
+ */
+function getCurrentDateInfo() {
+  const timezone = 'America/New_York';
+  const now = toZonedTime(new Date(), timezone);
+  const dayOfWeek = now.getDay(); // 0=Sunday, 6=Saturday
+  const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+  // Next open day: if Sunday -> Monday; if Saturday -> Monday
+  const nextOpen = isWeekend
+    ? (dayOfWeek === 0 ? addDays(now, 1) : addDays(now, 2)) // Sunday -> Monday, Saturday -> Monday
+    : null;
+  return {
+    current_date: format(now, 'yyyy-MM-dd'),
+    current_date_spoken: format(now, 'EEEE, MMMM d, yyyy'), // "Saturday, January 31, 2026"
+    current_day: format(now, 'EEEE'), // "Saturday"
+    current_time: format(now, 'h:mm a'), // "7:12 PM"
+    current_year: format(now, 'yyyy'), // "2026"
+    current_day_of_week: String(dayOfWeek), // "0" = Sunday, "6" = Saturday
+    is_today_closed: isWeekend ? 'true' : 'false',
+    next_open_day: nextOpen ? format(nextOpen, 'EEEE') : '', // "Monday"
+    next_open_date: nextOpen ? format(nextOpen, 'yyyy-MM-dd') : ''
+  };
+}
+
+/**
+ * POST /api/webhooks/voice/inbound
+ * Handle voice AI inbound call webhook - called BEFORE call connects
  * Used to look up caller by phone number and pass dynamic variables
  */
-router.post('/retell/inbound', async (req, res) => {
+router.post('/voice/inbound', async (req, res) => {
   try {
+    // Verify webhook signature for security
+    if (!verifyRetellSignature(req)) {
+      console.error('Invalid Retell webhook signature - rejecting request');
+      return res.status(401).json({ error: 'Invalid signature' });
+    }
+    
     const { event, call_inbound } = req.body;
     
     console.log('Nucleus inbound webhook:', JSON.stringify(req.body));
@@ -71,6 +135,7 @@ router.post('/retell/inbound', async (req, res) => {
     
     if (error || !customer) {
       console.log('Customer not found, new caller');
+      const dateInfo = getCurrentDateInfo();
       // New customer - pass info so agent knows
       return res.json({
         call_inbound: {
@@ -88,7 +153,8 @@ router.post('/retell/inbound', async (req, res) => {
             customer_phone: from_number,
             customer_id: '',
             vehicle_info: '',
-            vehicle_id: ''
+            vehicle_id: '',
+            ...dateInfo
           }
         }
       });
@@ -103,6 +169,42 @@ router.post('/retell/inbound', async (req, res) => {
       const v = customer.vehicles[0]; // Primary vehicle
       vehicleInfo = `${v.year} ${v.make} ${v.model}`;
       vehicleId = v.id;
+    }
+    
+    // Check if customer record is COMPLETE (has name AND vehicle)
+    const hasName = customer.first_name && customer.first_name !== 'null';
+    const hasVehicle = customer.vehicles && customer.vehicles.length > 0;
+    const isComplete = hasName && hasVehicle;
+    
+    // If incomplete, treat as NEW customer so agent collects missing info
+    if (!isComplete) {
+      console.log('Customer record incomplete - missing:', !hasName ? 'name' : '', !hasVehicle ? 'vehicle' : '');
+      const dateInfo = getCurrentDateInfo();
+      return res.json({
+        call_inbound: {
+          agent_override: {
+            retell_llm: {
+              start_speaker: "agent",
+              begin_message: `${timeGreeting}! Thanks for calling Premier Auto Service, this is Amber. How can I help you today?`
+            }
+          },
+          dynamic_variables: {
+            is_existing_customer: 'false',  // Treat as new so agent collects info!
+            customer_needs_name: hasName ? 'false' : 'true',
+            customer_needs_vehicle: hasVehicle ? 'false' : 'true',
+            customer_name: hasName ? `${customer.first_name} ${customer.last_name}` : '',
+            customer_first_name: customer.first_name || '',
+            customer_last_name: customer.last_name || '',
+            customer_phone: from_number,
+            customer_id: customer.id,
+            customer_email: customer.email || '',
+            total_visits: String(customer.total_visits || 0),
+            vehicle_info: vehicleInfo,
+            vehicle_id: vehicleId,
+            ...dateInfo
+          }
+        }
+      });
     }
     
     // Build personalized greeting
@@ -124,6 +226,9 @@ router.post('/retell/inbound', async (req, res) => {
       ? `${timeGreeting}, ${nameGreeting}! Thanks for calling Premier Auto Service, this is Amber. How can I help you today?`
       : `${timeGreeting}! Thanks for calling Premier Auto Service, this is Amber. How can I help you today?`;
     
+    // Get current date info for AI context
+    const dateInfo = getCurrentDateInfo();
+    
     // Return customer info as dynamic variables with professional greeting
     return res.json({
       call_inbound: {
@@ -143,7 +248,8 @@ router.post('/retell/inbound', async (req, res) => {
           customer_email: customer.email || '',
           total_visits: String(customer.total_visits || 0),
           vehicle_info: vehicleInfo,
-          vehicle_id: vehicleId
+          vehicle_id: vehicleId,
+          ...dateInfo
         }
       }
     });
@@ -156,12 +262,18 @@ router.post('/retell/inbound', async (req, res) => {
 });
 
 /**
- * POST /api/webhooks/retell
- * Handle Nucleus AI webhook events
+ * POST /api/webhooks/voice
+ * Handle voice AI webhook events
  * Events: call_started, call_ended, call_analyzed
  */
-router.post('/retell', async (req, res, next) => {
+router.post('/voice', async (req, res, next) => {
   try {
+    // Verify webhook signature for security
+    if (!verifyRetellSignature(req)) {
+      console.error('Invalid Retell webhook signature - rejecting request');
+      return res.status(401).json({ error: 'Invalid signature' });
+    }
+    
     const { event, call } = req.body;
 
     console.log(`Nucleus webhook: ${event}`, call?.call_id);
@@ -260,51 +372,131 @@ async function handleCallEnded(call) {
 }
 
 async function handleCallAnalyzed(call) {
-  const { 
-    call_id, 
-    transcript, 
-    recording_url,
-    call_summary,
-    sentiment,
-    from_number
-  } = call;
-
-  // Get current call log to check if customer is linked
-  const { data: callLog } = await supabase
-    .from('call_logs')
-    .select('customer_id, phone_normalized')
-    .eq('retell_call_id', call_id)
-    .single();
-
-  // Build update object
-  const updateData = {
+  // Capture full call record: duration, summary, transcript, sentiment, date/time (started_at/ended_at)
+  const {
+    call_id,
+    from_number,
+    start_timestamp,
+    end_timestamp,
+    duration_ms,
     transcript,
     recording_url,
-    transcript_summary: call_summary,
-    sentiment: sentiment || 'neutral'
-  };
+    call_summary,
+    call_analysis,
+    agent_id,
+    direction,
+    disconnection_reason
+  } = call;
 
-  // If no customer linked yet, try to find one (may have been created during call)
-  if (callLog && !callLog.customer_id) {
-    const phoneToCheck = callLog.phone_normalized || normalizePhone(from_number);
-    if (phoneToCheck) {
-      const { data: customer } = await supabase
-        .from('customers')
-        .select('id')
-        .eq('phone_normalized', phoneToCheck)
-        .single();
-      
-      if (customer) {
-        updateData.customer_id = customer.id;
-      }
+  console.log('Call analyzed:', call_id, 'Capturing full call record');
+
+  // Extract analysis data (payload may use call_analysis or top-level)
+  const sentiment = (call_analysis?.user_sentiment || 'neutral').toString().toLowerCase();
+  const summary = call_analysis?.call_summary || call_summary || '';
+  const callSuccessful = call_analysis?.call_successful;
+
+  // Determine intent from summary
+  let intentDetected = 'inquiry';
+  if (summary) {
+    const lowerSummary = summary.toLowerCase();
+    if (lowerSummary.includes('book') || lowerSummary.includes('schedule') || lowerSummary.includes('appointment')) {
+      intentDetected = 'book';
+    } else if (lowerSummary.includes('reschedule') || lowerSummary.includes('move') || lowerSummary.includes('change')) {
+      intentDetected = 'reschedule';
+    } else if (lowerSummary.includes('cancel')) {
+      intentDetected = 'cancel';
+    } else if (lowerSummary.includes('tow') || lowerSummary.includes('towing')) {
+      intentDetected = 'tow';
     }
   }
 
-  // Update call log with analysis
-  await supabase
+  const phoneNorm = from_number ? normalizePhone(from_number) : null;
+
+  // Get existing call log (if call_started was received)
+  const { data: existingLog } = await supabase
     .from('call_logs')
-    .update(updateData)
-    .eq('retell_call_id', call_id);
+    .select('id, customer_id, phone_normalized, outcome, appointment_id')
+    .eq('retell_call_id', call_id)
+    .single();
+
+  const startedAt = start_timestamp ? new Date(start_timestamp).toISOString() : null;
+  const endedAt = end_timestamp ? new Date(end_timestamp).toISOString() : null;
+  const durationSeconds = duration_ms != null ? Math.round(Number(duration_ms) / 1000) : null;
+
+  if (existingLog) {
+    // Update existing call log with full analysis data
+    const updateData = {
+      transcript: transcript || existingLog.transcript,
+      recording_url: recording_url || existingLog.recording_url,
+      transcript_summary: summary,
+      sentiment,
+      intent_detected: intentDetected,
+      started_at: startedAt || existingLog.started_at,
+      ended_at: endedAt || existingLog.ended_at,
+      duration_seconds: durationSeconds ?? existingLog.duration_seconds
+    };
+
+    if (callSuccessful === true) {
+      if (existingLog.appointment_id) {
+        updateData.outcome = 'booked';
+      } else if (existingLog.outcome !== 'booked') {
+        updateData.outcome = 'completed';
+      }
+    }
+
+    if (!existingLog.customer_id && phoneNorm) {
+      const { data: customer } = await supabase
+        .from('customers')
+        .select('id')
+        .eq('phone_normalized', phoneNorm)
+        .single();
+      if (customer) updateData.customer_id = customer.id;
+    }
+
+    await supabase
+      .from('call_logs')
+      .update(updateData)
+      .eq('retell_call_id', call_id);
+  } else {
+    // call_started was missed: create full call record from call_analyzed payload so we never lose a call
+    const insertData = {
+      retell_call_id: call_id,
+      phone_number: from_number || null,
+      phone_normalized: phoneNorm || null,
+      direction: direction || 'inbound',
+      started_at: startedAt,
+      ended_at: endedAt,
+      duration_seconds: durationSeconds,
+      transcript: transcript || null,
+      transcript_summary: summary || null,
+      recording_url: recording_url || null,
+      sentiment,
+      intent_detected: intentDetected,
+      outcome: callSuccessful === true ? 'completed' : 'inquiry',
+      agent_id: agent_id || null
+    };
+
+    const { data: appointment } = await supabase
+      .from('appointments')
+      .select('id')
+      .eq('call_id', call_id)
+      .single();
+    if (appointment) {
+      insertData.appointment_id = appointment.id;
+      insertData.outcome = 'booked';
+    }
+
+    if (phoneNorm) {
+      const { data: customer } = await supabase
+        .from('customers')
+        .select('id')
+        .eq('phone_normalized', phoneNorm)
+        .single();
+      if (customer) insertData.customer_id = customer.id;
+    }
+
+    await supabase.from('call_logs').insert(insertData);
+  }
 }
 
 /**

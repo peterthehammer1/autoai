@@ -127,22 +127,23 @@ export async function sendConfirmationSMS({
   appointmentId
 }) {
   const date = typeof appointmentDate === 'string' ? parseISO(appointmentDate) : appointmentDate;
-  const formattedDate = format(date, 'EEEE, MMMM d, yyyy');
+  const formattedDate = format(date, 'EEEE, MMMM do');
   const formattedTime = formatTime12Hour(appointmentTime);
 
-  const message = `${customerName ? `Hi ${customerName},\n\n` : ''}Your appointment has been scheduled.
+  // Format services naturally (lowercase "a/an" prefix)
+  const serviceText = services.toLowerCase().startsWith('a') || services.toLowerCase().startsWith('e') || 
+                      services.toLowerCase().startsWith('i') || services.toLowerCase().startsWith('o') || 
+                      services.toLowerCase().startsWith('u') 
+    ? `an ${services}` 
+    : `a ${services}`;
 
-Date: ${formattedDate}
-Time: ${formattedTime}
-Service: ${services}${vehicleDescription ? `\nVehicle: ${vehicleDescription}` : ''}
+  const vehiclePart = vehicleDescription ? ` for your ${vehicleDescription}` : '';
+  
+  const message = `Hi ${customerName || 'there'},
 
-Location:
-1250 Industrial Boulevard
-Automotive City
+Your appointment for ${serviceText}${vehiclePart} is on ${formattedDate} at ${formattedTime} at our location on 1250 Industrial Boulevard in Automotive City. If you need to reschedule or cancel, just give us a call at (519) 804-0969. Thanks for choosing Premier Auto Service!
 
-To reschedule or cancel, please call (716) 412-2499
-
-Thank you for choosing Premier Auto Service.`;
+- Amber`;
 
   return sendSMS(customerPhone, message, { 
     messageType: 'confirmation', 
@@ -165,22 +166,14 @@ export async function sendReminderSMS({
   appointmentId
 }) {
   const date = typeof appointmentDate === 'string' ? parseISO(appointmentDate) : appointmentDate;
-  const formattedDate = format(date, 'EEEE, MMMM d');
+  const formattedDate = format(date, 'EEEE');
   const formattedTime = formatTime12Hour(appointmentTime);
 
-  const message = `${customerName ? `Hi ${customerName},\n\n` : ''}This is a reminder about your appointment tomorrow.
+  const vehiclePart = vehicleDescription ? ` on your ${vehicleDescription}` : '';
+  
+  const message = `Hey ${customerName || 'there'}! Just a quick reminder - you have your ${services}${vehiclePart} tomorrow (${formattedDate}) at ${formattedTime}. We're at 1250 Industrial Boulevard in Automotive City. If something came up and you need to reschedule, just call us at (519) 804-0969. See you soon!
 
-Date: ${formattedDate}
-Time: ${formattedTime}
-Service: ${services}${vehicleDescription ? `\nVehicle: ${vehicleDescription}` : ''}
-
-Location:
-1250 Industrial Boulevard
-Automotive City
-
-Unable to make it? Please call (716) 412-2499 to reschedule.
-
-We look forward to seeing you.`;
+- Amber`;
 
   return sendSMS(customerPhone, message, { 
     messageType: 'reminder', 
@@ -189,8 +182,38 @@ We look forward to seeing you.`;
   });
 }
 
+/**
+ * Send appointment cancellation SMS
+ */
+export async function sendCancellationSMS({ 
+  customerPhone, 
+  customerName, 
+  appointmentDate, 
+  appointmentTime, 
+  services,
+  customerId,
+  appointmentId
+}) {
+  const date = typeof appointmentDate === 'string' ? parseISO(appointmentDate) : appointmentDate;
+  const formattedDate = format(date, 'EEEE, MMMM do');
+  const formattedTime = formatTime12Hour(appointmentTime);
+
+  const message = `Hi ${customerName || 'there'},
+
+Your appointment for ${services} on ${formattedDate} at ${formattedTime} has been cancelled. If you'd like to reschedule, just give us a call at (519) 804-0969 - we're happy to find a time that works for you.
+
+- Amber`;
+
+  return sendSMS(customerPhone, message, { 
+    messageType: 'cancellation', 
+    customerId, 
+    appointmentId 
+  });
+}
+
 export default {
   sendSMS,
   sendConfirmationSMS,
-  sendReminderSMS
+  sendReminderSMS,
+  sendCancellationSMS
 };

@@ -77,49 +77,49 @@ echo ""
 # Test 2: lookup_customer - Existing Customer
 test_endpoint \
     "lookup_customer (existing customer: John Smith)" \
-    "/api/retell/lookup_customer" \
+    "/api/voice/lookup_customer" \
     '{"phone_number": "555-234-5678"}' \
     "found"
 
 # Test 3: lookup_customer - New Customer
 test_endpoint \
     "lookup_customer (new customer)" \
-    "/api/retell/lookup_customer" \
+    "/api/voice/lookup_customer" \
     '{"phone_number": "555-999-9999"}' \
     "found"
 
 # Test 4: get_services - Popular
 test_endpoint \
     "get_services (popular services)" \
-    "/api/retell/get_services" \
+    "/api/voice/get_services" \
     '{}' \
     "services"
 
 # Test 5: get_services - Search
 test_endpoint \
     "get_services (search: oil change)" \
-    "/api/retell/get_services" \
+    "/api/voice/get_services" \
     '{"search": "oil change"}' \
     "services"
 
 # Test 6: get_services - Category
 test_endpoint \
     "get_services (category: Brakes)" \
-    "/api/retell/get_services" \
+    "/api/voice/get_services" \
     '{"category": "Brakes"}' \
     "services"
 
 # Test 7: get_services - With Mileage Recommendations
 test_endpoint \
     "get_services (with mileage: 45000km)" \
-    "/api/retell/get_services" \
+    "/api/voice/get_services" \
     '{"mileage": 45000}' \
     "services"
 
 # For check_availability and booking, we need a real service ID
 # First, get a service ID
 echo -e "${YELLOW}Fetching service ID for availability test...${NC}"
-SERVICE_RESPONSE=$(curl -s -X POST "$BASE_URL/api/retell/get_services" \
+SERVICE_RESPONSE=$(curl -s -X POST "$BASE_URL/api/voice/get_services" \
     -H "Content-Type: application/json" \
     -d '{"search": "synthetic oil"}')
 
@@ -142,28 +142,28 @@ TOMORROW=$(date -v+1d +%Y-%m-%d 2>/dev/null || date -d "+1 day" +%Y-%m-%d)
 
 test_endpoint \
     "check_availability (tomorrow morning)" \
-    "/api/retell/check_availability" \
+    "/api/voice/check_availability" \
     "{\"service_ids\": [\"$SERVICE_ID\"], \"preferred_date\": \"$TOMORROW\", \"preferred_time\": \"morning\"}" \
     "available"
 
 # Test 9: check_availability - Afternoon
 test_endpoint \
     "check_availability (any day, afternoon)" \
-    "/api/retell/check_availability" \
+    "/api/voice/check_availability" \
     "{\"service_ids\": [\"$SERVICE_ID\"], \"preferred_time\": \"afternoon\", \"days_to_check\": 7}" \
     "slots"
 
 # Test 10: get_customer_appointments - Existing Customer
 test_endpoint \
     "get_customer_appointments (John Smith)" \
-    "/api/retell/get_customer_appointments" \
+    "/api/voice/get_customer_appointments" \
     '{"customer_phone": "555-234-5678", "status": "upcoming"}' \
     "appointments"
 
 # Test 11: get_customer_appointments - Non-existent Customer
 test_endpoint \
     "get_customer_appointments (new customer)" \
-    "/api/retell/get_customer_appointments" \
+    "/api/voice/get_customer_appointments" \
     '{"customer_phone": "555-000-0000"}' \
     "appointments"
 
@@ -171,7 +171,7 @@ test_endpoint \
 echo -e "${YELLOW}NOTE: Skipping actual booking test to avoid creating test data.${NC}"
 echo "To test book_appointment manually, run:"
 echo ""
-echo "curl -X POST $BASE_URL/api/retell/book_appointment \\"
+echo "curl -X POST $BASE_URL/api/voice/book_appointment \\"
 echo "  -H \"Content-Type: application/json\" \\"
 echo "  -d '{"
 echo "    \"customer_phone\": \"555-TEST-123\","
@@ -193,12 +193,12 @@ echo -e "${YELLOW}NOTE: Skipping cancel/reschedule tests to preserve data.${NC}"
 echo "To test modify_appointment manually:"
 echo ""
 echo "# Cancel:"
-echo "curl -X POST $BASE_URL/api/retell/modify_appointment \\"
+echo "curl -X POST $BASE_URL/api/voice/modify_appointment \\"
 echo "  -H \"Content-Type: application/json\" \\"
 echo "  -d '{\"appointment_id\": \"YOUR-APT-ID\", \"action\": \"cancel\"}'"
 echo ""
 echo "# Reschedule:"
-echo "curl -X POST $BASE_URL/api/retell/modify_appointment \\"
+echo "curl -X POST $BASE_URL/api/voice/modify_appointment \\"
 echo "  -H \"Content-Type: application/json\" \\"
 echo "  -d '{\"appointment_id\": \"YOUR-APT-ID\", \"action\": \"reschedule\", \"new_date\": \"2024-02-20\", \"new_time\": \"14:00\"}'"
 echo ""

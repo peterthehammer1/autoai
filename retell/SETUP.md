@@ -48,17 +48,17 @@ chmod +x retell/test-functions.sh
 curl http://localhost:3001/health
 
 # Lookup existing customer (John Smith)
-curl -X POST http://localhost:3001/api/retell/lookup_customer \
+curl -X POST http://localhost:3001/api/voice/lookup_customer \
   -H "Content-Type: application/json" \
   -d '{"phone_number": "555-234-5678"}'
 
 # Get popular services
-curl -X POST http://localhost:3001/api/retell/get_services \
+curl -X POST http://localhost:3001/api/voice/get_services \
   -H "Content-Type: application/json" \
   -d '{}'
 
 # Check availability
-curl -X POST http://localhost:3001/api/retell/check_availability \
+curl -X POST http://localhost:3001/api/voice/check_availability \
   -H "Content-Type: application/json" \
   -d '{"service_ids": ["SERVICE_ID"], "preferred_time": "morning"}'
 ```
@@ -155,7 +155,7 @@ Add each function with the settings from `retell/retell-config.json`:
 | Field | Value |
 |-------|-------|
 | Name | `lookup_customer` |
-| URL | `https://YOUR-URL/api/retell/lookup_customer` |
+| URL | `https://YOUR-URL/api/voice/lookup_customer` |
 | Method | POST |
 | Description | Look up a customer by their phone number to check if they are a returning customer and retrieve their vehicle information. |
 
@@ -178,7 +178,7 @@ Add each function with the settings from `retell/retell-config.json`:
 | Field | Value |
 |-------|-------|
 | Name | `get_services` |
-| URL | `https://YOUR-URL/api/retell/get_services` |
+| URL | `https://YOUR-URL/api/voice/get_services` |
 | Method | POST |
 | Description | Get available services. Use when customer asks what services are offered. |
 
@@ -209,7 +209,7 @@ Add each function with the settings from `retell/retell-config.json`:
 | Field | Value |
 |-------|-------|
 | Name | `check_availability` |
-| URL | `https://YOUR-URL/api/retell/check_availability` |
+| URL | `https://YOUR-URL/api/voice/check_availability` |
 | Method | POST |
 | Description | Check available appointment time slots for specific services. |
 
@@ -241,7 +241,7 @@ Add each function with the settings from `retell/retell-config.json`:
 | Field | Value |
 |-------|-------|
 | Name | `book_appointment` |
-| URL | `https://YOUR-URL/api/retell/book_appointment` |
+| URL | `https://YOUR-URL/api/voice/book_appointment` |
 | Method | POST |
 | Description | Book a confirmed appointment after customer confirms details. |
 
@@ -273,7 +273,7 @@ Add each function with the settings from `retell/retell-config.json`:
 | Field | Value |
 |-------|-------|
 | Name | `get_customer_appointments` |
-| URL | `https://YOUR-URL/api/retell/get_customer_appointments` |
+| URL | `https://YOUR-URL/api/voice/get_customer_appointments` |
 | Method | POST |
 | Description | Get customer's existing appointments. |
 
@@ -294,7 +294,7 @@ Add each function with the settings from `retell/retell-config.json`:
 | Field | Value |
 |-------|-------|
 | Name | `modify_appointment` |
-| URL | `https://YOUR-URL/api/retell/modify_appointment` |
+| URL | `https://YOUR-URL/api/voice/modify_appointment` |
 | Method | POST |
 | Description | Cancel or reschedule an existing appointment. |
 
@@ -370,9 +370,9 @@ In Retell Dashboard → Settings → Webhooks:
 
 | Event | URL |
 |-------|-----|
-| call_started | `https://YOUR-URL/api/webhooks/retell` |
-| call_ended | `https://YOUR-URL/api/webhooks/retell` |
-| call_analyzed | `https://YOUR-URL/api/webhooks/retell` |
+| call_started | `https://YOUR-URL/api/webhooks/voice` |
+| call_ended | `https://YOUR-URL/api/webhooks/voice` |
+| call_analyzed | `https://YOUR-URL/api/webhooks/voice` |
 
 The webhook handler in `backend/src/routes/webhooks.js` logs call data to the `call_logs` table.
 

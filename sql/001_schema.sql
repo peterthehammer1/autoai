@@ -23,14 +23,14 @@ CREATE TABLE business_config (
     logo_url VARCHAR(500),
     primary_color VARCHAR(7) DEFAULT '#1e40af',
     secondary_color VARCHAR(7) DEFAULT '#3b82f6',
-    -- Business hours stored as JSON: {"monday": {"open": "07:00", "close": "18:00"}, ...}
+    -- Business hours: Service department Mon-Fri 7am-4pm only (no weekends, no evenings)
     business_hours JSONB DEFAULT '{
-        "monday": {"open": "07:00", "close": "18:00", "closed": false},
-        "tuesday": {"open": "07:00", "close": "18:00", "closed": false},
-        "wednesday": {"open": "07:00", "close": "18:00", "closed": false},
-        "thursday": {"open": "07:00", "close": "18:00", "closed": false},
-        "friday": {"open": "07:00", "close": "18:00", "closed": false},
-        "saturday": {"open": "08:00", "close": "16:00", "closed": false},
+        "monday": {"open": "07:00", "close": "16:00", "closed": false},
+        "tuesday": {"open": "07:00", "close": "16:00", "closed": false},
+        "wednesday": {"open": "07:00", "close": "16:00", "closed": false},
+        "thursday": {"open": "07:00", "close": "16:00", "closed": false},
+        "friday": {"open": "07:00", "close": "16:00", "closed": false},
+        "saturday": {"open": null, "close": null, "closed": true},
         "sunday": {"open": null, "close": null, "closed": true}
     }'::jsonb,
     slot_duration_minutes INTEGER DEFAULT 30, -- Base slot size
