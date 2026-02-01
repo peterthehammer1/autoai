@@ -165,8 +165,8 @@ Direct links you’ll use often:
 
 | What | Where |
 |------|--------|
-| Post-call webhook URL | Retell dashboard (or account settings) → Post-call webhook → `https://backend-jade-eight-75.vercel.app/api/webhooks/voice` |
-| Inbound webhook URL | Retell dashboard (phone number / inbound config) → Inbound webhook → `https://backend-jade-eight-75.vercel.app/api/webhooks/voice/inbound` |
+| Post-call webhook URL | Retell dashboard (or account settings) → Post-call webhook → `https://www.alignedai.dev/api/webhooks/voice` |
+| Inbound webhook URL | Retell dashboard (phone number / inbound config) → Inbound webhook → `https://www.alignedai.dev/api/webhooks/voice/inbound` |
 | Webhook handler | `backend/src/routes/webhooks.js` (verification, `call_started` / `call_ended` / `call_analyzed`, inbound with dynamic variables) |
 | Agent prompt & tools | `retell/agent-prompt-slim.md`, `retell/retell-config.json` |
 | Knowledge base files | `retell/kb-*.md` (upload/link in Retell dashboard) |

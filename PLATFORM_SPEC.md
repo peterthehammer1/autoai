@@ -14,7 +14,7 @@
 | **Frontend** | React + Vite + shadcn/ui | Dashboard: appointments, customers, call logs, analytics, settings |
 | **SMS** | Twilio | Confirmations, reminders (backend sends; optional inbound via webhook) |
 
-**Backend base URL (production):** `https://backend-jade-eight-75.vercel.app`  
+**Backend base URL (production):** `https://www.alignedai.dev`  
 **Frontend API base:** Set by `VITE_API_URL` or defaults (see Frontend section below).
 
 ---
@@ -86,9 +86,9 @@ These are the **exact** URLs our backend expects to be configured in the **voice
 
 | Setting | Where in dashboard | Value |
 |--------|--------------------|--------|
-| **Agent-level webhook URL** (post-call events) | Agent → Webhook Settings | `https://backend-jade-eight-75.vercel.app/api/webhooks/voice` |
-| **Inbound webhook URL** (before call connects) | Phone number / Inbound config | `https://backend-jade-eight-75.vercel.app/api/webhooks/voice/inbound` |
-| **Function URLs** (custom tools) | Agent → Functions | Base: `https://backend-jade-eight-75.vercel.app/api/voice/` then e.g. `get_services`, `check_availability`, `book_appointment`, `get_customer_appointments`, `modify_appointment`, `send_confirmation`, `submit_tow_request`. (lookup_customer is optional; we inject context via inbound webhook.) |
+| **Agent-level webhook URL** (post-call events) | Agent → Webhook Settings | `https://www.alignedai.dev/api/webhooks/voice` |
+| **Inbound webhook URL** (before call connects) | Phone number / Inbound config | `https://www.alignedai.dev/api/webhooks/voice/inbound` |
+| **Function URLs** (custom tools) | Agent → Functions | Base: `https://www.alignedai.dev/api/voice/` then e.g. `get_services`, `check_availability`, `book_appointment`, `get_customer_appointments`, `modify_appointment`, `send_confirmation`, `submit_tow_request`. (lookup_customer is optional; we inject context via inbound webhook.) |
 
 If the dashboard has only one webhook URL field, that is the **post-call** URL. The **inbound** webhook is configured per number (or in number/telephony settings), not on the agent.
 
@@ -120,7 +120,7 @@ The code accepts **NUCLEUS_API_KEY** or **RETELL_API_KEY** (Nucleus first) for w
 
 ## 6. Frontend
 
-- **API base:** `frontend/src/api/index.js` – `API_BASE = import.meta.env.VITE_API_URL || (localhost ? '/api' : 'https://www.alignedai.dev/api')`. So production frontend defaults to `https://www.alignedai.dev/api` unless `VITE_API_URL` is set (e.g. to the same backend: `https://backend-jade-eight-75.vercel.app`).
+- **API base:** `frontend/src/api/index.js` – `API_BASE = import.meta.env.VITE_API_URL || (localhost ? '/api' : 'https://www.alignedai.dev/api')`. So production frontend defaults to `https://www.alignedai.dev/api` unless `VITE_API_URL` is set (e.g. to the same backend: `https://www.alignedai.dev`).
 - **Call Logs:** Uses `callLogs.list()`, `callLogs.get()`, `callLogs.stats()` → **/api/call-logs**.
 
 ---
@@ -135,13 +135,13 @@ The code accepts **NUCLEUS_API_KEY** or **RETELL_API_KEY** (Nucleus first) for w
 ## 8. Summary: “What we need to do” by context
 
 - **To have call logging and full call records:**  
-  Set **Agent-level webhook URL** = `https://backend-jade-eight-75.vercel.app/api/webhooks/voice` (events: call_started, call_ended, call_analyzed). No other backend change needed.
+  Set **Agent-level webhook URL** = `https://www.alignedai.dev/api/webhooks/voice` (events: call_started, call_ended, call_analyzed). No other backend change needed.
 
 - **To have caller context and closed-day/tow behavior:**  
-  Set **Inbound webhook URL** (on the number) = `https://backend-jade-eight-75.vercel.app/api/webhooks/voice/inbound`. Backend already returns dynamic_variables and optional begin_message.
+  Set **Inbound webhook URL** (on the number) = `https://www.alignedai.dev/api/webhooks/voice/inbound`. Backend already returns dynamic_variables and optional begin_message.
 
 - **To have booking, tow, confirmations from the agent:**  
-  Register each custom function in the dashboard with the **same names and URLs** as in `retell/retell-config.json` (base `https://backend-jade-eight-75.vercel.app/api/voice/...`).
+  Register each custom function in the dashboard with the **same names and URLs** as in `retell/retell-config.json` (base `https://www.alignedai.dev/api/voice/...`).
 
 - **To change backend URL (e.g. different domain):**  
   Update `retell-config.json` and the voice provider dashboard; ensure RETELL_API_KEY and Supabase (and Twilio if used) are correct for that backend.

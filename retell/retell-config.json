@@ -20,7 +20,7 @@
       "type": "custom",
       "name": "get_services",
       "description": "Get available services. Use when you need to find service IDs for booking, or when the customer asks about services or prices.",
-      "url": "https://backend-jade-eight-75.vercel.app/api/voice/get_services",
+      "url": "https://www.alignedai.dev/api/voice/get_services",
       "speak_during_execution": false,
       "speak_after_execution": true,
       "parameters": {
@@ -37,7 +37,7 @@
       "type": "custom",
       "name": "check_availability",
       "description": "Check available appointment times. Call after you know what service they need.",
-      "url": "https://backend-jade-eight-75.vercel.app/api/voice/check_availability",
+      "url": "https://www.alignedai.dev/api/voice/check_availability",
       "speak_during_execution": false,
       "speak_after_execution": true,
       "parameters": {
@@ -64,7 +64,7 @@
       "type": "custom",
       "name": "book_appointment",
       "description": "Book the appointment after customer confirms date, time, and service.",
-      "url": "https://backend-jade-eight-75.vercel.app/api/voice/book_appointment",
+      "url": "https://www.alignedai.dev/api/voice/book_appointment",
       "speak_during_execution": false,
       "speak_after_execution": true,
       "parameters": {
@@ -125,7 +125,7 @@
       "type": "custom",
       "name": "get_customer_appointments",
       "description": "Get customer existing appointments. Use when customer asks about their appointments, wants to check when it is, reschedule, or cancel.",
-      "url": "https://backend-jade-eight-75.vercel.app/api/voice/get_customer_appointments",
+      "url": "https://www.alignedai.dev/api/voice/get_customer_appointments",
       "speak_during_execution": false,
       "speak_after_execution": true,
       "parameters": {
@@ -144,7 +144,7 @@
       "type": "custom",
       "name": "modify_appointment",
       "description": "Cancel, reschedule, or add services to an existing appointment.",
-      "url": "https://backend-jade-eight-75.vercel.app/api/voice/modify_appointment",
+      "url": "https://www.alignedai.dev/api/voice/modify_appointment",
       "speak_during_execution": false,
       "speak_after_execution": true,
       "parameters": {
@@ -180,7 +180,7 @@
       "type": "custom",
       "name": "send_confirmation",
       "description": "Send SMS confirmation to customer with appointment details. Use when customer asks for a confirmation text or reminder.",
-      "url": "https://backend-jade-eight-75.vercel.app/api/voice/send_confirmation",
+      "url": "https://www.alignedai.dev/api/voice/send_confirmation",
       "speak_during_execution": false,
       "speak_after_execution": true,
       "parameters": {
@@ -203,7 +203,7 @@
       "type": "custom",
       "name": "submit_tow_request",
       "description": "Submit a tow-in request when the customer needs a tow. Use after you have the pickup address (where the car is) and customer/vehicle info.",
-      "url": "https://backend-jade-eight-75.vercel.app/api/voice/submit_tow_request",
+      "url": "https://www.alignedai.dev/api/voice/submit_tow_request",
       "speak_during_execution": false,
       "speak_after_execution": true,
       "parameters": {
@@ -240,11 +240,11 @@
   
   "webhooks": {
     "inbound": {
-      "url": "https://backend-jade-eight-75.vercel.app/api/webhooks/voice/inbound",
+      "url": "https://www.alignedai.dev/api/webhooks/voice/inbound",
       "description": "Called before call connects - looks up customer by caller ID and sets dynamic variables"
     },
     "post_call": {
-      "url": "https://backend-jade-eight-75.vercel.app/api/webhooks/voice",
+      "url": "https://www.alignedai.dev/api/webhooks/voice",
       "events": ["call_started", "call_ended", "call_analyzed"]
     }
   }

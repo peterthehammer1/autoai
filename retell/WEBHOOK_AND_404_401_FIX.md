@@ -15,8 +15,8 @@ Use these **exact** URLs (replace with your real backend host if different):
 
 | Purpose | URL |
 |--------|-----|
-| **Inbound webhook** (before call connects – sets `{{customer_phone}}`, etc.) | `https://backend-jade-eight-75.vercel.app/api/webhooks/voice/inbound` |
-| **Post-call webhook** (call_started, call_ended, call_analyzed) | `https://backend-jade-eight-75.vercel.app/api/webhooks/voice` |
+| **Inbound webhook** (before call connects – sets `{{customer_phone}}`, etc.) | `https://www.alignedai.dev/api/webhooks/voice/inbound` |
+| **Post-call webhook** (call_started, call_ended, call_analyzed) | `https://www.alignedai.dev/api/webhooks/voice` |
 
 - **Inbound** is usually configured per phone number or in “Inbound” / “Before call” settings.
 - **Post-call** is usually on the Agent → Webhook / Events settings.
