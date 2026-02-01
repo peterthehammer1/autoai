@@ -1,7 +1,7 @@
 /**
  * Fetch the latest call from Retell API for your agent and save to retell/latest-call.json.
- * Run from project root: RETELL_API_KEY=your_key node backend/scripts/retell-fetch-latest-call.js
- * Or from backend: RETELL_API_KEY=your_key node scripts/retell-fetch-latest-call.js
+ * Run from project root: NUCLEUS_API_KEY=your_key node backend/scripts/retell-fetch-latest-call.js
+ * Or from backend: NUCLEUS_API_KEY=your_key node scripts/retell-fetch-latest-call.js
  *
  * Then open retell/latest-call.json to review transcript, tool calls, and call_analysis.
  */
@@ -17,9 +17,9 @@ const projectRoot = path.resolve(__dirname, '../..');
 const configPath = path.join(projectRoot, 'retell/retell-config.json');
 const outputPath = path.join(projectRoot, 'retell/latest-call.json');
 
-const RETELL_API_KEY = process.env.RETELL_API_KEY;
+const RETELL_API_KEY = process.env.NUCLEUS_API_KEY || process.env.RETELL_API_KEY;
 if (!RETELL_API_KEY) {
-  console.error('Set RETELL_API_KEY (e.g. RETELL_API_KEY=key_xxx node backend/scripts/retell-fetch-latest-call.js)');
+  console.error('Set NUCLEUS_API_KEY or RETELL_API_KEY (e.g. NUCLEUS_API_KEY=key_xxx node backend/scripts/retell-fetch-latest-call.js)');
   process.exit(1);
 }
 

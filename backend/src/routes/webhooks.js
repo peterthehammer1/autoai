@@ -6,25 +6,31 @@ import { format, addDays } from 'date-fns';
 
 const router = Router();
 
-// Retell API key for webhook verification
-const RETELL_API_KEY = process.env.RETELL_API_KEY;
+// API key for webhook verification (support white-label: NUCLEUS_API_KEY or RETELL_API_KEY)
+const RETELL_API_KEY = process.env.NUCLEUS_API_KEY || process.env.RETELL_API_KEY;
+const RETELL_SKIP_WEBHOOK_VERIFY = process.env.RETELL_SKIP_WEBHOOK_VERIFY === 'true' || process.env.RETELL_SKIP_WEBHOOK_VERIFY === '1';
 
 /**
  * Verify Retell webhook signature for security
- * Returns true if valid, false if invalid
+ * Returns true if valid, false if invalid.
+ * Set RETELL_SKIP_WEBHOOK_VERIFY=true to skip (e.g. if Retell signing key differs from API key).
  */
 function verifyRetellSignature(req) {
+  if (RETELL_SKIP_WEBHOOK_VERIFY) {
+    console.warn('RETELL_SKIP_WEBHOOK_VERIFY is set - skipping webhook signature verification');
+    return true;
+  }
   if (!RETELL_API_KEY) {
-    console.warn('RETELL_API_KEY not set - skipping webhook verification');
+    console.warn('NUCLEUS_API_KEY / RETELL_API_KEY not set - skipping webhook verification');
     return true; // Allow in development
   }
-  
+
   const signature = req.headers['x-retell-signature'];
   if (!signature) {
     console.warn('No x-retell-signature header present');
     return false;
   }
-  
+
   try {
     return Retell.verify(
       JSON.stringify(req.body),
@@ -341,6 +347,8 @@ async function handleCallEnded(call) {
     duration_ms,
     disconnection_reason 
   } = call;
+
+  console.log('Call ended:', call_id, 'duration_ms:', duration_ms, 'disconnection_reason:', disconnection_reason);
 
   // Determine outcome based on call data
   let outcome = 'inquiry';

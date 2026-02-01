@@ -239,9 +239,21 @@ router.post('/get_services', async (req, res, next) => {
       query = query.or(`name.ilike.%${normalizedSearch}%,description.ilike.%${normalizedSearch}%`);
     }
 
-    const { data: services, error } = await query.order('is_popular', { ascending: false }).limit(15);
+    let { data: services, error } = await query.order('is_popular', { ascending: false }).limit(15);
 
     if (error) throw error;
+
+    // Fallback: "diagnostic" / "check engine" map to "Check Engine" but DB may have "Diagnosis" in name
+    if (services.length === 0 && normalizedSearch === 'Check Engine') {
+      const { data: fallbackServices } = await supabase
+        .from('services')
+        .select('id, name, description, duration_minutes, price_min, price_display, is_popular, mileage_interval, category:service_categories(name)')
+        .eq('is_active', true)
+        .ilike('name', '%Diagnosis%')
+        .order('is_popular', { ascending: false })
+        .limit(15);
+      if (fallbackServices?.length) services = fallbackServices;
+    }
 
     // Check if this is an oil change search
     const searchLower = (search || '').toLowerCase();
@@ -616,11 +628,17 @@ router.post('/book_appointment', async (req, res, next) => {
     
     // Helper to clean "null" strings from Nucleus AI
     const cleanNull = (val) => (val === 'null' || val === null || val === undefined || val === '') ? null : val;
-    
+    const isTemplateVar = (val) => typeof val === 'string' && (val.includes('{{') || val.includes('}}'));
+
     // Handle both direct params and nested args from Nucleus AI
     const body = req.body.args || req.body;
-    
-    const customer_phone = cleanNull(body.customer_phone);
+
+    let customer_phone = cleanNull(body.customer_phone);
+    if (isTemplateVar(customer_phone)) {
+      console.log('book_appointment: customer_phone is template variable (inbound webhook may have failed)');
+      customer_phone = null;
+    }
+    const vehicle_id = isTemplateVar(body.vehicle_id) ? null : cleanNull(body.vehicle_id);
     const customer_first_name = cleanNull(body.customer_first_name);
     const customer_last_name = cleanNull(body.customer_last_name);
     const customer_email = cleanNull(body.customer_email);
@@ -628,7 +646,6 @@ router.post('/book_appointment', async (req, res, next) => {
     const vehicle_make = cleanNull(body.vehicle_make);
     const vehicle_model = cleanNull(body.vehicle_model);
     const vehicle_mileage = cleanNull(body.vehicle_mileage);
-    const vehicle_id = cleanNull(body.vehicle_id);
     const service_ids = body.service_ids;
     const appointment_date = cleanNull(body.appointment_date);
     const appointment_time = cleanNull(body.appointment_time);
@@ -639,18 +656,16 @@ router.post('/book_appointment', async (req, res, next) => {
 
     console.log('Parsed values:', { customer_phone, service_ids, appointment_date, appointment_time, vehicle_year, vehicle_make, vehicle_model });
 
-    // Validate required fields
+    // Validate required fields (customer_phone can be missing if inbound webhook didn't set it)
     if (!customer_phone || !service_ids || !appointment_date || !appointment_time) {
-      console.log('Validation failed:', { 
-        has_phone: !!customer_phone, 
-        has_services: !!service_ids, 
-        has_date: !!appointment_date, 
-        has_time: !!appointment_time 
-      });
+      console.log('Validation failed:', { has_phone: !!customer_phone, has_services: !!service_ids, has_date: !!appointment_date, has_time: !!appointment_time });
+      const phoneMessage = !customer_phone
+        ? 'I need the number you\'re calling from to complete the booking. Is this the best number for your account?'
+        : 'I\'m missing some information. I need your phone number, the service you want, and your preferred date and time.';
       return res.json({
         success: false,
         booked: false,
-        message: 'I\'m missing some information. I need your phone number, the service you want, and your preferred date and time.'
+        message: phoneMessage
       });
     }
 
@@ -1025,11 +1040,12 @@ router.post('/get_customer_appointments', async (req, res, next) => {
     console.log('Extracted customer_phone:', customer_phone);
     console.log('Extracted status:', status);
 
-    if (!customer_phone) {
-      console.log('ERROR: No customer_phone found in request');
+    const isTemplateVar = (val) => typeof val === 'string' && (val.includes('{{') || val.includes('}}'));
+    if (!customer_phone || isTemplateVar(customer_phone)) {
+      if (isTemplateVar(customer_phone)) console.log('get_customer_appointments: customer_phone is template variable (inbound webhook may have failed)');
       return res.json({
         success: false,
-        message: 'I need your phone number to look up your appointments.'
+        message: 'I need the number you\'re calling from to look up your appointments. Is this the best number for your account?'
       });
     }
 

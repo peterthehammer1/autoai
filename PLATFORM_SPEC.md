@@ -109,12 +109,12 @@ If the dashboard has only one webhook URL field, that is the **post-call** URL. 
 
 ## 5. Environment (backend)
 
-- **RETELL_API_KEY** – Used in `webhooks.js` for `Retell.verify(...)` (inbound + post-call). Must be a key that has webhook verification permission.  
+- **NUCLEUS_API_KEY** (or **RETELL_API_KEY**) – Used in `webhooks.js` for webhook signature verification (inbound + post-call). Must be the provider API key with webhook verification permission. White-label setups can use `NUCLEUS_API_KEY`.  
 - **SUPABASE_URL**, **SUPABASE_SERVICE_KEY** (and optionally SUPABASE_ANON_KEY).  
 - **TWILIO_*** – For send_confirmation and any outbound SMS.  
 - **PORT**, **NODE_ENV**, **TIMEZONE** – Optional/server config.
 
-`.env.example` may still show NUCLEUS_API_KEY; the **code** uses **RETELL_API_KEY**.
+The code accepts **NUCLEUS_API_KEY** or **RETELL_API_KEY** (Nucleus first) for webhook verification.
 
 ---
 
