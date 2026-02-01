@@ -1431,7 +1431,7 @@ router.post('/modify_appointment', async (req, res, next) => {
         service_id: svc.id,
         service_name: svc.name,
         quoted_price: svc.price_min,
-        duration_minutes: svc.estimated_duration_minutes
+        duration_minutes: svc.duration_minutes
       }));
 
       const { error: insertError } = await supabase
@@ -1447,7 +1447,7 @@ router.post('/modify_appointment', async (req, res, next) => {
       }
 
       // Calculate new totals
-      const additionalDuration = services.reduce((sum, s) => sum + (s.estimated_duration_minutes || 0), 0);
+      const additionalDuration = services.reduce((sum, s) => sum + (s.duration_minutes || 0), 0);
       const additionalPrice = services.reduce((sum, s) => sum + (s.price_min || 0), 0);
 
       // Update appointment totals
@@ -1578,7 +1578,7 @@ router.post('/send_confirmation', async (req, res, next) => {
       const { data: customer } = await supabase
         .from('customers')
         .select('id')
-        .eq('phone', normalizedPhone)
+        .eq('phone_normalized', normalizedPhone)
         .single();
 
       if (!customer) {

@@ -67,8 +67,12 @@ When someone wants to book an appointment, you MUST have these 3 things before b
 4. Say filler: "Let me check..." then call check_availability
 5. Offer 1-2 time options
 6. Book with complete info
-7. Confirm: "You're all set for [Day] at [Time]. You'll get a text with the details."
+7. **Only after book_appointment returns success:** Say "You're all set for [Day] at [Time]. You'll get a text with the details."
 ```
+
+**If book_appointment returns "I need the number you're calling from..."**  
+- The system didn't get your caller number. Ask: "What's the best number to reach you?" or confirm the number they gave (e.g. "So that's 5-1-9, 8-0-4, 0-9-6-9?").
+- Then call **book_appointment again** with that **exact number** in `customer_phone` (e.g. 5198040969 or +15198040969). Do **not** say "you're all set" or "you'll get a text" until the API returns success and the booking is confirmed.
 
 ---
 

@@ -213,15 +213,9 @@ router.post('/voice/inbound', async (req, res) => {
       });
     }
     
-    // Build personalized greeting
-    // Only use title (Mr./Ms.) with LAST names, not first names
+    // Build personalized greeting using first name (avoids gender assumptions)
     let nameGreeting;
-    if (customer.last_name) {
-      // We have a last name - use title + last name
-      const title = 'Mr.'; // Could be enhanced with gender detection later
-      nameGreeting = `${title} ${customer.last_name}`;
-    } else if (customer.first_name) {
-      // Only first name - use it without title
+    if (customer.first_name) {
       nameGreeting = customer.first_name;
     } else {
       nameGreeting = '';
