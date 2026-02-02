@@ -42,6 +42,14 @@ import {
   X,
   Star,
   MapPin,
+  MessageSquare,
+  ArrowUpRight,
+  CheckCircle2,
+  XCircle,
+  Bell,
+  ThumbsUp,
+  ThumbsDown,
+  Minus,
 } from 'lucide-react'
 import { cn, formatTime12Hour, getStatusColor, formatCents } from '@/lib/utils'
 import PhoneNumber, { Email } from '@/components/PhoneNumber'
@@ -90,6 +98,13 @@ export default function Customers() {
   const { data: healthData } = useQuery({
     queryKey: ['customer', selectedCustomerId, 'health'],
     queryFn: () => analytics.customerHealth(selectedCustomerId),
+    enabled: !!selectedCustomerId,
+  })
+
+  // Fetch customer interactions (calls + SMS)
+  const { data: interactionsData } = useQuery({
+    queryKey: ['customer', selectedCustomerId, 'interactions'],
+    queryFn: () => customers.getInteractions(selectedCustomerId),
     enabled: !!selectedCustomerId,
   })
 
@@ -447,6 +462,12 @@ export default function Customers() {
                     Appointments ({appointmentsData?.appointments?.length || 0})
                   </TabsTrigger>
                   <TabsTrigger 
+                    value="interactions" 
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent py-3 px-4"
+                  >
+                    Interactions ({interactionsData?.interactions?.length || 0})
+                  </TabsTrigger>
+                  <TabsTrigger 
                     value="insights" 
                     className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent py-3 px-4"
                   >
@@ -535,6 +556,28 @@ export default function Customers() {
                                 <p className="text-sm font-medium text-slate-900">Next Appointment</p>
                                 <p className="text-xs text-slate-500">
                                   {format(new Date(appointmentsData.appointments[0].scheduled_date), 'MMM d, yyyy')}
+                                </p>
+                              </div>
+                            </div>
+                          )}
+                          {interactionsData?.interactions?.[0] && (
+                            <div className="flex items-center gap-3">
+                              <div className={cn(
+                                "h-8 w-8 rounded-full flex items-center justify-center",
+                                interactionsData.interactions[0].type === 'call' ? 'bg-violet-100' : 'bg-amber-100'
+                              )}>
+                                {interactionsData.interactions[0].type === 'call' ? (
+                                  <PhoneCall className="h-4 w-4 text-violet-600" />
+                                ) : (
+                                  <MessageSquare className="h-4 w-4 text-amber-600" />
+                                )}
+                              </div>
+                              <div>
+                                <p className="text-sm font-medium text-slate-900">
+                                  Last {interactionsData.interactions[0].type === 'call' ? 'Call' : 'SMS'}
+                                </p>
+                                <p className="text-xs text-slate-500">
+                                  {formatDistanceToNow(new Date(interactionsData.interactions[0].timestamp), { addSuffix: true })}
                                 </p>
                               </div>
                             </div>
@@ -670,6 +713,114 @@ export default function Customers() {
                       <div className="text-center py-12 bg-slate-50 rounded-xl">
                         <Calendar className="h-12 w-12 text-slate-300 mx-auto mb-3" />
                         <p className="text-slate-500">No appointment history</p>
+                      </div>
+                    )}
+                  </TabsContent>
+
+                  {/* Interactions Tab */}
+                  <TabsContent value="interactions" className="m-0 p-6">
+                    <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                      <MessageSquare className="h-4 w-4 text-blue-500" />
+                      Communication History
+                    </h3>
+                    {interactionsData?.interactions?.length > 0 ? (
+                      <div className="space-y-3">
+                        {interactionsData.interactions.map((interaction) => (
+                          <Link
+                            key={`${interaction.type}-${interaction.id}`}
+                            to={interaction.type === 'call' ? `/call-logs` : `/sms-logs`}
+                            className="block bg-white rounded-xl border border-slate-200 p-4 hover:shadow-md transition-shadow"
+                          >
+                            <div className="flex items-start gap-4">
+                              {/* Icon */}
+                              <div className={cn(
+                                "h-10 w-10 rounded-full flex items-center justify-center shrink-0",
+                                interaction.type === 'call' 
+                                  ? interaction.outcome === 'booked' ? 'bg-emerald-100' : 'bg-blue-100'
+                                  : interaction.message_type === 'confirmation' ? 'bg-blue-100' 
+                                  : interaction.message_type === 'reminder' ? 'bg-violet-100'
+                                  : 'bg-slate-100'
+                              )}>
+                                {interaction.type === 'call' ? (
+                                  <PhoneCall className={cn(
+                                    "h-5 w-5",
+                                    interaction.outcome === 'booked' ? 'text-emerald-600' : 'text-blue-600'
+                                  )} />
+                                ) : (
+                                  interaction.message_type === 'confirmation' ? (
+                                    <CheckCircle2 className="h-5 w-5 text-blue-600" />
+                                  ) : interaction.message_type === 'reminder' ? (
+                                    <Bell className="h-5 w-5 text-violet-600" />
+                                  ) : (
+                                    <MessageSquare className="h-5 w-5 text-slate-600" />
+                                  )
+                                )}
+                              </div>
+
+                              {/* Content */}
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center justify-between gap-2">
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-medium text-slate-900 capitalize">
+                                      {interaction.type === 'call' ? 'Phone Call' : 'SMS'}
+                                    </span>
+                                    {interaction.type === 'call' && interaction.outcome && (
+                                      <Badge className={cn(
+                                        "text-xs",
+                                        interaction.outcome === 'booked' ? 'bg-emerald-100 text-emerald-700' :
+                                        interaction.outcome === 'inquiry' ? 'bg-blue-100 text-blue-700' :
+                                        'bg-slate-100 text-slate-700'
+                                      )}>
+                                        {interaction.outcome}
+                                      </Badge>
+                                    )}
+                                    {interaction.type === 'sms' && interaction.message_type && (
+                                      <Badge className={cn(
+                                        "text-xs",
+                                        interaction.message_type === 'confirmation' ? 'bg-blue-100 text-blue-700' :
+                                        interaction.message_type === 'reminder' ? 'bg-violet-100 text-violet-700' :
+                                        'bg-slate-100 text-slate-700'
+                                      )}>
+                                        {interaction.message_type}
+                                      </Badge>
+                                    )}
+                                    {interaction.type === 'call' && interaction.sentiment && (
+                                      <span className="text-slate-400">
+                                        {interaction.sentiment === 'positive' ? (
+                                          <ThumbsUp className="h-3.5 w-3.5 text-emerald-500" />
+                                        ) : interaction.sentiment === 'negative' ? (
+                                          <ThumbsDown className="h-3.5 w-3.5 text-red-500" />
+                                        ) : (
+                                          <Minus className="h-3.5 w-3.5 text-slate-400" />
+                                        )}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <span className="text-xs text-slate-400 whitespace-nowrap">
+                                    {interaction.timestamp ? format(new Date(interaction.timestamp), 'MMM d, h:mm a') : '-'}
+                                  </span>
+                                </div>
+                                <p className="text-sm text-slate-500 mt-1 line-clamp-2">
+                                  {interaction.summary || 'No details available'}
+                                </p>
+                                {interaction.type === 'call' && interaction.duration_seconds > 0 && (
+                                  <p className="text-xs text-slate-400 mt-1">
+                                    Duration: {Math.floor(interaction.duration_seconds / 60)}m {interaction.duration_seconds % 60}s
+                                  </p>
+                                )}
+                              </div>
+
+                              {/* Arrow */}
+                              <ArrowUpRight className="h-4 w-4 text-slate-400 shrink-0" />
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-12 bg-slate-50 rounded-xl">
+                        <MessageSquare className="h-12 w-12 text-slate-300 mx-auto mb-3" />
+                        <p className="text-slate-500">No interactions recorded</p>
+                        <p className="text-xs text-slate-400 mt-1">Calls and SMS messages will appear here</p>
                       </div>
                     )}
                   </TabsContent>

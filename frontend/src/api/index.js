@@ -75,6 +75,15 @@ export const customers = {
   getAppointments: (id, status = 'all') => 
     fetchAPI(`/customers/${id}/appointments?status=${status}`),
   
+  getCalls: (id, limit = 50) => 
+    fetchAPI(`/customers/${id}/calls?limit=${limit}`),
+  
+  getSms: (id, limit = 50) => 
+    fetchAPI(`/customers/${id}/sms?limit=${limit}`),
+  
+  getInteractions: (id, limit = 50) => 
+    fetchAPI(`/customers/${id}/interactions?limit=${limit}`),
+  
   addVehicle: (customerId, data) => fetchAPI(`/customers/${customerId}/vehicles`, {
     method: 'POST',
     body: JSON.stringify(data),

@@ -300,6 +300,149 @@ router.get('/:id/appointments', async (req, res, next) => {
 });
 
 /**
+ * GET /api/customers/:id/calls
+ * Get call history for a customer
+ */
+router.get('/:id/calls', async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { limit = 50 } = req.query;
+
+    const { data: calls, error } = await supabase
+      .from('call_logs')
+      .select(`
+        id,
+        retell_call_id,
+        phone_number,
+        started_at,
+        ended_at,
+        duration_seconds,
+        outcome,
+        sentiment,
+        intent_detected,
+        transcript_summary,
+        recording_url
+      `)
+      .eq('customer_id', id)
+      .order('started_at', { ascending: false })
+      .limit(parseInt(limit));
+
+    if (error) throw error;
+
+    res.json({ calls: calls || [] });
+
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * GET /api/customers/:id/sms
+ * Get SMS history for a customer
+ */
+router.get('/:id/sms', async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { limit = 50 } = req.query;
+
+    const { data: messages, error } = await supabase
+      .from('sms_logs')
+      .select(`
+        id,
+        to_phone,
+        from_phone,
+        message_body,
+        message_type,
+        status,
+        created_at,
+        appointment_id
+      `)
+      .eq('customer_id', id)
+      .order('created_at', { ascending: false })
+      .limit(parseInt(limit));
+
+    if (error) throw error;
+
+    res.json({ messages: messages || [] });
+
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * GET /api/customers/:id/interactions
+ * Get combined timeline of all customer interactions (calls + SMS)
+ */
+router.get('/:id/interactions', async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { limit = 50 } = req.query;
+
+    // Fetch calls and SMS in parallel
+    const [callsResult, smsResult] = await Promise.all([
+      supabase
+        .from('call_logs')
+        .select(`
+          id,
+          phone_number,
+          started_at,
+          duration_seconds,
+          outcome,
+          sentiment,
+          transcript_summary
+        `)
+        .eq('customer_id', id)
+        .order('started_at', { ascending: false })
+        .limit(parseInt(limit)),
+      supabase
+        .from('sms_logs')
+        .select(`
+          id,
+          to_phone,
+          message_body,
+          message_type,
+          status,
+          created_at
+        `)
+        .eq('customer_id', id)
+        .order('created_at', { ascending: false })
+        .limit(parseInt(limit))
+    ]);
+
+    if (callsResult.error) throw callsResult.error;
+    if (smsResult.error) throw smsResult.error;
+
+    // Combine and sort by date
+    const interactions = [
+      ...(callsResult.data || []).map(call => ({
+        type: 'call',
+        id: call.id,
+        timestamp: call.started_at,
+        summary: call.transcript_summary || `${call.outcome || 'Call'} - ${Math.round((call.duration_seconds || 0) / 60)}min`,
+        outcome: call.outcome,
+        sentiment: call.sentiment,
+        duration_seconds: call.duration_seconds
+      })),
+      ...(smsResult.data || []).map(sms => ({
+        type: 'sms',
+        id: sms.id,
+        timestamp: sms.created_at,
+        summary: sms.message_body?.substring(0, 100) + (sms.message_body?.length > 100 ? '...' : ''),
+        message_type: sms.message_type,
+        status: sms.status
+      }))
+    ].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+     .slice(0, parseInt(limit));
+
+    res.json({ interactions });
+
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
  * POST /api/customers/:id/vehicles
  * Add a vehicle to a customer
  */
