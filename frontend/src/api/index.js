@@ -145,6 +145,15 @@ export const analytics = {
   
   callTrends: (period = 'week') => 
     fetchAPI(`/analytics/call-trends?period=${period}`),
+  
+  revenue: (period = 'month') => 
+    fetchAPI(`/analytics/revenue?period=${period}`),
+  
+  customers: (period = 'month') => 
+    fetchAPI(`/analytics/customers?period=${period}`),
+  
+  comprehensive: (period = 'week') => 
+    fetchAPI(`/analytics/comprehensive?period=${period}`),
 }
 
 // Call Logs

@@ -933,4 +933,450 @@ router.get('/call-trends', async (req, res, next) => {
   }
 });
 
+/**
+ * GET /api/analytics/revenue
+ * Revenue analytics with trends and breakdowns
+ */
+router.get('/revenue', async (req, res, next) => {
+  try {
+    const { period = 'month' } = req.query;
+    const today = new Date();
+    const days = period === 'week' ? 7 : period === 'day' ? 1 : 30;
+    const startDate = format(subDays(today, days), 'yyyy-MM-dd');
+    const prevStartDate = format(subDays(today, days * 2), 'yyyy-MM-dd');
+    const prevEndDate = format(subDays(today, days + 1), 'yyyy-MM-dd');
+
+    // Current period revenue
+    const { data: currentAppointments } = await supabase
+      .from('appointments')
+      .select('scheduled_date, quoted_total, final_total, status')
+      .gte('scheduled_date', startDate)
+      .not('status', 'in', '("cancelled","no_show")');
+
+    // Previous period revenue for comparison
+    const { data: prevAppointments } = await supabase
+      .from('appointments')
+      .select('quoted_total, final_total')
+      .gte('scheduled_date', prevStartDate)
+      .lte('scheduled_date', prevEndDate)
+      .not('status', 'in', '("cancelled","no_show")');
+
+    // Revenue by service category
+    const { data: serviceRevenue } = await supabase
+      .from('appointment_services')
+      .select(`
+        service_name,
+        quoted_price,
+        final_price,
+        service:services (
+          category:service_categories (name)
+        ),
+        appointment:appointments!inner (scheduled_date, status)
+      `)
+      .gte('appointment.scheduled_date', startDate)
+      .not('appointment.status', 'in', '("cancelled","no_show")');
+
+    // Calculate totals
+    const currentRevenue = currentAppointments?.reduce((sum, a) => sum + (a.final_total || a.quoted_total || 0), 0) || 0;
+    const prevRevenue = prevAppointments?.reduce((sum, a) => sum + (a.final_total || a.quoted_total || 0), 0) || 0;
+    const revenueChange = prevRevenue > 0 ? Math.round(((currentRevenue - prevRevenue) / prevRevenue) * 100) : 0;
+
+    // Average ticket value
+    const avgTicket = currentAppointments?.length > 0 
+      ? Math.round(currentRevenue / currentAppointments.length) 
+      : 0;
+    const prevAvgTicket = prevAppointments?.length > 0 
+      ? Math.round(prevRevenue / prevAppointments.length) 
+      : 0;
+    const avgTicketChange = prevAvgTicket > 0 ? Math.round(((avgTicket - prevAvgTicket) / prevAvgTicket) * 100) : 0;
+
+    // Revenue by day
+    const revenueByDay = {};
+    for (const apt of currentAppointments || []) {
+      const date = apt.scheduled_date;
+      if (!revenueByDay[date]) {
+        revenueByDay[date] = { revenue: 0, appointments: 0 };
+      }
+      revenueByDay[date].revenue += apt.final_total || apt.quoted_total || 0;
+      revenueByDay[date].appointments++;
+    }
+
+    const revenueTrend = Object.entries(revenueByDay)
+      .map(([date, data]) => ({ date, ...data }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+
+    // Revenue by category
+    const byCategory = {};
+    for (const svc of serviceRevenue || []) {
+      const categoryName = svc.service?.category?.name || 'Other';
+      if (!byCategory[categoryName]) {
+        byCategory[categoryName] = 0;
+      }
+      byCategory[categoryName] += svc.final_price || svc.quoted_price || 0;
+    }
+
+    const categoryBreakdown = Object.entries(byCategory)
+      .map(([name, revenue]) => ({ name, revenue }))
+      .sort((a, b) => b.revenue - a.revenue);
+
+    // Top services by revenue
+    const byService = {};
+    for (const svc of serviceRevenue || []) {
+      if (!byService[svc.service_name]) {
+        byService[svc.service_name] = { revenue: 0, count: 0 };
+      }
+      byService[svc.service_name].revenue += svc.final_price || svc.quoted_price || 0;
+      byService[svc.service_name].count++;
+    }
+
+    const topServices = Object.entries(byService)
+      .map(([name, data]) => ({ name, ...data }))
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, 10);
+
+    res.json({
+      period,
+      current: {
+        total_revenue: currentRevenue,
+        appointments: currentAppointments?.length || 0,
+        avg_ticket: avgTicket
+      },
+      comparison: {
+        revenue_change: revenueChange,
+        avg_ticket_change: avgTicketChange,
+        prev_revenue: prevRevenue
+      },
+      revenue_trend: revenueTrend,
+      by_category: categoryBreakdown,
+      top_services: topServices
+    });
+
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * GET /api/analytics/customers
+ * Customer analytics with acquisition and health metrics
+ */
+router.get('/customers', async (req, res, next) => {
+  try {
+    const { period = 'month' } = req.query;
+    const today = new Date();
+    const days = period === 'week' ? 7 : period === 'day' ? 1 : 30;
+    const startDate = format(subDays(today, days), 'yyyy-MM-dd');
+    const prevStartDate = format(subDays(today, days * 2), 'yyyy-MM-dd');
+    const prevEndDate = format(subDays(today, days + 1), 'yyyy-MM-dd');
+
+    // New customers this period
+    const { count: newCustomers } = await supabase
+      .from('customers')
+      .select('*', { count: 'exact', head: true })
+      .gte('created_at', `${startDate}T00:00:00`);
+
+    // New customers previous period
+    const { count: prevNewCustomers } = await supabase
+      .from('customers')
+      .select('*', { count: 'exact', head: true })
+      .gte('created_at', `${prevStartDate}T00:00:00`)
+      .lte('created_at', `${prevEndDate}T23:59:59`);
+
+    const newCustomerChange = prevNewCustomers > 0 
+      ? Math.round(((newCustomers - prevNewCustomers) / prevNewCustomers) * 100) 
+      : 0;
+
+    // Total active customers (visited in last 90 days)
+    const ninetyDaysAgo = format(subDays(today, 90), 'yyyy-MM-dd');
+    const { count: activeCustomers } = await supabase
+      .from('customers')
+      .select('*', { count: 'exact', head: true })
+      .gte('last_visit_date', ninetyDaysAgo);
+
+    // Total customers
+    const { count: totalCustomers } = await supabase
+      .from('customers')
+      .select('*', { count: 'exact', head: true });
+
+    // Customer acquisition trend
+    const { data: customersByDate } = await supabase
+      .from('customers')
+      .select('created_at')
+      .gte('created_at', `${startDate}T00:00:00`);
+
+    const acquisitionByDay = {};
+    for (const c of customersByDate || []) {
+      const date = format(new Date(c.created_at), 'yyyy-MM-dd');
+      acquisitionByDay[date] = (acquisitionByDay[date] || 0) + 1;
+    }
+
+    const acquisitionTrend = Object.entries(acquisitionByDay)
+      .map(([date, count]) => ({ date, new_customers: count }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+
+    // Top customers by spend
+    const { data: topCustomers } = await supabase
+      .from('customers')
+      .select('id, first_name, last_name, total_visits, total_spent, last_visit_date')
+      .order('total_spent', { ascending: false })
+      .limit(10);
+
+    // At-risk customers (no visit in 60+ days but have visited before)
+    const sixtyDaysAgo = format(subDays(today, 60), 'yyyy-MM-dd');
+    const { count: atRiskCustomers } = await supabase
+      .from('customers')
+      .select('*', { count: 'exact', head: true })
+      .lt('last_visit_date', sixtyDaysAgo)
+      .gt('total_visits', 0);
+
+    // Customer health distribution
+    const { data: allCustomersHealth } = await supabase
+      .from('customers')
+      .select('total_visits, total_spent, last_visit_date, created_at')
+      .gt('total_visits', 0);
+
+    let healthDistribution = { excellent: 0, good: 0, fair: 0, at_risk: 0 };
+    
+    for (const c of allCustomersHealth || []) {
+      const daysSinceVisit = c.last_visit_date 
+        ? differenceInDays(today, new Date(c.last_visit_date)) 
+        : 999;
+      const customerAge = differenceInDays(today, new Date(c.created_at));
+      const visitsPerYear = customerAge > 0 ? (c.total_visits / (customerAge / 365)) : 0;
+      
+      // Simple health scoring
+      let score = 0;
+      if (daysSinceVisit <= 30) score += 30;
+      else if (daysSinceVisit <= 60) score += 20;
+      else if (daysSinceVisit <= 90) score += 10;
+      
+      if (visitsPerYear >= 4) score += 30;
+      else if (visitsPerYear >= 2) score += 20;
+      else if (visitsPerYear >= 1) score += 10;
+      
+      if ((c.total_spent || 0) >= 2000) score += 20;
+      else if ((c.total_spent || 0) >= 1000) score += 15;
+      else if ((c.total_spent || 0) >= 500) score += 10;
+
+      if (score >= 60) healthDistribution.excellent++;
+      else if (score >= 40) healthDistribution.good++;
+      else if (score >= 20) healthDistribution.fair++;
+      else healthDistribution.at_risk++;
+    }
+
+    // Returning vs new (appointments this period)
+    const { data: periodAppointments } = await supabase
+      .from('appointments')
+      .select('customer_id, customer:customers(total_visits)')
+      .gte('scheduled_date', startDate)
+      .not('status', 'in', '("cancelled","no_show")');
+
+    let returningCount = 0;
+    let newCount = 0;
+    const seenCustomers = new Set();
+    
+    for (const apt of periodAppointments || []) {
+      if (!seenCustomers.has(apt.customer_id)) {
+        seenCustomers.add(apt.customer_id);
+        if ((apt.customer?.total_visits || 0) > 1) {
+          returningCount++;
+        } else {
+          newCount++;
+        }
+      }
+    }
+
+    const returningRate = (returningCount + newCount) > 0 
+      ? Math.round((returningCount / (returningCount + newCount)) * 100) 
+      : 0;
+
+    res.json({
+      period,
+      summary: {
+        total_customers: totalCustomers || 0,
+        active_customers: activeCustomers || 0,
+        new_customers: newCustomers || 0,
+        new_customer_change: newCustomerChange,
+        at_risk_customers: atRiskCustomers || 0,
+        returning_rate: returningRate
+      },
+      health_distribution: healthDistribution,
+      acquisition_trend: acquisitionTrend,
+      top_customers: topCustomers?.map(c => ({
+        id: c.id,
+        name: `${c.first_name || ''} ${c.last_name || ''}`.trim() || 'Unknown',
+        visits: c.total_visits || 0,
+        total_spent: c.total_spent || 0,
+        last_visit: c.last_visit_date
+      })) || []
+    });
+
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * GET /api/analytics/comprehensive
+ * All-in-one analytics endpoint for dashboard
+ */
+router.get('/comprehensive', async (req, res, next) => {
+  try {
+    const { period = 'week' } = req.query;
+    const today = new Date();
+    const todayStr = format(today, 'yyyy-MM-dd');
+    const days = period === 'week' ? 7 : period === 'day' ? 1 : 30;
+    const startDate = format(subDays(today, days), 'yyyy-MM-dd');
+    const prevStartDate = format(subDays(today, days * 2), 'yyyy-MM-dd');
+    const prevEndDate = format(subDays(today, days + 1), 'yyyy-MM-dd');
+    const monthStart = format(startOfMonth(today), 'yyyy-MM-dd');
+
+    // Parallel queries for performance
+    const [
+      callsResult,
+      prevCallsResult,
+      bookedCallsResult,
+      appointmentsResult,
+      prevAppointmentsResult,
+      newCustomersResult,
+      prevNewCustomersResult,
+      sentimentResult,
+      monthRevenueResult,
+      todayApptsResult
+    ] = await Promise.all([
+      // Current period calls
+      supabase
+        .from('call_logs')
+        .select('id, outcome, sentiment, duration_seconds')
+        .gte('started_at', `${startDate}T00:00:00`),
+      // Previous period calls
+      supabase
+        .from('call_logs')
+        .select('id', { count: 'exact', head: true })
+        .gte('started_at', `${prevStartDate}T00:00:00`)
+        .lte('started_at', `${prevEndDate}T23:59:59`),
+      // Booked calls current period
+      supabase
+        .from('call_logs')
+        .select('id', { count: 'exact', head: true })
+        .gte('started_at', `${startDate}T00:00:00`)
+        .eq('outcome', 'booked'),
+      // Current period appointments
+      supabase
+        .from('appointments')
+        .select('quoted_total, final_total, status')
+        .gte('scheduled_date', startDate)
+        .not('status', 'in', '("cancelled","no_show")'),
+      // Previous period appointments
+      supabase
+        .from('appointments')
+        .select('quoted_total, final_total')
+        .gte('scheduled_date', prevStartDate)
+        .lte('scheduled_date', prevEndDate)
+        .not('status', 'in', '("cancelled","no_show")'),
+      // New customers current period
+      supabase
+        .from('customers')
+        .select('id', { count: 'exact', head: true })
+        .gte('created_at', `${startDate}T00:00:00`),
+      // New customers previous period
+      supabase
+        .from('customers')
+        .select('id', { count: 'exact', head: true })
+        .gte('created_at', `${prevStartDate}T00:00:00`)
+        .lte('created_at', `${prevEndDate}T23:59:59`),
+      // Positive sentiment calls
+      supabase
+        .from('call_logs')
+        .select('id', { count: 'exact', head: true })
+        .gte('started_at', `${startDate}T00:00:00`)
+        .eq('sentiment', 'positive'),
+      // Month revenue
+      supabase
+        .from('appointments')
+        .select('quoted_total, final_total')
+        .gte('scheduled_date', monthStart)
+        .not('status', 'in', '("cancelled","no_show")'),
+      // Today's appointments
+      supabase
+        .from('appointments')
+        .select('id', { count: 'exact', head: true })
+        .eq('scheduled_date', todayStr)
+        .not('status', 'in', '("cancelled","no_show")')
+    ]);
+
+    const calls = callsResult.data || [];
+    const totalCalls = calls.length;
+    const prevCalls = prevCallsResult.count || 0;
+    const bookedCalls = bookedCallsResult.count || 0;
+    const positiveCalls = sentimentResult.count || 0;
+
+    // Call metrics
+    const callChange = prevCalls > 0 ? Math.round(((totalCalls - prevCalls) / prevCalls) * 100) : 0;
+    const conversionRate = totalCalls > 0 ? Math.round((bookedCalls / totalCalls) * 100) : 0;
+    const satisfactionRate = totalCalls > 0 ? Math.round((positiveCalls / totalCalls) * 100) : 0;
+    
+    const avgDuration = calls.length > 0 
+      ? Math.round(calls.reduce((sum, c) => sum + (c.duration_seconds || 0), 0) / calls.length)
+      : 0;
+
+    // Outcome breakdown
+    const outcomeBreakdown = {};
+    for (const call of calls) {
+      const outcome = call.outcome || 'unknown';
+      outcomeBreakdown[outcome] = (outcomeBreakdown[outcome] || 0) + 1;
+    }
+
+    // Revenue metrics
+    const currentAppts = appointmentsResult.data || [];
+    const prevAppts = prevAppointmentsResult.data || [];
+    const monthAppts = monthRevenueResult.data || [];
+
+    const currentRevenue = currentAppts.reduce((sum, a) => sum + (a.final_total || a.quoted_total || 0), 0);
+    const prevRevenue = prevAppts.reduce((sum, a) => sum + (a.final_total || a.quoted_total || 0), 0);
+    const monthRevenue = monthAppts.reduce((sum, a) => sum + (a.final_total || a.quoted_total || 0), 0);
+    const revenueChange = prevRevenue > 0 ? Math.round(((currentRevenue - prevRevenue) / prevRevenue) * 100) : 0;
+
+    const avgTicket = currentAppts.length > 0 ? Math.round(currentRevenue / currentAppts.length) : 0;
+
+    // Customer metrics
+    const newCustomers = newCustomersResult.count || 0;
+    const prevNewCustomers = prevNewCustomersResult.count || 0;
+    const customerChange = prevNewCustomers > 0 
+      ? Math.round(((newCustomers - prevNewCustomers) / prevNewCustomers) * 100) 
+      : 0;
+
+    res.json({
+      period,
+      generated_at: new Date().toISOString(),
+      calls: {
+        total: totalCalls,
+        change: callChange,
+        conversion_rate: conversionRate,
+        satisfaction_rate: satisfactionRate,
+        avg_duration_seconds: avgDuration,
+        booked: bookedCalls,
+        by_outcome: outcomeBreakdown
+      },
+      revenue: {
+        period_total: currentRevenue,
+        month_total: monthRevenue,
+        change: revenueChange,
+        avg_ticket: avgTicket,
+        appointments: currentAppts.length
+      },
+      customers: {
+        new: newCustomers,
+        change: customerChange
+      },
+      today: {
+        appointments: todayApptsResult.count || 0
+      }
+    });
+
+  } catch (error) {
+    next(error);
+  }
+});
+
 export default router;

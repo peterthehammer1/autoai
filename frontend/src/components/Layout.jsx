@@ -28,8 +28,9 @@ const navigation = [
   { name: 'Call Logs', href: '/call-logs', icon: Phone },
   { name: 'SMS Messages', href: '/sms-logs', icon: MessageSquare },
   { name: 'Analytics', href: '/analytics', icon: BarChart3 },
-  { name: 'Services', href: '/services', icon: Wrench },
-  { name: 'Settings', href: '/settings', icon: Settings },
+  // Hidden for now - pages still accessible via direct URL
+  // { name: 'Services', href: '/services', icon: Wrench },
+  // { name: 'Settings', href: '/settings', icon: Settings },
 ]
 
 export default function Layout() {
@@ -138,29 +139,7 @@ export default function Layout() {
             <p className="px-3 py-2 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
               Main
             </p>
-            {navigation.slice(0, 5).map((item) => (
-              <Link
-                key={item.name}
-                to={item.href}
-                className={cn(
-                  'group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
-                  isActive(item.href)
-                    ? 'bg-primary text-white'
-                    : 'text-slate-300 hover:bg-slate-800 hover:text-white'
-                )}
-              >
-                <item.icon className="h-[18px] w-[18px]" />
-                {item.name}
-                {isActive(item.href) && (
-                  <ChevronRight className="h-4 w-4 ml-auto opacity-60" />
-                )}
-              </Link>
-            ))}
-            
-            <p className="px-3 py-2 mt-4 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
-              Settings
-            </p>
-            {navigation.slice(5).map((item) => (
+            {navigation.map((item) => (
               <Link
                 key={item.name}
                 to={item.href}
