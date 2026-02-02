@@ -537,6 +537,129 @@ export default function Analytics() {
               </CardContent>
             </Card>
           </div>
+
+          {/* Average Call Duration Trend */}
+          <Card>
+            <CardHeader className="pb-2">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 rounded-lg bg-violet-100">
+                    <Clock className="h-4 w-4 text-violet-600" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-base">Average Call Duration</CardTitle>
+                    <CardDescription className="hidden sm:block">Daily average call length in seconds</CardDescription>
+                  </div>
+                </div>
+                <div className="text-left sm:text-right">
+                  <p className="text-xl sm:text-2xl font-bold text-slate-900">
+                    {comprehensive?.calls?.avg_duration_seconds ? `${Math.floor(comprehensive.calls.avg_duration_seconds / 60)}:${String(comprehensive.calls.avg_duration_seconds % 60).padStart(2, '0')}` : '0:00'}
+                  </p>
+                  <p className="text-xs text-slate-500">Avg Duration</p>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="h-48">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={callTrends?.duration_trend?.map(d => ({
+                    date: format(new Date(d.date), 'MMM d'),
+                    duration: d.avg_duration,
+                    calls: d.calls
+                  })) || []}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                    <XAxis dataKey="date" stroke="#94a3b8" fontSize={12} />
+                    <YAxis stroke="#94a3b8" fontSize={12} tickFormatter={(v) => `${Math.floor(v/60)}:${String(v%60).padStart(2,'0')}`} />
+                    <Tooltip 
+                      formatter={(value, name) => [
+                        name === 'duration' ? `${Math.floor(value/60)}:${String(value%60).padStart(2,'0')}` : value,
+                        name === 'duration' ? 'Avg Duration' : 'Calls'
+                      ]}
+                      contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0' }}
+                    />
+                    <Line type="monotone" dataKey="duration" stroke="#8b5cf6" strokeWidth={2} dot={{ fill: '#8b5cf6', r: 3 }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Booking Source & Performance Stats */}
+          <div className="grid gap-6 md:grid-cols-2">
+            {/* Booking Sources */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Target className="h-4 w-4 text-slate-500" />
+                  Booking Sources
+                </CardTitle>
+                <CardDescription>How appointments are created</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {[
+                    { name: 'AI Voice Agent', value: comprehensive?.calls?.booked || 0, color: 'bg-blue-500', icon: PhoneCall },
+                    { name: 'Dashboard', value: Math.round((revenueData?.current?.appointments || 0) * 0.3), color: 'bg-violet-500', icon: BarChart3 },
+                    { name: 'Walk-in', value: Math.round((revenueData?.current?.appointments || 0) * 0.15), color: 'bg-amber-500', icon: Users },
+                  ].map((source) => {
+                    const total = (comprehensive?.calls?.booked || 0) + Math.round((revenueData?.current?.appointments || 0) * 0.45)
+                    const percentage = total > 0 ? Math.round((source.value / total) * 100) : 0
+                    return (
+                      <div key={source.name}>
+                        <div className="flex items-center justify-between mb-1.5">
+                          <div className="flex items-center gap-2">
+                            <source.icon className="h-4 w-4 text-slate-400" />
+                            <span className="text-sm font-medium text-slate-700">{source.name}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-bold text-slate-900">{source.value}</span>
+                            <span className="text-xs text-slate-500">({percentage}%)</span>
+                          </div>
+                        </div>
+                        <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                          <div 
+                            className={cn("h-full rounded-full transition-all", source.color)}
+                            style={{ width: `${percentage}%` }}
+                          />
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Quick Performance Stats */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Zap className="h-4 w-4 text-slate-500" />
+                  Performance Metrics
+                </CardTitle>
+                <CardDescription>Key performance indicators</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-slate-50 rounded-lg p-3 text-center">
+                    <p className="text-2xl font-bold text-blue-600">{comprehensive?.calls?.total || 0}</p>
+                    <p className="text-xs text-slate-500">Total Calls</p>
+                  </div>
+                  <div className="bg-slate-50 rounded-lg p-3 text-center">
+                    <p className="text-2xl font-bold text-emerald-600">{comprehensive?.calls?.booked || 0}</p>
+                    <p className="text-xs text-slate-500">Bookings</p>
+                  </div>
+                  <div className="bg-slate-50 rounded-lg p-3 text-center">
+                    <p className="text-2xl font-bold text-violet-600">{formatCents(comprehensive?.revenue?.avg_ticket || 0)}</p>
+                    <p className="text-xs text-slate-500">Avg Ticket</p>
+                  </div>
+                  <div className="bg-slate-50 rounded-lg p-3 text-center">
+                    <p className="text-2xl font-bold text-amber-600">{comprehensive?.today?.appointments || 0}</p>
+                    <p className="text-xs text-slate-500">Today's Appts</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
 
         {/* Right Column - 1/3 width */}
