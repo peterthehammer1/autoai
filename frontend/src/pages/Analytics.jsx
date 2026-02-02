@@ -76,32 +76,32 @@ function StatCard({ title, value, change, changeLabel, icon: Icon, iconColor, ic
   
   return (
     <Card className="relative overflow-hidden">
-      <CardContent className="p-4 sm:p-6">
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <p className="text-xs sm:text-sm font-medium text-slate-500 mb-1">{title}</p>
+      <CardContent className="p-4 sm:p-5">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-medium text-slate-500 mb-1 truncate">{title}</p>
             {loading ? (
-              <div className="h-8 w-24 bg-slate-100 animate-pulse rounded" />
+              <div className="h-7 w-20 bg-slate-100 animate-pulse rounded" />
             ) : (
-              <p className="text-2xl sm:text-3xl font-bold text-slate-900">
+              <p className="text-xl sm:text-2xl font-bold text-slate-900 truncate">
                 {prefix}{typeof value === 'number' ? value.toLocaleString() : value}{suffix}
               </p>
             )}
             {change !== undefined && change !== null && (
               <div className={cn(
-                "flex items-center gap-1 mt-2 text-xs sm:text-sm font-medium",
+                "flex items-center gap-1 mt-1.5 text-xs font-medium",
                 isPositive ? "text-emerald-600" : isNegative ? "text-red-600" : "text-slate-500"
               )}>
-                {isPositive ? <ArrowUpRight className="h-3.5 w-3.5" /> : 
-                 isNegative ? <ArrowDownRight className="h-3.5 w-3.5" /> : null}
-                <span>{isPositive ? '+' : ''}{change}%</span>
-                {changeLabel && <span className="text-slate-400 font-normal">{changeLabel}</span>}
+                {isPositive ? <ArrowUpRight className="h-3 w-3 shrink-0" /> : 
+                 isNegative ? <ArrowDownRight className="h-3 w-3 shrink-0" /> : null}
+                <span className="shrink-0">{isPositive ? '+' : ''}{change}%</span>
+                {changeLabel && <span className="text-slate-400 font-normal truncate">{changeLabel}</span>}
               </div>
             )}
           </div>
           {Icon && (
-            <div className={cn("p-2 sm:p-3 rounded-xl", iconBg || "bg-slate-100")}>
-              <Icon className={cn("h-5 w-5 sm:h-6 sm:w-6", iconColor || "text-slate-600")} />
+            <div className={cn("p-2 rounded-lg shrink-0", iconBg || "bg-slate-100")}>
+              <Icon className={cn("h-4 w-4 sm:h-5 sm:w-5", iconColor || "text-slate-600")} />
             </div>
           )}
         </div>
@@ -213,19 +213,19 @@ export default function Analytics() {
       </div>
 
       {/* Hero Stats Row */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
         <StatCard
           title="Total Calls"
           value={comprehensive?.calls?.total || 0}
           change={comprehensive?.calls?.change}
-          changeLabel="vs last period"
+          changeLabel="vs last"
           icon={PhoneCall}
           iconColor="text-blue-600"
           iconBg="bg-blue-100"
           loading={compLoading}
         />
         <StatCard
-          title="Conversion Rate"
+          title="Conversion"
           value={comprehensive?.calls?.conversion_rate || 0}
           suffix="%"
           icon={Target}
@@ -237,7 +237,7 @@ export default function Analytics() {
           title="Revenue"
           value={formatCents(comprehensive?.revenue?.period_total || 0)}
           change={comprehensive?.revenue?.change}
-          changeLabel="vs last period"
+          changeLabel="vs last"
           icon={DollarSign}
           iconColor="text-amber-600"
           iconBg="bg-amber-100"
@@ -256,7 +256,7 @@ export default function Analytics() {
           title="New Customers"
           value={comprehensive?.customers?.new || 0}
           change={comprehensive?.customers?.change}
-          changeLabel="vs last period"
+          changeLabel="vs last"
           icon={UserPlus}
           iconColor="text-cyan-600"
           iconBg="bg-cyan-100"
@@ -265,105 +265,85 @@ export default function Analytics() {
       </div>
 
       {/* Circular Gauges Row */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <Card>
-          <CardContent className="p-3 sm:p-6 flex flex-col items-center">
-            <div className="sm:hidden">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card className="overflow-hidden">
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex items-center gap-4">
               <CircularProgress 
                 value={comprehensive?.calls?.conversion_rate || 0} 
-                size={80}
+                size={70}
                 strokeWidth={6}
                 color="emerald"
-                label="Conv."
-                valueClassName="text-lg"
-                labelClassName="text-[10px]"
+                showValue={false}
               />
+              <div className="flex-1 min-w-0">
+                <p className="text-2xl sm:text-3xl font-bold text-slate-900">
+                  {comprehensive?.calls?.conversion_rate || 0}%
+                </p>
+                <p className="text-xs sm:text-sm text-slate-500">Conversion</p>
+                <p className="text-[10px] sm:text-xs text-slate-400 mt-0.5">Calls to Bookings</p>
+              </div>
             </div>
-            <div className="hidden sm:block">
-              <CircularProgress 
-                value={comprehensive?.calls?.conversion_rate || 0} 
-                size={100}
-                strokeWidth={8}
-                color="emerald"
-                label="Conversion"
-              />
-            </div>
-            <p className="text-[10px] sm:text-xs text-slate-500 mt-1 sm:mt-2 text-center">Calls to Bookings</p>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="p-3 sm:p-6 flex flex-col items-center">
-            <div className="sm:hidden">
+        <Card className="overflow-hidden">
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex items-center gap-4">
               <CircularProgress 
                 value={comprehensive?.calls?.satisfaction_rate || 0} 
-                size={80}
+                size={70}
                 strokeWidth={6}
                 color="violet"
-                label="CSAT"
-                valueClassName="text-lg"
-                labelClassName="text-[10px]"
+                showValue={false}
               />
+              <div className="flex-1 min-w-0">
+                <p className="text-2xl sm:text-3xl font-bold text-slate-900">
+                  {comprehensive?.calls?.satisfaction_rate || 0}%
+                </p>
+                <p className="text-xs sm:text-sm text-slate-500">Satisfaction</p>
+                <p className="text-[10px] sm:text-xs text-slate-400 mt-0.5">Customer CSAT</p>
+              </div>
             </div>
-            <div className="hidden sm:block">
-              <CircularProgress 
-                value={comprehensive?.calls?.satisfaction_rate || 0} 
-                size={100}
-                strokeWidth={8}
-                color="violet"
-                label="CSAT"
-              />
-            </div>
-            <p className="text-[10px] sm:text-xs text-slate-500 mt-1 sm:mt-2 text-center">Customer Satisfaction</p>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="p-3 sm:p-6 flex flex-col items-center">
-            <div className="sm:hidden">
+        <Card className="overflow-hidden">
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex items-center gap-4">
               <CircularProgress 
                 value={customerData?.summary?.returning_rate || 0} 
-                size={80}
+                size={70}
                 strokeWidth={6}
                 color="blue"
-                label="Return"
-                valueClassName="text-lg"
-                labelClassName="text-[10px]"
+                showValue={false}
               />
+              <div className="flex-1 min-w-0">
+                <p className="text-2xl sm:text-3xl font-bold text-slate-900">
+                  {customerData?.summary?.returning_rate || 0}%
+                </p>
+                <p className="text-xs sm:text-sm text-slate-500">Returning</p>
+                <p className="text-[10px] sm:text-xs text-slate-400 mt-0.5">Repeat Customers</p>
+              </div>
             </div>
-            <div className="hidden sm:block">
-              <CircularProgress 
-                value={customerData?.summary?.returning_rate || 0} 
-                size={100}
-                strokeWidth={8}
-                color="blue"
-                label="Returning"
-              />
-            </div>
-            <p className="text-[10px] sm:text-xs text-slate-500 mt-1 sm:mt-2 text-center">Repeat Customers</p>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="p-3 sm:p-6 flex flex-col items-center">
-            <div className="sm:hidden">
+        <Card className="overflow-hidden">
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex items-center gap-4">
               <CircularProgress 
                 value={bayStats?.overall?.utilization_percent || 0} 
-                size={80}
+                size={70}
                 strokeWidth={6}
                 color="amber"
-                label="Util."
-                valueClassName="text-lg"
-                labelClassName="text-[10px]"
+                showValue={false}
               />
+              <div className="flex-1 min-w-0">
+                <p className="text-2xl sm:text-3xl font-bold text-slate-900">
+                  {bayStats?.overall?.utilization_percent || 0}%
+                </p>
+                <p className="text-xs sm:text-sm text-slate-500">Utilization</p>
+                <p className="text-[10px] sm:text-xs text-slate-400 mt-0.5">Bay Capacity</p>
+              </div>
             </div>
-            <div className="hidden sm:block">
-              <CircularProgress 
-                value={bayStats?.overall?.utilization_percent || 0} 
-                size={100}
-                strokeWidth={8}
-                color="amber"
-                label="Utilization"
-              />
-            </div>
-            <p className="text-[10px] sm:text-xs text-slate-500 mt-1 sm:mt-2 text-center">Bay Capacity</p>
           </CardContent>
         </Card>
       </div>
