@@ -3,7 +3,7 @@ import { supabase } from '../config/database.js';
 
 // SendGrid API key
 const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
-const FROM_EMAIL = process.env.FROM_EMAIL || 'noreply@fixmycar.app';
+const FROM_EMAIL = process.env.FROM_EMAIL || 'noreply@premierauto.ai';
 const FROM_NAME = process.env.FROM_NAME || 'Premier Auto Service';
 
 /**
@@ -218,7 +218,7 @@ export async function sendConfirmationEmail({
             <td style="background-color: #f8fafc; padding: 24px 40px; border-top: 1px solid #e2e8f0; text-align: center;">
               <p style="margin: 0; color: #94a3b8; font-size: 12px;">
                 Premier Auto Service<br>
-                <a href="https://fixmycar.app" style="color: #94a3b8; text-decoration: none;">fixmycar.app</a>
+                <a href="https://premierauto.ai" style="color: #94a3b8; text-decoration: none;">premierauto.ai</a>
               </p>
             </td>
           </tr>
@@ -324,7 +324,7 @@ export async function sendReminderEmail({
           <tr>
             <td style="background-color: #f8fafc; padding: 24px 40px; border-top: 1px solid #e2e8f0; text-align: center;">
               <p style="margin: 0; color: #94a3b8; font-size: 12px;">
-                Premier Auto Service · <a href="https://fixmycar.app" style="color: #94a3b8; text-decoration: none;">fixmycar.app</a>
+                Premier Auto Service · <a href="https://premierauto.ai" style="color: #94a3b8; text-decoration: none;">premierauto.ai</a>
               </p>
             </td>
           </tr>

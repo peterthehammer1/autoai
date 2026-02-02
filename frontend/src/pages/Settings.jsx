@@ -54,7 +54,7 @@ export default function Settings() {
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Website</label>
-                  <Input defaultValue="https://fixmycar.app" />
+                  <Input defaultValue="https://premierauto.ai" />
                 </div>
               </div>
               <Separator />
