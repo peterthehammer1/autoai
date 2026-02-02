@@ -1,6 +1,8 @@
 /**
- * Privacy masking components for phone numbers and emails
+ * Phone number formatting and display components
  */
+
+import { formatPhone } from '@/lib/utils'
 
 // Mask a phone number showing only last 4 digits
 export const maskPhone = (phone) => {
@@ -24,17 +26,21 @@ export const maskEmail = (email) => {
   return `${masked}@${domain}`
 }
 
-// PhoneNumber component - always masked
+// PhoneNumber component - displays formatted phone number (519) 991-8959
+// Use masked={true} to show masked version •••-•••-8959
 export default function PhoneNumber({ 
   phone, 
   className = '',
+  masked = false,
   showRevealButton = false
 }) {
   if (!phone) return <span className={className}>-</span>
 
+  const displayValue = masked ? maskPhone(phone) : formatPhone(phone)
+
   return (
-    <span className={`font-mono text-slate-500 ${className}`}>
-      {maskPhone(phone)}
+    <span className={`font-mono text-slate-600 ${className}`}>
+      {displayValue}
     </span>
   )
 }

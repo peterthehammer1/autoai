@@ -51,7 +51,7 @@ import {
   ThumbsDown,
   Minus,
 } from 'lucide-react'
-import { cn, formatTime12Hour, getStatusColor, formatCents } from '@/lib/utils'
+import { cn, formatTime12Hour, getStatusColor, formatCents, formatPhone } from '@/lib/utils'
 import PhoneNumber, { Email } from '@/components/PhoneNumber'
 import CarImage from '@/components/CarImage'
 import CustomerAvatar from '@/components/CustomerAvatar'
@@ -315,8 +315,8 @@ export default function Customers() {
                       <p className="font-medium text-slate-900 truncate">
                         {customer.first_name} {customer.last_name}
                       </p>
-                      <p className="text-xs text-slate-500 truncate">
-                        {customer.phone || 'No phone'}
+                      <p className="text-xs text-slate-500 truncate font-mono">
+                        {customer.phone ? formatPhone(customer.phone) : 'No phone'}
                       </p>
                     </div>
                     {customer.total_visits > 0 && (
