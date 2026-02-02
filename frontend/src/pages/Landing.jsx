@@ -101,22 +101,18 @@ const capabilities = [
 
 const testimonials = [
   {
-    quote: "Amber handles 80% of our calls now. Our staff can focus on the cars instead of the phones.",
-    author: "Mike Thompson",
-    role: "Owner, Thompson Auto Care",
+    quote: "Nucleus gives us peace of mind and time freedom.",
+    author: "Nikita Nathwani",
+    role: "9Round Owner",
     rating: 5,
+    logo: "9Round",
   },
   {
-    quote: "We went from missing calls after hours to booking appointments 24/7. Revenue is up 35%.",
-    author: "Sarah Chen",
-    role: "Manager, Precision Auto Service",
+    quote: "I've tried six or seven AI receptionist services. They're not as good as carrying on a conversation as Nucleus AI.",
+    author: "Richard M Sedler",
+    role: "President & CEO, RMS Media Group Inc.",
     rating: 5,
-  },
-  {
-    quote: "The AI sounds so natural, customers don't even realize they're not talking to a person.",
-    author: "David Rodriguez",
-    role: "Owner, Dave's Auto Repair",
-    rating: 5,
+    logo: "RMS",
   },
 ]
 
@@ -561,7 +557,7 @@ export default function Landing() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             {testimonials.map((testimonial, i) => (
               <div
                 key={i}
@@ -572,7 +568,7 @@ export default function Landing() {
                     <Star key={j} className="h-5 w-5 fill-amber-400 text-amber-400" />
                   ))}
                 </div>
-                <p className="text-slate-700 mb-6 leading-relaxed">
+                <p className="text-slate-700 mb-6 leading-relaxed text-lg">
                   "{testimonial.quote}"
                 </p>
                 <div className="flex items-center gap-3">
@@ -608,7 +604,7 @@ export default function Landing() {
                 Call Now: (647) 371-1990
               </a>
             </Button>
-            <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10 text-lg px-8 h-14" asChild>
+            <Button size="lg" className="bg-white/20 text-white border-2 border-white hover:bg-white/30 text-lg px-8 h-14" asChild>
               <a href="mailto:service@premierauto.ai">
                 <MessageSquare className="h-5 w-5 mr-2" />
                 Contact Us
