@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from '@/components/ui/toaster'
 import Layout from '@/components/Layout'
+import Landing from '@/pages/Landing'
 import Dashboard from '@/pages/Dashboard'
 import Appointments from '@/pages/Appointments'
 import AppointmentDetail from '@/pages/AppointmentDetail'
@@ -16,8 +17,11 @@ function App() {
   return (
     <>
       <Routes>
-        <Route path="/" element={<Layout />}>
-          <Route index element={<Navigate to="/dashboard" replace />} />
+        {/* Public landing page */}
+        <Route path="/" element={<Landing />} />
+        
+        {/* Dashboard routes (with sidebar layout) */}
+        <Route element={<Layout />}>
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="appointments" element={<Appointments />} />
           <Route path="appointments/:id" element={<AppointmentDetail />} />
