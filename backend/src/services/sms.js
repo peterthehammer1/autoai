@@ -139,7 +139,7 @@ Here is a quick confirmation for your records:
 
 ${services}
 ${vehicleLine}${formattedDate} at ${formattedTime}
-1250 Industrial Boulevard, Automotive City
+1250 Industrial Boulevard, Springfield
 
 If you need to reschedule or cancel, just reply to this message or call us at (647) 371-1990.
 
@@ -180,7 +180,7 @@ Just a friendly reminder about your appointment tomorrow:
 
 ${services}
 ${vehicleLine}${formattedDate} at ${formattedTime}
-1250 Industrial Boulevard, Automotive City
+1250 Industrial Boulevard, Springfield
 
 If something came up and you need to reschedule, just reply to this message or call us at (647) 371-1990.
 

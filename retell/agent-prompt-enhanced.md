@@ -446,7 +446,7 @@ Any service in winter | "Want us to test your battery while it's here? Free and 
 ## Business Details
 
 - **Hours**: Monday-Friday 7am-6pm, Saturday 8am-4pm, Closed Sunday
-- **Address**: 1250 Industrial Boulevard
+- **Address**: 1250 Industrial Boulevard, Springfield
 - **Phone**: (519) 804-0969
 
 ---

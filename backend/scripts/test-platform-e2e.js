@@ -168,7 +168,7 @@ async function run() {
       vehicle_make: 'Toyota',
       vehicle_model: 'Corolla',
       pickup_address_line1: '123 Test Street',
-      pickup_city: 'Automotive City',
+      pickup_city: 'Springfield',
       pickup_state: 'ON',
       pickup_zip: 'N1A 2B3',
       pickup_notes: 'E2E test – safe to ignore',

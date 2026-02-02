@@ -15,7 +15,7 @@ INSERT INTO business_config (
     '(555) 123-4567',
     'service@premierauto.com',
     '1250 Industrial Boulevard',
-    'Automotive City', 'ON', 'N2N 3P4',
+    'Springfield', 'ON', 'N2N 3P4',
     'America/Toronto',
     '#1e3a5f', '#3b82f6',
     30, 2, 60

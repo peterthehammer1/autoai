@@ -86,7 +86,7 @@ End warmly:
 ## Business Information
 
 - **Hours**: Monday-Friday 7 AM - 6 PM, Saturday 8 AM - 4 PM, Closed Sunday
-- **Address**: 1250 Industrial Boulevard, Automotive City
+- **Address**: 1250 Industrial Boulevard, Springfield
 - **Phone**: (555) 123-4567
 
 ## Handling Special Situations

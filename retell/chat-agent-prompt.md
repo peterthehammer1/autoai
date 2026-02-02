@@ -150,7 +150,7 @@ For tow requests - need pickup address.
 ## Business Info
 
 - **Hours:** Mon-Fri 7am-4pm (closed weekends)
-- **Address:** 1250 Industrial Boulevard
+- **Address:** 1250 Industrial Boulevard, Springfield
 - **Phone:** (647) 371-1990
 
 ---
