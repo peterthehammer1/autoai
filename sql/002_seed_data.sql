@@ -12,7 +12,7 @@ INSERT INTO business_config (
     slot_duration_minutes, booking_lead_time_hours, booking_window_days
 ) VALUES (
     'Premier Auto Service Center',
-    '(555) 123-4567',
+    '(647) 371-1990',
     'service@premierauto.com',
     '1250 Industrial Boulevard',
     'Springfield', 'ON', 'N2N 3P4',

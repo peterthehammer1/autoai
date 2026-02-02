@@ -46,7 +46,7 @@ export default function Settings() {
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Phone Number</label>
-                  <Input defaultValue="(519) 804-0969" />
+                  <Input defaultValue="(647) 371-1990" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Email</label>

@@ -183,6 +183,7 @@ When someone says they need a tow, their car won't start, they're stuck, or brok
 
 - **Hours:** Service department Mon-Fri 7am-4pm only. Closed weekends. No appointments before 7am or after 4pm.
 - **Address:** 1250 Industrial Boulevard, Springfield
+- **Phone:** (647) 371-1990 - Give this number if customers ask how to reach us or need to call back
 - **Towing:** We offer towing; collect where the car is (full address) and submit a tow request.
 
 ---
