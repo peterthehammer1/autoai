@@ -391,7 +391,7 @@ export default function Customers() {
                       <div className="flex items-center gap-2 sm:gap-4 mt-1 text-xs sm:text-sm text-slate-500 flex-wrap">
                         <span className="flex items-center gap-1">
                           <Phone className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                          <PhoneNumber phone={selectedCustomer.phone} showRevealButton={false} />
+                          <PhoneNumber phone={selectedCustomer.phone} email={selectedCustomer.email} />
                         </span>
                         {selectedCustomer.email && (
                           <span className="flex items-center gap-1 hidden sm:flex">

@@ -247,7 +247,7 @@ export default function SmsLogs() {
                             <p className="font-medium text-slate-900 truncate">
                               {sms.customer 
                                 ? `${sms.customer.first_name} ${sms.customer.last_name}`
-                                : <PhoneNumber phone={sms.to_phone} showRevealButton={false} />
+                                : <PhoneNumber phone={sms.to_phone} email={sms.customer?.email} />
                               }
                             </p>
                             {getStatusIcon(sms.status)}
@@ -325,7 +325,7 @@ export default function SmsLogs() {
                       <div className="flex items-center gap-2 sm:gap-3 mt-1 text-xs sm:text-sm text-slate-500 flex-wrap">
                         <span className="flex items-center gap-1">
                           <Phone className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                          <PhoneNumber phone={selectedSms.to_phone} showRevealButton={false} />
+                          <PhoneNumber phone={selectedSms.to_phone} email={selectedSms.customer?.email} />
                         </span>
                         <span className="hidden sm:inline">•</span>
                         <span className="hidden sm:inline">{selectedSms.created_at ? format(new Date(selectedSms.created_at), 'MMM d, yyyy \'at\' h:mm a') : '-'}</span>
@@ -447,13 +447,13 @@ export default function SmsLogs() {
                       <div>
                         <span className="text-slate-500">To</span>
                         <p className="font-medium text-slate-900">
-                          <PhoneNumber phone={selectedSms.to_phone} showRevealButton={false} />
+                          <PhoneNumber phone={selectedSms.to_phone} email={selectedSms.customer?.email} />
                         </p>
                       </div>
                       <div>
                         <span className="text-slate-500">From</span>
                         <p className="font-medium text-slate-900">
-                          <PhoneNumber phone={selectedSms.from_phone} showRevealButton={false} />
+                          <PhoneNumber phone={selectedSms.from_phone} masked={false} />
                         </p>
                       </div>
                       {selectedSms.twilio_sid && (

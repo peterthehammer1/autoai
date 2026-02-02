@@ -198,7 +198,7 @@ export default function AppointmentDetail() {
             <div className="space-y-2 text-sm">
               <div className="flex items-center gap-2">
                 <Phone className="h-4 w-4 text-muted-foreground" />
-                <PhoneNumber phone={apt.customer?.phone} showRevealButton={false} />
+                <PhoneNumber phone={apt.customer?.phone} email={apt.customer?.email} />
               </div>
               {apt.customer?.email && (
                 <div className="flex items-center gap-2">

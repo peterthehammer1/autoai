@@ -271,7 +271,7 @@ export default function Appointments() {
                                 {apt.estimated_end_time_formatted && ` • Est. done ${apt.estimated_end_time_formatted}`}
                               </span>
                               {apt.customer?.phone && (
-                                <PhoneNumber phone={apt.customer.phone} showRevealButton={false} />
+                                <PhoneNumber phone={apt.customer.phone} email={apt.customer?.email} />
                               )}
                             </div>
                           </div>
@@ -630,7 +630,7 @@ export default function Appointments() {
                               {apt.customer?.first_name} {apt.customer?.last_name}
                             </p>
                             <p className="text-sm text-slate-500">
-                              <PhoneNumber phone={apt.customer?.phone} showRevealButton={false} />
+                              <PhoneNumber phone={apt.customer?.phone} email={apt.customer?.email} />
                             </p>
                           </div>
                         </TableCell>

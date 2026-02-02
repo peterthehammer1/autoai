@@ -311,7 +311,7 @@ export default function CallLogs() {
                           <p className="font-medium text-slate-900 truncate">
                             {call.customer 
                               ? `${call.customer.first_name} ${call.customer.last_name}`
-                              : <PhoneNumber phone={call.phone_number} showRevealButton={false} />
+                              : <PhoneNumber phone={call.phone_number} email={call.customer?.email} />
                             }
                           </p>
                           {getSentimentIcon(call.sentiment)}
@@ -393,7 +393,7 @@ export default function CallLogs() {
                       <div className="flex items-center gap-2 sm:gap-3 mt-1 text-xs sm:text-sm text-slate-500 flex-wrap">
                         <span className="flex items-center gap-1">
                           <Phone className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                          <PhoneNumber phone={selectedCall.phone_number} showRevealButton={false} />
+                          <PhoneNumber phone={selectedCall.phone_number} email={selectedCall.customer?.email} />
                         </span>
                         <span className="hidden sm:inline">•</span>
                         <span className="hidden sm:inline">{selectedCall.started_at ? format(new Date(selectedCall.started_at), 'MMM d, yyyy \'at\' h:mm a') : '-'}</span>
