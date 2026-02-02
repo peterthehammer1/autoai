@@ -82,10 +82,12 @@ export default function CallLogs() {
     return callData.calls.find(c => c.id === selectedCallId)
   }, [selectedCallId, callData?.calls])
 
-  // Auto-select first call when data loads
+  // Auto-select a call with transcript when data loads, or fall back to first call
   useEffect(() => {
     if (filteredCalls.length > 0 && !selectedCallId) {
-      setSelectedCallId(filteredCalls[0].id)
+      // Prefer a call with a transcript
+      const callWithTranscript = filteredCalls.find(c => c.transcript && c.transcript.length > 0)
+      setSelectedCallId(callWithTranscript?.id || filteredCalls[0].id)
     }
   }, [filteredCalls, selectedCallId])
 
