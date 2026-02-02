@@ -126,11 +126,12 @@ export default function Landing() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
-            <div className="flex items-center gap-2">
-              <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center">
-                <Car className="h-5 w-5 text-white" />
+            <div className="flex items-center gap-3">
+              <img src="/logo.svg" alt="Premier Auto" className="h-10 w-10 rounded-lg" />
+              <div className="flex flex-col">
+                <span className="text-xl font-bold text-slate-900 leading-tight">Premier Auto</span>
+                <span className="text-[10px] text-slate-500 leading-tight">Powered by <span className="font-semibold">Nucleus</span></span>
               </div>
-              <span className="text-xl font-bold text-slate-900">Premier Auto</span>
             </div>
 
             {/* Desktop Nav */}
@@ -550,10 +551,10 @@ export default function Landing() {
               Testimonials
             </Badge>
             <h2 className="text-3xl sm:text-4xl font-bold text-slate-900">
-              Loved by Auto Shops Everywhere
+              Loved by Businesses Everywhere
             </h2>
             <p className="mt-4 text-lg text-slate-600 max-w-2xl mx-auto">
-              See what shop owners are saying about Premier Auto AI.
+              See what owners are saying about Nucleus AI.
             </p>
           </div>
 
@@ -624,11 +625,12 @@ export default function Landing() {
           <div className="grid md:grid-cols-4 gap-12">
             {/* Brand */}
             <div className="md:col-span-2">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center">
-                  <Car className="h-5 w-5 text-white" />
+              <div className="flex items-center gap-3 mb-4">
+                <img src="/logo.svg" alt="Premier Auto" className="h-10 w-10 rounded-lg" />
+                <div className="flex flex-col">
+                  <span className="text-xl font-bold text-white leading-tight">Premier Auto Service</span>
+                  <span className="text-xs text-slate-400 leading-tight">Powered by <span className="font-semibold text-slate-300">Nucleus</span></span>
                 </div>
-                <span className="text-xl font-bold text-white">Premier Auto Service</span>
               </div>
               <p className="text-slate-400 mb-6 max-w-md">
                 AI-powered auto service booking platform. Available 24/7 to help you 
