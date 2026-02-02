@@ -53,6 +53,7 @@ import {
 } from 'lucide-react'
 import { cn, formatTime12Hour, getStatusColor, formatCents } from '@/lib/utils'
 import PhoneNumber, { Email } from '@/components/PhoneNumber'
+import CarImage from '@/components/CarImage'
 import { Link } from 'react-router-dom'
 
 const ITEMS_PER_PAGE = 50
@@ -654,9 +655,13 @@ export default function Customers() {
                             className="bg-white rounded-xl border border-slate-200 p-4 hover:shadow-md transition-shadow"
                           >
                             <div className="flex items-start gap-4">
-                              <div className="h-12 w-12 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
-                                <Car className="h-6 w-6 text-slate-400" />
-                              </div>
+                              <CarImage 
+                                make={vehicle.make} 
+                                model={vehicle.model} 
+                                year={vehicle.year}
+                                size="lg"
+                                className="shrink-0"
+                              />
                               <div className="flex-1">
                                 <div className="flex items-center gap-2">
                                   <p className="font-semibold text-slate-900">

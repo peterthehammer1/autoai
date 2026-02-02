@@ -35,6 +35,7 @@ import {
   Smile,
 } from 'lucide-react'
 import { cn, formatTime12Hour, getStatusColor, formatCents } from '@/lib/utils'
+import CarImage from '@/components/CarImage'
 
 // Insight icon and color mapping
 const insightConfig = {
@@ -310,9 +311,17 @@ export default function Dashboard() {
                       <p className="font-medium text-slate-900 truncate">
                         {apt.customer?.first_name} {apt.customer?.last_name}
                       </p>
-                      <p className="text-sm text-slate-500 truncate">
-                        {apt.vehicle?.year} {apt.vehicle?.make} {apt.vehicle?.model}
-                      </p>
+                      {apt.vehicle && (
+                        <div className="flex items-center gap-2 text-sm text-slate-500">
+                          <CarImage 
+                            make={apt.vehicle.make} 
+                            model={apt.vehicle.model} 
+                            year={apt.vehicle.year}
+                            size="xs"
+                          />
+                          <span className="truncate">{apt.vehicle.year} {apt.vehicle.make} {apt.vehicle.model}</span>
+                        </div>
+                      )}
                     </div>
                     <Badge className={cn(
                       'shrink-0 text-xs font-medium',

@@ -30,6 +30,7 @@ import {
 } from '@/lib/utils'
 import { useToast } from '@/hooks/use-toast'
 import PhoneNumber, { Email } from '@/components/PhoneNumber'
+import CarImage from '@/components/CarImage'
 
 export default function AppointmentDetail() {
   const { id } = useParams()
@@ -223,22 +224,30 @@ export default function AppointmentDetail() {
           <CardContent className="space-y-4">
             {apt.vehicle ? (
               <>
-                <div>
-                  <p className="text-lg font-medium">
-                    {apt.vehicle.year} {apt.vehicle.make} {apt.vehicle.model}
-                  </p>
-                  {apt.vehicle.color && (
-                    <p className="text-sm text-muted-foreground">
-                      {apt.vehicle.color}
+                <div className="flex items-start gap-4">
+                  <CarImage 
+                    make={apt.vehicle.make} 
+                    model={apt.vehicle.model} 
+                    year={apt.vehicle.year}
+                    size="xl"
+                  />
+                  <div>
+                    <p className="text-lg font-medium">
+                      {apt.vehicle.year} {apt.vehicle.make} {apt.vehicle.model}
                     </p>
-                  )}
-                </div>
-                {apt.vehicle.license_plate && (
-                  <div className="text-sm">
-                    <span className="text-muted-foreground">Plate: </span>
-                    {apt.vehicle.license_plate}
+                    {apt.vehicle.color && (
+                      <p className="text-sm text-muted-foreground">
+                        {apt.vehicle.color}
+                      </p>
+                    )}
+                    {apt.vehicle.license_plate && (
+                      <div className="text-sm mt-1">
+                        <span className="text-muted-foreground">Plate: </span>
+                        {apt.vehicle.license_plate}
+                      </div>
+                    )}
                   </div>
-                )}
+                </div>
               </>
             ) : (
               <p className="text-muted-foreground">No vehicle on file</p>

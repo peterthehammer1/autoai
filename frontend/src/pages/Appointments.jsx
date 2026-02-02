@@ -62,6 +62,7 @@ import {
 } from '@/lib/utils'
 import NewAppointmentModal from '@/components/NewAppointmentModal'
 import PhoneNumber from '@/components/PhoneNumber'
+import CarImage from '@/components/CarImage'
 
 export default function Appointments() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -249,7 +250,12 @@ export default function Appointments() {
                             
                             {apt.vehicle && (
                               <div className="flex items-center gap-2 text-sm text-slate-500 mb-1">
-                                <Car className="h-4 w-4 text-slate-400" />
+                                <CarImage 
+                                  make={apt.vehicle.make} 
+                                  model={apt.vehicle.model} 
+                                  year={apt.vehicle.year}
+                                  size="xs"
+                                />
                                 <span>{apt.vehicle.year} {apt.vehicle.make} {apt.vehicle.model}</span>
                               </div>
                             )}
@@ -576,9 +582,17 @@ export default function Appointments() {
                               {(apt.display_status || apt.status).replace('_', ' ')}
                             </Badge>
                           </div>
-                          <p className="text-sm text-slate-500 truncate">
-                            {apt.vehicle ? `${apt.vehicle.year} ${apt.vehicle.make} ${apt.vehicle.model}` : '-'}
-                          </p>
+                          {apt.vehicle && (
+                            <div className="flex items-center gap-2 text-sm text-slate-500">
+                              <CarImage 
+                                make={apt.vehicle.make} 
+                                model={apt.vehicle.model} 
+                                year={apt.vehicle.year}
+                                size="xs"
+                              />
+                              <span className="truncate">{apt.vehicle.year} {apt.vehicle.make} {apt.vehicle.model}</span>
+                            </div>
+                          )}
                           <p className="text-sm text-slate-500 truncate">
                             {apt.appointment_services?.map((s) => s.service_name).join(', ')}
                           </p>
@@ -622,7 +636,15 @@ export default function Appointments() {
                         </TableCell>
                         <TableCell>
                           {apt.vehicle ? (
-                            `${apt.vehicle.year} ${apt.vehicle.make} ${apt.vehicle.model}`
+                            <div className="flex items-center gap-2">
+                              <CarImage 
+                                make={apt.vehicle.make} 
+                                model={apt.vehicle.model} 
+                                year={apt.vehicle.year}
+                                size="sm"
+                              />
+                              <span>{apt.vehicle.year} {apt.vehicle.make} {apt.vehicle.model}</span>
+                            </div>
                           ) : (
                             <span className="text-slate-400">-</span>
                           )}
