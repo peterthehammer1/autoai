@@ -224,15 +224,16 @@ export default function AppointmentDetail() {
           <CardContent className="space-y-4">
             {apt.vehicle ? (
               <>
-                <div className="flex items-start gap-4">
+                <div className="flex items-start gap-3 sm:gap-4">
                   <CarImage 
                     make={apt.vehicle.make} 
                     model={apt.vehicle.model} 
                     year={apt.vehicle.year}
-                    size="xl"
+                    size="lg"
+                    className="shrink-0 sm:h-28 sm:w-44"
                   />
-                  <div>
-                    <p className="text-lg font-medium">
+                  <div className="min-w-0">
+                    <p className="text-base sm:text-lg font-medium truncate">
                       {apt.vehicle.year} {apt.vehicle.make} {apt.vehicle.model}
                     </p>
                     {apt.vehicle.color && (

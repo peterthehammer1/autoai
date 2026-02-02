@@ -616,16 +616,16 @@ export default function Customers() {
                             <Car className="h-4 w-4 text-slate-500" />
                             Primary Vehicle
                           </h3>
-                          <div className="flex items-center gap-4">
+                          <div className="flex items-center gap-3 sm:gap-4">
                             <CarImage 
                               make={selectedCustomer.vehicles[0].make}
                               model={selectedCustomer.vehicles[0].model}
                               year={selectedCustomer.vehicles[0].year}
-                              size="xl"
-                              className="shrink-0"
+                              size="lg"
+                              className="shrink-0 sm:h-28 sm:w-44"
                             />
-                            <div>
-                              <p className="text-lg font-semibold text-slate-900">
+                            <div className="min-w-0">
+                              <p className="text-base sm:text-lg font-semibold text-slate-900 truncate">
                                 {selectedCustomer.vehicles[0].year} {selectedCustomer.vehicles[0].make} {selectedCustomer.vehicles[0].model}
                               </p>
                               <p className="text-sm text-slate-500">
@@ -658,13 +658,13 @@ export default function Customers() {
                             key={vehicle.id}
                             className="bg-white rounded-xl border border-slate-200 p-4 hover:shadow-md transition-shadow"
                           >
-                            <div className="flex items-start gap-4">
+                            <div className="flex items-start gap-3 sm:gap-4">
                               <CarImage 
                                 make={vehicle.make} 
                                 model={vehicle.model} 
                                 year={vehicle.year}
-                                size="lg"
-                                className="shrink-0"
+                                size="md"
+                                className="shrink-0 sm:h-20 sm:w-32"
                               />
                               <div className="flex-1">
                                 <div className="flex items-center gap-2">
