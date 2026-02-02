@@ -349,9 +349,9 @@ export default function Analytics() {
       </div>
 
       {/* Main Content Grid */}
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-4 lg:grid-cols-3">
         {/* Left Column - 2/3 width */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-4">
           {/* Revenue Trend Chart */}
           <Card>
             <CardHeader className="pb-2">
@@ -374,7 +374,7 @@ export default function Analytics() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="h-64">
+              <div className="h-52">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={revenueTrendData}>
                     <defs>
@@ -436,7 +436,7 @@ export default function Analytics() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="h-56">
+              <div className="h-44">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={sentimentTrendData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
@@ -453,61 +453,57 @@ export default function Analytics() {
           </Card>
 
           {/* Week Comparison Stats */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-3 border border-blue-200">
-              <div className="flex items-center gap-2 mb-1">
-                <PhoneCall className="h-4 w-4 text-blue-600" />
-                <span className="text-xs font-medium text-blue-600">Calls</span>
+          <div className="grid grid-cols-4 gap-2">
+            <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-2.5 border border-blue-200">
+              <div className="flex items-center gap-1.5 mb-0.5">
+                <PhoneCall className="h-3.5 w-3.5 text-blue-600" />
+                <span className="text-[10px] font-medium text-blue-600">Calls</span>
               </div>
-              <p className="text-xl font-bold text-blue-900">{comprehensive?.calls?.total || 0}</p>
-              <p className="text-[10px] text-blue-600/70">this period</p>
+              <p className="text-lg font-bold text-blue-900">{comprehensive?.calls?.total || 0}</p>
             </div>
-            <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-lg p-3 border border-emerald-200">
-              <div className="flex items-center gap-2 mb-1">
-                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                <span className="text-xs font-medium text-emerald-600">Booked</span>
+            <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-lg p-2.5 border border-emerald-200">
+              <div className="flex items-center gap-1.5 mb-0.5">
+                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                <span className="text-[10px] font-medium text-emerald-600">Booked</span>
               </div>
-              <p className="text-xl font-bold text-emerald-900">{comprehensive?.calls?.booked || 0}</p>
-              <p className="text-[10px] text-emerald-600/70">appointments</p>
+              <p className="text-lg font-bold text-emerald-900">{comprehensive?.calls?.booked || 0}</p>
             </div>
-            <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-lg p-3 border border-amber-200">
-              <div className="flex items-center gap-2 mb-1">
-                <DollarSign className="h-4 w-4 text-amber-600" />
-                <span className="text-xs font-medium text-amber-600">Revenue</span>
+            <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-lg p-2.5 border border-amber-200">
+              <div className="flex items-center gap-1.5 mb-0.5">
+                <DollarSign className="h-3.5 w-3.5 text-amber-600" />
+                <span className="text-[10px] font-medium text-amber-600">Revenue</span>
               </div>
-              <p className="text-xl font-bold text-amber-900">{formatCents(comprehensive?.revenue?.period_total || 0)}</p>
-              <p className="text-[10px] text-amber-600/70">this period</p>
+              <p className="text-lg font-bold text-amber-900">{formatCents(comprehensive?.revenue?.period_total || 0)}</p>
             </div>
-            <div className="bg-gradient-to-br from-violet-50 to-violet-100 rounded-lg p-3 border border-violet-200">
-              <div className="flex items-center gap-2 mb-1">
-                <Smile className="h-4 w-4 text-violet-600" />
-                <span className="text-xs font-medium text-violet-600">Happy</span>
+            <div className="bg-gradient-to-br from-violet-50 to-violet-100 rounded-lg p-2.5 border border-violet-200">
+              <div className="flex items-center gap-1.5 mb-0.5">
+                <Smile className="h-3.5 w-3.5 text-violet-600" />
+                <span className="text-[10px] font-medium text-violet-600">Happy</span>
               </div>
-              <p className="text-xl font-bold text-violet-900">{comprehensive?.calls?.satisfaction_rate || 0}%</p>
-              <p className="text-[10px] text-violet-600/70">positive calls</p>
+              <p className="text-lg font-bold text-violet-900">{comprehensive?.calls?.satisfaction_rate || 0}%</p>
             </div>
           </div>
 
           {/* Two Column Charts */}
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-2">
             {/* Call Outcomes Pie */}
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <PieChartIcon className="h-4 w-4 text-slate-500" />
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <PieChartIcon className="h-3.5 w-3.5 text-slate-500" />
                   Call Outcomes
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="h-48">
+              <CardContent className="pt-0">
+                <div className="h-36">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
                         data={outcomeData}
                         cx="50%"
                         cy="50%"
-                        innerRadius={40}
-                        outerRadius={70}
+                        innerRadius={30}
+                        outerRadius={55}
                         paddingAngle={2}
                         dataKey="value"
                       >
@@ -519,10 +515,10 @@ export default function Analytics() {
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
-                <div className="flex flex-wrap gap-2 justify-center mt-2">
+                <div className="flex flex-wrap gap-2 justify-center">
                   {outcomeData.slice(0, 4).map((item, idx) => (
-                    <span key={item.name} className="flex items-center gap-1 text-xs">
-                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[idx] }} />
+                    <span key={item.name} className="flex items-center gap-1 text-[10px]">
+                      <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: COLORS[idx] }} />
                       {item.name}
                     </span>
                   ))}
@@ -533,18 +529,18 @@ export default function Analytics() {
             {/* Revenue by Category */}
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <BarChart3 className="h-4 w-4 text-slate-500" />
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <BarChart3 className="h-3.5 w-3.5 text-slate-500" />
                   Revenue by Category
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="h-48">
+              <CardContent className="pt-0">
+                <div className="h-40">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={categoryData} layout="vertical">
                       <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" horizontal={false} />
-                      <XAxis type="number" stroke="#94a3b8" fontSize={11} tickFormatter={(v) => `$${v}`} />
-                      <YAxis type="category" dataKey="name" stroke="#94a3b8" fontSize={11} width={80} />
+                      <XAxis type="number" stroke="#94a3b8" fontSize={10} tickFormatter={(v) => `$${v}`} />
+                      <YAxis type="category" dataKey="name" stroke="#94a3b8" fontSize={10} width={70} />
                       <Tooltip formatter={(value) => [`$${value.toFixed(2)}`, 'Revenue']} />
                       <Bar dataKey="value" fill="#3b82f6" radius={[0, 4, 4, 0]} />
                     </BarChart>
@@ -554,54 +550,8 @@ export default function Analytics() {
             </Card>
           </div>
 
-          {/* Average Call Duration Trend */}
-          <Card>
-            <CardHeader className="pb-2">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <div className="p-2 rounded-lg bg-violet-100">
-                    <Clock className="h-4 w-4 text-violet-600" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-base">Average Call Duration</CardTitle>
-                    <CardDescription className="hidden sm:block">Daily average call length in seconds</CardDescription>
-                  </div>
-                </div>
-                <div className="text-left sm:text-right">
-                  <p className="text-xl sm:text-2xl font-bold text-slate-900">
-                    {comprehensive?.calls?.avg_duration_seconds ? `${Math.floor(comprehensive.calls.avg_duration_seconds / 60)}:${String(comprehensive.calls.avg_duration_seconds % 60).padStart(2, '0')}` : '0:00'}
-                  </p>
-                  <p className="text-xs text-slate-500">Avg Duration</p>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="h-48">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={callTrends?.duration_trend?.map(d => ({
-                    date: format(new Date(d.date), 'MMM d'),
-                    duration: d.avg_duration,
-                    calls: d.calls
-                  })) || []}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                    <XAxis dataKey="date" stroke="#94a3b8" fontSize={12} />
-                    <YAxis stroke="#94a3b8" fontSize={12} tickFormatter={(v) => `${Math.floor(v/60)}:${String(v%60).padStart(2,'0')}`} />
-                    <Tooltip 
-                      formatter={(value, name) => [
-                        name === 'duration' ? `${Math.floor(value/60)}:${String(value%60).padStart(2,'0')}` : value,
-                        name === 'duration' ? 'Avg Duration' : 'Calls'
-                      ]}
-                      contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0' }}
-                    />
-                    <Line type="monotone" dataKey="duration" stroke="#8b5cf6" strokeWidth={2} dot={{ fill: '#8b5cf6', r: 3 }} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-
           {/* Booking Source & Performance Stats */}
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-2">
             {/* Booking Sources */}
             <Card>
               <CardHeader className="pb-2">
@@ -612,7 +562,7 @@ export default function Analytics() {
                 <CardDescription>How appointments are created</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {[
                     { name: 'AI Voice Agent', value: comprehensive?.calls?.booked || 0, color: 'bg-blue-500', icon: PhoneCall },
                     { name: 'Dashboard', value: Math.round((revenueData?.current?.appointments || 0) * 0.3), color: 'bg-violet-500', icon: BarChart3 },
@@ -622,17 +572,17 @@ export default function Analytics() {
                     const percentage = total > 0 ? Math.round((source.value / total) * 100) : 0
                     return (
                       <div key={source.name}>
-                        <div className="flex items-center justify-between mb-1.5">
+                        <div className="flex items-center justify-between mb-1">
                           <div className="flex items-center gap-2">
-                            <source.icon className="h-4 w-4 text-slate-400" />
+                            <source.icon className="h-3.5 w-3.5 text-slate-400" />
                             <span className="text-sm font-medium text-slate-700">{source.name}</span>
                           </div>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1.5">
                             <span className="text-sm font-bold text-slate-900">{source.value}</span>
                             <span className="text-xs text-slate-500">({percentage}%)</span>
                           </div>
                         </div>
-                        <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                        <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
                           <div 
                             className={cn("h-full rounded-full transition-all", source.color)}
                             style={{ width: `${percentage}%` }}
@@ -655,21 +605,21 @@ export default function Analytics() {
                 <CardDescription>Key performance indicators</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-slate-50 rounded-lg p-3 text-center">
-                    <p className="text-2xl font-bold text-blue-600">{comprehensive?.calls?.total || 0}</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-slate-50 rounded-lg p-2.5 text-center">
+                    <p className="text-xl font-bold text-blue-600">{comprehensive?.calls?.total || 0}</p>
                     <p className="text-xs text-slate-500">Total Calls</p>
                   </div>
-                  <div className="bg-slate-50 rounded-lg p-3 text-center">
-                    <p className="text-2xl font-bold text-emerald-600">{comprehensive?.calls?.booked || 0}</p>
+                  <div className="bg-slate-50 rounded-lg p-2.5 text-center">
+                    <p className="text-xl font-bold text-emerald-600">{comprehensive?.calls?.booked || 0}</p>
                     <p className="text-xs text-slate-500">Bookings</p>
                   </div>
-                  <div className="bg-slate-50 rounded-lg p-3 text-center">
-                    <p className="text-2xl font-bold text-violet-600">{formatCents(comprehensive?.revenue?.avg_ticket || 0)}</p>
+                  <div className="bg-slate-50 rounded-lg p-2.5 text-center">
+                    <p className="text-xl font-bold text-violet-600">{formatCents(comprehensive?.revenue?.avg_ticket || 0)}</p>
                     <p className="text-xs text-slate-500">Avg Ticket</p>
                   </div>
-                  <div className="bg-slate-50 rounded-lg p-3 text-center">
-                    <p className="text-2xl font-bold text-amber-600">{comprehensive?.today?.appointments || 0}</p>
+                  <div className="bg-slate-50 rounded-lg p-2.5 text-center">
+                    <p className="text-xl font-bold text-amber-600">{comprehensive?.today?.appointments || 0}</p>
                     <p className="text-xs text-slate-500">Today's Appts</p>
                   </div>
                 </div>
@@ -679,46 +629,46 @@ export default function Analytics() {
         </div>
 
         {/* Right Column - 1/3 width */}
-        <div className="space-y-6">
+        <div className="space-y-4">
           {/* AI Insights Panel */}
           <Card className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white border-0">
-            <CardHeader className="pb-3">
+            <CardHeader className="pb-2">
               <div className="flex items-center gap-2">
-                <div className="p-2 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600">
-                  <Sparkles className="h-4 w-4 text-white" />
+                <div className="p-1.5 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600">
+                  <Sparkles className="h-3.5 w-3.5 text-white" />
                 </div>
                 <div>
-                  <CardTitle className="text-base text-white">AI Insights</CardTitle>
-                  <CardDescription className="text-slate-400">Powered by your data</CardDescription>
+                  <CardTitle className="text-sm text-white">AI Insights</CardTitle>
+                  <CardDescription className="text-slate-400 text-xs">Powered by your data</CardDescription>
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-2 pt-0">
               {insightsLoading ? (
-                <div className="space-y-3">
+                <div className="space-y-2">
                   {[1, 2, 3].map(i => (
-                    <div key={i} className="h-16 bg-white/5 animate-pulse rounded-lg" />
+                    <div key={i} className="h-12 bg-white/5 animate-pulse rounded-lg" />
                   ))}
                 </div>
               ) : insightsData?.insights?.length > 0 ? (
-                insightsData.insights.slice(0, 5).map((insight, idx) => {
+                insightsData.insights.slice(0, 4).map((insight, idx) => {
                   const config = insightConfig[insight.type] || insightConfig.info
                   const Icon = config.icon
                   return (
                     <div
                       key={idx}
-                      className="bg-white/5 backdrop-blur rounded-lg p-3 border border-white/10 hover:bg-white/10 transition-colors"
+                      className="bg-white/5 backdrop-blur rounded-lg p-2.5 border border-white/10 hover:bg-white/10 transition-colors"
                     >
-                      <div className="flex items-start gap-3">
-                        <div className={cn('rounded-lg p-1.5 shrink-0', config.bg)}>
-                          <Icon className={cn('h-3.5 w-3.5', config.color)} />
+                      <div className="flex items-start gap-2">
+                        <div className={cn('rounded p-1 shrink-0', config.bg)}>
+                          <Icon className={cn('h-3 w-3', config.color)} />
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between gap-2">
-                            <p className="text-sm font-medium text-white truncate">{insight.title}</p>
+                            <p className="text-xs font-medium text-white truncate">{insight.title}</p>
                             {insight.value && (
                               <span className={cn(
-                                'text-xs font-bold shrink-0',
+                                'text-[10px] font-bold shrink-0',
                                 insight.type === 'trend_up' || insight.type === 'success' ? 'text-emerald-400' :
                                 insight.type === 'trend_down' || insight.type === 'warning' ? 'text-amber-400' :
                                 'text-blue-400'
@@ -727,57 +677,15 @@ export default function Analytics() {
                               </span>
                             )}
                           </div>
-                          <p className="text-xs text-slate-400 mt-0.5 line-clamp-2">{insight.message}</p>
+                          <p className="text-[10px] text-slate-400 mt-0.5 line-clamp-1">{insight.message}</p>
                         </div>
                       </div>
                     </div>
                   )
                 })
               ) : (
-                <p className="text-sm text-slate-400 text-center py-4">No insights available</p>
+                <p className="text-xs text-slate-400 text-center py-2">No insights available</p>
               )}
-            </CardContent>
-          </Card>
-
-          {/* Customer Health Distribution */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Users className="h-4 w-4 text-slate-500" />
-                Customer Health
-              </CardTitle>
-              <CardDescription>Distribution by engagement level</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="h-40">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={healthData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={35}
-                      outerRadius={55}
-                      paddingAngle={2}
-                      dataKey="value"
-                    >
-                      {healthData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="grid grid-cols-2 gap-2 mt-2">
-                {healthData.map((item) => (
-                  <div key={item.name} className="flex items-center gap-2 text-xs">
-                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }} />
-                    <span className="text-slate-600">{item.name}</span>
-                    <span className="font-medium ml-auto">{item.value}</span>
-                  </div>
-                ))}
-              </div>
             </CardContent>
           </Card>
 
@@ -785,32 +693,32 @@ export default function Analytics() {
           <Card>
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Star className="h-4 w-4 text-amber-500" />
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <Star className="h-3.5 w-3.5 text-amber-500" />
                   Top Customers
                 </CardTitle>
-                <Button variant="ghost" size="sm" asChild>
+                <Button variant="ghost" size="sm" className="h-7 text-xs" asChild>
                   <Link to="/customers">View All</Link>
                 </Button>
               </div>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {customerData?.top_customers?.slice(0, 5).map((customer, idx) => (
-                  <div key={customer.id} className="flex items-center gap-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-xs font-medium text-slate-600">
+            <CardContent className="pt-0">
+              <div className="space-y-2">
+                {customerData?.top_customers?.slice(0, 4).map((customer, idx) => (
+                  <div key={customer.id} className="flex items-center gap-2">
+                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-100 text-[10px] font-medium text-slate-600">
                       {idx + 1}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-slate-900 truncate">{customer.name}</p>
-                      <p className="text-xs text-slate-500">{customer.visits} visits</p>
+                      <p className="text-xs font-medium text-slate-900 truncate">{customer.name}</p>
+                      <p className="text-[10px] text-slate-500">{customer.visits} visits</p>
                     </div>
-                    <p className="text-sm font-semibold text-slate-900">
+                    <p className="text-xs font-semibold text-slate-900">
                       {formatCents(customer.total_spent || 0)}
                     </p>
                   </div>
                 )) || (
-                  <p className="text-sm text-slate-500 text-center py-4">No data available</p>
+                  <p className="text-xs text-slate-500 text-center py-2">No data available</p>
                 )}
               </div>
             </CardContent>
@@ -819,23 +727,23 @@ export default function Analytics() {
           {/* Popular Services */}
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Wrench className="h-4 w-4 text-slate-500" />
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Wrench className="h-3.5 w-3.5 text-slate-500" />
                 Popular Services
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {serviceStats?.services?.slice(0, 5).map((service, idx) => {
+            <CardContent className="pt-0">
+              <div className="space-y-2">
+                {serviceStats?.services?.slice(0, 4).map((service, idx) => {
                   const maxCount = serviceStats.services[0]?.count || 1
                   const percentage = (service.count / maxCount) * 100
                   return (
                     <div key={service.name}>
-                      <div className="flex items-center justify-between text-sm mb-1">
+                      <div className="flex items-center justify-between text-xs mb-0.5">
                         <span className="truncate text-slate-700">{service.name}</span>
                         <span className="font-medium text-slate-900 ml-2">{service.count}</span>
                       </div>
-                      <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                      <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
                         <div 
                           className="h-full bg-blue-500 rounded-full transition-all"
                           style={{ width: `${percentage}%` }}
@@ -844,8 +752,29 @@ export default function Analytics() {
                     </div>
                   )
                 }) || (
-                  <p className="text-sm text-slate-500 text-center py-4">No data available</p>
+                  <p className="text-xs text-slate-500 text-center py-2">No data available</p>
                 )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Customer Health Distribution - Compact */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Users className="h-3.5 w-3.5 text-slate-500" />
+                Customer Health
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="grid grid-cols-2 gap-2">
+                {healthData.map((item) => (
+                  <div key={item.name} className="flex items-center gap-1.5 text-xs bg-slate-50 rounded p-1.5">
+                    <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
+                    <span className="text-slate-600 truncate">{item.name}</span>
+                    <span className="font-medium ml-auto">{item.value}</span>
+                  </div>
+                ))}
               </div>
             </CardContent>
           </Card>
