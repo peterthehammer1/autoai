@@ -617,9 +617,13 @@ export default function Customers() {
                             Primary Vehicle
                           </h3>
                           <div className="flex items-center gap-4">
-                            <div className="h-16 w-16 rounded-xl bg-slate-200 flex items-center justify-center">
-                              <Car className="h-8 w-8 text-slate-400" />
-                            </div>
+                            <CarImage 
+                              make={selectedCustomer.vehicles[0].make}
+                              model={selectedCustomer.vehicles[0].model}
+                              year={selectedCustomer.vehicles[0].year}
+                              size="xl"
+                              className="shrink-0"
+                            />
                             <div>
                               <p className="text-lg font-semibold text-slate-900">
                                 {selectedCustomer.vehicles[0].year} {selectedCustomer.vehicles[0].make} {selectedCustomer.vehicles[0].model}
