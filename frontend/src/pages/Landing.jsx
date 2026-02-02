@@ -120,7 +120,7 @@ export default function Landing() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white" itemScope itemType="https://schema.org/AutoRepair">
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-lg border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -204,21 +204,21 @@ export default function Landing() {
                 AI-Powered Auto Service
               </Badge>
               
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-slate-900 leading-tight">
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-slate-900 leading-tight" itemProp="name">
                 Your AI Service Advisor,{' '}
                 <span className="bg-gradient-to-r from-blue-600 to-violet-600 bg-clip-text text-transparent">
                   Available 24/7
                 </span>
               </h1>
               
-              <p className="mt-6 text-lg sm:text-xl text-slate-600 max-w-2xl mx-auto lg:mx-0">
+              <p className="mt-6 text-lg sm:text-xl text-slate-600 max-w-2xl mx-auto lg:mx-0" itemProp="description">
                 Meet Amber — your AI-powered service advisor who books appointments, answers questions, 
                 and delights customers around the clock. Never miss another call.
               </p>
 
               <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                 <Button size="lg" className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-lg px-8 h-14" asChild>
-                  <a href="tel:+16473711990">
+                  <a href="tel:+16473711990" itemProp="telephone">
                     <PhoneCall className="h-5 w-5 mr-2" />
                     Call to Book: (647) 371-1990
                   </a>

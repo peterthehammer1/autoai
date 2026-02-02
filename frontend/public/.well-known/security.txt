@@ -1,0 +1,14 @@
+# Premier Auto Service Security Contact
+# https://premierauto.ai
+
+Contact: mailto:security@premierauto.ai
+Contact: mailto:service@premierauto.ai
+Expires: 2027-01-29T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://premierauto.ai/.well-known/security.txt
+
+# Our security practices
+# - Bank-level encryption (TLS 1.3)
+# - GDPR compliant data handling
+# - SOC 2 certified infrastructure
+# - Regular security audits

@@ -1,0 +1,19 @@
+/* TEAM */
+Company: Premier Auto Service
+Site: https://premierauto.ai
+Location: Springfield
+Contact: service@premierauto.ai
+Phone: (647) 371-1990
+
+/* TECHNOLOGY */
+Platform: Nucleus AI (https://nucleus.com)
+AI Agent: Amber - Conversational AI Voice Assistant
+Frontend: React, Vite, Tailwind CSS
+Backend: Node.js, Express
+Database: Supabase (PostgreSQL)
+Hosting: Vercel
+SMS: Twilio
+
+/* THANKS */
+Powered by Nucleus AI - Enterprise-Ready Conversational AI
+https://nucleus.com

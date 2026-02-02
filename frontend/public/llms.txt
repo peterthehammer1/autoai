@@ -1,0 +1,90 @@
+# Premier Auto Service - AI-Powered Auto Service Booking Platform
+# https://premierauto.ai
+# Powered by Nucleus AI
+
+## About Premier Auto Service
+
+Premier Auto Service is an AI-powered auto service booking platform that enables automotive businesses to offer 24/7 appointment booking through an intelligent AI voice assistant named Amber. The platform is powered by Nucleus AI, a leading conversational AI company.
+
+## Key Information
+
+- **Company**: Premier Auto Service
+- **Website**: https://premierauto.ai
+- **Phone**: (647) 371-1990
+- **Email**: service@premierauto.ai
+- **Location**: 1250 Industrial Boulevard, Springfield
+- **Technology Partner**: Nucleus AI (https://nucleus.com)
+
+## What We Offer
+
+### AI Voice Booking (24/7)
+Our AI agent Amber handles phone calls around the clock, booking appointments, answering questions, providing service quotes, and sending SMS confirmations. Customers can call anytime and speak naturally - Amber understands context, handles multiple vehicles, and processes requests just like a human service advisor.
+
+### Smart Scheduling
+Intelligent calendar management with real-time availability checking, service bay assignments, and estimated completion times. The system prevents double-booking and optimizes technician utilization.
+
+### Customer CRM
+Complete customer profiles including vehicle history, service records, customer health scores, and AI-powered recommendations for service upselling. Track every interaction across calls, SMS, and appointments.
+
+### Analytics & Insights
+Real-time dashboards showing conversion rates, revenue trends, customer sentiment analysis, and AI-generated business insights. Understand what's working and identify opportunities for growth.
+
+### SMS & Email Automation
+Automatic appointment confirmations, reminders, and follow-ups. Keep customers informed without manual effort. All communications are logged and searchable.
+
+### Enterprise Security
+Bank-level encryption, GDPR compliant data handling, and SOC 2 certified infrastructure. Customer data is protected with industry-leading security standards.
+
+## AI Capabilities
+
+Amber, our AI service advisor, can:
+- Book new appointments
+- Reschedule existing bookings
+- Cancel appointments
+- Provide service quotes and pricing
+- Answer business questions (hours, location, services)
+- Handle multiple vehicles per customer
+- Process tow service requests
+- Send SMS confirmations automatically
+- Speak naturally with human-like conversation flow
+
+## Performance Metrics
+
+- **Availability**: 24/7/365
+- **Booking Success Rate**: 95%
+- **Average Response Time**: Under 3 seconds
+- **Customer Satisfaction**: 4.9/5 stars
+
+## Services Offered
+
+Premier Auto Service handles all types of automotive maintenance and repair:
+- Oil changes and fluid services
+- Brake inspection and repair
+- Tire rotation and replacement
+- Engine diagnostics
+- Transmission service
+- Air conditioning repair
+- Battery replacement
+- Scheduled maintenance
+- And more
+
+## Contact Information
+
+To book an appointment or learn more:
+- **Call**: (647) 371-1990 (AI-powered, available 24/7)
+- **Email**: service@premierauto.ai
+- **Website**: https://premierauto.ai
+- **Address**: 1250 Industrial Boulevard, Springfield
+
+## For Businesses
+
+If you're an auto service center interested in implementing AI-powered booking for your business, contact Nucleus AI at https://nucleus.com to learn about their enterprise conversational AI platform.
+
+## Testimonials
+
+"Nucleus gives us peace of mind and time freedom." - Nikita Nathwani, 9Round Owner
+
+"I've tried six or seven AI receptionist services. They're not as good as carrying on a conversation as Nucleus AI." - Richard M Sedler, President & CEO, RMS Media Group Inc.
+
+---
+Last updated: January 2026
