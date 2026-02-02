@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Premier Auto Service - AI-Powered Booking Platform</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: white;
+      color: #1e293b;
+      line-height: 1.5;
+    }
+    
+    .page {
+      width: 8.5in;
+      min-height: 11in;
+      margin: 0 auto;
+      padding: 0.5in;
+      background: white;
+    }
+    
+    /* Header */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid #e2e8f0;
+    }
+    
+    .logo-section {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .logo {
+      width: 48px;
+      height: 48px;
+      border-radius: 10px;
+    }
+    
+    .logo-text h1 {
+      font-size: 20px;
+      font-weight: 700;
+      color: #0f172a;
+      line-height: 1.2;
+    }
+    
+    .logo-text span {
+      font-size: 10px;
+      color: #64748b;
+    }
+    
+    .logo-text span strong {
+      color: #475569;
+    }
+    
+    .contact-info {
+      text-align: right;
+      font-size: 11px;
+      color: #475569;
+    }
+    
+    .contact-info .phone {
+      font-size: 14px;
+      font-weight: 600;
+      color: #2563eb;
+    }
+    
+    /* Hero */
+    .hero {
+      background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+      border-radius: 16px;
+      padding: 28px 32px;
+      margin-bottom: 24px;
+      color: white;
+    }
+    
+    .hero h2 {
+      font-size: 28px;
+      font-weight: 800;
+      margin-bottom: 8px;
+      line-height: 1.2;
+    }
+    
+    .hero p {
+      font-size: 14px;
+      opacity: 0.9;
+      max-width: 500px;
+    }
+    
+    .hero-stats {
+      display: flex;
+      gap: 32px;
+      margin-top: 20px;
+    }
+    
+    .hero-stat {
+      text-align: center;
+    }
+    
+    .hero-stat .value {
+      font-size: 24px;
+      font-weight: 800;
+    }
+    
+    .hero-stat .label {
+      font-size: 10px;
+      opacity: 0.8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    /* Features Grid */
+    .features-section {
+      margin-bottom: 24px;
+    }
+    
+    .section-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+    
+    .feature-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 14px;
+    }
+    
+    .feature-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 8px;
+      font-size: 16px;
+    }
+    
+    .feature-icon.violet { background: #ede9fe; }
+    .feature-icon.blue { background: #dbeafe; }
+    .feature-icon.emerald { background: #d1fae5; }
+    .feature-icon.amber { background: #fef3c7; }
+    .feature-icon.pink { background: #fce7f3; }
+    .feature-icon.slate { background: #e2e8f0; }
+    
+    .feature-card h3 {
+      font-size: 12px;
+      font-weight: 600;
+      color: #0f172a;
+      margin-bottom: 4px;
+    }
+    
+    .feature-card p {
+      font-size: 10px;
+      color: #64748b;
+      line-height: 1.4;
+    }
+    
+    /* Two Column Section */
+    .two-column {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+    
+    /* Capabilities */
+    .capabilities {
+      background: #0f172a;
+      border-radius: 12px;
+      padding: 18px;
+      color: white;
+    }
+    
+    .capabilities h3 {
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+    
+    .capabilities-list {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px 12px;
+    }
+    
+    .capability-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 10px;
+      color: #cbd5e1;
+    }
+    
+    .capability-item .check {
+      color: #34d399;
+      font-weight: bold;
+    }
+    
+    /* Testimonials */
+    .testimonials {
+      background: #fefce8;
+      border: 1px solid #fef08a;
+      border-radius: 12px;
+      padding: 18px;
+    }
+    
+    .testimonials h3 {
+      font-size: 13px;
+      font-weight: 700;
+      color: #854d0e;
+      margin-bottom: 12px;
+    }
+    
+    .testimonial {
+      margin-bottom: 12px;
+    }
+    
+    .testimonial:last-child {
+      margin-bottom: 0;
+    }
+    
+    .testimonial-quote {
+      font-size: 11px;
+      color: #422006;
+      font-style: italic;
+      margin-bottom: 4px;
+    }
+    
+    .testimonial-author {
+      font-size: 9px;
+      color: #854d0e;
+      font-weight: 600;
+    }
+    
+    .stars {
+      color: #f59e0b;
+      font-size: 10px;
+      margin-bottom: 4px;
+    }
+    
+    /* CTA */
+    .cta {
+      background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+      border-radius: 12px;
+      padding: 20px 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: white;
+    }
+    
+    .cta-text h3 {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    
+    .cta-text p {
+      font-size: 11px;
+      opacity: 0.9;
+    }
+    
+    .cta-contact {
+      text-align: right;
+    }
+    
+    .cta-phone {
+      font-size: 20px;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+    
+    .cta-details {
+      font-size: 10px;
+      opacity: 0.8;
+    }
+    
+    /* Footer */
+    .footer {
+      margin-top: 16px;
+      padding-top: 12px;
+      border-top: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 9px;
+      color: #94a3b8;
+    }
+    
+    .footer a {
+      color: #2563eb;
+      text-decoration: none;
+    }
+    
+    @media print {
+      body {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      
+      .page {
+        width: 100%;
+        min-height: auto;
+        padding: 0.4in;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <!-- Header -->
+    <header class="header">
+      <div class="logo-section">
+        <img src="logo.svg" alt="Premier Auto" class="logo">
+        <div class="logo-text">
+          <h1>Premier Auto Service</h1>
+          <span>Powered by <strong>Nucleus AI</strong></span>
+        </div>
+      </div>
+      <div class="contact-info">
+        <div class="phone">(647) 371-1990</div>
+        <div>premierauto.ai</div>
+        <div>service@premierauto.ai</div>
+      </div>
+    </header>
+    
+    <!-- Hero -->
+    <section class="hero">
+      <h2>Your AI Service Advisor, Available 24/7</h2>
+      <p>Meet Amber — your AI-powered service advisor who books appointments, answers questions, and delights customers around the clock. Never miss another call.</p>
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <div class="value">24/7</div>
+          <div class="label">AI Availability</div>
+        </div>
+        <div class="hero-stat">
+          <div class="value">95%</div>
+          <div class="label">Booking Rate</div>
+        </div>
+        <div class="hero-stat">
+          <div class="value">&lt;3s</div>
+          <div class="label">Response Time</div>
+        </div>
+        <div class="hero-stat">
+          <div class="value">4.9★</div>
+          <div class="label">Customer Rating</div>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Features -->
+    <section class="features-section">
+      <h2 class="section-title">Platform Features</h2>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon violet">🤖</div>
+          <h3>24/7 AI Voice Booking</h3>
+          <p>Our AI agent handles calls around the clock, booking appointments and providing quotes — just like your best service advisor.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon blue">📅</div>
+          <h3>Smart Scheduling</h3>
+          <p>Intelligent calendar management with real-time availability, bay assignments, and estimated completion times.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon emerald">👥</div>
+          <h3>Customer CRM</h3>
+          <p>Complete customer profiles with vehicle history, service records, health scores, and AI-powered recommendations.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon amber">📊</div>
+          <h3>Analytics & Insights</h3>
+          <p>Real-time dashboards showing conversion rates, revenue trends, customer sentiment, and AI-generated insights.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon pink">💬</div>
+          <h3>SMS & Email Automation</h3>
+          <p>Automatic confirmations, reminders, and follow-ups. Keep customers informed without lifting a finger.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon slate">🔒</div>
+          <h3>Enterprise Security</h3>
+          <p>Bank-level encryption, GDPR compliant, and SOC 2 certified. Your customer data is always protected.</p>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Two Column: Capabilities + Testimonials -->
+    <section class="two-column">
+      <div class="capabilities">
+        <h3>🎯 What Amber Can Do</h3>
+        <div class="capabilities-list">
+          <div class="capability-item"><span class="check">✓</span> Book new appointments</div>
+          <div class="capability-item"><span class="check">✓</span> Reschedule existing bookings</div>
+          <div class="capability-item"><span class="check">✓</span> Cancel appointments</div>
+          <div class="capability-item"><span class="check">✓</span> Provide service quotes</div>
+          <div class="capability-item"><span class="check">✓</span> Answer business questions</div>
+          <div class="capability-item"><span class="check">✓</span> Handle multiple vehicles</div>
+          <div class="capability-item"><span class="check">✓</span> Process tow requests</div>
+          <div class="capability-item"><span class="check">✓</span> Send SMS confirmations</div>
+        </div>
+      </div>
+      
+      <div class="testimonials">
+        <h3>⭐ What Owners Are Saying</h3>
+        <div class="testimonial">
+          <div class="stars">★★★★★</div>
+          <div class="testimonial-quote">"Nucleus gives us peace of mind and time freedom."</div>
+          <div class="testimonial-author">— Nikita Nathwani, 9Round Owner</div>
+        </div>
+        <div class="testimonial">
+          <div class="stars">★★★★★</div>
+          <div class="testimonial-quote">"I've tried six or seven AI receptionist services. They're not as good as carrying on a conversation as Nucleus AI."</div>
+          <div class="testimonial-author">— Richard M Sedler, President & CEO, RMS Media Group</div>
+        </div>
+      </div>
+    </section>
+    
+    <!-- CTA -->
+    <section class="cta">
+      <div class="cta-text">
+        <h3>Ready to Transform Your Business?</h3>
+        <p>Join hundreds of businesses using AI to book more appointments, delight customers, and grow.</p>
+      </div>
+      <div class="cta-contact">
+        <div class="cta-phone">(647) 371-1990</div>
+        <div class="cta-details">Available 24/7 • Instant booking • SMS confirmation</div>
+      </div>
+    </section>
+    
+    <!-- Footer -->
+    <footer class="footer">
+      <div>© 2026 Premier Auto Service. All rights reserved.</div>
+      <div><a href="https://premierauto.ai">premierauto.ai</a> • 1250 Industrial Boulevard, Springfield</div>
+      <div>Powered by <strong>Nucleus AI</strong></div>
+    </footer>
+  </div>
+</body>
+</html>
