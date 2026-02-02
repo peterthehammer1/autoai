@@ -54,6 +54,7 @@ import {
 import { cn, formatTime12Hour, getStatusColor, formatCents } from '@/lib/utils'
 import PhoneNumber, { Email } from '@/components/PhoneNumber'
 import CarImage from '@/components/CarImage'
+import CustomerAvatar from '@/components/CustomerAvatar'
 import { Link } from 'react-router-dom'
 
 const ITEMS_PER_PAGE = 50
@@ -305,12 +306,11 @@ export default function Customers() {
                       selectedCustomerId === customer.id && "bg-blue-50 border-l-2 border-l-blue-500"
                     )}
                   >
-                    <div className={cn(
-                      "h-10 w-10 rounded-full flex items-center justify-center text-white font-medium text-sm shrink-0",
-                      getAvatarColor(customer.first_name)
-                    )}>
-                      {getInitials(customer.first_name, customer.last_name)}
-                    </div>
+                    <CustomerAvatar 
+                      firstName={customer.first_name}
+                      lastName={customer.last_name}
+                      size="md"
+                    />
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-slate-900 truncate">
                         {customer.first_name} {customer.last_name}
@@ -365,12 +365,12 @@ export default function Customers() {
                     >
                       <ChevronLeft className="h-5 w-5" />
                     </Button>
-                    <div className={cn(
-                      "h-12 w-12 sm:h-16 sm:w-16 rounded-full flex items-center justify-center text-white font-bold text-lg sm:text-xl shrink-0",
-                      getAvatarColor(selectedCustomer.first_name)
-                    )}>
-                      {getInitials(selectedCustomer.first_name, selectedCustomer.last_name)}
-                    </div>
+                    <CustomerAvatar 
+                      firstName={selectedCustomer.first_name}
+                      lastName={selectedCustomer.last_name}
+                      size="xl"
+                      className="h-12 w-12 sm:h-16 sm:w-16 text-lg sm:text-xl"
+                    />
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <h2 className="text-lg sm:text-2xl font-bold text-slate-900 truncate">
