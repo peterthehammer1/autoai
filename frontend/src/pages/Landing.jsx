@@ -594,7 +594,7 @@ export default function Landing() {
             Ready to Transform Your Auto Shop?
           </h2>
           <p className="text-xl text-blue-100 mb-10 max-w-2xl mx-auto">
-            Join hundreds of auto service centers using AI to book more appointments, 
+            Join thousands of businesses using AI to book more appointments, 
             delight customers, and grow their business.
           </p>
           
