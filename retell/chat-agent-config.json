@@ -1,0 +1,252 @@
+{
+  "agent_name": "Amber - Premier Auto Chat",
+  "llm_id": "llm_1a1e82f57e56978ff25fa3c95ba2",
+  "agent_id": "agent_7d1d04773946ddc7c0ba693d62",
+  "model": "gpt-4o-mini",
+  "channel": "chat",
+  
+  "notes": {
+    "dynamic_variables": "For chat, customer_phone must be collected from the user. Variables: {{customer_phone}}, {{customer_id}}, {{customer_name}}, {{customer_first_name}}, {{customer_last_name}}, {{is_existing_customer}}, {{vehicle_info}}, {{vehicle_id}}",
+    "channel": "This agent is for SMS and website chat - not voice calls"
+  },
+  
+  "general_tools": [
+    {
+      "type": "end_call",
+      "name": "end_conversation",
+      "description": "End the conversation when the customer says goodbye, thanks you, or the conversation is complete."
+    },
+    {
+      "type": "custom",
+      "name": "get_services",
+      "description": "Get available services. Use when you need to find service IDs for booking, or when the customer asks about services or prices.",
+      "url": "https://www.alignedai.dev/api/voice/get_services",
+      "speak_during_execution": false,
+      "speak_after_execution": true,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "search": {
+            "type": "string",
+            "description": "Search term to find services (e.g., oil change, brakes, alignment)"
+          }
+        }
+      }
+    },
+    {
+      "type": "custom",
+      "name": "check_availability",
+      "description": "Check available appointment times. Call after you know what service they need.",
+      "url": "https://www.alignedai.dev/api/voice/check_availability",
+      "speak_during_execution": false,
+      "speak_after_execution": true,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "service_ids": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "Service IDs from get_services"
+          },
+          "preferred_date": {
+            "type": "string",
+            "description": "Preferred date YYYY-MM-DD"
+          },
+          "preferred_time": {
+            "type": "string",
+            "description": "morning, afternoon, or specific time"
+          }
+        },
+        "required": ["service_ids"]
+      }
+    },
+    {
+      "type": "custom",
+      "name": "book_appointment",
+      "description": "Book the appointment after customer confirms date, time, and service.",
+      "url": "https://www.alignedai.dev/api/voice/book_appointment",
+      "speak_during_execution": false,
+      "speak_after_execution": true,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "customer_phone": {
+            "type": "string",
+            "description": "Customer phone number - MUST be collected from the customer"
+          },
+          "vehicle_id": {
+            "type": "string",
+            "description": "Vehicle ID - only if customer is returning and vehicle is on file"
+          },
+          "service_ids": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "Service IDs to book"
+          },
+          "appointment_date": {
+            "type": "string",
+            "description": "Date YYYY-MM-DD"
+          },
+          "appointment_time": {
+            "type": "string",
+            "description": "Time HH:MM (24-hour)"
+          },
+          "customer_first_name": {
+            "type": "string",
+            "description": "Customer first name"
+          },
+          "customer_last_name": {
+            "type": "string",
+            "description": "Customer last name"
+          },
+          "customer_email": {
+            "type": "string",
+            "description": "Customer email (optional)"
+          },
+          "vehicle_year": {
+            "type": "integer",
+            "description": "Vehicle year"
+          },
+          "vehicle_make": {
+            "type": "string",
+            "description": "Vehicle make"
+          },
+          "vehicle_model": {
+            "type": "string",
+            "description": "Vehicle model"
+          }
+        },
+        "required": ["customer_phone", "service_ids", "appointment_date", "appointment_time"]
+      }
+    },
+    {
+      "type": "custom",
+      "name": "lookup_customer",
+      "description": "Look up a customer by phone number to check if they're in the system and get their info/vehicles. Call this FIRST when you get their phone number.",
+      "url": "https://www.alignedai.dev/api/voice/lookup_customer",
+      "speak_during_execution": false,
+      "speak_after_execution": true,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "phone_number": {
+            "type": "string",
+            "description": "Customer phone number to look up"
+          }
+        },
+        "required": ["phone_number"]
+      }
+    },
+    {
+      "type": "custom",
+      "name": "get_customer_appointments",
+      "description": "Get customer existing appointments. Use when customer asks about their appointments, wants to check when it is, reschedule, or cancel.",
+      "url": "https://www.alignedai.dev/api/voice/get_customer_appointments",
+      "speak_during_execution": false,
+      "speak_after_execution": true,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "customer_phone": {
+            "type": "string",
+            "description": "Customer phone number"
+          }
+        },
+        "required": ["customer_phone"]
+      }
+    },
+    {
+      "type": "custom",
+      "name": "modify_appointment",
+      "description": "Cancel, reschedule, or add services to an existing appointment.",
+      "url": "https://www.alignedai.dev/api/voice/modify_appointment",
+      "speak_during_execution": false,
+      "speak_after_execution": true,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "appointment_id": {
+            "type": "string",
+            "description": "The appointment ID from get_customer_appointments"
+          },
+          "action": {
+            "type": "string",
+            "enum": ["cancel", "reschedule", "add_services"],
+            "description": "cancel, reschedule, or add_services"
+          },
+          "new_date": {
+            "type": "string",
+            "description": "New date YYYY-MM-DD (required for reschedule)"
+          },
+          "new_time": {
+            "type": "string",
+            "description": "New time HH:MM (required for reschedule)"
+          },
+          "service_ids": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "Service IDs to add (required for add_services)"
+          }
+        },
+        "required": ["appointment_id", "action"]
+      }
+    },
+    {
+      "type": "custom",
+      "name": "send_confirmation",
+      "description": "Send SMS confirmation to customer with appointment details.",
+      "url": "https://www.alignedai.dev/api/voice/send_confirmation",
+      "speak_during_execution": false,
+      "speak_after_execution": true,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "appointment_id": {
+            "type": "string",
+            "description": "The appointment ID to send confirmation for"
+          },
+          "customer_phone": {
+            "type": "string",
+            "description": "Customer phone number"
+          }
+        },
+        "required": ["customer_phone"]
+      }
+    },
+    {
+      "type": "custom",
+      "name": "submit_tow_request",
+      "description": "Submit a tow-in request when the customer needs a tow.",
+      "url": "https://www.alignedai.dev/api/voice/submit_tow_request",
+      "speak_during_execution": false,
+      "speak_after_execution": true,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "customer_phone": {
+            "type": "string",
+            "description": "Customer phone number"
+          },
+          "customer_first_name": { "type": "string", "description": "First name" },
+          "customer_last_name": { "type": "string", "description": "Last name" },
+          "vehicle_id": {
+            "type": "string",
+            "description": "Vehicle ID if on file"
+          },
+          "vehicle_year": { "type": "integer", "description": "Year of vehicle" },
+          "vehicle_make": { "type": "string", "description": "Make of vehicle" },
+          "vehicle_model": { "type": "string", "description": "Model of vehicle" },
+          "pickup_address_line1": {
+            "type": "string",
+            "description": "Street address where the car is (required)"
+          },
+          "pickup_city": { "type": "string", "description": "City (required)" },
+          "pickup_state": { "type": "string", "description": "State (required)" },
+          "pickup_zip": { "type": "string", "description": "ZIP code (required)" },
+          "pickup_notes": { "type": "string", "description": "Cross street, landmark, etc." }
+        },
+        "required": ["customer_phone", "pickup_address_line1", "pickup_city", "pickup_state", "pickup_zip"]
+      }
+    }
+  ]
+}
