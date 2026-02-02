@@ -579,12 +579,19 @@ router.post('/check_availability', async (req, res, next) => {
     // Format for voice
     const formattedSlots = uniqueSlots.map(s => {
       const date = parseISO(s.date);
+      const dayName = format(date, 'EEEE');
+      const dayOfMonth = format(date, 'd');
+      const monthName = format(date, 'MMMM');
       return {
         ...s,
-        formatted: `${format(date, 'EEEE, MMMM d')} at ${formatTime12Hour(s.time)}`,
-        day_name: format(date, 'EEEE'),
-        date_formatted: format(date, 'MMMM d'),
-        time_formatted: formatTime12Hour(s.time)
+        formatted: `${dayName}, ${monthName} ${dayOfMonth} at ${formatTime12Hour(s.time)}`,
+        day_name: dayName,
+        day_of_month: dayOfMonth,
+        month_name: monthName,
+        date_formatted: `${monthName} ${dayOfMonth}`,
+        time_formatted: formatTime12Hour(s.time),
+        // Explicit: "Monday the 9th" format for voice
+        spoken_date: `${dayName} the ${dayOfMonth}${getOrdinalSuffix(parseInt(dayOfMonth))}`
       };
     });
 
@@ -1357,13 +1364,18 @@ router.post('/modify_appointment', async (req, res, next) => {
         `)
         .eq('id', appointment_id)
         .single();
+      // Check if caller wants SMS sent to a different number
+      const send_to_phone = req.body.send_to_phone || req.body.args?.send_to_phone;
+      
       if (aptForSms?.customer) {
         const services = aptForSms.appointment_services?.map(s => s.service_name).join(', ') || '';
         const vehicleDesc = aptForSms.vehicle
           ? `${aptForSms.vehicle.year} ${aptForSms.vehicle.make} ${aptForSms.vehicle.model}`
           : null;
+        // Use send_to_phone if provided, otherwise use customer's phone on file
+        const targetPhone = send_to_phone ? normalizePhone(send_to_phone) : aptForSms.customer.phone;
         sendConfirmationSMS({
-          customerPhone: aptForSms.customer.phone,
+          customerPhone: targetPhone,
           customerName: aptForSms.customer.first_name,
           appointmentDate: aptForSms.scheduled_date,
           appointmentTime: aptForSms.scheduled_time,
@@ -1377,13 +1389,14 @@ router.post('/modify_appointment', async (req, res, next) => {
       }
 
       const date = parseISO(new_date);
+      const smsNote = send_to_phone ? ` I'm sending the confirmation to ${formatPhone(send_to_phone)}.` : '';
 
       return res.json({
         success: true,
         action: 'rescheduled',
         new_date,
         new_time,
-        message: `I've rescheduled your appointment to ${format(date, 'EEEE, MMMM d')} at ${formatTime12Hour(new_time)}. You'll get a text with the updated details.`
+        message: `I've rescheduled your appointment to ${format(date, 'EEEE, MMMM d')} at ${formatTime12Hour(new_time)}.${smsNote} You'll get a text with the updated details.`
       });
     }
 
@@ -1543,6 +1556,8 @@ router.post('/send_confirmation', async (req, res, next) => {
     
     const appointment_id = req.body.appointment_id || req.body.args?.appointment_id;
     const customer_phone = req.body.customer_phone || req.body.args?.customer_phone;
+    // Optional: send to a different phone number than on file
+    const send_to_phone = req.body.send_to_phone || req.body.args?.send_to_phone;
 
     if (!appointment_id && !customer_phone) {
       return res.json({
@@ -1624,8 +1639,11 @@ router.post('/send_confirmation', async (req, res, next) => {
       ? `${appointment.vehicle.year} ${appointment.vehicle.make} ${appointment.vehicle.model}`
       : null;
 
+    // Use send_to_phone if provided, otherwise use customer's phone on file
+    const targetPhone = send_to_phone ? normalizePhone(send_to_phone) : appointment.customer.phone;
+    
     const result = await sendConfirmationSMS({
-      customerPhone: appointment.customer.phone,
+      customerPhone: targetPhone,
       customerName: appointment.customer.first_name,
       appointmentDate: appointment.scheduled_date,
       appointmentTime: appointment.scheduled_time,
@@ -1822,6 +1840,16 @@ function formatTime12Hour(timeStr) {
   const period = hours >= 12 ? 'PM' : 'AM';
   const hour12 = hours % 12 || 12;
   return `${hour12}:${String(mins).padStart(2, '0')} ${period}`;
+}
+
+function getOrdinalSuffix(day) {
+  if (day > 3 && day < 21) return 'th';
+  switch (day % 10) {
+    case 1: return 'st';
+    case 2: return 'nd';
+    case 3: return 'rd';
+    default: return 'th';
+  }
 }
 
 export default router;
