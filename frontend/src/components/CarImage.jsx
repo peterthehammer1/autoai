@@ -42,7 +42,7 @@ export default function CarImage({
   // Imagin.studio URL - they provide free car images
   // Using angle=23 for a nice 3/4 view
   const imageUrl = cleanMake && cleanModel
-    ? `https://cdn.imagin.studio/getimage?customer=hrjavascript-masede&make=${encodeURIComponent(make)}&modelFamily=${encodeURIComponent(model)}${year ? `&modelYear=${year}` : ''}&angle=23`
+    ? `https://cdn.imagin.studio/getimage?customer=img&make=${encodeURIComponent(make)}&modelFamily=${encodeURIComponent(model)}${year ? `&modelYear=${year}` : ''}&angle=23`
     : null
 
   // If no make/model provided or error occurred, show fallback

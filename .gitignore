@@ -43,3 +43,4 @@ retell/latest-call.json
 # Misc
 *.tgz
 .cache/
+.env*.local
