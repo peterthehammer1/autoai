@@ -17,9 +17,11 @@ import {
   PhoneCall,
 } from 'lucide-react'
 
-// Business phone number for AI agent
-const BUSINESS_PHONE = '(716) 412-2499'
-const BUSINESS_PHONE_RAW = '+17164122499'
+// Business phone numbers for AI agent
+const PHONE_NUMBERS = [
+  { label: 'New York', phone: '(716) 412-2499', raw: '+17164122499' },
+  { label: 'Toronto', phone: '(647) 371-1990', raw: '+16473711990' },
+]
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
@@ -91,20 +93,23 @@ export default function Layout() {
             ))}
           </nav>
           
-          {/* Mobile Phone Number */}
-          <div className="p-3 border-t border-slate-700/50">
-            <a 
-              href={`tel:${BUSINESS_PHONE_RAW}`}
-              className="flex items-center gap-3 rounded-lg bg-primary/10 border border-primary/20 p-3"
-            >
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-                <PhoneCall className="h-4 w-4 text-white" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-white">{BUSINESS_PHONE}</p>
-                <p className="text-[11px] text-slate-400">AI Booking Line</p>
-              </div>
-            </a>
+          {/* Mobile Phone Numbers */}
+          <div className="p-3 border-t border-slate-700/50 space-y-2">
+            {PHONE_NUMBERS.map((num) => (
+              <a 
+                key={num.raw}
+                href={`tel:${num.raw}`}
+                className="flex items-center gap-3 rounded-lg bg-primary/10 border border-primary/20 p-2.5"
+              >
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+                  <PhoneCall className="h-3.5 w-3.5 text-white" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-white">{num.phone}</p>
+                  <p className="text-[10px] text-slate-400">{num.label} • AI Booking</p>
+                </div>
+              </a>
+            ))}
           </div>
           
           {/* Mobile Powered by Nucleus */}
@@ -160,20 +165,23 @@ export default function Layout() {
           </nav>
           
           {/* AI Status & Phone */}
-          <div className="p-3 border-t border-slate-700/50 space-y-3">
-            {/* Phone Number */}
-            <a 
-              href={`tel:${BUSINESS_PHONE_RAW}`}
-              className="flex items-center gap-3 rounded-lg bg-primary/10 border border-primary/20 p-3 hover:bg-primary/20 transition-colors group"
-            >
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-                <PhoneCall className="h-4 w-4 text-white" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-white">{BUSINESS_PHONE}</p>
-                <p className="text-[11px] text-slate-400">AI Booking Line</p>
-              </div>
-            </a>
+          <div className="p-3 border-t border-slate-700/50 space-y-2">
+            {/* Phone Numbers */}
+            {PHONE_NUMBERS.map((num) => (
+              <a 
+                key={num.raw}
+                href={`tel:${num.raw}`}
+                className="flex items-center gap-3 rounded-lg bg-primary/10 border border-primary/20 p-2.5 hover:bg-primary/20 transition-colors group"
+              >
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+                  <PhoneCall className="h-3.5 w-3.5 text-white" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-white">{num.phone}</p>
+                  <p className="text-[10px] text-slate-400">{num.label} • AI Booking</p>
+                </div>
+              </a>
+            ))}
             
             {/* AI Status */}
             <div className="rounded-lg bg-slate-800 p-3">
