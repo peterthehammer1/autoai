@@ -141,7 +141,7 @@ export async function sendConfirmationSMS({
   
   const message = `Hi ${customerName || 'there'},
 
-Your appointment for ${serviceText}${vehiclePart} is on ${formattedDate} at ${formattedTime} at our location on 1250 Industrial Boulevard in Automotive City. If you need to reschedule or cancel, just give us a call at (519) 804-0969. Thanks for choosing Premier Auto Service!
+Your appointment for ${serviceText}${vehiclePart} is on ${formattedDate} at ${formattedTime} at our location on 1250 Industrial Boulevard in Automotive City. If you need to reschedule or cancel, just give us a call at (647) 371-1990. Thanks for choosing Premier Auto Service!
 
 - Amber`;
 
@@ -171,7 +171,7 @@ export async function sendReminderSMS({
 
   const vehiclePart = vehicleDescription ? ` on your ${vehicleDescription}` : '';
   
-  const message = `Hey ${customerName || 'there'}! Just a quick reminder - you have your ${services}${vehiclePart} tomorrow (${formattedDate}) at ${formattedTime}. We're at 1250 Industrial Boulevard in Automotive City. If something came up and you need to reschedule, just call us at (519) 804-0969. See you soon!
+  const message = `Hey ${customerName || 'there'}! Just a quick reminder - you have your ${services}${vehiclePart} tomorrow (${formattedDate}) at ${formattedTime}. We're at 1250 Industrial Boulevard in Automotive City. If something came up and you need to reschedule, just call us at (647) 371-1990. See you soon!
 
 - Amber`;
 
@@ -200,7 +200,7 @@ export async function sendCancellationSMS({
 
   const message = `Hi ${customerName || 'there'},
 
-Your appointment for ${services} on ${formattedDate} at ${formattedTime} has been cancelled. If you'd like to reschedule, just give us a call at (519) 804-0969 - we're happy to find a time that works for you.
+Your appointment for ${services} on ${formattedDate} at ${formattedTime} has been cancelled. If you'd like to reschedule, just give us a call at (647) 371-1990 - we're happy to find a time that works for you.
 
 - Amber`;
 

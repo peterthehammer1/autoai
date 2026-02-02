@@ -208,7 +208,7 @@ export async function sendConfirmationEmail({
             <td style="padding: 0 40px 32px; text-align: center;">
               <p style="margin: 0; color: #64748b; font-size: 14px; line-height: 1.5;">
                 Need to reschedule? Call us at<br>
-                <a href="tel:+17164122499" style="color: #1e293b; font-weight: 600; text-decoration: none;">(716) 412-2499</a>
+                <a href="tel:+16473711990" style="color: #1e293b; font-weight: 600; text-decoration: none;">(647) 371-1990</a>
               </p>
             </td>
           </tr>
@@ -315,7 +315,7 @@ export async function sendReminderEmail({
           <tr>
             <td style="padding: 0 40px 32px; text-align: center;">
               <p style="margin: 0; color: #64748b; font-size: 14px;">
-                Need to reschedule? Call <a href="tel:+17164122499" style="color: #1e293b; font-weight: 600; text-decoration: none;">(716) 412-2499</a>
+                Need to reschedule? Call <a href="tel:+16473711990" style="color: #1e293b; font-weight: 600; text-decoration: none;">(647) 371-1990</a>
               </p>
             </td>
           </tr>
