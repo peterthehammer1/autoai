@@ -235,11 +235,6 @@ export default function Dashboard() {
 
   return (
     <div className="flex flex-col gap-6 animate-fade-in">
-      {/* AI Insights - Hidden on mobile, shown on desktop at top */}
-      <div className="hidden sm:block">
-        <AIInsightsPanel />
-      </div>
-
       {/* Stats Grid */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {stats.map((stat, index) => (
@@ -440,15 +435,13 @@ export default function Dashboard() {
         ))}
       </div>
 
-      {/* Mobile Only: Sentiment Chart at bottom */}
+      {/* Sentiment Chart - shown at bottom on mobile */}
       <div className="sm:hidden">
         <SentimentChart />
       </div>
 
-      {/* Mobile Only: AI Insights at bottom */}
-      <div className="sm:hidden">
-        <AIInsightsPanel />
-      </div>
+      {/* AI Insights - at bottom so it doesn't cause layout shift when loading */}
+      <AIInsightsPanel />
     </div>
   )
 }
