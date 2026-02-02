@@ -226,30 +226,30 @@ export default function Customers() {
   return (
     <div className="h-[calc(100vh-6rem)] flex flex-col animate-fade-in">
       {/* Top Stats Bar */}
-      <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 rounded-xl p-4 mb-4 text-white">
+      <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 rounded-xl p-3 sm:p-4 mb-4 text-white">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-white/10 rounded-lg backdrop-blur">
-              <Users className="h-5 w-5" />
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="p-1.5 sm:p-2 bg-white/10 rounded-lg backdrop-blur">
+              <Users className="h-4 w-4 sm:h-5 sm:w-5" />
             </div>
             <div>
-              <h1 className="text-lg font-semibold">Customer Management</h1>
-              <p className="text-sm text-slate-400">CRM Dashboard</p>
+              <h1 className="text-base sm:text-lg font-semibold">Customer Management</h1>
+              <p className="text-xs sm:text-sm text-slate-400 hidden sm:block">CRM Dashboard</p>
             </div>
           </div>
           
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-3 sm:gap-6">
             <div className="text-center">
-              <p className="text-2xl font-bold">{data?.customers?.length || 0}</p>
-              <p className="text-xs text-slate-400">Customers</p>
+              <p className="text-lg sm:text-2xl font-bold">{data?.customers?.length || 0}</p>
+              <p className="text-[10px] sm:text-xs text-slate-400">Customers</p>
             </div>
-            <div className="h-8 w-px bg-white/20" />
-            <div className="text-center">
+            <div className="h-6 sm:h-8 w-px bg-white/20 hidden sm:block" />
+            <div className="text-center hidden sm:block">
               <p className="text-2xl font-bold">{totalVehicles}</p>
               <p className="text-xs text-slate-400">Vehicles</p>
             </div>
-            <div className="h-8 w-px bg-white/20" />
-            <div className="text-center">
+            <div className="h-8 w-px bg-white/20 hidden lg:block" />
+            <div className="text-center hidden lg:block">
               <p className="text-2xl font-bold">{totalVisits}</p>
               <p className="text-xs text-slate-400">Total Visits</p>
             </div>
@@ -258,9 +258,13 @@ export default function Customers() {
       </div>
 
       {/* Main Content - Master/Detail Layout */}
-      <div className="flex-1 flex gap-4 min-h-0">
+      <div className="flex-1 flex flex-col lg:flex-row gap-4 min-h-0">
         {/* Left Panel - Customer List */}
-        <div className="w-80 flex flex-col bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className={cn(
+          "flex flex-col bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden",
+          "w-full lg:w-80",
+          selectedCustomerId ? "hidden lg:flex" : "flex"
+        )}>
           {/* Search Header */}
           <div className="p-3 border-b border-slate-200 bg-slate-50">
             <div className="relative">
@@ -327,7 +331,10 @@ export default function Customers() {
         </div>
 
         {/* Right Panel - Customer Details */}
-        <div className="flex-1 flex flex-col min-h-0">
+        <div className={cn(
+          "flex-1 flex flex-col min-h-0",
+          !selectedCustomerId ? "hidden lg:flex" : "flex"
+        )}>
           {!selectedCustomerId ? (
             <div className="flex-1 flex items-center justify-center bg-white rounded-xl border border-slate-200">
               <div className="text-center">
@@ -345,23 +352,32 @@ export default function Customers() {
           ) : selectedCustomer ? (
             <div className="flex-1 flex flex-col bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
               {/* Customer Header */}
-              <div className="bg-gradient-to-r from-slate-50 to-white p-6 border-b border-slate-200">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-4">
+              <div className="bg-gradient-to-r from-slate-50 to-white p-4 sm:p-6 border-b border-slate-200">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                    {/* Mobile Back Button */}
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="lg:hidden shrink-0 -ml-2"
+                      onClick={() => setSelectedCustomerId(null)}
+                    >
+                      <ChevronLeft className="h-5 w-5" />
+                    </Button>
                     <div className={cn(
-                      "h-16 w-16 rounded-full flex items-center justify-center text-white font-bold text-xl",
+                      "h-12 w-12 sm:h-16 sm:w-16 rounded-full flex items-center justify-center text-white font-bold text-lg sm:text-xl shrink-0",
                       getAvatarColor(selectedCustomer.first_name)
                     )}>
                       {getInitials(selectedCustomer.first_name, selectedCustomer.last_name)}
                     </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h2 className="text-2xl font-bold text-slate-900">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h2 className="text-lg sm:text-2xl font-bold text-slate-900 truncate">
                           {selectedCustomer.first_name} {selectedCustomer.last_name}
                         </h2>
                         {healthData && (
                           <Badge className={cn(
-                            'text-xs',
+                            'text-xs shrink-0',
                             healthData.health_color === 'green' ? 'bg-emerald-100 text-emerald-700' :
                             healthData.health_color === 'blue' ? 'bg-blue-100 text-blue-700' :
                             healthData.health_color === 'yellow' ? 'bg-amber-100 text-amber-700' :
@@ -371,69 +387,72 @@ export default function Customers() {
                           </Badge>
                         )}
                       </div>
-                      <div className="flex items-center gap-4 mt-1 text-sm text-slate-500">
+                      <div className="flex items-center gap-2 sm:gap-4 mt-1 text-xs sm:text-sm text-slate-500 flex-wrap">
                         <span className="flex items-center gap-1">
-                          <Phone className="h-3.5 w-3.5" />
+                          <Phone className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                           <PhoneNumber phone={selectedCustomer.phone} showRevealButton={false} />
                         </span>
                         {selectedCustomer.email && (
-                          <span className="flex items-center gap-1">
+                          <span className="flex items-center gap-1 hidden sm:flex">
                             <Mail className="h-3.5 w-3.5" />
                             <Email email={selectedCustomer.email} />
                           </span>
                         )}
                       </div>
-                      <p className="text-xs text-slate-400 mt-1">
+                      <p className="text-xs text-slate-400 mt-1 hidden sm:block">
                         Customer since {format(new Date(selectedCustomer.created_at), 'MMMM yyyy')}
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" onClick={handleEditOpen}>
+                  <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+                    <Button variant="outline" size="sm" onClick={handleEditOpen} className="hidden sm:flex">
                       <Edit className="h-4 w-4 mr-1" />
                       Edit
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => setSelectedCustomerId(null)}>
+                    <Button variant="ghost" size="icon" onClick={handleEditOpen} className="sm:hidden">
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => setSelectedCustomerId(null)} className="hidden lg:flex">
                       <X className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>
 
                 {/* Quick Stats */}
-                <div className="grid grid-cols-4 gap-4 mt-6">
-                  <div className="bg-white rounded-lg p-3 border border-slate-200 shadow-sm">
-                    <div className="flex items-center gap-2 text-slate-500 text-xs mb-1">
-                      <CalendarCheck className="h-3.5 w-3.5" />
-                      Total Visits
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 mt-4 sm:mt-6">
+                  <div className="bg-white rounded-lg p-2 sm:p-3 border border-slate-200 shadow-sm">
+                    <div className="flex items-center gap-1.5 sm:gap-2 text-slate-500 text-[10px] sm:text-xs mb-0.5 sm:mb-1">
+                      <CalendarCheck className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                      <span className="hidden sm:inline">Total </span>Visits
                     </div>
-                    <p className="text-xl font-bold text-slate-900">
+                    <p className="text-lg sm:text-xl font-bold text-slate-900">
                       {healthData?.stats?.total_visits || selectedCustomer.total_visits || 0}
                     </p>
                   </div>
-                  <div className="bg-white rounded-lg p-3 border border-slate-200 shadow-sm">
-                    <div className="flex items-center gap-2 text-slate-500 text-xs mb-1">
-                      <DollarSign className="h-3.5 w-3.5" />
-                      Total Spend
+                  <div className="bg-white rounded-lg p-2 sm:p-3 border border-slate-200 shadow-sm">
+                    <div className="flex items-center gap-1.5 sm:gap-2 text-slate-500 text-[10px] sm:text-xs mb-0.5 sm:mb-1">
+                      <DollarSign className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                      <span className="hidden sm:inline">Total </span>Spend
                     </div>
-                    <p className="text-xl font-bold text-slate-900">
+                    <p className="text-lg sm:text-xl font-bold text-slate-900">
                       {healthData?.stats?.total_spend ? formatCents(healthData.stats.total_spend) : '$0'}
                     </p>
                   </div>
-                  <div className="bg-white rounded-lg p-3 border border-slate-200 shadow-sm">
-                    <div className="flex items-center gap-2 text-slate-500 text-xs mb-1">
-                      <Car className="h-3.5 w-3.5" />
+                  <div className="bg-white rounded-lg p-2 sm:p-3 border border-slate-200 shadow-sm">
+                    <div className="flex items-center gap-1.5 sm:gap-2 text-slate-500 text-[10px] sm:text-xs mb-0.5 sm:mb-1">
+                      <Car className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                       Vehicles
                     </div>
-                    <p className="text-xl font-bold text-slate-900">
+                    <p className="text-lg sm:text-xl font-bold text-slate-900">
                       {selectedCustomer.vehicles?.length || 0}
                     </p>
                   </div>
-                  <div className="bg-white rounded-lg p-3 border border-slate-200 shadow-sm">
-                    <div className="flex items-center gap-2 text-slate-500 text-xs mb-1">
-                      <Heart className="h-3.5 w-3.5" />
-                      Health Score
+                  <div className="bg-white rounded-lg p-2 sm:p-3 border border-slate-200 shadow-sm">
+                    <div className="flex items-center gap-1.5 sm:gap-2 text-slate-500 text-[10px] sm:text-xs mb-0.5 sm:mb-1">
+                      <Heart className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                      Health
                     </div>
-                    <p className="text-xl font-bold text-slate-900">
+                    <p className="text-lg sm:text-xl font-bold text-slate-900">
                       {healthData?.health_score || '-'}
                     </p>
                   </div>
@@ -442,43 +461,47 @@ export default function Customers() {
 
               {/* Tabbed Content */}
               <Tabs defaultValue="overview" className="flex-1 flex flex-col min-h-0">
-                <TabsList className="w-full justify-start rounded-none border-b border-slate-200 bg-slate-50 p-0 h-auto">
+                <TabsList className="w-full justify-start rounded-none border-b border-slate-200 bg-slate-50 p-0 h-auto overflow-x-auto flex-nowrap">
                   <TabsTrigger 
                     value="overview" 
-                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent py-3 px-4"
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm whitespace-nowrap"
                   >
                     Overview
                   </TabsTrigger>
                   <TabsTrigger 
                     value="vehicles" 
-                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent py-3 px-4"
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm whitespace-nowrap"
                   >
-                    Vehicles ({selectedCustomer.vehicles?.length || 0})
+                    <span className="sm:hidden">Vehicles</span>
+                    <span className="hidden sm:inline">Vehicles ({selectedCustomer.vehicles?.length || 0})</span>
                   </TabsTrigger>
                   <TabsTrigger 
                     value="appointments" 
-                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent py-3 px-4"
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm whitespace-nowrap"
                   >
-                    Appointments ({appointmentsData?.appointments?.length || 0})
+                    <span className="sm:hidden">Appts</span>
+                    <span className="hidden sm:inline">Appointments ({appointmentsData?.appointments?.length || 0})</span>
                   </TabsTrigger>
                   <TabsTrigger 
                     value="interactions" 
-                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent py-3 px-4"
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm whitespace-nowrap"
                   >
-                    Interactions ({interactionsData?.interactions?.length || 0})
+                    <span className="sm:hidden">Activity</span>
+                    <span className="hidden sm:inline">Interactions ({interactionsData?.interactions?.length || 0})</span>
                   </TabsTrigger>
                   <TabsTrigger 
                     value="insights" 
-                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent py-3 px-4"
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm whitespace-nowrap"
                   >
-                    AI Insights
+                    <span className="sm:hidden">AI</span>
+                    <span className="hidden sm:inline">AI Insights</span>
                   </TabsTrigger>
                 </TabsList>
 
                 <ScrollArea className="flex-1">
                   {/* Overview Tab */}
-                  <TabsContent value="overview" className="m-0 p-6">
-                    <div className="grid grid-cols-2 gap-6">
+                  <TabsContent value="overview" className="m-0 p-4 sm:p-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                       {/* Health Score Card */}
                       {healthData && (
                         <div className="bg-gradient-to-br from-slate-50 to-white rounded-xl border border-slate-200 p-5">
@@ -587,7 +610,7 @@ export default function Customers() {
 
                       {/* Primary Vehicle */}
                       {selectedCustomer.vehicles?.length > 0 && (
-                        <div className="col-span-2 bg-gradient-to-br from-slate-50 to-white rounded-xl border border-slate-200 p-5">
+                        <div className="sm:col-span-2 bg-gradient-to-br from-slate-50 to-white rounded-xl border border-slate-200 p-4 sm:p-5">
                           <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2">
                             <Car className="h-4 w-4 text-slate-500" />
                             Primary Vehicle
@@ -615,16 +638,16 @@ export default function Customers() {
                   </TabsContent>
 
                   {/* Vehicles Tab */}
-                  <TabsContent value="vehicles" className="m-0 p-6">
+                  <TabsContent value="vehicles" className="m-0 p-4 sm:p-6">
                     <div className="flex items-center justify-between mb-4">
-                      <h3 className="font-semibold text-slate-900">Registered Vehicles</h3>
+                      <h3 className="font-semibold text-slate-900 text-sm sm:text-base">Registered Vehicles</h3>
                       <Button size="sm" onClick={() => setIsAddVehicleOpen(true)}>
-                        <Plus className="h-4 w-4 mr-1" />
-                        Add Vehicle
+                        <Plus className="h-4 w-4 sm:mr-1" />
+                        <span className="hidden sm:inline">Add Vehicle</span>
                       </Button>
                     </div>
                     {selectedCustomer.vehicles?.length > 0 ? (
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                         {selectedCustomer.vehicles.map((vehicle) => (
                           <div
                             key={vehicle.id}
@@ -672,8 +695,8 @@ export default function Customers() {
                   </TabsContent>
 
                   {/* Appointments Tab */}
-                  <TabsContent value="appointments" className="m-0 p-6">
-                    <h3 className="font-semibold text-slate-900 mb-4">Appointment History</h3>
+                  <TabsContent value="appointments" className="m-0 p-4 sm:p-6">
+                    <h3 className="font-semibold text-slate-900 mb-4 text-sm sm:text-base">Appointment History</h3>
                     {appointmentsData?.appointments?.length > 0 ? (
                       <div className="space-y-3">
                         {appointmentsData.appointments.map((apt) => (
@@ -718,8 +741,8 @@ export default function Customers() {
                   </TabsContent>
 
                   {/* Interactions Tab */}
-                  <TabsContent value="interactions" className="m-0 p-6">
-                    <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                  <TabsContent value="interactions" className="m-0 p-4 sm:p-6">
+                    <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2 text-sm sm:text-base">
                       <MessageSquare className="h-4 w-4 text-blue-500" />
                       Communication History
                     </h3>
@@ -826,8 +849,8 @@ export default function Customers() {
                   </TabsContent>
 
                   {/* AI Insights Tab */}
-                  <TabsContent value="insights" className="m-0 p-6">
-                    <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                  <TabsContent value="insights" className="m-0 p-4 sm:p-6">
+                    <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2 text-sm sm:text-base">
                       <Target className="h-4 w-4 text-violet-500" />
                       AI-Powered Recommendations
                     </h3>

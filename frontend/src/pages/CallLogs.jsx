@@ -38,6 +38,7 @@ import {
   ThumbsDown,
   Minus,
   Volume2,
+  ChevronLeft,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import PhoneNumber from '@/components/PhoneNumber'
@@ -180,46 +181,50 @@ export default function CallLogs() {
   return (
     <div className="h-[calc(100vh-6rem)] flex flex-col animate-fade-in">
       {/* Top Stats Bar */}
-      <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 rounded-xl p-4 mb-4 text-white">
+      <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 rounded-xl p-3 sm:p-4 mb-4 text-white">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-white/10 rounded-lg backdrop-blur">
-              <PhoneCall className="h-5 w-5" />
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="p-1.5 sm:p-2 bg-white/10 rounded-lg backdrop-blur">
+              <PhoneCall className="h-4 w-4 sm:h-5 sm:w-5" />
             </div>
             <div>
-              <h1 className="text-lg font-semibold">AI Call Center</h1>
-              <p className="text-sm text-slate-400">Voice Agent Analytics</p>
+              <h1 className="text-base sm:text-lg font-semibold">AI Call Center</h1>
+              <p className="text-xs sm:text-sm text-slate-400 hidden sm:block">Voice Agent Analytics</p>
             </div>
           </div>
           
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-3 sm:gap-6">
             <div className="text-center">
-              <p className="text-2xl font-bold">{stats?.summary?.total_calls ?? 0}</p>
-              <p className="text-xs text-slate-400">Total Calls</p>
+              <p className="text-lg sm:text-2xl font-bold">{stats?.summary?.total_calls ?? 0}</p>
+              <p className="text-[10px] sm:text-xs text-slate-400">Calls</p>
             </div>
-            <div className="h-8 w-px bg-white/20" />
-            <div className="text-center">
+            <div className="h-6 sm:h-8 w-px bg-white/20 hidden sm:block" />
+            <div className="text-center hidden sm:block">
               <p className="text-2xl font-bold">{formatDuration(stats?.summary?.avg_duration_seconds)}</p>
               <p className="text-xs text-slate-400">Avg Duration</p>
             </div>
-            <div className="h-8 w-px bg-white/20" />
-            <div className="text-center">
+            <div className="h-8 w-px bg-white/20 hidden lg:block" />
+            <div className="text-center hidden lg:block">
               <p className="text-2xl font-bold">{stats?.summary?.by_outcome?.booked ?? 0}</p>
               <p className="text-xs text-slate-400">Bookings</p>
             </div>
-            <div className="h-8 w-px bg-white/20" />
+            <div className="h-6 sm:h-8 w-px bg-white/20" />
             <div className="text-center">
-              <p className="text-2xl font-bold text-emerald-400">{conversionRate}%</p>
-              <p className="text-xs text-slate-400">Conversion</p>
+              <p className="text-lg sm:text-2xl font-bold text-emerald-400">{conversionRate}%</p>
+              <p className="text-[10px] sm:text-xs text-slate-400">Conv.</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Main Content - Master/Detail Layout */}
-      <div className="flex-1 flex gap-4 min-h-0">
+      <div className="flex-1 flex flex-col lg:flex-row gap-4 min-h-0">
         {/* Left Panel - Call List */}
-        <div className="w-96 flex flex-col bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className={cn(
+          "flex flex-col bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden",
+          "w-full lg:w-96",
+          selectedCallId ? "hidden lg:flex" : "flex"
+        )}>
           {/* Search & Filter Header */}
           <div className="p-3 border-b border-slate-200 bg-slate-50 space-y-3">
             <div className="relative">
@@ -331,7 +336,10 @@ export default function CallLogs() {
         </div>
 
         {/* Right Panel - Call Details */}
-        <div className="flex-1 flex flex-col min-h-0">
+        <div className={cn(
+          "flex-1 flex flex-col min-h-0",
+          !selectedCallId ? "hidden lg:flex" : "flex"
+        )}>
           {!selectedCallId ? (
             <div className="flex-1 flex items-center justify-center bg-white rounded-xl border border-slate-200">
               <div className="text-center">
@@ -345,25 +353,34 @@ export default function CallLogs() {
           ) : selectedCall ? (
             <div className="flex-1 flex flex-col bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
               {/* Call Header */}
-              <div className="bg-gradient-to-r from-slate-50 to-white p-6 border-b border-slate-200">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-4">
+              <div className="bg-gradient-to-r from-slate-50 to-white p-4 sm:p-6 border-b border-slate-200">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                    {/* Mobile Back Button */}
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="lg:hidden shrink-0 -ml-2"
+                      onClick={() => setSelectedCallId(null)}
+                    >
+                      <ChevronLeft className="h-5 w-5" />
+                    </Button>
                     <div className={cn(
-                      "h-14 w-14 rounded-full flex items-center justify-center",
+                      "h-10 w-10 sm:h-14 sm:w-14 rounded-full flex items-center justify-center shrink-0",
                       selectedCall.outcome === 'booked' || selectedCall.outcome === 'completed' ? 'bg-emerald-100' :
                       selectedCall.outcome === 'inquiry' ? 'bg-blue-100' :
                       selectedCall.outcome === 'abandoned' ? 'bg-red-100' : 'bg-slate-100'
                     )}>
                       <PhoneIncoming className={cn(
-                        "h-7 w-7",
+                        "h-5 w-5 sm:h-7 sm:w-7",
                         selectedCall.outcome === 'booked' || selectedCall.outcome === 'completed' ? 'text-emerald-600' :
                         selectedCall.outcome === 'inquiry' ? 'text-blue-600' :
                         selectedCall.outcome === 'abandoned' ? 'text-red-600' : 'text-slate-500'
                       )} />
                     </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h2 className="text-xl font-bold text-slate-900">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h2 className="text-lg sm:text-xl font-bold text-slate-900 truncate">
                           {selectedCall.customer 
                             ? `${selectedCall.customer.first_name} ${selectedCall.customer.last_name}`
                             : 'Unknown Caller'
@@ -371,69 +388,76 @@ export default function CallLogs() {
                         </h2>
                         {getOutcomeBadge(selectedCall.outcome)}
                       </div>
-                      <div className="flex items-center gap-3 mt-1 text-sm text-slate-500">
+                      <div className="flex items-center gap-2 sm:gap-3 mt-1 text-xs sm:text-sm text-slate-500 flex-wrap">
                         <span className="flex items-center gap-1">
-                          <Phone className="h-3.5 w-3.5" />
+                          <Phone className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                           <PhoneNumber phone={selectedCall.phone_number} showRevealButton={false} />
                         </span>
-                        <span>•</span>
-                        <span>{selectedCall.started_at ? format(new Date(selectedCall.started_at), 'MMM d, yyyy \'at\' h:mm a') : '-'}</span>
+                        <span className="hidden sm:inline">•</span>
+                        <span className="hidden sm:inline">{selectedCall.started_at ? format(new Date(selectedCall.started_at), 'MMM d, yyyy \'at\' h:mm a') : '-'}</span>
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 sm:gap-2 shrink-0">
                     {selectedCall.customer && (
-                      <Button variant="outline" size="sm" asChild>
+                      <Button variant="outline" size="sm" asChild className="hidden sm:flex">
                         <Link to={`/customers/${selectedCall.customer.id}`}>
                           <User className="h-4 w-4 mr-1" />
                           View Customer
                         </Link>
                       </Button>
                     )}
-                    <Button variant="ghost" size="icon" onClick={() => setSelectedCallId(null)}>
+                    {selectedCall.customer && (
+                      <Button variant="ghost" size="icon" asChild className="sm:hidden">
+                        <Link to={`/customers/${selectedCall.customer.id}`}>
+                          <User className="h-4 w-4" />
+                        </Link>
+                      </Button>
+                    )}
+                    <Button variant="ghost" size="icon" onClick={() => setSelectedCallId(null)} className="hidden lg:flex">
                       <X className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>
 
                 {/* Quick Stats */}
-                <div className="grid grid-cols-4 gap-4 mt-6">
-                  <div className="bg-white rounded-lg p-3 border border-slate-200 shadow-sm">
-                    <div className="flex items-center gap-2 text-slate-500 text-xs mb-1">
-                      <Clock className="h-3.5 w-3.5" />
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 mt-4 sm:mt-6">
+                  <div className="bg-white rounded-lg p-2 sm:p-3 border border-slate-200 shadow-sm">
+                    <div className="flex items-center gap-1.5 sm:gap-2 text-slate-500 text-[10px] sm:text-xs mb-0.5 sm:mb-1">
+                      <Clock className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                       Duration
                     </div>
-                    <p className="text-xl font-bold text-slate-900">
+                    <p className="text-lg sm:text-xl font-bold text-slate-900">
                       {formatDuration(selectedCall.duration_seconds)}
                     </p>
                   </div>
-                  <div className="bg-white rounded-lg p-3 border border-slate-200 shadow-sm">
-                    <div className="flex items-center gap-2 text-slate-500 text-xs mb-1">
-                      <TrendingUp className="h-3.5 w-3.5" />
+                  <div className="bg-white rounded-lg p-2 sm:p-3 border border-slate-200 shadow-sm">
+                    <div className="flex items-center gap-1.5 sm:gap-2 text-slate-500 text-[10px] sm:text-xs mb-0.5 sm:mb-1">
+                      <TrendingUp className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                       Sentiment
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1 sm:gap-2">
                       {getSentimentIcon(selectedCall.sentiment)}
-                      <span className="text-xl font-bold text-slate-900 capitalize">
+                      <span className="text-lg sm:text-xl font-bold text-slate-900 capitalize truncate">
                         {selectedCall.sentiment || 'Neutral'}
                       </span>
                     </div>
                   </div>
-                  <div className="bg-white rounded-lg p-3 border border-slate-200 shadow-sm">
-                    <div className="flex items-center gap-2 text-slate-500 text-xs mb-1">
-                      <Sparkles className="h-3.5 w-3.5" />
+                  <div className="bg-white rounded-lg p-2 sm:p-3 border border-slate-200 shadow-sm">
+                    <div className="flex items-center gap-1.5 sm:gap-2 text-slate-500 text-[10px] sm:text-xs mb-0.5 sm:mb-1">
+                      <Sparkles className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                       Intent
                     </div>
-                    <p className="text-xl font-bold text-slate-900 capitalize">
+                    <p className="text-lg sm:text-xl font-bold text-slate-900 capitalize truncate">
                       {selectedCall.intent_detected || 'Unknown'}
                     </p>
                   </div>
-                  <div className="bg-white rounded-lg p-3 border border-slate-200 shadow-sm">
-                    <div className="flex items-center gap-2 text-slate-500 text-xs mb-1">
-                      <PhoneIncoming className="h-3.5 w-3.5" />
+                  <div className="bg-white rounded-lg p-2 sm:p-3 border border-slate-200 shadow-sm">
+                    <div className="flex items-center gap-1.5 sm:gap-2 text-slate-500 text-[10px] sm:text-xs mb-0.5 sm:mb-1">
+                      <PhoneIncoming className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                       Direction
                     </div>
-                    <p className="text-xl font-bold text-slate-900 capitalize">
+                    <p className="text-lg sm:text-xl font-bold text-slate-900 capitalize">
                       {selectedCall.direction || 'Inbound'}
                     </p>
                   </div>
@@ -445,32 +469,32 @@ export default function CallLogs() {
                 <TabsList className="w-full justify-start rounded-none border-b border-slate-200 bg-slate-50 p-0 h-auto">
                   <TabsTrigger 
                     value="transcript" 
-                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent py-3 px-4"
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm"
                   >
-                    <MessageSquare className="h-4 w-4 mr-1.5" />
-                    Transcript
+                    <MessageSquare className="h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-1.5" />
+                    <span className="hidden sm:inline">Transcript</span>
                   </TabsTrigger>
                   <TabsTrigger 
                     value="summary" 
-                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent py-3 px-4"
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm"
                   >
-                    <Sparkles className="h-4 w-4 mr-1.5" />
-                    AI Summary
+                    <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-1.5" />
+                    <span className="hidden sm:inline">AI Summary</span>
                   </TabsTrigger>
                   {selectedCall.recording_url && (
                     <TabsTrigger 
                       value="recording" 
-                      className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent py-3 px-4"
+                      className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm"
                     >
-                      <Volume2 className="h-4 w-4 mr-1.5" />
-                      Recording
+                      <Volume2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-1.5" />
+                      <span className="hidden sm:inline">Recording</span>
                     </TabsTrigger>
                   )}
                 </TabsList>
 
                 <ScrollArea className="flex-1">
                   {/* Transcript Tab */}
-                  <TabsContent value="transcript" className="m-0 p-6">
+                  <TabsContent value="transcript" className="m-0 p-4 sm:p-6">
                     {selectedCall.transcript ? (
                       <div className="space-y-4">
                         {parseTranscript(selectedCall.transcript).map((msg, idx) => (
@@ -521,7 +545,7 @@ export default function CallLogs() {
                   </TabsContent>
 
                   {/* Summary Tab */}
-                  <TabsContent value="summary" className="m-0 p-6">
+                  <TabsContent value="summary" className="m-0 p-4 sm:p-6">
                     {selectedCall.transcript_summary ? (
                       <div className="space-y-6">
                         <div className="bg-gradient-to-br from-violet-50 to-blue-50 rounded-xl p-6 border border-violet-200">
@@ -588,7 +612,7 @@ export default function CallLogs() {
 
                   {/* Recording Tab */}
                   {selectedCall.recording_url && (
-                    <TabsContent value="recording" className="m-0 p-6">
+                    <TabsContent value="recording" className="m-0 p-4 sm:p-6">
                       <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl p-6 border border-slate-200">
                         <div className="flex items-center gap-3 mb-4">
                           <div className="p-2 bg-slate-200 rounded-lg">

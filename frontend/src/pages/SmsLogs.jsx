@@ -32,6 +32,7 @@ import {
   AlertTriangle,
   ArrowDownLeft,
   ArrowUpFromLine,
+  ChevronLeft,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import PhoneNumber from '@/components/PhoneNumber'
@@ -132,46 +133,50 @@ export default function SmsLogs() {
   return (
     <div className="h-[calc(100vh-6rem)] flex flex-col animate-fade-in">
       {/* Top Stats Bar */}
-      <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 rounded-xl p-4 mb-4 text-white">
+      <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 rounded-xl p-3 sm:p-4 mb-4 text-white">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-white/10 rounded-lg backdrop-blur">
-              <Smartphone className="h-5 w-5" />
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="p-1.5 sm:p-2 bg-white/10 rounded-lg backdrop-blur">
+              <Smartphone className="h-4 w-4 sm:h-5 sm:w-5" />
             </div>
             <div>
-              <h1 className="text-lg font-semibold">SMS Communications</h1>
-              <p className="text-sm text-slate-400">Automated Messaging</p>
+              <h1 className="text-base sm:text-lg font-semibold">SMS Communications</h1>
+              <p className="text-xs sm:text-sm text-slate-400 hidden sm:block">Automated Messaging</p>
             </div>
           </div>
           
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-3 sm:gap-6">
             <div className="text-center">
-              <p className="text-2xl font-bold">{stats?.total || 0}</p>
-              <p className="text-xs text-slate-400">Total Sent</p>
+              <p className="text-lg sm:text-2xl font-bold">{stats?.total || 0}</p>
+              <p className="text-[10px] sm:text-xs text-slate-400">Sent</p>
             </div>
-            <div className="h-8 w-px bg-white/20" />
-            <div className="text-center">
+            <div className="h-6 sm:h-8 w-px bg-white/20 hidden sm:block" />
+            <div className="text-center hidden sm:block">
               <p className="text-2xl font-bold">{stats?.by_type?.confirmation || 0}</p>
               <p className="text-xs text-slate-400">Confirmations</p>
             </div>
-            <div className="h-8 w-px bg-white/20" />
-            <div className="text-center">
+            <div className="h-8 w-px bg-white/20 hidden lg:block" />
+            <div className="text-center hidden lg:block">
               <p className="text-2xl font-bold">{stats?.by_type?.reminder || 0}</p>
               <p className="text-xs text-slate-400">Reminders</p>
             </div>
-            <div className="h-8 w-px bg-white/20" />
+            <div className="h-6 sm:h-8 w-px bg-white/20" />
             <div className="text-center">
-              <p className="text-2xl font-bold text-emerald-400">{successRate}%</p>
-              <p className="text-xs text-slate-400">Success Rate</p>
+              <p className="text-lg sm:text-2xl font-bold text-emerald-400">{successRate}%</p>
+              <p className="text-[10px] sm:text-xs text-slate-400">Success</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Main Content - Master/Detail Layout */}
-      <div className="flex-1 flex gap-4 min-h-0">
+      <div className="flex-1 flex flex-col lg:flex-row gap-4 min-h-0">
         {/* Left Panel - SMS List */}
-        <div className="w-96 flex flex-col bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className={cn(
+          "flex flex-col bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden",
+          "w-full lg:w-96",
+          selectedSmsId ? "hidden lg:flex" : "flex"
+        )}>
           {/* Search & Filter Header */}
           <div className="p-3 border-b border-slate-200 bg-slate-50 space-y-3">
             <div className="relative">
@@ -269,7 +274,10 @@ export default function SmsLogs() {
         </div>
 
         {/* Right Panel - SMS Details */}
-        <div className="flex-1 flex flex-col min-h-0">
+        <div className={cn(
+          "flex-1 flex flex-col min-h-0",
+          !selectedSmsId ? "hidden lg:flex" : "flex"
+        )}>
           {!selectedSmsId ? (
             <div className="flex-1 flex items-center justify-center bg-white rounded-xl border border-slate-200">
               <div className="text-center">
@@ -283,21 +291,30 @@ export default function SmsLogs() {
           ) : selectedSms ? (
             <div className="flex-1 flex flex-col bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
               {/* SMS Header */}
-              <div className="bg-gradient-to-r from-slate-50 to-white p-6 border-b border-slate-200">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-4">
+              <div className="bg-gradient-to-r from-slate-50 to-white p-4 sm:p-6 border-b border-slate-200">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                    {/* Mobile Back Button */}
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="lg:hidden shrink-0 -ml-2"
+                      onClick={() => setSelectedSmsId(null)}
+                    >
+                      <ChevronLeft className="h-5 w-5" />
+                    </Button>
                     <div className={cn(
-                      "h-14 w-14 rounded-full flex items-center justify-center",
+                      "h-10 w-10 sm:h-14 sm:w-14 rounded-full flex items-center justify-center shrink-0",
                       getTypeConfig(selectedSms.message_type).bg
                     )}>
                       {(() => {
                         const Icon = getTypeConfig(selectedSms.message_type).icon
-                        return <Icon className={cn("h-7 w-7", getTypeConfig(selectedSms.message_type).color)} />
+                        return <Icon className={cn("h-5 w-5 sm:h-7 sm:w-7", getTypeConfig(selectedSms.message_type).color)} />
                       })()}
                     </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h2 className="text-xl font-bold text-slate-900">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h2 className="text-lg sm:text-xl font-bold text-slate-900 truncate">
                           {selectedSms.customer 
                             ? `${selectedSms.customer.first_name} ${selectedSms.customer.last_name}`
                             : 'Unknown Recipient'
@@ -305,69 +322,76 @@ export default function SmsLogs() {
                         </h2>
                         {getStatusBadge(selectedSms.status)}
                       </div>
-                      <div className="flex items-center gap-3 mt-1 text-sm text-slate-500">
+                      <div className="flex items-center gap-2 sm:gap-3 mt-1 text-xs sm:text-sm text-slate-500 flex-wrap">
                         <span className="flex items-center gap-1">
-                          <Phone className="h-3.5 w-3.5" />
+                          <Phone className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                           <PhoneNumber phone={selectedSms.to_phone} showRevealButton={false} />
                         </span>
-                        <span>•</span>
-                        <span>{selectedSms.created_at ? format(new Date(selectedSms.created_at), 'MMM d, yyyy \'at\' h:mm a') : '-'}</span>
+                        <span className="hidden sm:inline">•</span>
+                        <span className="hidden sm:inline">{selectedSms.created_at ? format(new Date(selectedSms.created_at), 'MMM d, yyyy \'at\' h:mm a') : '-'}</span>
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 sm:gap-2 shrink-0">
                     {selectedSms.customer && (
-                      <Button variant="outline" size="sm" asChild>
+                      <Button variant="outline" size="sm" asChild className="hidden sm:flex">
                         <Link to={`/customers/${selectedSms.customer.id}`}>
                           <User className="h-4 w-4 mr-1" />
                           View Customer
                         </Link>
                       </Button>
                     )}
-                    <Button variant="ghost" size="icon" onClick={() => setSelectedSmsId(null)}>
+                    {selectedSms.customer && (
+                      <Button variant="ghost" size="icon" asChild className="sm:hidden">
+                        <Link to={`/customers/${selectedSms.customer.id}`}>
+                          <User className="h-4 w-4" />
+                        </Link>
+                      </Button>
+                    )}
+                    <Button variant="ghost" size="icon" onClick={() => setSelectedSmsId(null)} className="hidden lg:flex">
                       <X className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>
 
                 {/* Quick Stats */}
-                <div className="grid grid-cols-4 gap-4 mt-6">
-                  <div className="bg-white rounded-lg p-3 border border-slate-200 shadow-sm">
-                    <div className="flex items-center gap-2 text-slate-500 text-xs mb-1">
-                      <MessageCircle className="h-3.5 w-3.5" />
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 mt-4 sm:mt-6">
+                  <div className="bg-white rounded-lg p-2 sm:p-3 border border-slate-200 shadow-sm">
+                    <div className="flex items-center gap-1.5 sm:gap-2 text-slate-500 text-[10px] sm:text-xs mb-0.5 sm:mb-1">
+                      <MessageCircle className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                       Type
                     </div>
-                    <p className="text-lg font-bold text-slate-900 capitalize">
+                    <p className="text-base sm:text-lg font-bold text-slate-900 capitalize truncate">
                       {getTypeConfig(selectedSms.message_type).label}
                     </p>
                   </div>
-                  <div className="bg-white rounded-lg p-3 border border-slate-200 shadow-sm">
-                    <div className="flex items-center gap-2 text-slate-500 text-xs mb-1">
-                      <Send className="h-3.5 w-3.5" />
+                  <div className="bg-white rounded-lg p-2 sm:p-3 border border-slate-200 shadow-sm">
+                    <div className="flex items-center gap-1.5 sm:gap-2 text-slate-500 text-[10px] sm:text-xs mb-0.5 sm:mb-1">
+                      <Send className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                       Status
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1 sm:gap-2">
                       {getStatusIcon(selectedSms.status)}
-                      <span className="text-lg font-bold text-slate-900 capitalize">
+                      <span className="text-base sm:text-lg font-bold text-slate-900 capitalize truncate">
                         {selectedSms.status === 'sent' ? 'Delivered' : selectedSms.status || 'Unknown'}
                       </span>
                     </div>
                   </div>
-                  <div className="bg-white rounded-lg p-3 border border-slate-200 shadow-sm">
-                    <div className="flex items-center gap-2 text-slate-500 text-xs mb-1">
-                      <Clock className="h-3.5 w-3.5" />
+                  <div className="bg-white rounded-lg p-2 sm:p-3 border border-slate-200 shadow-sm">
+                    <div className="flex items-center gap-1.5 sm:gap-2 text-slate-500 text-[10px] sm:text-xs mb-0.5 sm:mb-1">
+                      <Clock className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                       Sent
                     </div>
-                    <p className="text-lg font-bold text-slate-900">
+                    <p className="text-base sm:text-lg font-bold text-slate-900 truncate">
                       {selectedSms.created_at ? formatDistanceToNow(new Date(selectedSms.created_at), { addSuffix: true }) : '-'}
                     </p>
                   </div>
-                  <div className="bg-white rounded-lg p-3 border border-slate-200 shadow-sm">
-                    <div className="flex items-center gap-2 text-slate-500 text-xs mb-1">
-                      <ArrowUpFromLine className="h-3.5 w-3.5" />
+                  <div className="bg-white rounded-lg p-2 sm:p-3 border border-slate-200 shadow-sm">
+                    <div className="flex items-center gap-1.5 sm:gap-2 text-slate-500 text-[10px] sm:text-xs mb-0.5 sm:mb-1">
+                      <ArrowUpFromLine className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                       Direction
                     </div>
-                    <p className="text-lg font-bold text-slate-900">
+                    <p className="text-base sm:text-lg font-bold text-slate-900">
                       {selectedSms.message_type === 'reply' ? 'Inbound' : 'Outbound'}
                     </p>
                   </div>
@@ -375,7 +399,7 @@ export default function SmsLogs() {
               </div>
 
               {/* Message Content */}
-              <ScrollArea className="flex-1 p-6">
+              <ScrollArea className="flex-1 p-4 sm:p-6">
                 <div className="space-y-6">
                   {/* Message Bubble */}
                   <div>
