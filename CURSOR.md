@@ -2,6 +2,41 @@
 
 > **Use this file as context when working with Cursor AI.** Add it to your chat or reference it with @CURSOR.md
 
+---
+
+## ⚠️ CRITICAL: Deployment Setup
+
+**This project has TWO Vercel projects deploying from ONE GitHub repo:**
+
+| What | Domain | Vercel Project | Deploys |
+|------|--------|----------------|---------|
+| **Frontend** | `premierauto.ai` | [autoai-dash](https://vercel.com/petes-projects-268bdd55/autoai-dash) | `/frontend` folder |
+| **Backend** | `www.alignedai.dev` | [autoai](https://vercel.com/petes-projects-268bdd55/autoai) | `/backend` folder |
+
+**GitHub Repo:** https://github.com/peterthehammer1/autoai
+
+### Auto-Deploy
+Both projects auto-deploy when you push to `main`. Just `git push` and wait ~1 min.
+
+### Manual Deploy (if needed)
+```bash
+# Deploy Frontend (from project root)
+cd /Users/petercross/Downloads/auto-service-booking
+vercel link --project autoai-dash --yes && vercel deploy --prod --yes
+
+# Deploy Backend (from project root)  
+cd /Users/petercross/Downloads/auto-service-booking
+vercel link --project autoai --yes && vercel deploy --prod --yes
+```
+
+### Update Retell AI Agent
+```bash
+cd /Users/petercross/Downloads/auto-service-booking/backend
+source .env && node scripts/retell-update-agent.js
+```
+
+---
+
 ## Project Overview
 
 AI-powered voice booking system for automotive service centers. Customers call, speak with "Alex" (Retell AI agent), and book appointments. Dashboard for staff to manage everything.
