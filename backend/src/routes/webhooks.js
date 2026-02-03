@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { Retell } from 'retell-sdk';
 import { supabase, normalizePhone } from '../config/database.js';
 import { toZonedTime, format as formatTz } from 'date-fns-tz';
-import { format, addDays } from 'date-fns';
+import { format, addDays, parseISO } from 'date-fns';
 
 const router = Router();
 
@@ -229,6 +229,72 @@ router.post('/voice/inbound', async (req, res) => {
     // Get current date info for AI context
     const dateInfo = getCurrentDateInfo();
     
+    // Get upcoming appointments for this customer
+    const today = format(new Date(), 'yyyy-MM-dd');
+    const { data: upcomingAppointments } = await supabase
+      .from('appointments')
+      .select(`
+        id,
+        scheduled_date,
+        scheduled_time,
+        status,
+        appointment_services (service_id, service_name)
+      `)
+      .eq('customer_id', customer.id)
+      .gte('scheduled_date', today)
+      .not('status', 'in', '("cancelled","completed","no_show")')
+      .order('scheduled_date')
+      .order('scheduled_time')
+      .limit(3);
+    
+    // Get recent completed appointments (service history) - last 6 months
+    const sixMonthsAgo = format(addDays(new Date(), -180), 'yyyy-MM-dd');
+    const { data: recentAppointments } = await supabase
+      .from('appointments')
+      .select(`
+        id,
+        scheduled_date,
+        appointment_services (service_id, service_name)
+      `)
+      .eq('customer_id', customer.id)
+      .eq('status', 'completed')
+      .gte('scheduled_date', sixMonthsAgo)
+      .order('scheduled_date', { ascending: false })
+      .limit(5);
+    
+    // Build upcoming appointments summary string for dynamic variable
+    let upcomingApptsSummary = '';
+    if (upcomingAppointments && upcomingAppointments.length > 0) {
+      const apptStrings = upcomingAppointments.map(apt => {
+        const date = parseISO(apt.scheduled_date);
+        const services = apt.appointment_services.map(s => s.service_name).join(', ');
+        const dayName = format(date, 'EEEE');
+        const monthDay = format(date, 'MMMM d');
+        const time = apt.scheduled_time.slice(0, 5);
+        const [h, m] = time.split(':').map(Number);
+        const period = h >= 12 ? 'PM' : 'AM';
+        const hour12 = h % 12 || 12;
+        const timeFormatted = `${hour12}:${String(m).padStart(2, '0')} ${period}`;
+        return `${services} on ${dayName}, ${monthDay} at ${timeFormatted}`;
+      });
+      upcomingApptsSummary = apptStrings.join('; ');
+    }
+    
+    // Build service history summary - when was each service last done
+    let serviceHistorySummary = '';
+    if (recentAppointments && recentAppointments.length > 0) {
+      const serviceMap = {};
+      recentAppointments.forEach(apt => {
+        apt.appointment_services?.forEach(svc => {
+          if (!serviceMap[svc.service_name]) {
+            const daysAgo = Math.floor((new Date() - parseISO(apt.scheduled_date)) / (1000 * 60 * 60 * 24));
+            serviceMap[svc.service_name] = `${svc.service_name} ${daysAgo} days ago`;
+          }
+        });
+      });
+      serviceHistorySummary = Object.values(serviceMap).join('; ');
+    }
+    
     // Return customer info as dynamic variables with professional greeting
     return res.json({
       call_inbound: {
@@ -249,6 +315,10 @@ router.post('/voice/inbound', async (req, res) => {
           total_visits: String(customer.total_visits || 0),
           vehicle_info: vehicleInfo,
           vehicle_id: vehicleId,
+          // NEW: Upcoming appointments (e.g., "Oil Change on Friday, February 6 at 7:30 AM")
+          upcoming_appointments: upcomingApptsSummary,
+          // NEW: Service history (e.g., "Oil Change 25 days ago; Tire Rotation 90 days ago")
+          service_history: serviceHistorySummary,
           ...dateInfo
         }
       }
