@@ -9,6 +9,7 @@ const router = Router();
 /**
  * POST /api/voice/lookup_customer
  * Nucleus AI function: Look up customer by phone
+ * Returns: customer info, vehicles, upcoming appointments, and service history
  */
 router.post('/lookup_customer', async (req, res, next) => {
   try {
@@ -37,6 +38,7 @@ router.post('/lookup_customer', async (req, res, next) => {
         last_name,
         email,
         total_visits,
+        last_visit_date,
         vehicles (
           id,
           year,
@@ -74,6 +76,99 @@ router.post('/lookup_customer', async (req, res, next) => {
       }
     }
 
+    // Get upcoming appointments
+    const today = format(new Date(), 'yyyy-MM-dd');
+    const { data: upcomingAppointments } = await supabase
+      .from('appointments')
+      .select(`
+        id,
+        scheduled_date,
+        scheduled_time,
+        status,
+        appointment_services (service_id, service_name)
+      `)
+      .eq('customer_id', customer.id)
+      .gte('scheduled_date', today)
+      .not('status', 'in', '("cancelled","completed","no_show")')
+      .order('scheduled_date')
+      .order('scheduled_time')
+      .limit(5);
+
+    // Get recent completed appointments (service history) - last 6 months
+    const sixMonthsAgo = format(addDays(new Date(), -180), 'yyyy-MM-dd');
+    const { data: recentAppointments } = await supabase
+      .from('appointments')
+      .select(`
+        id,
+        scheduled_date,
+        scheduled_time,
+        status,
+        appointment_services (service_id, service_name)
+      `)
+      .eq('customer_id', customer.id)
+      .eq('status', 'completed')
+      .gte('scheduled_date', sixMonthsAgo)
+      .order('scheduled_date', { ascending: false })
+      .limit(10);
+
+    // Format upcoming appointments for voice agent
+    const upcomingFormatted = (upcomingAppointments || []).map(apt => {
+      const date = parseISO(apt.scheduled_date);
+      const services = apt.appointment_services.map(s => s.service_name).join(', ');
+      const serviceIds = apt.appointment_services.map(s => s.service_id);
+      return {
+        id: apt.id,
+        date: apt.scheduled_date,
+        time: apt.scheduled_time,
+        formatted: `${format(date, 'EEEE, MMMM d')} at ${formatTime12Hour(apt.scheduled_time)}`,
+        services,
+        service_ids: serviceIds
+      };
+    });
+
+    // Build service history summary - when was each service last done
+    const serviceHistory = {};
+    (recentAppointments || []).forEach(apt => {
+      apt.appointment_services.forEach(svc => {
+        if (!serviceHistory[svc.service_name]) {
+          serviceHistory[svc.service_name] = {
+            service_name: svc.service_name,
+            service_id: svc.service_id,
+            last_date: apt.scheduled_date,
+            days_ago: Math.floor((new Date() - parseISO(apt.scheduled_date)) / (1000 * 60 * 60 * 24))
+          };
+        }
+      });
+    });
+
+    // Build intelligence summary for the agent
+    let intelligenceSummary = [];
+    
+    // Check for upcoming appointments
+    if (upcomingFormatted.length > 0) {
+      const apt = upcomingFormatted[0];
+      intelligenceSummary.push(`Has upcoming appointment: ${apt.services} on ${apt.formatted}`);
+    }
+
+    // Check recent service history for common services
+    const oilChangeServices = Object.values(serviceHistory).filter(s => 
+      s.service_name.toLowerCase().includes('oil change')
+    );
+    if (oilChangeServices.length > 0) {
+      const lastOil = oilChangeServices[0];
+      if (lastOil.days_ago < 60) {
+        intelligenceSummary.push(`Had oil change ${lastOil.days_ago} days ago (${lastOil.last_date}) - may be too soon for another`);
+      }
+    }
+
+    // Last visit info
+    if (customer.last_visit_date) {
+      const daysSinceVisit = Math.floor((new Date() - new Date(customer.last_visit_date)) / (1000 * 60 * 60 * 24));
+      if (daysSinceVisit > 180) {
+        intelligenceSummary.push(`Last visit was ${daysSinceVisit} days ago - welcome them back!`);
+      }
+    }
+
     res.json({
       success: true,
       found: true,
@@ -84,7 +179,8 @@ router.post('/lookup_customer', async (req, res, next) => {
         full_name: [customer.first_name, customer.last_name].filter(Boolean).join(' ') || 'Customer',
         email: customer.email,
         total_visits: customer.total_visits,
-        is_returning: customer.total_visits > 0
+        is_returning: customer.total_visits > 0,
+        last_visit_date: customer.last_visit_date
       },
       primary_vehicle: primaryVehicle ? {
         id: primaryVehicle.id,
@@ -101,6 +197,12 @@ router.post('/lookup_customer', async (req, res, next) => {
         make: v.make,
         model: v.model
       })) || [],
+      // NEW: Upcoming appointments
+      upcoming_appointments: upcomingFormatted,
+      // NEW: Service history (last time each service was done)
+      service_history: Object.values(serviceHistory),
+      // NEW: Intelligence summary for agent
+      intelligence: intelligenceSummary,
       message: customer.first_name 
         ? (vehicleDescription 
             ? `Welcome back, ${customer.first_name}! I see you have a ${vehicleDescription} on file.`
