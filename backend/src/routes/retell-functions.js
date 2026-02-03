@@ -2105,11 +2105,11 @@ router.post('/request_callback', async (req, res, next) => {
       
       const message = `📞 CALLBACK REQUEST\n\nName: ${customer_name || 'Customer'}\nPhone: ${formatPhone(customer_phone)}\nReason: ${reason}${preferred_time ? `\nPreferred time: ${preferred_time}` : ''}\n\nPlease call back soon.`;
       
-      // Send to service advisor
+      // Send to service advisor (Pete)
       await client.messages.create({
         body: message,
         from: process.env.TWILIO_PHONE_NUMBER,
-        to: process.env.SERVICE_ADVISOR_PHONE || '+16473711990'
+        to: process.env.SERVICE_ADVISOR_PHONE || '+15199918959'
       });
     } catch (smsError) {
       console.error('Failed to send callback notification SMS:', smsError);
