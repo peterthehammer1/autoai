@@ -437,21 +437,21 @@ export default function CallLogs() {
               </div>
 
               {/* Tabbed Content */}
-              <Tabs defaultValue="transcript" className="flex-1 flex flex-col min-h-0">
+              <Tabs defaultValue="summary" className="flex-1 flex flex-col min-h-0">
                 <TabsList className="w-full justify-start rounded-none border-b border-slate-200 bg-slate-50 p-0 h-auto">
-                  <TabsTrigger 
-                    value="transcript" 
-                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm"
-                  >
-                    <MessageSquare className="h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-1.5" />
-                    <span className="hidden sm:inline">Transcript</span>
-                  </TabsTrigger>
                   <TabsTrigger 
                     value="summary" 
                     className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm"
                   >
                     <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-1.5" />
                     <span className="hidden sm:inline">AI Summary</span>
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="transcript" 
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm"
+                  >
+                    <MessageSquare className="h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-1.5" />
+                    <span className="hidden sm:inline">Transcript</span>
                   </TabsTrigger>
                   {selectedCall.recording_url && (
                     <TabsTrigger 
@@ -465,58 +465,7 @@ export default function CallLogs() {
                 </TabsList>
 
                 <ScrollArea className="flex-1">
-                  {/* Transcript Tab */}
-                  <TabsContent value="transcript" className="m-0 p-4 sm:p-6">
-                    {selectedCall.transcript ? (
-                      <div className="space-y-4">
-                        {parseTranscript(selectedCall.transcript).map((msg, idx) => (
-                          <div 
-                            key={idx} 
-                            className={cn('flex', msg.isAgent ? 'justify-start' : 'justify-end')}
-                          >
-                            <div className={cn('max-w-[75%]', msg.isAgent ? 'order-2' : 'order-1')}>
-                              <div className={cn(
-                                'flex items-center gap-2 mb-1',
-                                msg.isAgent ? 'justify-start' : 'justify-end'
-                              )}>
-                                <span className={cn(
-                                  'text-xs font-medium',
-                                  msg.isAgent ? 'text-violet-600' : 'text-blue-600'
-                                )}>
-                                  {msg.speaker}
-                                </span>
-                              </div>
-                              <div className={cn(
-                                'rounded-2xl px-4 py-3 text-sm',
-                                msg.isAgent 
-                                  ? 'bg-gradient-to-br from-violet-50 to-violet-100 text-slate-800 rounded-tl-sm border border-violet-200' 
-                                  : 'bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-tr-sm'
-                              )}>
-                                {msg.text}
-                              </div>
-                            </div>
-                            <div className={cn(
-                              'w-8 h-8 rounded-full flex items-center justify-center shrink-0 mx-2',
-                              msg.isAgent ? 'bg-violet-100 order-1' : 'bg-blue-100 order-2'
-                            )}>
-                              {msg.isAgent ? (
-                                <Mic className="h-4 w-4 text-violet-600" />
-                              ) : (
-                                <User className="h-4 w-4 text-blue-600" />
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="text-center py-12">
-                        <FileText className="h-12 w-12 text-slate-300 mx-auto mb-3" />
-                        <p className="text-slate-500">No transcript available</p>
-                      </div>
-                    )}
-                  </TabsContent>
-
-                  {/* Summary Tab */}
+                  {/* AI Summary Tab */}
                   <TabsContent value="summary" className="m-0 p-4 sm:p-6">
                     {selectedCall.transcript_summary ? (
                       <div className="space-y-6">
@@ -578,6 +527,57 @@ export default function CallLogs() {
                       <div className="text-center py-12">
                         <Sparkles className="h-12 w-12 text-slate-300 mx-auto mb-3" />
                         <p className="text-slate-500">No summary available</p>
+                      </div>
+                    )}
+                  </TabsContent>
+
+                  {/* Transcript Tab */}
+                  <TabsContent value="transcript" className="m-0 p-4 sm:p-6">
+                    {selectedCall.transcript ? (
+                      <div className="space-y-4">
+                        {parseTranscript(selectedCall.transcript).map((msg, idx) => (
+                          <div 
+                            key={idx} 
+                            className={cn('flex', msg.isAgent ? 'justify-start' : 'justify-end')}
+                          >
+                            <div className={cn('max-w-[75%]', msg.isAgent ? 'order-2' : 'order-1')}>
+                              <div className={cn(
+                                'flex items-center gap-2 mb-1',
+                                msg.isAgent ? 'justify-start' : 'justify-end'
+                              )}>
+                                <span className={cn(
+                                  'text-xs font-medium',
+                                  msg.isAgent ? 'text-violet-600' : 'text-blue-600'
+                                )}>
+                                  {msg.speaker}
+                                </span>
+                              </div>
+                              <div className={cn(
+                                'rounded-2xl px-4 py-3 text-sm',
+                                msg.isAgent 
+                                  ? 'bg-gradient-to-br from-violet-50 to-violet-100 text-slate-800 rounded-tl-sm border border-violet-200' 
+                                  : 'bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-tr-sm'
+                              )}>
+                                {msg.text}
+                              </div>
+                            </div>
+                            <div className={cn(
+                              'w-8 h-8 rounded-full flex items-center justify-center shrink-0 mx-2',
+                              msg.isAgent ? 'bg-violet-100 order-1' : 'bg-blue-100 order-2'
+                            )}>
+                              {msg.isAgent ? (
+                                <Mic className="h-4 w-4 text-violet-600" />
+                              ) : (
+                                <User className="h-4 w-4 text-blue-600" />
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-12">
+                        <FileText className="h-12 w-12 text-slate-300 mx-auto mb-3" />
+                        <p className="text-slate-500">No transcript available</p>
                       </div>
                     )}
                   </TabsContent>
