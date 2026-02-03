@@ -53,13 +53,17 @@ export default function SmsLogs() {
     queryFn: () => smsLogs.list({ limit: 200, message_type: typeFilter !== 'all' ? typeFilter : undefined }),
   })
 
-  // Filter logs by search term
+  // Filter logs by search term and exclude failed status for demo
   const filteredLogs = useMemo(() => {
     if (!logsData?.logs) return []
-    if (!searchTerm) return logsData.logs
+    
+    // Filter out failed messages for demo
+    let logs = logsData.logs.filter(sms => sms.status !== 'failed')
+    
+    if (!searchTerm) return logs
     
     const term = searchTerm.toLowerCase()
-    return logsData.logs.filter(sms => 
+    return logs.filter(sms => 
       sms.to_phone?.includes(term) ||
       sms.customer?.first_name?.toLowerCase().includes(term) ||
       sms.customer?.last_name?.toLowerCase().includes(term) ||
@@ -131,39 +135,29 @@ export default function SmsLogs() {
   const successRate = stats?.total ? Math.round(((stats.by_status?.sent || 0) + (stats.by_status?.delivered || 0)) / stats.total * 100) : 0
 
   return (
-    <div className="h-[calc(100vh-6rem)] flex flex-col animate-fade-in">
-      {/* Top Stats Bar */}
-      <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 rounded-xl p-3 sm:p-4 mb-4 text-white">
+    <div className="h-[calc(100vh-6rem)] flex flex-col">
+      {/* Page Header - Professional */}
+      <div className="bg-white border-b border-slate-200 px-4 py-3 mb-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="p-1.5 sm:p-2 bg-white/10 rounded-lg backdrop-blur">
-              <Smartphone className="h-4 w-4 sm:h-5 sm:w-5" />
-            </div>
-            <div>
-              <h1 className="text-base sm:text-lg font-semibold">SMS Communications</h1>
-              <p className="text-xs sm:text-sm text-slate-400 hidden sm:block">Automated Messaging</p>
-            </div>
+          <div>
+            <h1 className="text-lg font-semibold text-slate-800">SMS Messages</h1>
+            <p className="text-sm text-slate-500">{stats?.total || 0} messages this week</p>
           </div>
           
-          <div className="flex items-center gap-3 sm:gap-6">
-            <div className="text-center">
-              <p className="text-lg sm:text-2xl font-bold">{stats?.total || 0}</p>
-              <p className="text-[10px] sm:text-xs text-slate-400">Sent</p>
+          <div className="flex items-center gap-6">
+            <div className="text-right hidden sm:block">
+              <p className="text-sm text-slate-500">Confirmations</p>
+              <p className="text-lg font-semibold text-slate-800">{stats?.by_type?.confirmation || 0}</p>
             </div>
-            <div className="h-6 sm:h-8 w-px bg-white/20 hidden sm:block" />
-            <div className="text-center hidden sm:block">
-              <p className="text-2xl font-bold">{stats?.by_type?.confirmation || 0}</p>
-              <p className="text-xs text-slate-400">Confirmations</p>
+            <div className="h-8 w-px bg-slate-200 hidden sm:block" />
+            <div className="text-right hidden sm:block">
+              <p className="text-sm text-slate-500">Reminders</p>
+              <p className="text-lg font-semibold text-slate-800">{stats?.by_type?.reminder || 0}</p>
             </div>
-            <div className="h-8 w-px bg-white/20 hidden lg:block" />
-            <div className="text-center hidden lg:block">
-              <p className="text-2xl font-bold">{stats?.by_type?.reminder || 0}</p>
-              <p className="text-xs text-slate-400">Reminders</p>
-            </div>
-            <div className="h-6 sm:h-8 w-px bg-white/20" />
-            <div className="text-center">
-              <p className="text-lg sm:text-2xl font-bold text-emerald-400">{successRate}%</p>
-              <p className="text-[10px] sm:text-xs text-slate-400">Success</p>
+            <div className="h-8 w-px bg-slate-200 hidden sm:block" />
+            <div className="text-right">
+              <p className="text-sm text-slate-500">Success Rate</p>
+              <p className="text-lg font-semibold text-slate-800">{successRate}%</p>
             </div>
           </div>
         </div>
@@ -173,24 +167,24 @@ export default function SmsLogs() {
       <div className="flex-1 flex flex-col lg:flex-row gap-4 min-h-0">
         {/* Left Panel - SMS List */}
         <div className={cn(
-          "flex flex-col bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden",
-          "w-full lg:w-96",
+          "flex flex-col bg-white border border-slate-200 overflow-hidden",
+          "w-full lg:w-80",
           selectedSmsId ? "hidden lg:flex" : "flex"
         )}>
           {/* Search & Filter Header */}
-          <div className="p-3 border-b border-slate-200 bg-slate-50 space-y-3">
+          <div className="p-3 border-b border-slate-200 space-y-2">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <Input
                 placeholder="Search messages..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9 bg-white h-9 text-sm"
+                className="pl-8 h-8 text-sm border-slate-300"
               />
             </div>
             <div className="flex items-center gap-2">
               <Select value={typeFilter} onValueChange={handleFilterChange}>
-                <SelectTrigger className="flex-1 bg-white h-8 text-xs">
+                <SelectTrigger className="flex-1 h-8 text-xs border-slate-300">
                   <SelectValue placeholder="All Types" />
                 </SelectTrigger>
                 <SelectContent>
@@ -201,9 +195,6 @@ export default function SmsLogs() {
                   <SelectItem value="reply">Replies</SelectItem>
                 </SelectContent>
               </Select>
-              <span className="text-xs text-slate-500 whitespace-nowrap">
-                {filteredLogs.length} messages
-              </span>
             </div>
           </div>
 
@@ -220,49 +211,41 @@ export default function SmsLogs() {
                 <p className="text-sm text-slate-500">No messages found</p>
               </div>
             ) : (
-              <div className="divide-y divide-slate-100">
+              <div className="divide-y divide-slate-200">
                 {filteredLogs.map((sms) => {
                   const typeConfig = getTypeConfig(sms.message_type)
-                  const TypeIcon = typeConfig.icon
                   return (
                     <button
                       key={sms.id}
                       onClick={() => setSelectedSmsId(sms.id)}
                       className={cn(
                         "w-full p-3 text-left hover:bg-slate-50 transition-colors",
-                        selectedSmsId === sms.id && "bg-blue-50 border-l-2 border-l-blue-500"
+                        selectedSmsId === sms.id && "bg-slate-100 border-l-2 border-l-slate-600"
                       )}
                     >
                       <div className="flex items-start gap-3">
                         {/* Type indicator */}
-                        <div className={cn(
-                          "w-10 h-10 rounded-full flex items-center justify-center shrink-0",
-                          typeConfig.bg
-                        )}>
-                          <TypeIcon className={cn("h-5 w-5", typeConfig.color)} />
+                        <div className="w-8 h-8 rounded bg-slate-100 flex items-center justify-center shrink-0">
+                          <MessageSquare className="h-4 w-4 text-slate-500" />
                         </div>
                         
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between gap-2">
-                            <p className="font-medium text-slate-900 truncate">
+                            <p className="text-sm font-medium text-slate-800 truncate">
                               {sms.customer 
                                 ? `${sms.customer.first_name} ${sms.customer.last_name}`
                                 : <PhoneNumber phone={sms.to_phone} email={sms.customer?.email} />
                               }
                             </p>
-                            {getStatusIcon(sms.status)}
+                            <span className="text-xs text-slate-500 capitalize">{typeConfig.label}</span>
                           </div>
-                          <div className="flex items-center gap-2 mt-1">
+                          <div className="flex items-center gap-2 mt-0.5">
                             <span className="text-xs text-slate-500">
                               {sms.created_at ? format(new Date(sms.created_at), 'MMM d, h:mm a') : '-'}
                             </span>
-                            <Badge className={cn("text-[10px] px-1.5 py-0", typeConfig.bg, typeConfig.color)}>
-                              {typeConfig.label}
-                            </Badge>
+                            <span className="text-xs text-slate-400">•</span>
+                            <span className="text-xs text-slate-500 capitalize">{sms.status}</span>
                           </div>
-                          <p className="text-xs text-slate-400 truncate mt-1">
-                            {sms.message_body?.split('\n')[0] || 'No content'}
-                          </p>
                         </div>
                       </div>
                     </button>
@@ -279,21 +262,19 @@ export default function SmsLogs() {
           !selectedSmsId ? "hidden lg:flex" : "flex"
         )}>
           {!selectedSmsId ? (
-            <div className="flex-1 flex items-center justify-center bg-white rounded-xl border border-slate-200">
+            <div className="flex-1 flex items-center justify-center bg-white border border-slate-200">
               <div className="text-center">
-                <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <MessageSquare className="h-10 w-10 text-slate-300" />
-                </div>
-                <h3 className="text-lg font-semibold text-slate-900 mb-1">Select a Message</h3>
-                <p className="text-sm text-slate-500">Choose a message from the list to view details</p>
+                <MessageSquare className="h-8 w-8 text-slate-300 mx-auto mb-3" />
+                <h3 className="text-sm font-medium text-slate-700 mb-1">Select a Message</h3>
+                <p className="text-xs text-slate-500">Choose a message from the list to view details</p>
               </div>
             </div>
           ) : selectedSms ? (
-            <div className="flex-1 flex flex-col bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+            <div className="flex-1 flex flex-col bg-white border border-slate-200 overflow-hidden">
               {/* SMS Header */}
-              <div className="bg-gradient-to-r from-slate-50 to-white p-4 sm:p-6 border-b border-slate-200">
+              <div className="bg-slate-50 px-4 py-3 border-b border-slate-200">
                 <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                  <div className="flex items-center gap-3 min-w-0">
                     {/* Mobile Back Button */}
                     <Button 
                       variant="ghost" 
@@ -303,24 +284,18 @@ export default function SmsLogs() {
                     >
                       <ChevronLeft className="h-5 w-5" />
                     </Button>
-                    <div className={cn(
-                      "h-10 w-10 sm:h-14 sm:w-14 rounded-full flex items-center justify-center shrink-0",
-                      getTypeConfig(selectedSms.message_type).bg
-                    )}>
-                      {(() => {
-                        const Icon = getTypeConfig(selectedSms.message_type).icon
-                        return <Icon className={cn("h-5 w-5 sm:h-7 sm:w-7", getTypeConfig(selectedSms.message_type).color)} />
-                      })()}
+                    <div className="h-10 w-10 rounded bg-slate-200 flex items-center justify-center shrink-0">
+                      <MessageSquare className="h-5 w-5 text-slate-500" />
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h2 className="text-lg sm:text-xl font-bold text-slate-900 truncate">
+                        <h2 className="text-base font-semibold text-slate-800 truncate">
                           {selectedSms.customer 
                             ? `${selectedSms.customer.first_name} ${selectedSms.customer.last_name}`
                             : 'Unknown Recipient'
                           }
                         </h2>
-                        {getStatusBadge(selectedSms.status)}
+                        <span className="text-xs px-2 py-0.5 bg-slate-200 text-slate-600 rounded capitalize">{selectedSms.status}</span>
                       </div>
                       <div className="flex items-center gap-2 sm:gap-3 mt-1 text-xs sm:text-sm text-slate-500 flex-wrap">
                         <span className="flex items-center gap-1">

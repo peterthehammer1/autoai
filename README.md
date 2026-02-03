@@ -244,18 +244,37 @@ The seed script creates:
 
 ## Deployment
 
-### Backend (Railway)
+### ⚠️ IMPORTANT: Vercel Project Setup
 
-1. Push to GitHub
-2. Connect repo to Railway
-3. Add environment variables
-4. Deploy
+This project uses **TWO separate Vercel projects** from the same GitHub repo:
 
-### Backend (Vercel)
+| Project | Domain | Deploys From | Vercel Project |
+|---------|--------|--------------|----------------|
+| **Frontend** | `premierauto.ai` | `/frontend` folder | [autoai-dash](https://vercel.com/petes-projects-268bdd55/autoai-dash) |
+| **Backend** | `www.alignedai.dev` | `/backend` folder | [autoai](https://vercel.com/petes-projects-268bdd55/autoai) |
 
-1. Install Vercel CLI: `npm i -g vercel`
-2. Run: `vercel`
-3. Add environment variables in dashboard
+### How to Deploy
+
+**Frontend (Dashboard):**
+```bash
+cd /Users/petercross/Downloads/auto-service-booking
+vercel link --project autoai-dash  # Only needed once
+vercel deploy --prod --yes
+```
+
+**Backend (API):**
+```bash
+cd /Users/petercross/Downloads/auto-service-booking
+vercel link --project autoai       # Only needed once
+vercel deploy --prod --yes
+```
+
+> **⚠️ DO NOT** run `vercel deploy` without first linking to the correct project!
+> Running `vercel` in an unlinked folder will create a NEW project.
+
+### Auto-Deploy via GitHub
+
+Both projects are connected to the `peterthehammer1/autoai` GitHub repo and auto-deploy on push to `main`.
 
 ### Supabase
 

@@ -1826,6 +1826,72 @@ router.post('/submit_tow_request', async (req, res, next) => {
   }
 });
 
+/**
+ * POST /api/voice/submit_lead
+ * Easter egg: Capture lead when someone asks about the AI platform
+ * Sends SMS to Pete with the prospect's details
+ */
+router.post('/submit_lead', async (req, res, next) => {
+  try {
+    console.log('submit_lead received:', JSON.stringify(req.body));
+    
+    const customer_name = req.body.customer_name || req.body.args?.customer_name || 'Unknown';
+    const customer_phone = req.body.customer_phone || req.body.args?.customer_phone;
+    const interest = req.body.interest || req.body.args?.interest || 'AI platform inquiry';
+    const business_name = req.body.business_name || req.body.args?.business_name;
+    
+    const phoneDisplay = customer_phone ? formatPhone(customer_phone) : 'No phone';
+    const businessInfo = business_name ? `\nBusiness: ${business_name}` : '';
+    
+    // Send SMS to Pete
+    const twilioClient = (await import('twilio')).default;
+    const client = twilioClient(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+    
+    const message = `🚀 NUCLEUS AI LEAD\n\nName: ${customer_name}\nPhone: ${phoneDisplay}${businessInfo}\nInterest: ${interest}\n\nFrom Premier Auto demo call`;
+    
+    await client.messages.create({
+      body: message,
+      from: process.env.TWILIO_PHONE_NUMBER,
+      to: '+15199918959' // Pete's number
+    });
+    
+    // Also send email to pete@nucleus.com
+    try {
+      const sgMail = (await import('@sendgrid/mail')).default;
+      sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+      
+      await sgMail.send({
+        to: 'pete@nucleus.com',
+        from: process.env.FROM_EMAIL || 'notifications@alignedai.dev',
+        subject: `🚀 New AI Platform Lead: ${customer_name}`,
+        text: `New lead from Premier Auto demo:\n\nName: ${customer_name}\nPhone: ${phoneDisplay}${businessInfo}\nInterest: ${interest}\n\nThis person called the Premier Auto demo line and expressed interest in the AI platform.`,
+        html: `
+          <h2>🚀 New AI Platform Lead</h2>
+          <p><strong>Name:</strong> ${customer_name}</p>
+          <p><strong>Phone:</strong> ${phoneDisplay}</p>
+          ${business_name ? `<p><strong>Business:</strong> ${business_name}</p>` : ''}
+          <p><strong>Interest:</strong> ${interest}</p>
+          <hr>
+          <p><em>This person called the Premier Auto demo line and expressed interest in the AI platform.</em></p>
+        `
+      });
+    } catch (emailErr) {
+      console.log('Email send failed (non-critical):', emailErr.message);
+    }
+    
+    return res.json({
+      success: true,
+      message: `I've passed your information along to our team at Nucleus AI. Someone will reach out to you shortly to discuss how we can help your business. Is there anything else I can help you with today?`
+    });
+  } catch (error) {
+    console.error('submit_lead error:', error);
+    res.json({
+      success: true, // Still return success so Amber doesn't retry
+      message: `I'll make sure someone from our team reaches out to you. Is there anything else I can help you with?`
+    });
+  }
+});
+
 // Helper functions
 function addMinutesToTime(timeStr, minutes) {
   const [hours, mins] = timeStr.split(':').map(Number);

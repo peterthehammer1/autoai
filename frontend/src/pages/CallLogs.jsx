@@ -62,13 +62,17 @@ export default function CallLogs() {
     }),
   })
 
-  // Filter calls by search term
+  // Filter calls by search term and exclude abandoned for demo
   const filteredCalls = useMemo(() => {
     if (!callData?.calls) return []
-    if (!searchTerm) return callData.calls
+    
+    // Filter out abandoned/failed calls for demo
+    let calls = callData.calls.filter(call => call.outcome !== 'abandoned' && call.outcome !== 'failed')
+    
+    if (!searchTerm) return calls
     
     const term = searchTerm.toLowerCase()
-    return callData.calls.filter(call => 
+    return calls.filter(call => 
       call.phone_number?.includes(term) ||
       call.customer?.first_name?.toLowerCase().includes(term) ||
       call.customer?.last_name?.toLowerCase().includes(term) ||
@@ -163,7 +167,17 @@ export default function CallLogs() {
       if (match) {
         const speaker = match[1].toLowerCase()
         const isAgent = ['agent', 'ai', 'assistant', 'amber'].includes(speaker)
-        messages.push({ speaker: isAgent ? 'Amber' : 'Customer', isAgent, text: match[2].trim() })
+        const newText = match[2].trim()
+        
+        // Group consecutive messages from the same speaker
+        const lastMsg = messages[messages.length - 1]
+        if (lastMsg && lastMsg.isAgent === isAgent) {
+          // Same speaker - append to previous message
+          lastMsg.text += ' ' + newText
+        } else {
+          // Different speaker - create new message
+          messages.push({ speaker: isAgent ? 'Amber' : 'Customer', isAgent, text: newText })
+        }
       } else if (line.trim() && messages.length > 0) {
         messages[messages.length - 1].text += ' ' + line.trim()
       }
@@ -181,39 +195,29 @@ export default function CallLogs() {
     : 0
 
   return (
-    <div className="h-[calc(100vh-6rem)] flex flex-col animate-fade-in">
-      {/* Top Stats Bar */}
-      <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 rounded-xl p-3 sm:p-4 mb-4 text-white">
+    <div className="h-[calc(100vh-6rem)] flex flex-col">
+      {/* Page Header - Professional */}
+      <div className="bg-white border-b border-slate-200 px-4 py-3 mb-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="p-1.5 sm:p-2 bg-white/10 rounded-lg backdrop-blur">
-              <PhoneCall className="h-4 w-4 sm:h-5 sm:w-5" />
-            </div>
-            <div>
-              <h1 className="text-base sm:text-lg font-semibold">AI Call Center</h1>
-              <p className="text-xs sm:text-sm text-slate-400 hidden sm:block">Voice Agent Analytics</p>
-            </div>
+          <div>
+            <h1 className="text-lg font-semibold text-slate-800">Call Logs</h1>
+            <p className="text-sm text-slate-500">{stats?.summary?.total_calls ?? 0} calls this week</p>
           </div>
           
-          <div className="flex items-center gap-3 sm:gap-6">
-            <div className="text-center">
-              <p className="text-lg sm:text-2xl font-bold">{stats?.summary?.total_calls ?? 0}</p>
-              <p className="text-[10px] sm:text-xs text-slate-400">Calls</p>
+          <div className="flex items-center gap-6">
+            <div className="text-right hidden sm:block">
+              <p className="text-sm text-slate-500">Avg Duration</p>
+              <p className="text-lg font-semibold text-slate-800">{formatDuration(stats?.summary?.avg_duration_seconds)}</p>
             </div>
-            <div className="h-6 sm:h-8 w-px bg-white/20 hidden sm:block" />
-            <div className="text-center hidden sm:block">
-              <p className="text-2xl font-bold">{formatDuration(stats?.summary?.avg_duration_seconds)}</p>
-              <p className="text-xs text-slate-400">Avg Duration</p>
+            <div className="h-8 w-px bg-slate-200 hidden sm:block" />
+            <div className="text-right hidden sm:block">
+              <p className="text-sm text-slate-500">Bookings</p>
+              <p className="text-lg font-semibold text-slate-800">{stats?.summary?.by_outcome?.booked ?? 0}</p>
             </div>
-            <div className="h-8 w-px bg-white/20 hidden lg:block" />
-            <div className="text-center hidden lg:block">
-              <p className="text-2xl font-bold">{stats?.summary?.by_outcome?.booked ?? 0}</p>
-              <p className="text-xs text-slate-400">Bookings</p>
-            </div>
-            <div className="h-6 sm:h-8 w-px bg-white/20" />
-            <div className="text-center">
-              <p className="text-lg sm:text-2xl font-bold text-emerald-400">{conversionRate}%</p>
-              <p className="text-[10px] sm:text-xs text-slate-400">Conv.</p>
+            <div className="h-8 w-px bg-slate-200 hidden sm:block" />
+            <div className="text-right">
+              <p className="text-sm text-slate-500">Conversion</p>
+              <p className="text-lg font-semibold text-slate-800">{conversionRate}%</p>
             </div>
           </div>
         </div>
@@ -223,24 +227,24 @@ export default function CallLogs() {
       <div className="flex-1 flex flex-col lg:flex-row gap-4 min-h-0">
         {/* Left Panel - Call List */}
         <div className={cn(
-          "flex flex-col bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden",
-          "w-full lg:w-96",
+          "flex flex-col bg-white border border-slate-200 overflow-hidden",
+          "w-full lg:w-80",
           selectedCallId ? "hidden lg:flex" : "flex"
         )}>
           {/* Search & Filter Header */}
-          <div className="p-3 border-b border-slate-200 bg-slate-50 space-y-3">
+          <div className="p-3 border-b border-slate-200 space-y-2">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <Input
                 placeholder="Search calls..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9 bg-white h-9 text-sm"
+                className="pl-8 h-8 text-sm border-slate-300"
               />
             </div>
             <div className="flex items-center gap-2">
               <Select value={outcomeFilter} onValueChange={handleFilterChange}>
-                <SelectTrigger className="flex-1 bg-white h-8 text-xs">
+                <SelectTrigger className="flex-1 h-8 text-xs border-slate-300">
                   <SelectValue placeholder="All Outcomes" />
                 </SelectTrigger>
                 <SelectContent>
@@ -249,12 +253,8 @@ export default function CallLogs() {
                   <SelectItem value="completed">Completed</SelectItem>
                   <SelectItem value="inquiry">Inquiry</SelectItem>
                   <SelectItem value="transferred">Transferred</SelectItem>
-                  <SelectItem value="abandoned">Abandoned</SelectItem>
                 </SelectContent>
               </Select>
-              <span className="text-xs text-slate-500 whitespace-nowrap">
-                {filteredCalls.length} calls
-              </span>
             </div>
           </div>
 
@@ -271,52 +271,37 @@ export default function CallLogs() {
                 <p className="text-sm text-slate-500">No calls found</p>
               </div>
             ) : (
-              <div className="divide-y divide-slate-100">
+              <div className="divide-y divide-slate-200">
                 {filteredCalls.map((call) => (
                   <button
                     key={call.id}
                     onClick={() => setSelectedCallId(call.id)}
                     className={cn(
                       "w-full p-3 text-left hover:bg-slate-50 transition-colors",
-                      selectedCallId === call.id && "bg-blue-50 border-l-2 border-l-blue-500"
+                      selectedCallId === call.id && "bg-slate-100 border-l-2 border-l-slate-600"
                     )}
                   >
                     <div className="flex items-start gap-3">
                       {/* Outcome indicator */}
-                      <div className={cn(
-                        "w-10 h-10 rounded-full flex items-center justify-center shrink-0",
-                        call.outcome === 'booked' || call.outcome === 'completed' ? 'bg-emerald-100' :
-                        call.outcome === 'inquiry' ? 'bg-blue-100' :
-                        call.outcome === 'abandoned' ? 'bg-red-100' : 'bg-slate-100'
-                      )}>
+                      <div className="w-8 h-8 rounded bg-slate-100 flex items-center justify-center shrink-0">
                         {call.direction === 'outbound' ? (
-                          <PhoneOutgoing className={cn(
-                            "h-5 w-5",
-                            call.outcome === 'booked' || call.outcome === 'completed' ? 'text-emerald-600' :
-                            call.outcome === 'inquiry' ? 'text-blue-600' :
-                            call.outcome === 'abandoned' ? 'text-red-600' : 'text-slate-500'
-                          )} />
+                          <PhoneOutgoing className="h-4 w-4 text-slate-500" />
                         ) : (
-                          <PhoneIncoming className={cn(
-                            "h-5 w-5",
-                            call.outcome === 'booked' || call.outcome === 'completed' ? 'text-emerald-600' :
-                            call.outcome === 'inquiry' ? 'text-blue-600' :
-                            call.outcome === 'abandoned' ? 'text-red-600' : 'text-slate-500'
-                          )} />
+                          <PhoneIncoming className="h-4 w-4 text-slate-500" />
                         )}
                       </div>
                       
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-2">
-                          <p className="font-medium text-slate-900 truncate">
+                          <p className="text-sm font-medium text-slate-800 truncate">
                             {call.customer 
                               ? `${call.customer.first_name} ${call.customer.last_name}`
                               : <PhoneNumber phone={call.phone_number} email={call.customer?.email} />
                             }
                           </p>
-                          {getSentimentIcon(call.sentiment)}
+                          <span className="text-xs text-slate-500 capitalize">{call.outcome || 'Unknown'}</span>
                         </div>
-                        <div className="flex items-center gap-2 mt-1">
+                        <div className="flex items-center gap-2 mt-0.5">
                           <span className="text-xs text-slate-500">
                             {call.started_at ? format(new Date(call.started_at), 'MMM d, h:mm a') : '-'}
                           </span>
@@ -325,9 +310,6 @@ export default function CallLogs() {
                             {formatDuration(call.duration_seconds)}
                           </span>
                         </div>
-                        <p className="text-xs text-slate-400 truncate mt-1">
-                          {call.transcript_summary || 'No summary available'}
-                        </p>
                       </div>
                     </div>
                   </button>
@@ -343,21 +325,19 @@ export default function CallLogs() {
           !selectedCallId ? "hidden lg:flex" : "flex"
         )}>
           {!selectedCallId ? (
-            <div className="flex-1 flex items-center justify-center bg-white rounded-xl border border-slate-200">
+            <div className="flex-1 flex items-center justify-center bg-white border border-slate-200">
               <div className="text-center">
-                <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Phone className="h-10 w-10 text-slate-300" />
-                </div>
-                <h3 className="text-lg font-semibold text-slate-900 mb-1">Select a Call</h3>
-                <p className="text-sm text-slate-500">Choose a call from the list to view details</p>
+                <Phone className="h-8 w-8 text-slate-300 mx-auto mb-3" />
+                <h3 className="text-sm font-medium text-slate-700 mb-1">Select a Call</h3>
+                <p className="text-xs text-slate-500">Choose a call from the list to view details</p>
               </div>
             </div>
           ) : selectedCall ? (
-            <div className="flex-1 flex flex-col bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+            <div className="flex-1 flex flex-col bg-white border border-slate-200 overflow-hidden">
               {/* Call Header */}
-              <div className="bg-gradient-to-r from-slate-50 to-white p-4 sm:p-6 border-b border-slate-200">
+              <div className="bg-slate-50 px-4 py-3 border-b border-slate-200">
                 <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                  <div className="flex items-center gap-3 min-w-0">
                     {/* Mobile Back Button */}
                     <Button 
                       variant="ghost" 
@@ -367,28 +347,18 @@ export default function CallLogs() {
                     >
                       <ChevronLeft className="h-5 w-5" />
                     </Button>
-                    <div className={cn(
-                      "h-10 w-10 sm:h-14 sm:w-14 rounded-full flex items-center justify-center shrink-0",
-                      selectedCall.outcome === 'booked' || selectedCall.outcome === 'completed' ? 'bg-emerald-100' :
-                      selectedCall.outcome === 'inquiry' ? 'bg-blue-100' :
-                      selectedCall.outcome === 'abandoned' ? 'bg-red-100' : 'bg-slate-100'
-                    )}>
-                      <PhoneIncoming className={cn(
-                        "h-5 w-5 sm:h-7 sm:w-7",
-                        selectedCall.outcome === 'booked' || selectedCall.outcome === 'completed' ? 'text-emerald-600' :
-                        selectedCall.outcome === 'inquiry' ? 'text-blue-600' :
-                        selectedCall.outcome === 'abandoned' ? 'text-red-600' : 'text-slate-500'
-                      )} />
+                    <div className="h-10 w-10 rounded bg-slate-200 flex items-center justify-center shrink-0">
+                      <PhoneIncoming className="h-5 w-5 text-slate-500" />
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h2 className="text-lg sm:text-xl font-bold text-slate-900 truncate">
+                        <h2 className="text-base font-semibold text-slate-800 truncate">
                           {selectedCall.customer 
                             ? `${selectedCall.customer.first_name} ${selectedCall.customer.last_name}`
                             : 'Unknown Caller'
                           }
                         </h2>
-                        {getOutcomeBadge(selectedCall.outcome)}
+                        <span className="text-xs px-2 py-0.5 bg-slate-200 text-slate-600 rounded capitalize">{selectedCall.outcome || 'Unknown'}</span>
                       </div>
                       <div className="flex items-center gap-2 sm:gap-3 mt-1 text-xs sm:text-sm text-slate-500 flex-wrap">
                         <span className="flex items-center gap-1">

@@ -226,34 +226,24 @@ export default function Customers() {
   }
 
   return (
-    <div className="h-[calc(100vh-6rem)] flex flex-col animate-fade-in">
-      {/* Top Stats Bar */}
-      <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 rounded-xl p-3 sm:p-4 mb-4 text-white">
+    <div className="h-[calc(100vh-6rem)] flex flex-col">
+      {/* Top Header Bar - Professional/Conservative */}
+      <div className="bg-white border-b border-slate-200 px-4 py-3 mb-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="p-1.5 sm:p-2 bg-white/10 rounded-lg backdrop-blur">
-              <Users className="h-4 w-4 sm:h-5 sm:w-5" />
-            </div>
-            <div>
-              <h1 className="text-base sm:text-lg font-semibold">Customer Management</h1>
-              <p className="text-xs sm:text-sm text-slate-400 hidden sm:block">CRM Dashboard</p>
-            </div>
+          <div>
+            <h1 className="text-lg font-semibold text-slate-800">Customers</h1>
+            <p className="text-sm text-slate-500">{data?.customers?.length || 0} total customers</p>
           </div>
           
-          <div className="flex items-center gap-3 sm:gap-6">
-            <div className="text-center">
-              <p className="text-lg sm:text-2xl font-bold">{data?.customers?.length || 0}</p>
-              <p className="text-[10px] sm:text-xs text-slate-400">Customers</p>
+          <div className="flex items-center gap-6">
+            <div className="text-right hidden sm:block">
+              <p className="text-sm text-slate-500">Vehicles</p>
+              <p className="text-lg font-semibold text-slate-800">{totalVehicles}</p>
             </div>
-            <div className="h-6 sm:h-8 w-px bg-white/20 hidden sm:block" />
-            <div className="text-center hidden sm:block">
-              <p className="text-2xl font-bold">{totalVehicles}</p>
-              <p className="text-xs text-slate-400">Vehicles</p>
-            </div>
-            <div className="h-8 w-px bg-white/20 hidden lg:block" />
-            <div className="text-center hidden lg:block">
-              <p className="text-2xl font-bold">{totalVisits}</p>
-              <p className="text-xs text-slate-400">Total Visits</p>
+            <div className="h-8 w-px bg-slate-200 hidden sm:block" />
+            <div className="text-right hidden sm:block">
+              <p className="text-sm text-slate-500">Total Visits</p>
+              <p className="text-lg font-semibold text-slate-800">{totalVisits}</p>
             </div>
           </div>
         </div>
@@ -263,31 +253,28 @@ export default function Customers() {
       <div className="flex-1 flex flex-col lg:flex-row gap-4 min-h-0">
         {/* Left Panel - Customer List */}
         <div className={cn(
-          "flex flex-col bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden",
-          "w-full lg:w-80",
+          "flex flex-col bg-white border border-slate-200 overflow-hidden",
+          "w-full lg:w-72 xl:w-80",
           selectedCustomerId ? "hidden lg:flex" : "flex"
         )}>
           {/* Search Header */}
-          <div className="p-3 border-b border-slate-200 bg-slate-50">
+          <div className="p-3 border-b border-slate-200">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <Input
-                placeholder="Search customers..."
+                placeholder="Search by name or phone..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9 bg-white h-9 text-sm"
+                className="pl-8 h-8 text-sm border-slate-300 focus:border-slate-400 focus:ring-slate-400"
               />
             </div>
-            <p className="text-xs text-slate-500 mt-2">
-              {sortedAndFilteredCustomers.length} customers
-            </p>
           </div>
 
           {/* Customer List */}
           <ScrollArea className="flex-1">
             {isLoading ? (
               <div className="p-8 text-center">
-                <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full mx-auto mb-2" />
+                <div className="animate-spin h-5 w-5 border-2 border-slate-400 border-t-transparent rounded-full mx-auto mb-2" />
                 <p className="text-sm text-slate-500">Loading...</p>
               </div>
             ) : sortedAndFilteredCustomers.length === 0 ? (
@@ -302,33 +289,37 @@ export default function Customers() {
                     key={customer.id}
                     onClick={() => setSelectedCustomerId(customer.id)}
                     className={cn(
-                      "w-full p-3 text-left hover:bg-slate-50 transition-colors flex items-center gap-3",
-                      selectedCustomerId === customer.id && "bg-blue-50 border-l-2 border-l-blue-500"
+                      "w-full px-3 py-2.5 text-left hover:bg-slate-50 transition-colors flex items-center gap-3",
+                      selectedCustomerId === customer.id && "bg-slate-100 border-l-2 border-l-slate-600"
                     )}
                   >
                     <CustomerAvatar 
                       firstName={customer.first_name}
                       lastName={customer.last_name}
-                      size="md"
+                      size="sm"
+                      className="bg-slate-200 text-slate-600"
                     />
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-slate-900 truncate">
+                      <p className="text-sm font-medium text-slate-800 truncate">
                         {customer.first_name} {customer.last_name}
                       </p>
-                      <p className="text-xs text-slate-500 truncate font-mono">
-                        {customer.phone ? formatPhone(customer.phone) : 'No phone'}
+                      <p className="text-xs text-slate-500 truncate">
+                        {customer.phone ? <PhoneNumber phone={customer.phone} /> : 'No phone'}
                       </p>
                     </div>
                     {customer.total_visits > 0 && (
-                      <Badge variant="secondary" className="text-xs shrink-0">
+                      <span className="text-xs text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
                         {customer.total_visits}
-                      </Badge>
+                      </span>
                     )}
                   </button>
                 ))}
               </div>
             )}
           </ScrollArea>
+          <div className="px-3 py-2 border-t border-slate-200 bg-slate-50">
+            <p className="text-xs text-slate-500">{sortedAndFilteredCustomers.length} results</p>
+          </div>
         </div>
 
         {/* Right Panel - Customer Details */}
@@ -337,25 +328,25 @@ export default function Customers() {
           !selectedCustomerId ? "hidden lg:flex" : "flex"
         )}>
           {!selectedCustomerId ? (
-            <div className="flex-1 flex items-center justify-center bg-white rounded-xl border border-slate-200">
+            <div className="flex-1 flex items-center justify-center bg-white border border-slate-200">
               <div className="text-center">
-                <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <User className="h-10 w-10 text-slate-300" />
+                <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <User className="h-8 w-8 text-slate-400" />
                 </div>
-                <h3 className="text-lg font-semibold text-slate-900 mb-1">Select a Customer</h3>
-                <p className="text-sm text-slate-500">Choose a customer from the list to view their details</p>
+                <h3 className="text-base font-medium text-slate-700 mb-1">Select a Customer</h3>
+                <p className="text-sm text-slate-500">Choose from the list to view details</p>
               </div>
             </div>
           ) : isLoadingCustomer ? (
-            <div className="flex-1 flex items-center justify-center bg-white rounded-xl border border-slate-200">
-              <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full" />
+            <div className="flex-1 flex items-center justify-center bg-white border border-slate-200">
+              <div className="animate-spin h-6 w-6 border-2 border-slate-400 border-t-transparent rounded-full" />
             </div>
           ) : selectedCustomer ? (
-            <div className="flex-1 flex flex-col bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+            <div className="flex-1 flex flex-col bg-white border border-slate-200 overflow-hidden">
               {/* Customer Header */}
-              <div className="bg-gradient-to-r from-slate-50 to-white p-4 sm:p-6 border-b border-slate-200">
+              <div className="bg-slate-50 p-4 sm:p-5 border-b border-slate-200">
                 <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                  <div className="flex items-center gap-3 min-w-0">
                     {/* Mobile Back Button */}
                     <Button 
                       variant="ghost" 
@@ -368,34 +359,35 @@ export default function Customers() {
                     <CustomerAvatar 
                       firstName={selectedCustomer.first_name}
                       lastName={selectedCustomer.last_name}
-                      size="xl"
-                      className="h-12 w-12 sm:h-16 sm:w-16 text-lg sm:text-xl"
+                      size="lg"
+                      className="h-11 w-11 sm:h-12 sm:w-12 text-base bg-slate-200 text-slate-600"
                     />
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h2 className="text-lg sm:text-2xl font-bold text-slate-900 truncate">
+                        <h2 className="text-base sm:text-lg font-semibold text-slate-800 truncate">
                           {selectedCustomer.first_name} {selectedCustomer.last_name}
                         </h2>
                         {healthData && (
-                          <Badge className={cn(
-                            'text-xs shrink-0',
-                            healthData.health_color === 'green' ? 'bg-emerald-100 text-emerald-700' :
+                          <span className={cn(
+                            'text-xs px-2 py-0.5 rounded font-medium',
+                            healthData.health_color === 'green' ? 'bg-green-100 text-green-700' :
                             healthData.health_color === 'blue' ? 'bg-blue-100 text-blue-700' :
                             healthData.health_color === 'yellow' ? 'bg-amber-100 text-amber-700' :
+                            healthData.health_color === 'purple' ? 'bg-slate-100 text-slate-600' :
                             'bg-red-100 text-red-700'
                           )}>
                             {healthData.health_status}
-                          </Badge>
+                          </span>
                         )}
                       </div>
-                      <div className="flex items-center gap-2 sm:gap-4 mt-1 text-xs sm:text-sm text-slate-500 flex-wrap">
+                      <div className="flex items-center gap-3 mt-1 text-sm text-slate-600 flex-wrap">
                         <span className="flex items-center gap-1">
-                          <Phone className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                          <Phone className="h-3.5 w-3.5 text-slate-400" />
                           <PhoneNumber phone={selectedCustomer.phone} email={selectedCustomer.email} />
                         </span>
                         {selectedCustomer.email && (
                           <span className="flex items-center gap-1 hidden sm:flex">
-                            <Mail className="h-3.5 w-3.5" />
+                            <Mail className="h-3.5 w-3.5 text-slate-400" />
                             <Email email={selectedCustomer.email} />
                           </span>
                         )}
@@ -420,131 +412,118 @@ export default function Customers() {
                 </div>
 
                 {/* Quick Stats */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 mt-4 sm:mt-6">
-                  <div className="bg-white rounded-lg p-2 sm:p-3 border border-slate-200 shadow-sm">
-                    <div className="flex items-center gap-1.5 sm:gap-2 text-slate-500 text-[10px] sm:text-xs mb-0.5 sm:mb-1">
-                      <CalendarCheck className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                      <span className="hidden sm:inline">Total </span>Visits
-                    </div>
-                    <p className="text-lg sm:text-xl font-bold text-slate-900">
+                <div className="grid grid-cols-4 gap-4 mt-4">
+                  <div className="text-center">
+                    <p className="text-lg font-semibold text-slate-800">
                       {healthData?.stats?.total_visits || selectedCustomer.total_visits || 0}
                     </p>
+                    <p className="text-xs text-slate-500">Visits</p>
                   </div>
-                  <div className="bg-white rounded-lg p-2 sm:p-3 border border-slate-200 shadow-sm">
-                    <div className="flex items-center gap-1.5 sm:gap-2 text-slate-500 text-[10px] sm:text-xs mb-0.5 sm:mb-1">
-                      <DollarSign className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                      <span className="hidden sm:inline">Total </span>Spend
-                    </div>
-                    <p className="text-lg sm:text-xl font-bold text-slate-900">
+                  <div className="text-center">
+                    <p className="text-lg font-semibold text-slate-800">
                       {healthData?.stats?.total_spend ? formatCents(healthData.stats.total_spend) : '$0'}
                     </p>
+                    <p className="text-xs text-slate-500">Total Spend</p>
                   </div>
-                  <div className="bg-white rounded-lg p-2 sm:p-3 border border-slate-200 shadow-sm">
-                    <div className="flex items-center gap-1.5 sm:gap-2 text-slate-500 text-[10px] sm:text-xs mb-0.5 sm:mb-1">
-                      <Car className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                      Vehicles
-                    </div>
-                    <p className="text-lg sm:text-xl font-bold text-slate-900">
+                  <div className="text-center">
+                    <p className="text-lg font-semibold text-slate-800">
                       {selectedCustomer.vehicles?.length || 0}
                     </p>
+                    <p className="text-xs text-slate-500">Vehicles</p>
                   </div>
-                  <div className="bg-white rounded-lg p-2 sm:p-3 border border-slate-200 shadow-sm">
-                    <div className="flex items-center gap-1.5 sm:gap-2 text-slate-500 text-[10px] sm:text-xs mb-0.5 sm:mb-1">
-                      <Heart className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                      Health
-                    </div>
-                    <p className="text-lg sm:text-xl font-bold text-slate-900">
+                  <div className="text-center">
+                    <p className="text-lg font-semibold text-slate-800">
                       {healthData?.health_score || '-'}
                     </p>
+                    <p className="text-xs text-slate-500">Health Score</p>
                   </div>
                 </div>
               </div>
 
               {/* Tabbed Content */}
               <Tabs defaultValue="overview" className="flex-1 flex flex-col min-h-0">
-                <TabsList className="w-full justify-start rounded-none border-b border-slate-200 bg-slate-50 p-0 h-auto overflow-x-auto flex-nowrap">
+                <TabsList className="w-full justify-start rounded-none border-b border-slate-200 bg-white p-0 h-auto overflow-x-auto flex-nowrap">
                   <TabsTrigger 
                     value="overview" 
-                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm whitespace-nowrap"
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-slate-600 data-[state=active]:bg-transparent data-[state=active]:text-slate-800 py-2.5 px-4 text-sm text-slate-500 whitespace-nowrap font-medium"
                   >
                     Overview
                   </TabsTrigger>
                   <TabsTrigger 
                     value="vehicles" 
-                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm whitespace-nowrap"
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-slate-600 data-[state=active]:bg-transparent data-[state=active]:text-slate-800 py-2.5 px-4 text-sm text-slate-500 whitespace-nowrap font-medium"
                   >
                     <span className="sm:hidden">Vehicles</span>
                     <span className="hidden sm:inline">Vehicles ({selectedCustomer.vehicles?.length || 0})</span>
                   </TabsTrigger>
                   <TabsTrigger 
                     value="appointments" 
-                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm whitespace-nowrap"
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-slate-600 data-[state=active]:bg-transparent data-[state=active]:text-slate-800 py-2.5 px-4 text-sm text-slate-500 whitespace-nowrap font-medium"
                   >
                     <span className="sm:hidden">Appts</span>
                     <span className="hidden sm:inline">Appointments ({appointmentsData?.appointments?.length || 0})</span>
                   </TabsTrigger>
                   <TabsTrigger 
                     value="interactions" 
-                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm whitespace-nowrap"
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-slate-600 data-[state=active]:bg-transparent data-[state=active]:text-slate-800 py-2.5 px-4 text-sm text-slate-500 whitespace-nowrap font-medium"
                   >
                     <span className="sm:hidden">Activity</span>
-                    <span className="hidden sm:inline">Interactions ({interactionsData?.interactions?.length || 0})</span>
+                    <span className="hidden sm:inline">Activity ({interactionsData?.interactions?.length || 0})</span>
                   </TabsTrigger>
                   <TabsTrigger 
                     value="insights" 
-                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm whitespace-nowrap"
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-slate-600 data-[state=active]:bg-transparent data-[state=active]:text-slate-800 py-2.5 px-4 text-sm text-slate-500 whitespace-nowrap font-medium"
                   >
-                    <span className="sm:hidden">AI</span>
-                    <span className="hidden sm:inline">AI Insights</span>
+                    Insights
                   </TabsTrigger>
                 </TabsList>
 
                 <ScrollArea className="flex-1">
                   {/* Overview Tab */}
-                  <TabsContent value="overview" className="m-0 p-4 sm:p-6">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                  <TabsContent value="overview" className="m-0 p-4 sm:p-5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       {/* Health Score Card */}
                       {healthData && (
-                        <div className="bg-gradient-to-br from-slate-50 to-white rounded-xl border border-slate-200 p-5">
-                          <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2">
-                            <Heart className="h-4 w-4 text-rose-500" />
+                        <div className="border border-slate-200 rounded-lg p-4">
+                          <h3 className="text-sm font-medium text-slate-700 mb-3">
                             Customer Health
                           </h3>
-                          <div className="flex items-center gap-6">
+                          <div className="flex items-center gap-5">
                             <div className="relative">
-                              <svg className="w-24 h-24 transform -rotate-90">
-                                <circle cx="48" cy="48" r="40" fill="none" stroke="#e2e8f0" strokeWidth="8" />
+                              <svg className="w-20 h-20 transform -rotate-90">
+                                <circle cx="40" cy="40" r="32" fill="none" stroke="#e2e8f0" strokeWidth="6" />
                                 <circle
-                                  cx="48" cy="48" r="40" fill="none"
+                                  cx="40" cy="40" r="32" fill="none"
                                   stroke={
-                                    healthData.health_color === 'green' ? '#10b981' :
-                                    healthData.health_color === 'blue' ? '#3b82f6' :
-                                    healthData.health_color === 'yellow' ? '#f59e0b' : '#ef4444'
+                                    healthData.health_color === 'green' ? '#059669' :
+                                    healthData.health_color === 'blue' ? '#2563eb' :
+                                    healthData.health_color === 'yellow' ? '#d97706' :
+                                    healthData.health_color === 'purple' ? '#64748b' : '#dc2626'
                                   }
-                                  strokeWidth="8" strokeLinecap="round"
-                                  strokeDasharray={`${(healthData.health_score / 100) * 251} 251`}
+                                  strokeWidth="6" strokeLinecap="round"
+                                  strokeDasharray={`${(healthData.health_score / 100) * 201} 201`}
                                 />
                               </svg>
                               <div className="absolute inset-0 flex items-center justify-center">
-                                <span className="text-2xl font-bold text-slate-900">{healthData.health_score}</span>
+                                <span className="text-xl font-semibold text-slate-800">{healthData.health_score}</span>
                               </div>
                             </div>
-                            <div className="flex-1 space-y-2">
+                            <div className="flex-1 space-y-1.5">
                               <div className="flex justify-between text-sm">
                                 <span className="text-slate-500">Recency</span>
-                                <span className="font-medium">{healthData.score_breakdown.recency}/30</span>
+                                <span className="text-slate-700">{healthData.score_breakdown.recency}/30</span>
                               </div>
                               <div className="flex justify-between text-sm">
                                 <span className="text-slate-500">Frequency</span>
-                                <span className="font-medium">{healthData.score_breakdown.frequency}/30</span>
+                                <span className="text-slate-700">{healthData.score_breakdown.frequency}/30</span>
                               </div>
                               <div className="flex justify-between text-sm">
                                 <span className="text-slate-500">Value</span>
-                                <span className="font-medium">{healthData.score_breakdown.value}/20</span>
+                                <span className="text-slate-700">{healthData.score_breakdown.value}/20</span>
                               </div>
                               <div className="flex justify-between text-sm">
                                 <span className="text-slate-500">Loyalty</span>
-                                <span className="font-medium">{healthData.score_breakdown.loyalty}/20</span>
+                                <span className="text-slate-700">{healthData.score_breakdown.loyalty}/20</span>
                               </div>
                             </div>
                           </div>

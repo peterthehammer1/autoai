@@ -130,9 +130,9 @@ export default function CustomerDetail() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
-        <div className="h-8 w-64 animate-pulse rounded bg-slate-100" />
-        <div className="h-64 animate-pulse rounded-lg bg-slate-100" />
+      <div className="space-y-4">
+        <div className="h-8 w-64 animate-pulse bg-slate-100" />
+        <div className="h-64 animate-pulse bg-slate-100" />
       </div>
     )
   }
@@ -149,82 +149,82 @@ export default function CustomerDetail() {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-4">
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" asChild>
+      <div className="flex items-center gap-3 pb-2">
+        <Button variant="ghost" size="icon" asChild className="h-8 w-8">
           <Link to="/customers">
-            <ArrowLeft className="h-5 w-5" />
+            <ArrowLeft className="h-4 w-4" />
           </Link>
         </Button>
         <div className="flex-1">
-          <h1 className="text-2xl font-bold text-slate-900">
+          <h1 className="text-lg font-semibold text-slate-800">
             {customer.first_name} {customer.last_name}
           </h1>
-          <p className="text-slate-500">Customer Profile</p>
+          <p className="text-sm text-slate-500">Customer Profile</p>
         </div>
-        <Button variant="outline" onClick={handleEditOpen}>
-          <Edit className="mr-2 h-4 w-4" />
+        <Button variant="outline" size="sm" onClick={handleEditOpen} className="text-xs">
+          <Edit className="mr-1.5 h-3.5 w-3.5" />
           Edit
         </Button>
       </div>
 
       {/* Customer Info Card */}
-      <div className="grid gap-6 md:grid-cols-3">
-        <Card className="md:col-span-1">
-          <CardHeader>
-            <CardTitle>Contact Info</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+      <div className="grid gap-4 md:grid-cols-3">
+        <div className="bg-white border border-slate-200 md:col-span-1">
+          <div className="px-4 py-3 border-b border-slate-200 bg-slate-50">
+            <h3 className="text-sm font-medium text-slate-700">Contact Info</h3>
+          </div>
+          <div className="p-4 space-y-3">
             <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-                <User className="h-6 w-6 text-primary" />
+              <div className="flex h-10 w-10 items-center justify-center rounded bg-slate-100">
+                <User className="h-5 w-5 text-slate-500" />
               </div>
               <div>
-                <p className="font-medium text-slate-900">
+                <p className="text-sm font-medium text-slate-800">
                   {customer.first_name} {customer.last_name}
                 </p>
-                <p className="text-sm text-slate-500">
+                <p className="text-xs text-slate-500">
                   {customer.total_visits || 0} visits
                 </p>
               </div>
             </div>
-            <div className="space-y-2 text-sm">
+            <div className="space-y-1.5 text-sm">
               <div className="flex items-center gap-2 text-slate-600">
-                <Phone className="h-4 w-4 text-slate-400" />
+                <Phone className="h-3.5 w-3.5 text-slate-400" />
                 <PhoneNumber phone={customer.phone} showRevealButton={false} />
               </div>
               {customer.email && (
                 <div className="flex items-center gap-2 text-slate-600">
-                  <Mail className="h-4 w-4 text-slate-400" />
+                  <Mail className="h-3.5 w-3.5 text-slate-400" />
                   <Email email={customer.email} />
                 </div>
               )}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Customer Health Score Card */}
         {healthData && (
-          <Card className="md:col-span-2">
-            <CardHeader className="pb-3">
+          <div className="bg-white border border-slate-200 md:col-span-2">
+            <div className="px-4 py-3 border-b border-slate-200 bg-slate-50">
               <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2">
-                  <Heart className="h-5 w-5 text-rose-500" />
+                <h3 className="text-sm font-medium text-slate-700 flex items-center gap-2">
+                  <Heart className="h-4 w-4 text-slate-400" />
                   Customer Health Score
-                </CardTitle>
-                <Badge className={cn(
-                  'text-sm font-semibold',
-                  healthData.health_color === 'green' ? 'bg-emerald-100 text-emerald-700' :
-                  healthData.health_color === 'blue' ? 'bg-blue-100 text-blue-700' :
-                  healthData.health_color === 'yellow' ? 'bg-amber-100 text-amber-700' :
-                  'bg-red-100 text-red-700'
+                </h3>
+                <span className={cn(
+                  'text-xs px-2 py-0.5 rounded',
+                  healthData.health_color === 'green' ? 'bg-slate-100 text-slate-700' :
+                  healthData.health_color === 'blue' ? 'bg-slate-100 text-slate-600' :
+                  healthData.health_color === 'yellow' ? 'bg-slate-100 text-slate-600' :
+                  'bg-slate-100 text-slate-600'
                 )}>
                   {healthData.health_status}
-                </Badge>
+                </span>
               </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
+            </div>
+            <div className="p-4 space-y-4">
               {/* Score Display */}
               <div className="flex items-center gap-6">
                 <div className="relative">
@@ -317,26 +317,26 @@ export default function CustomerDetail() {
                   ))}
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         )}
 
         {/* Vehicles */}
-        <Card className="md:col-span-3">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Vehicles</CardTitle>
-            <Button size="sm" onClick={() => setIsAddVehicleOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" />
+        <div className="bg-white border border-slate-200 md:col-span-3">
+          <div className="px-4 py-3 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+            <h3 className="text-sm font-medium text-slate-700">Vehicles</h3>
+            <Button size="sm" onClick={() => setIsAddVehicleOpen(true)} className="text-xs h-7">
+              <Plus className="mr-1 h-3.5 w-3.5" />
               Add Vehicle
             </Button>
-          </CardHeader>
-          <CardContent>
+          </div>
+          <div className="p-4">
             {customer.vehicles?.length > 0 ? (
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {customer.vehicles.map((vehicle) => (
                   <div
                     key={vehicle.id}
-                    className="flex items-center justify-between rounded-lg border border-slate-200 p-4"
+                    className="flex items-center justify-between border border-slate-200 p-3"
                   >
                     <div className="flex items-center gap-3">
                       <Car className="h-6 w-6 text-slate-400" />
@@ -354,10 +354,10 @@ export default function CustomerDetail() {
                     </div>
                     <div className="text-right">
                       {vehicle.is_primary && (
-                        <Badge variant="secondary">Primary</Badge>
+                        <span className="text-xs px-2 py-0.5 bg-slate-100 text-slate-600 rounded">Primary</span>
                       )}
                       {vehicle.license_plate && (
-                        <p className="text-sm text-slate-500">
+                        <p className="text-xs text-slate-500 mt-1">
                           {vehicle.license_plate}
                         </p>
                       )}
@@ -366,63 +366,63 @@ export default function CustomerDetail() {
                 ))}
               </div>
             ) : (
-              <p className="py-6 text-center text-slate-500">
+              <p className="py-6 text-center text-xs text-slate-500">
                 No vehicles on file
               </p>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
 
       {/* Appointments History */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Appointment History</CardTitle>
-        </CardHeader>
-        <CardContent>
+      <div className="bg-white border border-slate-200">
+        <div className="px-4 py-3 border-b border-slate-200 bg-slate-50">
+          <h3 className="text-sm font-medium text-slate-700">Appointment History</h3>
+        </div>
+        <div className="p-4">
           {appointmentsData?.appointments?.length > 0 ? (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {appointmentsData.appointments.map((apt) => (
                 <Link
                   key={apt.id}
                   to={`/appointments/${apt.id}`}
-                  className="flex items-center justify-between rounded-lg border border-slate-200 p-4 transition-colors hover:bg-slate-50"
+                  className="flex items-center justify-between border border-slate-200 p-3 transition-colors hover:bg-slate-50"
                 >
-                  <div className="flex items-center gap-4">
-                    <div className="text-center">
-                      <p className="text-lg font-bold text-slate-900">
+                  <div className="flex items-center gap-3">
+                    <div className="text-center w-10">
+                      <p className="text-sm font-semibold text-slate-800">
                         {format(new Date(apt.scheduled_date), 'd')}
                       </p>
-                      <p className="text-xs text-slate-500">
+                      <p className="text-[10px] text-slate-500">
                         {format(new Date(apt.scheduled_date), 'MMM')}
                       </p>
                     </div>
                     <div>
-                      <p className="font-medium text-slate-900">
+                      <p className="text-sm font-medium text-slate-800">
                         {apt.appointment_services
                           ?.map((s) => s.service_name)
                           .join(', ') || 'Service'}
                       </p>
-                      <p className="text-sm text-slate-500">
+                      <p className="text-xs text-slate-500">
                         {formatTime12Hour(apt.scheduled_time)}
                         {apt.vehicle &&
                           ` • ${apt.vehicle.year} ${apt.vehicle.make} ${apt.vehicle.model}`}
                       </p>
                     </div>
                   </div>
-                  <Badge className={getStatusColor(apt.status)}>
+                  <span className="text-xs px-2 py-0.5 bg-slate-100 text-slate-600 rounded capitalize">
                     {apt.status.replace('_', ' ')}
-                  </Badge>
+                  </span>
                 </Link>
               ))}
             </div>
           ) : (
-            <p className="py-6 text-center text-slate-500">
+            <p className="py-6 text-center text-xs text-slate-500">
               No appointment history
             </p>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Edit Customer Dialog */}
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>

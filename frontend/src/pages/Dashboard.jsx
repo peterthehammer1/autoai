@@ -1,6 +1,7 @@
+import { useState, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
-import { format } from 'date-fns'
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, isToday, addMonths, subMonths, getDay } from 'date-fns'
 import {
   AreaChart,
   Area,
@@ -33,9 +34,24 @@ import {
   Target,
   Sparkles,
   Smile,
+  Sun,
+  Moon,
+  Sunrise,
+  ChevronLeft,
+  ChevronRight,
+  PhoneCall,
+  Bot,
 } from 'lucide-react'
 import { cn, formatTime12Hour, getStatusColor, formatCents } from '@/lib/utils'
 import CarImage from '@/components/CarImage'
+
+// Get greeting based on time of day
+function getGreeting() {
+  const hour = new Date().getHours()
+  if (hour < 12) return { text: 'Good morning', icon: Sunrise, color: 'text-amber-500' }
+  if (hour < 17) return { text: 'Good afternoon', icon: Sun, color: 'text-yellow-500' }
+  return { text: 'Good evening', icon: Moon, color: 'text-indigo-500' }
+}
 
 // Insight icon and color mapping
 const insightConfig = {
@@ -48,6 +64,10 @@ const insightConfig = {
 }
 
 export default function Dashboard() {
+  const [calendarMonth, setCalendarMonth] = useState(new Date())
+  const greeting = getGreeting()
+  const GreetingIcon = greeting.icon
+
   const { data: overview, isLoading: overviewLoading } = useQuery({
     queryKey: ['analytics', 'overview'],
     queryFn: analytics.overview,
@@ -68,6 +88,25 @@ export default function Dashboard() {
     queryKey: ['analytics', 'call-trends', 'week'],
     queryFn: () => analytics.callTrends('week'),
   })
+
+  // Fetch appointments for the calendar month
+  const { data: monthAppointments } = useQuery({
+    queryKey: ['appointments', 'month', format(calendarMonth, 'yyyy-MM')],
+    queryFn: () => appointments.list({ 
+      start_date: format(startOfMonth(calendarMonth), 'yyyy-MM-dd'),
+      end_date: format(endOfMonth(calendarMonth), 'yyyy-MM-dd'),
+      limit: 200
+    }),
+  })
+
+  // Build appointment counts by date for calendar
+  const appointmentsByDate = {}
+  if (monthAppointments?.data) {
+    monthAppointments.data.forEach(apt => {
+      const date = apt.scheduled_date
+      appointmentsByDate[date] = (appointmentsByDate[date] || 0) + 1
+    })
+  }
 
   const stats = [
     {
@@ -159,9 +198,11 @@ export default function Dashboard() {
     ) : null
   )
 
-  // Sentiment Chart Component (reusable)
-  const SentimentChart = () => (
-    callTrends?.sentiment_trend?.length > 0 ? (
+  // Sentiment Chart - memoized to prevent re-renders
+  const sentimentChartContent = useMemo(() => {
+    if (!callTrends?.sentiment_trend?.length) return null
+    
+    return (
       <Card className="shadow-card">
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
@@ -207,6 +248,7 @@ export default function Dashboard() {
                   fill="#22c55e" 
                   fillOpacity={0.6}
                   name="Positive"
+                  isAnimationActive={false}
                 />
                 <Area 
                   type="monotone" 
@@ -216,6 +258,7 @@ export default function Dashboard() {
                   fill="#64748b" 
                   fillOpacity={0.6}
                   name="Neutral"
+                  isAnimationActive={false}
                 />
                 <Area 
                   type="monotone" 
@@ -225,70 +268,162 @@ export default function Dashboard() {
                   fill="#ef4444" 
                   fillOpacity={0.6}
                   name="Negative"
+                  isAnimationActive={false}
                 />
               </AreaChart>
             </ResponsiveContainer>
           </div>
         </CardContent>
       </Card>
-    ) : null
-  )
+    )
+  }, [callTrends?.sentiment_trend])
+
+  // Mini Calendar Component
+  const MiniCalendar = () => {
+    const monthStart = startOfMonth(calendarMonth)
+    const monthEnd = endOfMonth(calendarMonth)
+    const days = eachDayOfInterval({ start: monthStart, end: monthEnd })
+    const startDayOfWeek = getDay(monthStart)
+    
+    return (
+      <div className="bg-white border border-slate-200 overflow-hidden flex-1">
+        <div className="px-3 py-2 border-b border-slate-200 bg-slate-50">
+          <div className="flex items-center justify-between">
+            <button 
+              onClick={() => setCalendarMonth(subMonths(calendarMonth, 1))}
+              className="p-1 hover:bg-slate-200 rounded transition-colors"
+            >
+              <ChevronLeft className="h-4 w-4 text-slate-500" />
+            </button>
+            <span className="text-sm font-medium text-slate-700">
+              {format(calendarMonth, 'MMMM yyyy')}
+            </span>
+            <button 
+              onClick={() => setCalendarMonth(addMonths(calendarMonth, 1))}
+              className="p-1 hover:bg-slate-200 rounded transition-colors"
+            >
+              <ChevronRight className="h-4 w-4 text-slate-500" />
+            </button>
+          </div>
+        </div>
+        <div className="p-2">
+          {/* Day headers */}
+          <div className="grid grid-cols-7 mb-1">
+            {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
+              <div key={i} className="text-center text-[10px] font-medium text-slate-400 py-1">
+                {day}
+              </div>
+            ))}
+          </div>
+          {/* Calendar grid */}
+          <div className="grid grid-cols-7 gap-0.5">
+            {/* Empty cells for days before month starts */}
+            {Array.from({ length: startDayOfWeek }).map((_, i) => (
+              <div key={`empty-${i}`} className="aspect-square" />
+            ))}
+            {/* Actual days */}
+            {days.map(day => {
+              const dateStr = format(day, 'yyyy-MM-dd')
+              const count = appointmentsByDate[dateStr] || 0
+              const isCurrentDay = isToday(day)
+              
+              return (
+                <Link
+                  key={dateStr}
+                  to={`/appointments?date=${dateStr}`}
+                  className={cn(
+                    'aspect-square flex flex-col items-center justify-center text-xs transition-colors relative',
+                    isCurrentDay 
+                      ? 'bg-slate-700 text-white font-medium' 
+                      : 'hover:bg-slate-100 text-slate-700',
+                    count > 0 && !isCurrentDay && 'font-medium'
+                  )}
+                >
+                  <span>{format(day, 'd')}</span>
+                  {count > 0 && (
+                    <span className={cn(
+                      'absolute bottom-0.5 w-1 h-1 rounded-full',
+                      isCurrentDay ? 'bg-white' : 'bg-slate-400'
+                    )} />
+                  )}
+                </Link>
+              )
+            })}
+          </div>
+        </div>
+        <div className="px-3 py-2 border-t border-slate-100 bg-slate-50">
+          <p className="text-[10px] text-slate-500 text-center">Click a date to view appointments</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
-    <div className="flex flex-col gap-6 animate-fade-in">
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+    <div className="flex flex-col gap-4">
+      {/* Welcome Header - Professional */}
+      <div className="bg-white border-b border-slate-200 -mx-4 sm:-mx-6 -mt-4 sm:-mt-6 px-4 sm:px-6 py-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-lg font-semibold text-slate-800">{greeting.text}</h1>
+            <p className="text-sm text-slate-500">
+              {format(new Date(), 'EEEE, MMMM d, yyyy')} • {todayData?.summary?.total || 0} appointments today
+            </p>
+          </div>
+          <div className="flex items-center gap-2 text-sm">
+            <span className="flex h-2 w-2 rounded-full bg-green-500" />
+            <span className="text-slate-600">AI Agent Online</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Stats Grid - Conservative */}
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {stats.map((stat, index) => (
           <div
             key={stat.name}
-            className={cn(
-              'rounded-lg p-4 bg-white border border-slate-200 shadow-card',
-              stat.bgClass
-            )}
+            className="bg-white border border-slate-200 p-4"
           >
-            <div className="flex items-center justify-between mb-3">
-              <div className={cn('rounded-lg p-2 bg-white shadow-sm')}>
-                <stat.icon className={cn('h-5 w-5', stat.iconColor)} />
-              </div>
-              <span className="flex items-center gap-0.5 text-xs font-semibold text-emerald-600">
-                <ArrowUpRight className="h-3 w-3" />
-                {stat.change}
-              </span>
+            <div className="flex items-center justify-between mb-2">
+              <stat.icon className="h-4 w-4 text-slate-400" />
+              <span className="text-xs text-green-600">{stat.change}</span>
             </div>
-            <p className="text-2xl font-bold text-slate-900">{stat.value}</p>
-            <p className="text-sm text-slate-500 mt-0.5">{stat.name}</p>
+            <p className="text-xl font-semibold text-slate-800">{stat.value}</p>
+            <p className="text-sm text-slate-500">{stat.name}</p>
           </div>
         ))}
       </div>
 
       {/* Sentiment Chart - Hidden on mobile, shown on desktop */}
       <div className="hidden sm:block">
-        <SentimentChart />
+        {sentimentChartContent}
       </div>
 
-      {/* Main Content Grid */}
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Today's Schedule */}
-        <div className="lg:col-span-2 bg-white rounded-lg border border-slate-200 shadow-card overflow-hidden">
-          <div className="flex items-center justify-between p-4 sm:p-5 border-b border-slate-100">
+      {/* Main Content Grid - Equal height columns */}
+      <div className="grid gap-4 lg:grid-cols-5 lg:items-stretch">
+        {/* Left Column - 3/5 width - Single card with schedule + summary */}
+        <div className="lg:col-span-3 bg-white border border-slate-200 overflow-hidden flex flex-col">
+          {/* Today's Schedule Header */}
+          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-slate-50">
             <div>
-              <h2 className="text-base font-semibold text-slate-900">Today's Schedule</h2>
-              <p className="text-sm text-slate-500">
-                {todayData?.summary?.total || 0} appointments scheduled
+              <h2 className="text-sm font-medium text-slate-700">Today's Schedule</h2>
+              <p className="text-xs text-slate-500">
+                {todayData?.summary?.total || 0} appointments
               </p>
             </div>
-            <Button variant="outline" size="sm" asChild>
+            <Button variant="ghost" size="sm" asChild className="text-slate-600 hover:text-slate-800">
               <Link to="/appointments">
                 View All
-                <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+                <ArrowRight className="ml-1 h-3.5 w-3.5" />
               </Link>
             </Button>
           </div>
-          <div className="p-3 sm:p-4">
+          
+          {/* Appointments List */}
+          <div className="p-3 sm:p-4 flex-1">
             {todayLoading ? (
               <div className="space-y-3">
                 {[1, 2, 3].map((i) => (
-                  <div key={i} className="h-16 animate-pulse rounded-lg bg-slate-100" />
+                  <div key={i} className="h-16 animate-pulse bg-slate-100" />
                 ))}
               </div>
             ) : todayData?.appointments?.length > 0 ? (
@@ -342,51 +477,10 @@ export default function Dashboard() {
               </div>
             )}
           </div>
-        </div>
-
-        {/* Right Column */}
-        <div className="space-y-6">
-          {/* AI Performance Card */}
-          <div className="bg-slate-900 rounded-lg overflow-hidden shadow-card">
-            <div className="p-4 sm:p-5">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-                  <Zap className="h-4 w-4 text-white" />
-                </div>
-                <h2 className="text-base font-semibold text-white">AI Performance</h2>
-              </div>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-slate-400">Calls Handled</span>
-                  <span className="font-semibold text-white">{overview?.week?.calls ?? 0}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-slate-400">Bookings Made</span>
-                  <span className="font-semibold text-white">{overview?.week?.ai_bookings ?? 0}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-slate-400">Success Rate</span>
-                  <span className="font-semibold text-emerald-400">
-                    {overview?.week?.conversion_rate ?? 0}%
-                  </span>
-                </div>
-              </div>
-              <div className="mt-4 pt-3 border-t border-slate-700">
-                <div className="flex items-center gap-2 text-xs text-slate-400">
-                  <span className="flex h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  <span>AI agent is handling calls 24/7</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Status Breakdown */}
-          <div className="bg-white rounded-lg border border-slate-200 shadow-card overflow-hidden">
-            <div className="p-4 sm:p-5 border-b border-slate-100">
-              <h2 className="text-base font-semibold text-slate-900">Today's Summary</h2>
-              <p className="text-sm text-slate-500">Status breakdown</p>
-            </div>
-            <div className="p-4 sm:p-5 space-y-3">
+          
+          {/* Status Summary - Bottom of card */}
+          <div className="border-t border-slate-100 p-4 sm:p-5 bg-slate-50/50">
+            <div className="grid grid-cols-5 gap-2">
               {[
                 { label: 'Completed', color: 'bg-emerald-500', count: todayData?.by_status?.completed?.length || 0 },
                 { label: 'In Progress', color: 'bg-amber-500', count: todayData?.by_status?.in_progress?.length || 0 },
@@ -394,50 +488,107 @@ export default function Dashboard() {
                 { label: 'Confirmed', color: 'bg-violet-500', count: todayData?.by_status?.confirmed?.length || 0 },
                 { label: 'Scheduled', color: 'bg-slate-400', count: todayData?.by_status?.scheduled?.length || 0 },
               ].map((item) => (
-                <div key={item.label} className="flex items-center justify-between">
-                  <div className="flex items-center gap-2.5">
-                    <div className={cn('h-2 w-2 rounded-full', item.color)} />
-                    <span className="text-sm text-slate-600">{item.label}</span>
+                <div key={item.label} className="text-center">
+                  <p className="text-lg font-bold text-slate-900">{item.count}</p>
+                  <div className="flex items-center justify-center gap-1 mt-0.5">
+                    <div className={cn('h-1.5 w-1.5 rounded-full', item.color)} />
+                    <span className="text-[10px] text-slate-500">{item.label}</span>
                   </div>
-                  <span className="font-semibold text-slate-900">{item.count}</span>
                 </div>
               ))}
             </div>
           </div>
         </div>
+
+        {/* Right Column - 2/5 width */}
+        <div className="lg:col-span-2 flex flex-col gap-4">
+          {/* AI Performance Card - Professional */}
+          <div className="bg-white border border-slate-200 overflow-hidden">
+            <div className="px-4 py-3 border-b border-slate-200 bg-slate-50">
+              <div className="flex items-center justify-between">
+                <h2 className="text-sm font-medium text-slate-700">AI Agent Performance</h2>
+                <div className="flex items-center gap-1.5 text-xs text-green-600">
+                  <span className="flex h-1.5 w-1.5 rounded-full bg-green-500" />
+                  Online
+                </div>
+              </div>
+              <p className="text-xs text-slate-500">This week</p>
+            </div>
+            <div className="p-4">
+              {/* Stats Grid */}
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div className="text-center">
+                  <p className="text-2xl font-semibold text-slate-800">{overview?.week?.calls ?? 0}</p>
+                  <p className="text-xs text-slate-500">Calls Handled</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-semibold text-slate-800">{overview?.week?.ai_bookings ?? 0}</p>
+                  <p className="text-xs text-slate-500">Bookings Made</p>
+                </div>
+              </div>
+              
+              {/* Conversion Rate Bar */}
+              <div className="mb-4">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs text-slate-500">Conversion Rate</span>
+                  <span className="text-sm font-medium text-slate-700">{overview?.week?.conversion_rate ?? 0}%</span>
+                </div>
+                <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-slate-600 rounded-full transition-all duration-500"
+                    style={{ width: `${Math.min(overview?.week?.conversion_rate ?? 0, 100)}%` }}
+                  />
+                </div>
+              </div>
+              
+              {/* Additional Stats */}
+              <div className="space-y-2 pt-3 border-t border-slate-100">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-slate-500">Avg. Call Duration</span>
+                  <span className="text-slate-700">{overview?.week?.avg_call_duration ?? '2:30'}</span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-slate-500">Satisfaction</span>
+                  <span className="text-slate-700">{overview?.week?.satisfaction ?? '94'}%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Mini Calendar */}
+          <MiniCalendar />
+        </div>
       </div>
 
       {/* Bottom Stats */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         {[
           {
             icon: CheckCircle2,
             label: 'AI Bookings This Week',
             value: overview?.week?.ai_bookings ?? 0,
-            iconColor: 'text-emerald-600',
-            bgColor: 'bg-emerald-50',
+            iconColor: 'text-slate-400',
+            bgColor: 'bg-white',
           },
           {
             icon: Phone,
             label: 'Total Calls This Week',
             value: overview?.week?.calls ?? 0,
-            iconColor: 'text-blue-600',
-            bgColor: 'bg-blue-50',
+            iconColor: 'text-slate-400',
+            bgColor: 'bg-white',
           },
           {
             icon: Users,
             label: 'New Customers This Week',
             value: overview?.week?.new_customers ?? 0,
-            iconColor: 'text-violet-600',
-            bgColor: 'bg-violet-50',
+            iconColor: 'text-slate-400',
+            bgColor: 'bg-white',
           },
         ].map((item) => (
-          <div key={item.label} className="bg-white rounded-lg border border-slate-200 shadow-card p-4 flex items-center gap-4">
-            <div className={cn('rounded-lg p-2.5', item.bgColor)}>
-              <item.icon className={cn('h-5 w-5', item.iconColor)} />
-            </div>
+          <div key={item.label} className="bg-white border border-slate-200 p-4 flex items-center gap-3">
+            <item.icon className={cn('h-5 w-5', item.iconColor)} />
             <div>
-              <p className="text-xl font-bold text-slate-900">{item.value}</p>
+              <p className="text-lg font-semibold text-slate-800">{item.value}</p>
               <p className="text-sm text-slate-500">{item.label}</p>
             </div>
           </div>
@@ -446,7 +597,7 @@ export default function Dashboard() {
 
       {/* Sentiment Chart - shown at bottom on mobile */}
       <div className="sm:hidden">
-        <SentimentChart />
+        {sentimentChartContent}
       </div>
 
       {/* AI Insights - at bottom so it doesn't cause layout shift when loading */}

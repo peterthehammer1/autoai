@@ -62,7 +62,7 @@ export default function Services() {
                 Array.from({ length: 5 }).map((_, i) => (
                   <TableRow key={i}>
                     <TableCell colSpan={6}>
-                      <div className="h-12 animate-pulse rounded bg-muted" />
+                      <div className="h-12 animate-pulse bg-slate-100" />
                     </TableCell>
                   </TableRow>
                 ))

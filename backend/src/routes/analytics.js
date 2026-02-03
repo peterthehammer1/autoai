@@ -765,6 +765,8 @@ router.get('/customer-health/:id', async (req, res, next) => {
 
     // Determine health status
     let healthStatus, healthColor;
+    const isNewCustomer = customerAge < 60 && (customer.total_visits || 0) <= 1;
+    
     if (totalScore >= 80) {
       healthStatus = 'Excellent';
       healthColor = 'green';
@@ -774,6 +776,10 @@ router.get('/customer-health/:id', async (req, res, next) => {
     } else if (totalScore >= 40) {
       healthStatus = 'Fair';
       healthColor = 'yellow';
+    } else if (isNewCustomer) {
+      // New customers with low scores aren't "at risk" - they're just getting started
+      healthStatus = 'New';
+      healthColor = 'purple';
     } else {
       healthStatus = 'At Risk';
       healthColor = 'red';
@@ -1135,7 +1141,7 @@ router.get('/customers', async (req, res, next) => {
       .select('total_visits, total_spent, last_visit_date, created_at')
       .gt('total_visits', 0);
 
-    let healthDistribution = { excellent: 0, good: 0, fair: 0, at_risk: 0 };
+    let healthDistribution = { excellent: 0, good: 0, fair: 0, new: 0, at_risk: 0 };
     
     for (const c of allCustomersHealth || []) {
       const daysSinceVisit = c.last_visit_date 
@@ -1143,6 +1149,7 @@ router.get('/customers', async (req, res, next) => {
         : 999;
       const customerAge = differenceInDays(today, new Date(c.created_at));
       const visitsPerYear = customerAge > 0 ? (c.total_visits / (customerAge / 365)) : 0;
+      const isNewCustomer = customerAge < 60 && (c.total_visits || 0) <= 1;
       
       // Simple health scoring
       let score = 0;
@@ -1161,6 +1168,7 @@ router.get('/customers', async (req, res, next) => {
       if (score >= 60) healthDistribution.excellent++;
       else if (score >= 40) healthDistribution.good++;
       else if (score >= 20) healthDistribution.fair++;
+      else if (isNewCustomer) healthDistribution.new++;
       else healthDistribution.at_risk++;
     }
 

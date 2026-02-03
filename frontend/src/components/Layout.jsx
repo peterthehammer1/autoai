@@ -9,6 +9,7 @@ import {
   Phone,
   MessageSquare,
   BarChart3,
+  FileDown,
   Wrench,
   Settings,
   Menu,
@@ -30,6 +31,7 @@ const navigation = [
   { name: 'Call Logs', href: '/call-logs', icon: Phone },
   { name: 'SMS Messages', href: '/sms-logs', icon: MessageSquare },
   { name: 'Analytics', href: '/analytics', icon: BarChart3 },
+  { name: 'Reports', href: '/reports', icon: FileDown },
   // Hidden for now - pages still accessible via direct URL
   // { name: 'Services', href: '/services', icon: Wrench },
   // { name: 'Settings', href: '/settings', icon: Settings },

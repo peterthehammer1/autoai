@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from '@/components/ui/toaster'
+import ErrorBoundary from '@/components/ErrorBoundary'
 import Layout from '@/components/Layout'
 import Landing from '@/pages/Landing'
 import Dashboard from '@/pages/Dashboard'
@@ -10,12 +11,13 @@ import CustomerDetail from '@/pages/CustomerDetail'
 import CallLogs from '@/pages/CallLogs'
 import SmsLogs from '@/pages/SmsLogs'
 import Analytics from '@/pages/Analytics'
+import Reports from '@/pages/Reports'
 import Services from '@/pages/Services'
 import Settings from '@/pages/Settings'
 
 function App() {
   return (
-    <>
+    <ErrorBoundary>
       <Routes>
         {/* Public landing page */}
         <Route path="/" element={<Landing />} />
@@ -30,12 +32,13 @@ function App() {
           <Route path="call-logs" element={<CallLogs />} />
           <Route path="sms-logs" element={<SmsLogs />} />
           <Route path="analytics" element={<Analytics />} />
+          <Route path="reports" element={<Reports />} />
           <Route path="services" element={<Services />} />
           <Route path="settings" element={<Settings />} />
         </Route>
       </Routes>
       <Toaster />
-    </>
+    </ErrorBoundary>
   )
 }
 

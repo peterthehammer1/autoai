@@ -192,22 +192,23 @@ export default function Analytics() {
     { name: 'Excellent', value: customerData.health_distribution.excellent, color: '#22c55e' },
     { name: 'Good', value: customerData.health_distribution.good, color: '#3b82f6' },
     { name: 'Fair', value: customerData.health_distribution.fair, color: '#f59e0b' },
+    { name: 'New', value: customerData.health_distribution.new, color: '#8b5cf6' },
     { name: 'At Risk', value: customerData.health_distribution.at_risk, color: '#ef4444' },
   ].filter(d => d.value > 0) : []
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      {/* Header with Period Selector */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div className="space-y-4">
+      {/* Page Header - Professional */}
+      <div className="flex items-center justify-between pb-2">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Analytics Dashboard</h1>
-          <p className="text-sm text-slate-500">Comprehensive business intelligence and AI insights</p>
+          <h1 className="text-lg font-semibold text-slate-800">Analytics</h1>
+          <p className="text-sm text-slate-500">Business performance metrics</p>
         </div>
         <Tabs value={period} onValueChange={setPeriod}>
-          <TabsList className="bg-white border border-slate-200">
-            <TabsTrigger value="day" className="text-xs sm:text-sm">Today</TabsTrigger>
-            <TabsTrigger value="week" className="text-xs sm:text-sm">This Week</TabsTrigger>
-            <TabsTrigger value="month" className="text-xs sm:text-sm">This Month</TabsTrigger>
+          <TabsList className="bg-slate-100 p-1">
+            <TabsTrigger value="day" className="text-xs data-[state=active]:bg-white">Today</TabsTrigger>
+            <TabsTrigger value="week" className="text-xs data-[state=active]:bg-white">Week</TabsTrigger>
+            <TabsTrigger value="month" className="text-xs data-[state=active]:bg-white">Month</TabsTrigger>
           </TabsList>
         </Tabs>
       </div>
@@ -647,7 +648,7 @@ export default function Analytics() {
               {insightsLoading ? (
                 <div className="space-y-2">
                   {[1, 2, 3].map(i => (
-                    <div key={i} className="h-12 bg-white/5 animate-pulse rounded-lg" />
+                    <div key={i} className="h-12 bg-slate-100 animate-pulse" />
                   ))}
                 </div>
               ) : insightsData?.insights?.length > 0 ? (

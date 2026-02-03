@@ -66,9 +66,9 @@ export default function AppointmentDetail() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
-        <div className="h-8 w-64 animate-pulse rounded bg-muted" />
-        <div className="h-64 animate-pulse rounded-lg bg-muted" />
+      <div className="space-y-4">
+        <div className="h-8 w-64 animate-pulse bg-slate-100" />
+        <div className="h-64 animate-pulse bg-slate-100" />
       </div>
     )
   }
@@ -94,280 +94,279 @@ export default function AppointmentDetail() {
   const availableActions = statusActions[apt.status] || []
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" asChild>
+      <div className="flex items-center gap-3 pb-2">
+        <Button variant="ghost" size="icon" asChild className="h-8 w-8">
           <Link to="/appointments">
-            <ArrowLeft className="h-5 w-5" />
+            <ArrowLeft className="h-4 w-4" />
           </Link>
         </Button>
         <div className="flex-1">
-          <h1 className="text-2xl font-bold tracking-tight">
+          <h1 className="text-lg font-semibold text-slate-800">
             Appointment Details
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-sm text-slate-500">
             {format(new Date(apt.scheduled_date), 'EEEE, MMMM d, yyyy')} at{' '}
             {formatTime12Hour(apt.scheduled_time)}
           </p>
         </div>
-        <Badge className={cn('text-sm', getStatusColor(apt.status))}>
+        <span className="text-xs px-2 py-1 bg-slate-100 text-slate-600 rounded capitalize">
           {apt.status.replace('_', ' ')}
-        </Badge>
+        </span>
       </div>
 
       {/* Quick Actions */}
       {availableActions.length > 0 && (
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex flex-wrap gap-2">
-              {availableActions.includes('confirmed') && (
-                <Button
-                  onClick={() => updateMutation.mutate({ status: 'confirmed' })}
-                  disabled={updateMutation.isPending}
-                >
-                  <CheckCircle className="mr-2 h-4 w-4" />
-                  Confirm
-                </Button>
-              )}
-              {availableActions.includes('checked_in') && (
-                <Button
-                  onClick={() => updateMutation.mutate({ status: 'checked_in' })}
-                  disabled={updateMutation.isPending}
-                >
-                  Check In
-                </Button>
-              )}
-              {availableActions.includes('in_progress') && (
-                <Button
-                  onClick={() => updateMutation.mutate({ status: 'in_progress' })}
-                  disabled={updateMutation.isPending}
-                >
-                  Start Work
-                </Button>
-              )}
-              {availableActions.includes('completed') && (
-                <Button
-                  onClick={() => updateMutation.mutate({ status: 'completed' })}
-                  disabled={updateMutation.isPending}
-                  className="bg-green-600 hover:bg-green-700"
-                >
-                  Mark Complete
-                </Button>
-              )}
-              {availableActions.includes('cancelled') && (
-                <Button
-                  variant="outline"
-                  onClick={() => updateMutation.mutate({ status: 'cancelled' })}
-                  disabled={updateMutation.isPending}
-                >
-                  <XCircle className="mr-2 h-4 w-4" />
-                  Cancel
-                </Button>
-              )}
-              {apt.status === 'scheduled' && (
-                <Button
-                  variant="outline"
-                  onClick={() => confirmMutation.mutate()}
-                  disabled={confirmMutation.isPending}
-                >
-                  Send Confirmation SMS
-                </Button>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+        <div className="bg-white border border-slate-200 p-3">
+          <div className="flex flex-wrap gap-2">
+            {availableActions.includes('confirmed') && (
+              <Button
+                onClick={() => updateMutation.mutate({ status: 'confirmed' })}
+                disabled={updateMutation.isPending}
+                size="sm"
+                className="bg-slate-700 hover:bg-slate-800"
+              >
+                Confirm
+              </Button>
+            )}
+            {availableActions.includes('checked_in') && (
+              <Button
+                onClick={() => updateMutation.mutate({ status: 'checked_in' })}
+                disabled={updateMutation.isPending}
+                size="sm"
+                className="bg-slate-700 hover:bg-slate-800"
+              >
+                Check In
+              </Button>
+            )}
+            {availableActions.includes('in_progress') && (
+              <Button
+                onClick={() => updateMutation.mutate({ status: 'in_progress' })}
+                disabled={updateMutation.isPending}
+                size="sm"
+                className="bg-slate-700 hover:bg-slate-800"
+              >
+                Start Work
+              </Button>
+            )}
+            {availableActions.includes('completed') && (
+              <Button
+                onClick={() => updateMutation.mutate({ status: 'completed' })}
+                disabled={updateMutation.isPending}
+                size="sm"
+                className="bg-slate-700 hover:bg-slate-800"
+              >
+                Mark Complete
+              </Button>
+            )}
+            {availableActions.includes('cancelled') && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => updateMutation.mutate({ status: 'cancelled' })}
+                disabled={updateMutation.isPending}
+              >
+                Cancel
+              </Button>
+            )}
+            {apt.status === 'scheduled' && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => confirmMutation.mutate()}
+                disabled={confirmMutation.isPending}
+              >
+                Send Confirmation SMS
+              </Button>
+            )}
+          </div>
+        </div>
       )}
 
       {/* Details Grid */}
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-2">
         {/* Customer Info */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <User className="h-5 w-5" />
+        <div className="bg-white border border-slate-200">
+          <div className="px-4 py-3 border-b border-slate-200 bg-slate-50">
+            <h3 className="text-sm font-medium text-slate-700 flex items-center gap-2">
+              <User className="h-4 w-4 text-slate-400" />
               Customer
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <p className="text-lg font-medium">
-                {apt.customer?.first_name} {apt.customer?.last_name}
-              </p>
-            </div>
-            <div className="space-y-2 text-sm">
-              <div className="flex items-center gap-2">
-                <Phone className="h-4 w-4 text-muted-foreground" />
+            </h3>
+          </div>
+          <div className="p-4 space-y-3">
+            <p className="text-sm font-medium text-slate-800">
+              {apt.customer?.first_name} {apt.customer?.last_name}
+            </p>
+            <div className="space-y-1.5 text-sm">
+              <div className="flex items-center gap-2 text-slate-600">
+                <Phone className="h-3.5 w-3.5 text-slate-400" />
                 <PhoneNumber phone={apt.customer?.phone} email={apt.customer?.email} />
               </div>
               {apt.customer?.email && (
-                <div className="flex items-center gap-2">
-                  <Mail className="h-4 w-4 text-muted-foreground" />
+                <div className="flex items-center gap-2 text-slate-600">
+                  <Mail className="h-3.5 w-3.5 text-slate-400" />
                   <Email email={apt.customer?.email} />
                 </div>
               )}
             </div>
-            <Button variant="outline" size="sm" asChild>
+            <Button variant="ghost" size="sm" asChild className="text-xs">
               <Link to={`/customers/${apt.customer?.id}`}>View Customer</Link>
             </Button>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Vehicle Info */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Car className="h-5 w-5" />
+        <div className="bg-white border border-slate-200">
+          <div className="px-4 py-3 border-b border-slate-200 bg-slate-50">
+            <h3 className="text-sm font-medium text-slate-700 flex items-center gap-2">
+              <Car className="h-4 w-4 text-slate-400" />
               Vehicle
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+            </h3>
+          </div>
+          <div className="p-4 space-y-3">
             {apt.vehicle ? (
               <>
-                <div className="flex items-start gap-3 sm:gap-4">
+                <div className="flex items-start gap-3">
                   <CarImage 
                     make={apt.vehicle.make} 
                     model={apt.vehicle.model} 
                     year={apt.vehicle.year}
-                    size="lg"
-                    className="shrink-0 sm:h-28 sm:w-44"
+                    size="md"
+                    className="shrink-0"
                   />
                   <div className="min-w-0">
-                    <p className="text-base sm:text-lg font-medium truncate">
+                    <p className="text-sm font-medium text-slate-800 truncate">
                       {apt.vehicle.year} {apt.vehicle.make} {apt.vehicle.model}
                     </p>
                     {apt.vehicle.color && (
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-xs text-slate-500">
                         {apt.vehicle.color}
                       </p>
                     )}
                     {apt.vehicle.license_plate && (
-                      <div className="text-sm mt-1">
-                        <span className="text-muted-foreground">Plate: </span>
-                        {apt.vehicle.license_plate}
-                      </div>
+                      <p className="text-xs text-slate-500">
+                        Plate: {apt.vehicle.license_plate}
+                      </p>
                     )}
                   </div>
                 </div>
               </>
             ) : (
-              <p className="text-muted-foreground">No vehicle on file</p>
+              <p className="text-xs text-slate-500">No vehicle on file</p>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Appointment Details */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
+        <div className="bg-white border border-slate-200">
+          <div className="px-4 py-3 border-b border-slate-200 bg-slate-50">
+            <h3 className="text-sm font-medium text-slate-700 flex items-center gap-2">
+              <Calendar className="h-4 w-4 text-slate-400" />
               Appointment
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4 text-sm">
+            </h3>
+          </div>
+          <div className="p-4 space-y-3">
+            <div className="grid grid-cols-2 gap-3 text-sm">
               <div>
-                <p className="text-muted-foreground">Date</p>
-                <p className="font-medium">
+                <p className="text-xs text-slate-500">Date</p>
+                <p className="text-sm text-slate-800">
                   {format(new Date(apt.scheduled_date), 'MMM d, yyyy')}
                 </p>
               </div>
               <div>
-                <p className="text-muted-foreground">Time</p>
-                <p className="font-medium">
+                <p className="text-xs text-slate-500">Time</p>
+                <p className="text-sm text-slate-800">
                   {formatTime12Hour(apt.scheduled_time)}
                 </p>
               </div>
               <div>
-                <p className="text-muted-foreground">Duration</p>
-                <p className="font-medium">
+                <p className="text-xs text-slate-500">Duration</p>
+                <p className="text-sm text-slate-800">
                   {formatDuration(apt.estimated_duration_minutes)}
                 </p>
               </div>
               <div>
-                <p className="text-muted-foreground">Bay</p>
-                <p className="font-medium">{apt.bay?.name || '-'}</p>
+                <p className="text-xs text-slate-500">Bay</p>
+                <p className="text-sm text-slate-800">{apt.bay?.name || '-'}</p>
               </div>
             </div>
-            <Separator />
-            <div className="space-y-2 text-sm">
-              {apt.loaner_requested && (
-                <Badge variant="outline">Loaner Requested</Badge>
-              )}
-              {apt.shuttle_requested && (
-                <Badge variant="outline">Shuttle Requested</Badge>
-              )}
-              {apt.waiter && <Badge variant="outline">Waiting</Badge>}
-            </div>
-            {apt.customer_notes && (
-              <>
-                <Separator />
-                <div>
-                  <p className="text-sm text-muted-foreground">Customer Notes</p>
-                  <p className="text-sm">{apt.customer_notes}</p>
-                </div>
-              </>
+            {(apt.loaner_requested || apt.shuttle_requested || apt.waiter) && (
+              <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-100">
+                {apt.loaner_requested && (
+                  <span className="text-xs px-2 py-0.5 bg-slate-100 text-slate-600 rounded">Loaner</span>
+                )}
+                {apt.shuttle_requested && (
+                  <span className="text-xs px-2 py-0.5 bg-slate-100 text-slate-600 rounded">Shuttle</span>
+                )}
+                {apt.waiter && (
+                  <span className="text-xs px-2 py-0.5 bg-slate-100 text-slate-600 rounded">Waiting</span>
+                )}
+              </div>
             )}
-          </CardContent>
-        </Card>
+            {apt.customer_notes && (
+              <div className="pt-2 border-t border-slate-100">
+                <p className="text-xs text-slate-500 mb-1">Customer Notes</p>
+                <p className="text-sm text-slate-700">{apt.customer_notes}</p>
+              </div>
+            )}
+          </div>
+        </div>
 
         {/* Services */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Wrench className="h-5 w-5" />
+        <div className="bg-white border border-slate-200">
+          <div className="px-4 py-3 border-b border-slate-200 bg-slate-50">
+            <h3 className="text-sm font-medium text-slate-700 flex items-center gap-2">
+              <Wrench className="h-4 w-4 text-slate-400" />
               Services
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
+            </h3>
+          </div>
+          <div className="p-4">
+            <div className="space-y-2">
               {apt.appointment_services?.map((svc, idx) => (
                 <div
                   key={idx}
-                  className="flex items-center justify-between rounded-lg border p-3"
+                  className="flex items-center justify-between py-2 border-b border-slate-100 last:border-0"
                 >
                   <div>
-                    <p className="font-medium">{svc.service_name}</p>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-slate-800">{svc.service_name}</p>
+                    <p className="text-xs text-slate-500">
                       {formatDuration(svc.duration_minutes)}
                     </p>
                   </div>
-                  <p className="font-medium">
+                  <p className="text-sm text-slate-700">
                     {formatCents(svc.quoted_price)}
                   </p>
                 </div>
               ))}
-              <Separator />
-              <div className="flex items-center justify-between font-medium">
-                <span>Total</span>
-                <span>{formatCents(apt.quoted_total)}</span>
+              <div className="flex items-center justify-between pt-2 border-t border-slate-200">
+                <span className="text-sm font-medium text-slate-800">Total</span>
+                <span className="text-sm font-medium text-slate-800">{formatCents(apt.quoted_total)}</span>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
 
       {/* Metadata */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex flex-wrap gap-6 text-sm text-muted-foreground">
-            <div>
-              <span>Created: </span>
-              {format(new Date(apt.created_at), 'MMM d, yyyy h:mm a')}
-            </div>
-            <div>
-              <span>Source: </span>
-              {apt.created_by === 'ai_agent' ? 'AI Voice Agent' : apt.created_by}
-            </div>
-            {apt.call_id && (
-              <div>
-                <span>Call ID: </span>
-                {apt.call_id}
-              </div>
-            )}
+      <div className="bg-white border border-slate-200 p-3">
+        <div className="flex flex-wrap gap-4 text-xs text-slate-500">
+          <div>
+            <span>Created: </span>
+            {format(new Date(apt.created_at), 'MMM d, yyyy h:mm a')}
           </div>
-        </CardContent>
-      </Card>
+          <div>
+            <span>Source: </span>
+            {apt.created_by === 'ai_agent' ? 'AI Voice Agent' : apt.created_by}
+          </div>
+          {apt.call_id && (
+            <div>
+              <span>Call ID: </span>
+              {apt.call_id}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   )
 }

@@ -126,12 +126,8 @@ export default function Landing() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
-            <div className="flex items-center gap-3">
-              <img src="/logo.svg" alt="Premier Auto" className="h-10 w-10 rounded-lg" />
-              <div className="flex flex-col">
-                <span className="text-xl font-bold text-slate-900 leading-tight">Premier Auto</span>
-                <span className="text-[10px] text-slate-500 leading-tight">Powered by <span className="font-semibold">Nucleus</span></span>
-              </div>
+            <div className="flex items-center">
+              <img src="/logo-light.png" alt="Premier Auto Service" className="h-20 scale-[1.3] origin-left" />
             </div>
 
             {/* Desktop Nav */}
@@ -626,11 +622,7 @@ export default function Landing() {
             {/* Brand */}
             <div className="md:col-span-2">
               <div className="flex items-center gap-3 mb-4">
-                <img src="/logo.svg" alt="Premier Auto" className="h-10 w-10 rounded-lg" />
-                <div className="flex flex-col">
-                  <span className="text-xl font-bold text-white leading-tight">Premier Auto Service</span>
-                  <span className="text-xs text-slate-400 leading-tight">Powered by <span className="font-semibold text-slate-300">Nucleus</span></span>
-                </div>
+                <span className="text-2xl font-bold text-white tracking-tight">PREMIER AUTO</span>
               </div>
               <p className="text-slate-400 mb-6 max-w-md">
                 AI-powered auto service booking platform. Available 24/7 to help you 

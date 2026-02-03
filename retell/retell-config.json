@@ -235,6 +235,37 @@
         },
         "required": ["customer_phone", "pickup_address_line1", "pickup_city", "pickup_state", "pickup_zip"]
       }
+    },
+    {
+      "type": "custom",
+      "name": "submit_lead",
+      "description": "ONLY use when someone asks about the AI platform itself (who made this, how do I get this for my business, etc). NOT for auto service questions.",
+      "url": "https://www.alignedai.dev/api/voice/submit_lead",
+      "speak_during_execution": false,
+      "speak_after_execution": true,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "customer_name": {
+            "type": "string",
+            "description": "The person's name"
+          },
+          "customer_phone": {
+            "type": "string",
+            "const": "{{customer_phone}}",
+            "description": "Their phone number - auto-filled from caller ID"
+          },
+          "business_name": {
+            "type": "string",
+            "description": "Their business name if they mentioned it"
+          },
+          "interest": {
+            "type": "string",
+            "description": "What they're interested in (e.g., 'AI receptionist for auto shop', 'voice AI for my business')"
+          }
+        },
+        "required": ["customer_name", "customer_phone"]
+      }
     }
   ],
   
