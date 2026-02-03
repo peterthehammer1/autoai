@@ -2133,6 +2133,7 @@ router.post('/request_callback', async (req, res, next) => {
 /**
  * POST /api/voice/get_repair_status
  * Check status of a vehicle currently at the shop
+ * Auto-estimates based on scheduled appointment time (assumes on-time arrival)
  */
 router.post('/get_repair_status', async (req, res, next) => {
   try {
@@ -2165,9 +2166,13 @@ router.post('/get_repair_status', async (req, res, next) => {
       });
     }
     
-    // Look for appointments that are checked_in or in_progress (vehicle is at shop)
     const today = format(new Date(), 'yyyy-MM-dd');
-    const { data: activeAppointments } = await supabase
+    const now = new Date();
+    const currentTimeMinutes = now.getHours() * 60 + now.getMinutes();
+    
+    // Look for today's appointments (scheduled, checked_in, or in_progress)
+    // We'll auto-treat "scheduled" appointments as in-progress if appointment time has passed
+    const { data: todayAppointments } = await supabase
       .from('appointments')
       .select(`
         id,
@@ -2182,81 +2187,92 @@ router.post('/get_repair_status', async (req, res, next) => {
         appointment_services (service_name)
       `)
       .eq('customer_id', customer.id)
-      .in('status', ['checked_in', 'in_progress'])
-      .order('scheduled_date', { ascending: false })
-      .limit(1);
+      .eq('scheduled_date', today)
+      .not('status', 'in', '("cancelled","completed","no_show")')
+      .order('scheduled_time')
+      .limit(3);
     
-    if (!activeAppointments || activeAppointments.length === 0) {
-      // Check if they have an appointment today that's not checked in yet
-      const { data: todayAppointments } = await supabase
-        .from('appointments')
-        .select(`
-          id,
-          scheduled_date,
-          scheduled_time,
-          status,
-          vehicle:vehicles (year, make, model),
-          appointment_services (service_name)
-        `)
-        .eq('customer_id', customer.id)
-        .eq('scheduled_date', today)
-        .eq('status', 'scheduled')
-        .limit(1);
-      
-      if (todayAppointments && todayAppointments.length > 0) {
-        const apt = todayAppointments[0];
-        const services = apt.appointment_services.map(s => s.service_name).join(', ');
-        return res.json({
-          success: true,
-          has_vehicle_in_shop: false,
-          has_appointment_today: true,
-          appointment: {
-            time: formatTime12Hour(apt.scheduled_time),
-            services,
-            vehicle: apt.vehicle ? `${apt.vehicle.year} ${apt.vehicle.make} ${apt.vehicle.model}` : null
-          },
-          message: `${customer.first_name ? customer.first_name + ', I' : 'I'} see you have an appointment today at ${formatTime12Hour(apt.scheduled_time)} for ${services}, but it looks like you haven't checked in yet. Are you on your way?`
-        });
-      }
-      
+    if (!todayAppointments || todayAppointments.length === 0) {
       return res.json({
         success: true,
         has_vehicle_in_shop: false,
-        message: `${customer.first_name ? customer.first_name + ', I' : 'I'} don't see any vehicles currently checked in at the shop. Did you drop off recently, or were you checking on a past repair?`
+        message: `${customer.first_name ? customer.first_name + ', I' : 'I'} don't see any appointments for you today. Did you drop off recently, or were you checking on a past repair?`
       });
     }
     
-    const apt = activeAppointments[0];
+    // Find the most relevant appointment
+    // Priority: in_progress > checked_in > scheduled (if time has passed)
+    let apt = todayAppointments.find(a => a.status === 'in_progress') 
+           || todayAppointments.find(a => a.status === 'checked_in');
+    
+    // If no explicitly checked-in appointment, check if a scheduled one should be "in progress"
+    if (!apt) {
+      for (const a of todayAppointments) {
+        if (a.status === 'scheduled') {
+          const [aptH, aptM] = a.scheduled_time.split(':').map(Number);
+          const aptTimeMinutes = aptH * 60 + aptM;
+          
+          // If appointment time has passed, assume they're here and work is underway
+          if (currentTimeMinutes >= aptTimeMinutes) {
+            apt = a;
+            break;
+          }
+        }
+      }
+    }
+    
+    // If still no match, they have an appointment but it hasn't started yet
+    if (!apt) {
+      const nextApt = todayAppointments[0];
+      const services = nextApt.appointment_services.map(s => s.service_name).join(', ');
+      return res.json({
+        success: true,
+        has_vehicle_in_shop: false,
+        has_appointment_today: true,
+        appointment: {
+          time: formatTime12Hour(nextApt.scheduled_time),
+          services,
+          vehicle: nextApt.vehicle ? `${nextApt.vehicle.year} ${nextApt.vehicle.make} ${nextApt.vehicle.model}` : null
+        },
+        message: `${customer.first_name ? customer.first_name + ', your' : 'Your'} appointment is at ${formatTime12Hour(nextApt.scheduled_time)} for ${services}. Are you on your way?`
+      });
+    }
+    
+    // We have an active/in-progress appointment
     const services = apt.appointment_services.map(s => s.service_name).join(', ');
     const vehicle = apt.vehicle ? `${apt.vehicle.year} ${apt.vehicle.make} ${apt.vehicle.model}` : 'your vehicle';
+    const duration = apt.estimated_duration_minutes || 60;
     
-    // Calculate estimated completion
+    // Calculate estimated completion based on scheduled time (assume on-time arrival)
+    const [aptH, aptM] = apt.scheduled_time.split(':').map(Number);
+    const scheduledStartMinutes = aptH * 60 + aptM;
+    const estimatedEndMinutes = scheduledStartMinutes + duration;
+    const minutesRemaining = Math.max(0, estimatedEndMinutes - currentTimeMinutes);
+    
+    // Format estimated ready time
+    const endHour = Math.floor(estimatedEndMinutes / 60);
+    const endMin = estimatedEndMinutes % 60;
+    const estimatedReadyTime = formatTime12Hour(`${String(endHour).padStart(2, '0')}:${String(endMin).padStart(2, '0')}`);
+    
+    // Build status message
     let statusMessage = '';
     let estimatedReady = '';
     
-    if (apt.status === 'checked_in') {
-      statusMessage = `${vehicle} is checked in and waiting to go into the bay`;
-      if (apt.scheduled_time) {
-        estimatedReady = `We should have it done by around ${formatTime12Hour(addMinutesToTime(apt.scheduled_time, apt.estimated_duration_minutes || 60).slice(0, 5))}`;
-      }
-    } else if (apt.status === 'in_progress') {
-      statusMessage = `The technician is working on ${vehicle} right now`;
-      if (apt.started_at) {
-        const startedAt = new Date(apt.started_at);
-        const estimatedEnd = new Date(startedAt.getTime() + (apt.estimated_duration_minutes || 60) * 60000);
-        const now = new Date();
-        const minutesRemaining = Math.max(0, Math.round((estimatedEnd - now) / 60000));
-        
-        if (minutesRemaining <= 0) {
-          estimatedReady = 'It should be finishing up any minute now';
-        } else if (minutesRemaining <= 15) {
-          estimatedReady = 'It should be ready in about 15 minutes or less';
-        } else if (minutesRemaining <= 30) {
-          estimatedReady = 'It should be ready in about 30 minutes';
-        } else {
-          estimatedReady = `It should be ready in about ${Math.round(minutesRemaining / 15) * 15} minutes`;
-        }
-      }
+    if (minutesRemaining <= 0) {
+      statusMessage = `${vehicle} should be just about done`;
+      estimatedReady = 'It should be ready any minute now - we\'ll text you as soon as it\'s finished';
+    } else if (minutesRemaining <= 10) {
+      statusMessage = `The team is finishing up on ${vehicle}`;
+      estimatedReady = 'Should be ready in just a few minutes';
+    } else if (minutesRemaining <= 20) {
+      statusMessage = `${vehicle} is being worked on now`;
+      estimatedReady = `Should be ready in about 15-20 minutes, around ${estimatedReadyTime}`;
+    } else if (minutesRemaining <= 45) {
+      statusMessage = `${vehicle} is in the bay being worked on`;
+      estimatedReady = `Should be ready around ${estimatedReadyTime}, about ${Math.round(minutesRemaining / 5) * 5} minutes from now`;
+    } else {
+      statusMessage = `${vehicle} is being worked on`;
+      estimatedReady = `Estimated ready time is around ${estimatedReadyTime}`;
     }
     
     // Include any tech notes if available
@@ -2268,9 +2284,13 @@ router.post('/get_repair_status', async (req, res, next) => {
     return res.json({
       success: true,
       has_vehicle_in_shop: true,
-      status: apt.status,
+      status: apt.status === 'scheduled' ? 'in_progress_assumed' : apt.status,
       vehicle,
       services,
+      scheduled_time: apt.scheduled_time,
+      estimated_duration_minutes: duration,
+      minutes_remaining: minutesRemaining,
+      estimated_ready_time: estimatedReadyTime,
       status_message: statusMessage,
       estimated_ready: estimatedReady,
       message: `${customer.first_name ? customer.first_name + ', ' : ''}${statusMessage} for ${services}. ${estimatedReady}.${techNotes} We'll text you when it's ready. Anything else I can help with?`
