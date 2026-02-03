@@ -1994,6 +1994,440 @@ router.post('/submit_lead', async (req, res, next) => {
   }
 });
 
+/**
+ * POST /api/voice/transfer_to_human
+ * Transfer call to a human service advisor
+ * Logs the transfer request and provides context
+ */
+router.post('/transfer_to_human', async (req, res, next) => {
+  try {
+    console.log('transfer_to_human received:', JSON.stringify(req.body));
+    
+    const body = req.body.args || req.body;
+    const customer_phone = body.customer_phone;
+    const reason = body.reason || 'Customer requested transfer';
+    const context = body.context || '';
+    const call_id = body.call_id;
+    
+    // Log the transfer request
+    if (call_id) {
+      await supabase
+        .from('call_logs')
+        .update({
+          outcome: 'transferred',
+          internal_notes: `Transfer reason: ${reason}. Context: ${context}`
+        })
+        .eq('retell_call_id', call_id);
+    }
+    
+    // In production, this would trigger an actual transfer via Retell's transfer API
+    // For now, we provide the callback number
+    const serviceAdvisorNumber = process.env.SERVICE_ADVISOR_PHONE || '(647) 371-1990';
+    
+    return res.json({
+      success: true,
+      transfer_to: serviceAdvisorNumber,
+      message: `I'll connect you with one of our service advisors right now. If we get disconnected, you can call us directly at ${serviceAdvisorNumber}. One moment please.`
+    });
+  } catch (error) {
+    console.error('transfer_to_human error:', error);
+    res.json({
+      success: false,
+      message: 'I\'m having trouble with the transfer. Our direct number is (647) 371-1990 - you can call that to speak with a service advisor.'
+    });
+  }
+});
+
+/**
+ * POST /api/voice/request_callback
+ * Customer requests a callback from a service advisor
+ */
+router.post('/request_callback', async (req, res, next) => {
+  try {
+    console.log('request_callback received:', JSON.stringify(req.body));
+    
+    const body = req.body.args || req.body;
+    const customer_phone = body.customer_phone;
+    const customer_name = body.customer_name || body.customer_first_name;
+    const reason = body.reason || 'General inquiry';
+    const preferred_time = body.preferred_time; // e.g., "this afternoon", "tomorrow morning"
+    const call_id = body.call_id;
+    
+    if (!customer_phone) {
+      return res.json({
+        success: false,
+        message: 'What\'s the best number for us to call you back on?'
+      });
+    }
+    
+    const normalizedPhone = normalizePhone(customer_phone);
+    
+    // Find or create customer
+    let { data: customer } = await supabase
+      .from('customers')
+      .select('id, first_name')
+      .eq('phone_normalized', normalizedPhone)
+      .single();
+    
+    if (!customer && customer_name) {
+      const { data: newCustomer } = await supabase
+        .from('customers')
+        .insert({
+          phone: customer_phone,
+          first_name: customer_name
+        })
+        .select('id, first_name')
+        .single();
+      customer = newCustomer;
+    }
+    
+    // Create a callback request in call_logs with outcome 'callback_requested'
+    const { error } = await supabase
+      .from('call_logs')
+      .insert({
+        phone_number: customer_phone,
+        phone_normalized: normalizedPhone,
+        customer_id: customer?.id,
+        direction: 'inbound',
+        outcome: 'callback_requested',
+        transcript_summary: `Callback requested: ${reason}${preferred_time ? ` | Preferred time: ${preferred_time}` : ''}`,
+        started_at: new Date().toISOString(),
+        ended_at: new Date().toISOString(),
+        duration_seconds: 0
+      });
+    
+    if (error) console.error('Error logging callback request:', error);
+    
+    // Send SMS notification to service team
+    try {
+      const twilioClient = (await import('twilio')).default;
+      const client = twilioClient(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+      
+      const message = `📞 CALLBACK REQUEST\n\nName: ${customer_name || 'Customer'}\nPhone: ${formatPhone(customer_phone)}\nReason: ${reason}${preferred_time ? `\nPreferred time: ${preferred_time}` : ''}\n\nPlease call back soon.`;
+      
+      // Send to service advisor
+      await client.messages.create({
+        body: message,
+        from: process.env.TWILIO_PHONE_NUMBER,
+        to: process.env.SERVICE_ADVISOR_PHONE || '+16473711990'
+      });
+    } catch (smsError) {
+      console.error('Failed to send callback notification SMS:', smsError);
+    }
+    
+    const timeNote = preferred_time ? ` We'll try to reach you ${preferred_time}.` : ' They\'ll call you as soon as possible.';
+    
+    return res.json({
+      success: true,
+      message: `I've put in a callback request for you.${timeNote} Is there anything else I can help with in the meantime?`
+    });
+  } catch (error) {
+    console.error('request_callback error:', error);
+    res.json({
+      success: false,
+      message: 'I had trouble submitting that request. Our number is (647) 371-1990 if you\'d like to call back, or I can try again.'
+    });
+  }
+});
+
+/**
+ * POST /api/voice/get_repair_status
+ * Check status of a vehicle currently at the shop
+ */
+router.post('/get_repair_status', async (req, res, next) => {
+  try {
+    console.log('get_repair_status received:', JSON.stringify(req.body));
+    
+    const body = req.body.args || req.body;
+    const customer_phone = body.customer_phone;
+    
+    if (!customer_phone) {
+      return res.json({
+        success: false,
+        message: 'I need your phone number to look up your repair status. Is this the number on your account?'
+      });
+    }
+    
+    const normalizedPhone = normalizePhone(customer_phone);
+    
+    // Get customer
+    const { data: customer } = await supabase
+      .from('customers')
+      .select('id, first_name')
+      .eq('phone_normalized', normalizedPhone)
+      .single();
+    
+    if (!customer) {
+      return res.json({
+        success: true,
+        has_vehicle_in_shop: false,
+        message: 'I don\'t see any vehicles checked in under that phone number. Is it possible the account is under a different number?'
+      });
+    }
+    
+    // Look for appointments that are checked_in or in_progress (vehicle is at shop)
+    const today = format(new Date(), 'yyyy-MM-dd');
+    const { data: activeAppointments } = await supabase
+      .from('appointments')
+      .select(`
+        id,
+        scheduled_date,
+        scheduled_time,
+        status,
+        checked_in_at,
+        started_at,
+        estimated_duration_minutes,
+        internal_notes,
+        vehicle:vehicles (year, make, model),
+        appointment_services (service_name)
+      `)
+      .eq('customer_id', customer.id)
+      .in('status', ['checked_in', 'in_progress'])
+      .order('scheduled_date', { ascending: false })
+      .limit(1);
+    
+    if (!activeAppointments || activeAppointments.length === 0) {
+      // Check if they have an appointment today that's not checked in yet
+      const { data: todayAppointments } = await supabase
+        .from('appointments')
+        .select(`
+          id,
+          scheduled_date,
+          scheduled_time,
+          status,
+          vehicle:vehicles (year, make, model),
+          appointment_services (service_name)
+        `)
+        .eq('customer_id', customer.id)
+        .eq('scheduled_date', today)
+        .eq('status', 'scheduled')
+        .limit(1);
+      
+      if (todayAppointments && todayAppointments.length > 0) {
+        const apt = todayAppointments[0];
+        const services = apt.appointment_services.map(s => s.service_name).join(', ');
+        return res.json({
+          success: true,
+          has_vehicle_in_shop: false,
+          has_appointment_today: true,
+          appointment: {
+            time: formatTime12Hour(apt.scheduled_time),
+            services,
+            vehicle: apt.vehicle ? `${apt.vehicle.year} ${apt.vehicle.make} ${apt.vehicle.model}` : null
+          },
+          message: `${customer.first_name ? customer.first_name + ', I' : 'I'} see you have an appointment today at ${formatTime12Hour(apt.scheduled_time)} for ${services}, but it looks like you haven't checked in yet. Are you on your way?`
+        });
+      }
+      
+      return res.json({
+        success: true,
+        has_vehicle_in_shop: false,
+        message: `${customer.first_name ? customer.first_name + ', I' : 'I'} don't see any vehicles currently checked in at the shop. Did you drop off recently, or were you checking on a past repair?`
+      });
+    }
+    
+    const apt = activeAppointments[0];
+    const services = apt.appointment_services.map(s => s.service_name).join(', ');
+    const vehicle = apt.vehicle ? `${apt.vehicle.year} ${apt.vehicle.make} ${apt.vehicle.model}` : 'your vehicle';
+    
+    // Calculate estimated completion
+    let statusMessage = '';
+    let estimatedReady = '';
+    
+    if (apt.status === 'checked_in') {
+      statusMessage = `${vehicle} is checked in and waiting to go into the bay`;
+      if (apt.scheduled_time) {
+        estimatedReady = `We should have it done by around ${formatTime12Hour(addMinutesToTime(apt.scheduled_time, apt.estimated_duration_minutes || 60).slice(0, 5))}`;
+      }
+    } else if (apt.status === 'in_progress') {
+      statusMessage = `The technician is working on ${vehicle} right now`;
+      if (apt.started_at) {
+        const startedAt = new Date(apt.started_at);
+        const estimatedEnd = new Date(startedAt.getTime() + (apt.estimated_duration_minutes || 60) * 60000);
+        const now = new Date();
+        const minutesRemaining = Math.max(0, Math.round((estimatedEnd - now) / 60000));
+        
+        if (minutesRemaining <= 0) {
+          estimatedReady = 'It should be finishing up any minute now';
+        } else if (minutesRemaining <= 15) {
+          estimatedReady = 'It should be ready in about 15 minutes or less';
+        } else if (minutesRemaining <= 30) {
+          estimatedReady = 'It should be ready in about 30 minutes';
+        } else {
+          estimatedReady = `It should be ready in about ${Math.round(minutesRemaining / 15) * 15} minutes`;
+        }
+      }
+    }
+    
+    // Include any tech notes if available
+    let techNotes = '';
+    if (apt.internal_notes && apt.internal_notes.includes('Update:')) {
+      techNotes = ' ' + apt.internal_notes.split('Update:').pop().trim();
+    }
+    
+    return res.json({
+      success: true,
+      has_vehicle_in_shop: true,
+      status: apt.status,
+      vehicle,
+      services,
+      status_message: statusMessage,
+      estimated_ready: estimatedReady,
+      message: `${customer.first_name ? customer.first_name + ', ' : ''}${statusMessage} for ${services}. ${estimatedReady}.${techNotes} We'll text you when it's ready. Anything else I can help with?`
+    });
+    
+  } catch (error) {
+    console.error('get_repair_status error:', error);
+    res.json({
+      success: false,
+      message: 'I had trouble looking that up. Let me transfer you to the service desk - they can give you a live update.'
+    });
+  }
+});
+
+/**
+ * POST /api/voice/get_estimate
+ * Provide a price estimate for services
+ */
+router.post('/get_estimate', async (req, res, next) => {
+  try {
+    console.log('get_estimate received:', JSON.stringify(req.body));
+    
+    const body = req.body.args || req.body;
+    const service_search = body.service_search || body.search;
+    const vehicle_year = body.vehicle_year;
+    const vehicle_make = body.vehicle_make;
+    const vehicle_model = body.vehicle_model;
+    const customer_phone = body.customer_phone;
+    const issue_description = body.issue_description;
+    
+    // If they described an issue rather than a specific service
+    if (issue_description && !service_search) {
+      // Log this for follow-up
+      if (customer_phone) {
+        const normalizedPhone = normalizePhone(customer_phone);
+        const { data: customer } = await supabase
+          .from('customers')
+          .select('id')
+          .eq('phone_normalized', normalizedPhone)
+          .single();
+        
+        // Create a callback/quote request
+        await supabase
+          .from('call_logs')
+          .insert({
+            phone_number: customer_phone,
+            phone_normalized: normalizedPhone,
+            customer_id: customer?.id,
+            direction: 'inbound',
+            outcome: 'inquiry',
+            transcript_summary: `Quote request: ${issue_description}${vehicle_year ? ` | Vehicle: ${vehicle_year} ${vehicle_make} ${vehicle_model}` : ''}`,
+            started_at: new Date().toISOString(),
+            ended_at: new Date().toISOString()
+          });
+      }
+      
+      return res.json({
+        success: true,
+        needs_diagnosis: true,
+        message: `That sounds like something we'd need to take a look at to give you an accurate quote. We can do a diagnostic for $125, and if you decide to do the repair with us, we'll apply that toward the cost. Would you like to schedule a diagnostic appointment?`
+      });
+    }
+    
+    if (!service_search) {
+      return res.json({
+        success: false,
+        message: 'What service did you want an estimate for?'
+      });
+    }
+    
+    // Search for the service
+    const { data: services } = await supabase
+      .from('services')
+      .select('id, name, price_min, price_max, price_display, duration_minutes, description, requires_diagnosis')
+      .eq('is_active', true)
+      .or(`name.ilike.%${service_search}%,description.ilike.%${service_search}%`)
+      .order('is_popular', { ascending: false })
+      .limit(3);
+    
+    if (!services || services.length === 0) {
+      return res.json({
+        success: true,
+        service_found: false,
+        message: `I don't have a standard price for "${service_search}". We'd need to take a look at the vehicle to give you an accurate quote. Would you like to schedule a diagnostic appointment? That's $125, and we apply it to the repair if you go ahead.`
+      });
+    }
+    
+    const service = services[0];
+    
+    // Check if this service requires diagnosis first
+    if (service.requires_diagnosis) {
+      return res.json({
+        success: true,
+        service_found: true,
+        requires_diagnosis: true,
+        service_name: service.name,
+        message: `${service.name} pricing depends on what we find during the inspection. We'd need to do a diagnostic first - that's $125, and we'll apply it toward the repair if you decide to go ahead. Would you like to schedule that?`
+      });
+    }
+    
+    // Build price message
+    let priceMessage = '';
+    if (service.price_min && service.price_max && service.price_min !== service.price_max) {
+      priceMessage = `runs between $${service.price_min} and $${service.price_max}`;
+    } else if (service.price_min) {
+      priceMessage = `is $${service.price_min}`;
+    } else if (service.price_display) {
+      priceMessage = `is ${service.price_display}`;
+    }
+    
+    // Duration
+    const durationMessage = service.duration_minutes 
+      ? `takes about ${service.duration_minutes} minutes`
+      : '';
+    
+    // Build full response
+    let message = `${service.name} ${priceMessage}`;
+    if (durationMessage) {
+      message += ` and ${durationMessage}`;
+    }
+    message += '. Would you like to schedule an appointment?';
+    
+    // If multiple matching services, mention alternatives
+    if (services.length > 1) {
+      const alternatives = services.slice(1).map(s => s.name).join(' or ');
+      message += ` I also have ${alternatives} if that's what you were looking for.`;
+    }
+    
+    return res.json({
+      success: true,
+      service_found: true,
+      estimate: {
+        service_id: service.id,
+        service_name: service.name,
+        price_min: service.price_min,
+        price_max: service.price_max,
+        price_display: service.price_display,
+        duration_minutes: service.duration_minutes,
+        description: service.description
+      },
+      alternatives: services.slice(1).map(s => ({
+        service_id: s.id,
+        service_name: s.name,
+        price_display: s.price_display
+      })),
+      message
+    });
+    
+  } catch (error) {
+    console.error('get_estimate error:', error);
+    res.json({
+      success: false,
+      message: 'I had trouble looking that up. Let me get you to a service advisor who can help with pricing.'
+    });
+  }
+});
+
 // Helper functions
 function addMinutesToTime(timeStr, minutes) {
   const [hours, mins] = timeStr.split(':').map(Number);

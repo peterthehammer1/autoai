@@ -266,6 +266,122 @@
         },
         "required": ["customer_name", "customer_phone"]
       }
+    },
+    {
+      "type": "custom",
+      "name": "transfer_to_human",
+      "description": "Transfer the call to a human service advisor. Use when: customer is frustrated and wants a person, complex issue you can't handle, customer explicitly asks for a person, or you've failed multiple times at a task.",
+      "url": "https://www.alignedai.dev/api/voice/transfer_to_human",
+      "speak_during_execution": false,
+      "speak_after_execution": true,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "customer_phone": {
+            "type": "string",
+            "const": "{{customer_phone}}",
+            "description": "Customer phone - auto-filled"
+          },
+          "reason": {
+            "type": "string",
+            "description": "Why the customer needs to speak with a human (e.g., 'customer frustrated', 'complex repair question', 'billing dispute')"
+          },
+          "context": {
+            "type": "string",
+            "description": "Brief summary of what you've discussed so the advisor has context"
+          }
+        },
+        "required": ["reason"]
+      }
+    },
+    {
+      "type": "custom",
+      "name": "request_callback",
+      "description": "Request a callback from a service advisor. Use when customer wants someone to call them back rather than hold or transfer.",
+      "url": "https://www.alignedai.dev/api/voice/request_callback",
+      "speak_during_execution": false,
+      "speak_after_execution": true,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "customer_phone": {
+            "type": "string",
+            "const": "{{customer_phone}}",
+            "description": "Customer phone - auto-filled"
+          },
+          "customer_name": {
+            "type": "string",
+            "description": "Customer's name"
+          },
+          "reason": {
+            "type": "string",
+            "description": "What they need help with (e.g., 'question about repair cost', 'warranty question', 'complex scheduling')"
+          },
+          "preferred_time": {
+            "type": "string",
+            "description": "When they'd like to be called back (e.g., 'this afternoon', 'tomorrow morning', 'anytime')"
+          }
+        },
+        "required": ["customer_phone", "reason"]
+      }
+    },
+    {
+      "type": "custom",
+      "name": "get_repair_status",
+      "description": "Check status of a vehicle currently at the shop. Use when customer asks 'is my car ready?', 'what's the status?', 'how much longer?', or similar.",
+      "url": "https://www.alignedai.dev/api/voice/get_repair_status",
+      "speak_during_execution": false,
+      "speak_after_execution": true,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "customer_phone": {
+            "type": "string",
+            "const": "{{customer_phone}}",
+            "description": "Customer phone - auto-filled"
+          }
+        },
+        "required": ["customer_phone"]
+      }
+    },
+    {
+      "type": "custom",
+      "name": "get_estimate",
+      "description": "Get a price estimate for a service. Use when customer asks 'how much for...', 'what does X cost?', 'can I get a quote?'",
+      "url": "https://www.alignedai.dev/api/voice/get_estimate",
+      "speak_during_execution": false,
+      "speak_after_execution": true,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "customer_phone": {
+            "type": "string",
+            "const": "{{customer_phone}}",
+            "description": "Customer phone - auto-filled for logging"
+          },
+          "service_search": {
+            "type": "string",
+            "description": "The service they want a price for (e.g., 'brake pads', 'oil change', 'alignment')"
+          },
+          "issue_description": {
+            "type": "string",
+            "description": "If they described a problem rather than a service (e.g., 'my car is making a grinding noise')"
+          },
+          "vehicle_year": {
+            "type": "integer",
+            "description": "Vehicle year if they mentioned it"
+          },
+          "vehicle_make": {
+            "type": "string",
+            "description": "Vehicle make if they mentioned it"
+          },
+          "vehicle_model": {
+            "type": "string",
+            "description": "Vehicle model if they mentioned it"
+          }
+        },
+        "required": []
+      }
     }
   ],
   
