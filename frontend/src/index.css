@@ -33,6 +33,12 @@
     --success: 158 64% 32%;
     --warning: 32 95% 44%;
     --info: 213 94% 40%;
+    
+    /* Sidebar-matching teal colors (based on #082438) */
+    --sidebar: 201 75% 12%;
+    --sidebar-light: 201 40% 20%;
+    --sidebar-lighter: 201 30% 30%;
+    --sidebar-muted: 201 20% 45%;
   }
 
   .dark {

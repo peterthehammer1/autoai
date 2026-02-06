@@ -215,11 +215,11 @@ export default function Customers() {
     return `${(firstName || '')[0] || ''}${(lastName || '')[0] || ''}`.toUpperCase() || '?'
   }
 
-  // Get avatar color based on name
+  // Get avatar color based on name - using sidebar teal shades
   const getAvatarColor = (name) => {
     const colors = [
-      'bg-slate-400', 'bg-slate-500', 'bg-gray-400', 'bg-gray-500', 
-      'bg-zinc-400', 'bg-zinc-500', 'bg-neutral-400', 'bg-neutral-500'
+      'bg-sidebar-lighter', 'bg-sidebar-light', 'bg-sidebar-muted', 'bg-sidebar-lighter',
+      'bg-sidebar-light', 'bg-sidebar-muted', 'bg-sidebar-lighter', 'bg-sidebar-light'
     ]
     const index = (name || '').charCodeAt(0) % colors.length
     return colors[index]
@@ -290,14 +290,14 @@ export default function Customers() {
                     onClick={() => setSelectedCustomerId(customer.id)}
                     className={cn(
                       "w-full px-3 py-2.5 text-left hover:bg-slate-50 transition-colors flex items-center gap-3",
-                      selectedCustomerId === customer.id && "bg-slate-100 border-l-2 border-l-slate-600"
+                      selectedCustomerId === customer.id && "bg-sidebar/5 border-l-2 border-l-sidebar"
                     )}
                   >
                     <CustomerAvatar 
                       firstName={customer.first_name}
                       lastName={customer.last_name}
                       size="sm"
-                      className="bg-slate-200 text-slate-600"
+                      className="bg-sidebar-lighter text-white"
                     />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-slate-800 truncate">
@@ -360,7 +360,7 @@ export default function Customers() {
                       firstName={selectedCustomer.first_name}
                       lastName={selectedCustomer.last_name}
                       size="lg"
-                      className="h-11 w-11 sm:h-12 sm:w-12 text-base bg-slate-200 text-slate-600"
+                      className="h-11 w-11 sm:h-12 sm:w-12 text-base bg-sidebar-lighter text-white"
                     />
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
@@ -368,7 +368,7 @@ export default function Customers() {
                           {selectedCustomer.first_name} {selectedCustomer.last_name}
                         </h2>
                         {healthData && (
-                          <span className="text-xs px-2 py-0.5 rounded font-medium bg-slate-100 text-slate-600">
+                          <span className="text-xs px-2 py-0.5 rounded font-medium bg-sidebar/10 text-sidebar-lighter">
                             {healthData.health_status}
                           </span>
                         )}
@@ -438,34 +438,34 @@ export default function Customers() {
                 <TabsList className="w-full justify-start rounded-none border-b border-slate-200 bg-white p-0 h-auto overflow-x-auto flex-nowrap">
                   <TabsTrigger 
                     value="overview" 
-                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-slate-600 data-[state=active]:bg-transparent data-[state=active]:text-slate-800 py-2.5 px-4 text-sm text-slate-500 whitespace-nowrap font-medium"
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-sidebar data-[state=active]:bg-transparent data-[state=active]:text-sidebar py-2.5 px-4 text-sm text-sidebar-muted whitespace-nowrap font-medium"
                   >
                     Overview
                   </TabsTrigger>
                   <TabsTrigger 
                     value="vehicles" 
-                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-slate-600 data-[state=active]:bg-transparent data-[state=active]:text-slate-800 py-2.5 px-4 text-sm text-slate-500 whitespace-nowrap font-medium"
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-sidebar data-[state=active]:bg-transparent data-[state=active]:text-sidebar py-2.5 px-4 text-sm text-sidebar-muted whitespace-nowrap font-medium"
                   >
                     <span className="sm:hidden">Vehicles</span>
                     <span className="hidden sm:inline">Vehicles ({selectedCustomer.vehicles?.length || 0})</span>
                   </TabsTrigger>
                   <TabsTrigger 
                     value="appointments" 
-                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-slate-600 data-[state=active]:bg-transparent data-[state=active]:text-slate-800 py-2.5 px-4 text-sm text-slate-500 whitespace-nowrap font-medium"
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-sidebar data-[state=active]:bg-transparent data-[state=active]:text-sidebar py-2.5 px-4 text-sm text-sidebar-muted whitespace-nowrap font-medium"
                   >
                     <span className="sm:hidden">Appts</span>
                     <span className="hidden sm:inline">Appointments ({appointmentsData?.appointments?.length || 0})</span>
                   </TabsTrigger>
                   <TabsTrigger 
                     value="interactions" 
-                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-slate-600 data-[state=active]:bg-transparent data-[state=active]:text-slate-800 py-2.5 px-4 text-sm text-slate-500 whitespace-nowrap font-medium"
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-sidebar data-[state=active]:bg-transparent data-[state=active]:text-sidebar py-2.5 px-4 text-sm text-sidebar-muted whitespace-nowrap font-medium"
                   >
                     <span className="sm:hidden">Activity</span>
                     <span className="hidden sm:inline">Activity ({interactionsData?.interactions?.length || 0})</span>
                   </TabsTrigger>
                   <TabsTrigger 
                     value="insights" 
-                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-slate-600 data-[state=active]:bg-transparent data-[state=active]:text-slate-800 py-2.5 px-4 text-sm text-slate-500 whitespace-nowrap font-medium"
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-sidebar data-[state=active]:bg-transparent data-[state=active]:text-sidebar py-2.5 px-4 text-sm text-sidebar-muted whitespace-nowrap font-medium"
                   >
                     Insights
                   </TabsTrigger>
@@ -487,7 +487,7 @@ export default function Customers() {
                                 <circle cx="40" cy="40" r="32" fill="none" stroke="#e2e8f0" strokeWidth="6" />
                                 <circle
                                   cx="40" cy="40" r="32" fill="none"
-                                  stroke="#64748b"
+                                  stroke="#0a3a54"
                                   strokeWidth="6" strokeLinecap="round"
                                   strokeDasharray={`${(healthData.health_score / 100) * 201} 201`}
                                 />
@@ -527,8 +527,8 @@ export default function Customers() {
                         <div className="space-y-3">
                           {healthData?.stats?.last_visit && (
                             <div className="flex items-center gap-3">
-                              <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center">
-                                <CalendarCheck className="h-4 w-4 text-slate-500" />
+                              <div className="h-8 w-8 rounded-full bg-sidebar/10 flex items-center justify-center">
+                                <CalendarCheck className="h-4 w-4 text-sidebar-lighter" />
                               </div>
                               <div>
                                 <p className="text-sm font-medium text-slate-900">Last Visit</p>
@@ -540,8 +540,8 @@ export default function Customers() {
                           )}
                           {appointmentsData?.appointments?.[0] && (
                             <div className="flex items-center gap-3">
-                              <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center">
-                                <Calendar className="h-4 w-4 text-slate-500" />
+                              <div className="h-8 w-8 rounded-full bg-sidebar/10 flex items-center justify-center">
+                                <Calendar className="h-4 w-4 text-sidebar-lighter" />
                               </div>
                               <div>
                                 <p className="text-sm font-medium text-slate-900">Next Appointment</p>
@@ -553,11 +553,11 @@ export default function Customers() {
                           )}
                           {interactionsData?.interactions?.[0] && (
                             <div className="flex items-center gap-3">
-                              <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center">
+                              <div className="h-8 w-8 rounded-full bg-sidebar/10 flex items-center justify-center">
                                 {interactionsData.interactions[0].type === 'call' ? (
-                                  <PhoneCall className="h-4 w-4 text-slate-500" />
+                                  <PhoneCall className="h-4 w-4 text-sidebar-lighter" />
                                 ) : (
-                                  <MessageSquare className="h-4 w-4 text-slate-500" />
+                                  <MessageSquare className="h-4 w-4 text-sidebar-lighter" />
                                 )}
                               </div>
                               <div>
@@ -636,7 +636,7 @@ export default function Customers() {
                                     {vehicle.year} {vehicle.make} {vehicle.model}
                                   </p>
                                   {vehicle.is_primary && (
-                                    <Badge className="bg-slate-100 text-slate-600 text-xs">Primary</Badge>
+                                    <Badge className="bg-sidebar/10 text-sidebar-lighter text-xs">Primary</Badge>
                                   )}
                                 </div>
                                 <p className="text-sm text-slate-500 mt-1">
@@ -729,16 +729,16 @@ export default function Customers() {
                           >
                             <div className="flex items-start gap-4">
                               {/* Icon */}
-                              <div className="h-10 w-10 rounded-full flex items-center justify-center shrink-0 bg-slate-100">
+                              <div className="h-10 w-10 rounded-full flex items-center justify-center shrink-0 bg-sidebar/10">
                                 {interaction.type === 'call' ? (
-                                  <PhoneCall className="h-5 w-5 text-slate-500" />
+                                  <PhoneCall className="h-5 w-5 text-sidebar-lighter" />
                                 ) : (
                                   interaction.message_type === 'confirmation' ? (
-                                    <CheckCircle2 className="h-5 w-5 text-slate-500" />
+                                    <CheckCircle2 className="h-5 w-5 text-sidebar-lighter" />
                                   ) : interaction.message_type === 'reminder' ? (
-                                    <Bell className="h-5 w-5 text-slate-500" />
+                                    <Bell className="h-5 w-5 text-sidebar-lighter" />
                                   ) : (
-                                    <MessageSquare className="h-5 w-5 text-slate-500" />
+                                    <MessageSquare className="h-5 w-5 text-sidebar-lighter" />
                                   )
                                 )}
                               </div>
@@ -751,23 +751,23 @@ export default function Customers() {
                                       {interaction.type === 'call' ? 'Phone Call' : 'SMS'}
                                     </span>
                                     {interaction.type === 'call' && interaction.outcome && (
-                                      <Badge className="text-xs bg-slate-100 text-slate-600">
+                                      <Badge className="text-xs bg-sidebar/10 text-sidebar-lighter">
                                         {interaction.outcome}
                                       </Badge>
                                     )}
                                     {interaction.type === 'sms' && interaction.message_type && (
-                                      <Badge className="text-xs bg-slate-100 text-slate-600">
+                                      <Badge className="text-xs bg-sidebar/10 text-sidebar-lighter">
                                         {interaction.message_type}
                                       </Badge>
                                     )}
                                     {interaction.type === 'call' && interaction.sentiment && (
-                                      <span className="text-slate-400">
+                                      <span className="text-sidebar-muted">
                                         {interaction.sentiment === 'positive' ? (
-                                          <ThumbsUp className="h-3.5 w-3.5 text-slate-500" />
+                                          <ThumbsUp className="h-3.5 w-3.5 text-sidebar-lighter" />
                                         ) : interaction.sentiment === 'negative' ? (
-                                          <ThumbsDown className="h-3.5 w-3.5 text-slate-500" />
+                                          <ThumbsDown className="h-3.5 w-3.5 text-sidebar-lighter" />
                                         ) : (
-                                          <Minus className="h-3.5 w-3.5 text-slate-400" />
+                                          <Minus className="h-3.5 w-3.5 text-sidebar-muted" />
                                         )}
                                       </span>
                                     )}
@@ -804,7 +804,7 @@ export default function Customers() {
                   {/* AI Insights Tab */}
                   <TabsContent value="insights" className="m-0 p-4 sm:p-6">
                     <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2 text-sm sm:text-base">
-                      <Target className="h-4 w-4 text-slate-400" />
+                      <Target className="h-4 w-4 text-sidebar-muted" />
                       AI-Powered Recommendations
                     </h3>
                     {healthData?.recommendations?.length > 0 ? (
@@ -812,23 +812,23 @@ export default function Customers() {
                         {healthData.recommendations.map((rec, idx) => (
                           <div
                             key={idx}
-                            className="rounded-lg border border-slate-200 bg-slate-50 p-4 flex items-start gap-3"
+                            className="rounded-lg border border-sidebar/20 bg-sidebar/5 p-4 flex items-start gap-3"
                           >
-                            {rec.type === 'action' && <AlertCircle className="h-5 w-5 text-slate-500 shrink-0 mt-0.5" />}
-                            {rec.type === 'service' && <Wrench className="h-5 w-5 text-slate-500 shrink-0 mt-0.5" />}
-                            {rec.type === 'upsell' && <Target className="h-5 w-5 text-slate-500 shrink-0 mt-0.5" />}
+                            {rec.type === 'action' && <AlertCircle className="h-5 w-5 text-sidebar-lighter shrink-0 mt-0.5" />}
+                            {rec.type === 'service' && <Wrench className="h-5 w-5 text-sidebar-lighter shrink-0 mt-0.5" />}
+                            {rec.type === 'upsell' && <Target className="h-5 w-5 text-sidebar-lighter shrink-0 mt-0.5" />}
                             <div>
-                              <p className="font-medium text-slate-800 capitalize">{rec.type}</p>
+                              <p className="font-medium text-sidebar capitalize">{rec.type}</p>
                               <p className="text-sm text-slate-600 mt-1">{rec.message}</p>
                             </div>
                           </div>
                         ))}
                       </div>
                     ) : (
-                      <div className="text-center py-12 bg-slate-50 rounded-lg">
-                        <Target className="h-12 w-12 text-slate-300 mx-auto mb-3" />
-                        <p className="text-slate-500">No recommendations available yet</p>
-                        <p className="text-xs text-slate-400 mt-1">More data needed to generate insights</p>
+                      <div className="text-center py-12 bg-sidebar/5 rounded-lg">
+                        <Target className="h-12 w-12 text-sidebar/30 mx-auto mb-3" />
+                        <p className="text-sidebar-muted">No recommendations available yet</p>
+                        <p className="text-xs text-sidebar-muted/70 mt-1">More data needed to generate insights</p>
                       </div>
                     )}
                   </TabsContent>
