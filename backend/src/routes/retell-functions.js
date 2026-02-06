@@ -2306,6 +2306,146 @@ router.post('/get_repair_status', async (req, res, next) => {
 });
 
 /**
+ * POST /api/voice/get_vehicle_info
+ * Get detailed vehicle information, maintenance schedule, and recalls by VIN
+ * Uses Vehicle Databases API
+ */
+router.post('/get_vehicle_info', async (req, res, next) => {
+  try {
+    console.log('get_vehicle_info received:', JSON.stringify(req.body));
+    
+    const body = req.body.args || req.body;
+    const vin = body.vin;
+    const customer_phone = body.customer_phone;
+    const current_mileage = body.current_mileage ? parseInt(body.current_mileage, 10) : null;
+    const check_service = body.check_service; // Optional: specific service to check
+    
+    // If no VIN provided, try to look up from customer's vehicle
+    let vehicleVin = vin;
+    let vehicleMileage = current_mileage;
+    
+    if (!vehicleVin && customer_phone) {
+      const normalizedPhone = normalizePhone(customer_phone);
+      const { data: customer } = await supabase
+        .from('customers')
+        .select(`
+          id,
+          vehicles (id, vin, year, make, model, mileage)
+        `)
+        .eq('phone_normalized', normalizedPhone)
+        .single();
+      
+      if (customer?.vehicles?.length > 0) {
+        const primaryVehicle = customer.vehicles.find(v => v.vin) || customer.vehicles[0];
+        vehicleVin = primaryVehicle.vin;
+        vehicleMileage = vehicleMileage || primaryVehicle.mileage;
+      }
+    }
+    
+    if (!vehicleVin) {
+      return res.json({
+        success: false,
+        message: 'I need the VIN to look up detailed vehicle information. Do you have the VIN handy? It\'s usually on the driver\'s side dashboard or door jamb.'
+      });
+    }
+    
+    // Import the vehicle databases service
+    const vehicleDB = await import('../services/vehicle-databases.js');
+    
+    // If checking a specific service
+    if (check_service && vehicleMileage) {
+      const serviceResult = await vehicleDB.isServiceDue(vehicleVin, vehicleMileage, check_service);
+      
+      if (serviceResult.success && serviceResult.found) {
+        let message = '';
+        if (serviceResult.is_overdue) {
+          message = `Based on your ${serviceResult.vehicle.year} ${serviceResult.vehicle.make} ${serviceResult.vehicle.model}'s maintenance schedule, ${serviceResult.service} is actually overdue by about ${Math.abs(serviceResult.miles_until_due).toLocaleString()} miles. It's definitely a good idea to get that done.`;
+        } else if (serviceResult.is_due) {
+          message = `Your ${serviceResult.vehicle.year} ${serviceResult.vehicle.make} ${serviceResult.vehicle.model} is due for ${serviceResult.service} within the next ${serviceResult.miles_until_due.toLocaleString()} miles. Good timing to schedule it.`;
+        } else {
+          message = `According to the maintenance schedule for your ${serviceResult.vehicle.year} ${serviceResult.vehicle.make} ${serviceResult.vehicle.model}, ${serviceResult.service} isn't due until ${serviceResult.next_due_at.toLocaleString()} miles - you've got about ${serviceResult.miles_until_due.toLocaleString()} miles to go. Is there something specific going on with the car?`;
+        }
+        
+        return res.json({
+          success: true,
+          service_check: serviceResult,
+          message
+        });
+      }
+    }
+    
+    // Get full vehicle intelligence
+    const intelligence = await vehicleDB.getVehicleIntelligence(vehicleVin, vehicleMileage);
+    
+    if (!intelligence.success) {
+      return res.json({
+        success: false,
+        message: 'I had trouble looking up that VIN. Let me help you with what I know about your vehicle on file.'
+      });
+    }
+    
+    // Build response message
+    let messageParts = [];
+    
+    if (intelligence.vehicle) {
+      messageParts.push(`I found your ${intelligence.vehicle.year} ${intelligence.vehicle.make} ${intelligence.vehicle.model}`);
+      if (intelligence.vehicle.trim) {
+        messageParts[0] += ` ${intelligence.vehicle.trim}`;
+      }
+    }
+    
+    // Check for recalls - this is important!
+    if (intelligence.recalls?.has_open_recalls) {
+      const recallCount = intelligence.recalls.count;
+      messageParts.push(`I see there ${recallCount === 1 ? 'is' : 'are'} ${recallCount} open recall${recallCount > 1 ? 's' : ''} on this vehicle`);
+      
+      // Mention the most critical one
+      if (intelligence.recalls.items?.length > 0) {
+        const topRecall = intelligence.recalls.items[0];
+        messageParts.push(`The most recent one is for ${topRecall.component}`);
+      }
+      messageParts.push('These are covered free of charge - would you like me to schedule that?');
+    }
+    
+    // Mention upcoming maintenance if we have mileage
+    if (intelligence.maintenance?.upcoming_services?.length > 0) {
+      const nextService = intelligence.maintenance.upcoming_services[0];
+      if (nextService.miles_until <= 2000) {
+        messageParts.push(`You're also coming up on ${nextService.services.join(' and ')} in about ${nextService.miles_until.toLocaleString()} miles`);
+      }
+    }
+    
+    // Check for overdue services
+    if (intelligence.maintenance?.recently_due?.length > 0) {
+      const overdue = intelligence.maintenance.recently_due.find(s => s.miles_overdue > 1000);
+      if (overdue) {
+        messageParts.push(`Based on the schedule, you might be due for ${overdue.services.join(' or ')}`);
+      }
+    }
+    
+    const message = messageParts.length > 0 
+      ? messageParts.join('. ') + '.'
+      : 'I found your vehicle information. How can I help you today?';
+    
+    return res.json({
+      success: true,
+      vehicle: intelligence.vehicle,
+      recalls: intelligence.recalls,
+      maintenance: intelligence.maintenance,
+      summary: intelligence.summary,
+      message
+    });
+    
+  } catch (error) {
+    console.error('get_vehicle_info error:', error);
+    res.json({
+      success: false,
+      message: 'I had trouble looking up the vehicle details. Let me help you with what I have on file.'
+    });
+  }
+});
+
+/**
  * POST /api/voice/get_estimate
  * Provide a price estimate for services
  */
