@@ -53,14 +53,14 @@ function getGreeting() {
   return { text: 'Good evening', icon: Moon, color: 'text-indigo-500' }
 }
 
-// Insight icon and color mapping
+// Insight icon and color mapping - using sidebar teal theme
 const insightConfig = {
-  trend_up: { icon: TrendingUp, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-  trend_down: { icon: TrendingDown, color: 'text-red-600', bg: 'bg-red-50' },
-  success: { icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-  warning: { icon: AlertTriangle, color: 'text-amber-600', bg: 'bg-amber-50' },
-  info: { icon: Info, color: 'text-blue-600', bg: 'bg-blue-50' },
-  action: { icon: Target, color: 'text-violet-600', bg: 'bg-violet-50' },
+  trend_up: { icon: TrendingUp, color: 'text-[#0a3a54]', bg: 'bg-[#082438]/10' },
+  trend_down: { icon: TrendingDown, color: 'text-slate-600', bg: 'bg-slate-100' },
+  success: { icon: CheckCircle2, color: 'text-[#0a3a54]', bg: 'bg-[#082438]/10' },
+  warning: { icon: AlertTriangle, color: 'text-slate-600', bg: 'bg-slate-100' },
+  info: { icon: Info, color: 'text-[#0d4a6a]', bg: 'bg-[#0d4a6a]/10' },
+  action: { icon: Target, color: 'text-[#105a80]', bg: 'bg-[#105a80]/10' },
 }
 
 export default function Dashboard() {
@@ -114,7 +114,7 @@ export default function Dashboard() {
       value: overview?.today?.appointments ?? '0',
       change: '+12%',
       icon: Calendar,
-      iconColor: 'text-blue-600',
+      iconColor: 'text-[#082438]',
       bgClass: 'stat-blue',
     },
     {
@@ -122,7 +122,7 @@ export default function Dashboard() {
       value: overview?.today?.calls ?? '0',
       change: '+8%',
       icon: Phone,
-      iconColor: 'text-emerald-600',
+      iconColor: 'text-[#0a3a54]',
       bgClass: 'stat-green',
     },
     {
@@ -130,7 +130,7 @@ export default function Dashboard() {
       value: overview?.week?.conversion_rate ? `${overview.week.conversion_rate}%` : '0%',
       change: '+5%',
       icon: TrendingUp,
-      iconColor: 'text-violet-600',
+      iconColor: 'text-[#0d4a6a]',
       bgClass: 'stat-purple',
     },
     {
@@ -140,7 +140,7 @@ export default function Dashboard() {
         : '$0',
       change: '+18%',
       icon: DollarSign,
-      iconColor: 'text-amber-600',
+      iconColor: 'text-[#105a80]',
       bgClass: 'stat-amber',
     },
   ]
@@ -148,15 +148,15 @@ export default function Dashboard() {
   // AI Insights Panel Component (reusable)
   const AIInsightsPanel = () => (
     insightsData?.insights?.length > 0 ? (
-      <div className="bg-gradient-to-r from-slate-900 to-slate-800 rounded-lg overflow-hidden shadow-card">
+      <div className="bg-gradient-to-r from-[#082438] to-[#0a3a54] rounded-lg overflow-hidden shadow-card">
         <div className="p-4 sm:p-5">
           <div className="flex items-center gap-2 mb-4">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-purple-600">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/20">
               <Sparkles className="h-4 w-4 text-white" />
             </div>
             <div>
               <h2 className="text-base font-semibold text-white">AI Insights</h2>
-              <p className="text-xs text-slate-400">Powered by your data</p>
+              <p className="text-xs text-white/60">Powered by your data</p>
             </div>
           </div>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -169,24 +169,19 @@ export default function Dashboard() {
                   className="bg-white/5 backdrop-blur rounded-lg p-3 border border-white/10 hover:bg-white/10 transition-colors"
                 >
                   <div className="flex items-start gap-3">
-                    <div className={cn('rounded-lg p-1.5 shrink-0', config.bg)}>
-                      <Icon className={cn('h-4 w-4', config.color)} />
+                    <div className="rounded-lg p-1.5 shrink-0 bg-white/10">
+                      <Icon className="h-4 w-4 text-white/80" />
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center justify-between gap-2">
                         <p className="text-sm font-medium text-white truncate">{insight.title}</p>
                         {insight.value && (
-                          <span className={cn(
-                            'text-xs font-bold shrink-0',
-                            insight.type === 'trend_up' || insight.type === 'success' ? 'text-emerald-400' :
-                            insight.type === 'trend_down' || insight.type === 'warning' ? 'text-amber-400' :
-                            'text-blue-400'
-                          )}>
+                          <span className="text-xs font-bold shrink-0 text-white/80">
                             {insight.value}
                           </span>
                         )}
                       </div>
-                      <p className="text-xs text-slate-400 mt-0.5 line-clamp-2">{insight.message}</p>
+                      <p className="text-xs text-white/50 mt-0.5 line-clamp-2">{insight.message}</p>
                     </div>
                   </div>
                 </div>
@@ -207,8 +202,8 @@ export default function Dashboard() {
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100">
-                <Smile className="h-4 w-4 text-emerald-600" />
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#082438]/10">
+                <Smile className="h-4 w-4 text-[#0a3a54]" />
               </div>
               <div>
                 <CardTitle className="text-base">Customer Sentiment</CardTitle>
@@ -334,7 +329,7 @@ export default function Dashboard() {
                   className={cn(
                     'aspect-square flex flex-col items-center justify-center text-xs transition-colors relative',
                     isCurrentDay 
-                      ? 'bg-slate-700 text-white font-medium' 
+                      ? 'bg-[#082438] text-white font-medium' 
                       : 'hover:bg-slate-100 text-slate-700',
                     count > 0 && !isCurrentDay && 'font-medium'
                   )}
@@ -482,10 +477,10 @@ export default function Dashboard() {
           <div className="border-t border-slate-100 p-4 sm:p-5 bg-slate-50/50">
             <div className="grid grid-cols-5 gap-2">
               {[
-                { label: 'Completed', color: 'bg-emerald-500', count: todayData?.by_status?.completed?.length || 0 },
-                { label: 'In Progress', color: 'bg-amber-500', count: todayData?.by_status?.in_progress?.length || 0 },
-                { label: 'Checked In', color: 'bg-blue-500', count: todayData?.by_status?.checked_in?.length || 0 },
-                { label: 'Confirmed', color: 'bg-violet-500', count: todayData?.by_status?.confirmed?.length || 0 },
+                { label: 'Completed', color: 'bg-[#082438]', count: todayData?.by_status?.completed?.length || 0 },
+                { label: 'In Progress', color: 'bg-[#0a3a54]', count: todayData?.by_status?.in_progress?.length || 0 },
+                { label: 'Checked In', color: 'bg-[#0d4a6a]', count: todayData?.by_status?.checked_in?.length || 0 },
+                { label: 'Confirmed', color: 'bg-[#105a80]', count: todayData?.by_status?.confirmed?.length || 0 },
                 { label: 'Scheduled', color: 'bg-slate-400', count: todayData?.by_status?.scheduled?.length || 0 },
               ].map((item) => (
                 <div key={item.label} className="text-center">
@@ -533,9 +528,9 @@ export default function Dashboard() {
                   <span className="text-xs text-slate-500">Conversion Rate</span>
                   <span className="text-sm font-medium text-slate-700">{overview?.week?.conversion_rate ?? 0}%</span>
                 </div>
-                <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                  <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
                   <div 
-                    className="h-full bg-slate-600 rounded-full transition-all duration-500"
+                    className="h-full bg-[#082438] rounded-full transition-all duration-500"
                     style={{ width: `${Math.min(overview?.week?.conversion_rate ?? 0, 100)}%` }}
                   />
                 </div>

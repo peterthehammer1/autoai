@@ -105,9 +105,9 @@ export default function CallLogs() {
   const getSentimentIcon = (sentiment) => {
     switch (sentiment) {
       case 'positive':
-        return <ThumbsUp className="h-4 w-4 text-emerald-500" />
+        return <ThumbsUp className="h-4 w-4 text-[#0a3a54]" />
       case 'negative':
-        return <ThumbsDown className="h-4 w-4 text-red-500" />
+        return <ThumbsDown className="h-4 w-4 text-slate-500" />
       default:
         return <Minus className="h-4 w-4 text-slate-400" />
     }
@@ -116,9 +116,9 @@ export default function CallLogs() {
   const getSentimentBadge = (sentiment) => {
     switch (sentiment) {
       case 'positive':
-        return <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100">Positive</Badge>
+        return <Badge className="bg-[#082438]/10 text-[#0a3a54] hover:bg-[#082438]/10">Positive</Badge>
       case 'negative':
-        return <Badge className="bg-red-100 text-red-700 hover:bg-red-100">Negative</Badge>
+        return <Badge className="bg-slate-100 text-slate-600 hover:bg-slate-100">Negative</Badge>
       default:
         return <Badge className="bg-slate-100 text-slate-600 hover:bg-slate-100">Neutral</Badge>
     }
@@ -126,11 +126,11 @@ export default function CallLogs() {
 
   const getOutcomeBadge = (outcome) => {
     const config = {
-      booked: { bg: 'bg-emerald-100 text-emerald-700', label: 'Booked', icon: CheckCircle2 },
-      completed: { bg: 'bg-emerald-100 text-emerald-700', label: 'Completed', icon: CheckCircle2 },
-      inquiry: { bg: 'bg-blue-100 text-blue-700', label: 'Inquiry', icon: MessageSquare },
-      transferred: { bg: 'bg-amber-100 text-amber-700', label: 'Transferred', icon: PhoneOutgoing },
-      abandoned: { bg: 'bg-red-100 text-red-700', label: 'Abandoned', icon: XCircle },
+      booked: { bg: 'bg-[#082438]/10 text-[#0a3a54]', label: 'Booked', icon: CheckCircle2 },
+      completed: { bg: 'bg-[#082438]/10 text-[#0a3a54]', label: 'Completed', icon: CheckCircle2 },
+      inquiry: { bg: 'bg-[#0d4a6a]/10 text-[#0d4a6a]', label: 'Inquiry', icon: MessageSquare },
+      transferred: { bg: 'bg-slate-100 text-slate-600', label: 'Transferred', icon: PhoneOutgoing },
+      abandoned: { bg: 'bg-slate-100 text-slate-600', label: 'Abandoned', icon: XCircle },
     }
     const c = config[outcome] || { bg: 'bg-slate-100 text-slate-600', label: outcome || 'Unknown', icon: Phone }
     const Icon = c.icon
@@ -146,13 +146,13 @@ export default function CallLogs() {
     switch (outcome) {
       case 'booked':
       case 'completed':
-        return 'bg-emerald-500'
+        return 'bg-[#082438]'
       case 'inquiry':
-        return 'bg-blue-500'
+        return 'bg-[#0d4a6a]'
       case 'transferred':
-        return 'bg-amber-500'
+        return 'bg-[#105a80]'
       case 'abandoned':
-        return 'bg-red-500'
+        return 'bg-slate-400'
       default:
         return 'bg-slate-400'
     }
@@ -441,14 +441,14 @@ export default function CallLogs() {
                 <TabsList className="w-full justify-start rounded-none border-b border-slate-200 bg-slate-50 p-0 h-auto">
                   <TabsTrigger 
                     value="summary" 
-                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm"
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-[#082438] data-[state=active]:bg-transparent data-[state=active]:text-[#082438] py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm text-slate-500"
                   >
                     <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-1.5" />
                     <span className="hidden sm:inline">AI Summary</span>
                   </TabsTrigger>
                   <TabsTrigger 
                     value="transcript" 
-                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm"
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-[#082438] data-[state=active]:bg-transparent data-[state=active]:text-[#082438] py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm text-slate-500"
                   >
                     <MessageSquare className="h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-1.5" />
                     <span className="hidden sm:inline">Transcript</span>
@@ -456,7 +456,7 @@ export default function CallLogs() {
                   {selectedCall.recording_url && (
                     <TabsTrigger 
                       value="recording" 
-                      className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm"
+                      className="rounded-none border-b-2 border-transparent data-[state=active]:border-[#082438] data-[state=active]:bg-transparent data-[state=active]:text-[#082438] py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm text-slate-500"
                     >
                       <Volume2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-1.5" />
                       <span className="hidden sm:inline">Recording</span>
@@ -469,10 +469,10 @@ export default function CallLogs() {
                   <TabsContent value="summary" className="m-0 p-4 sm:p-6">
                     {selectedCall.transcript_summary ? (
                       <div className="space-y-6">
-                        <div className="bg-gradient-to-br from-violet-50 to-blue-50 rounded-xl p-6 border border-violet-200">
+                        <div className="bg-[#082438]/5 rounded-xl p-6 border border-[#082438]/20">
                           <div className="flex items-start gap-3">
-                            <div className="p-2 bg-violet-100 rounded-lg shrink-0">
-                              <Sparkles className="h-5 w-5 text-violet-600" />
+                            <div className="p-2 bg-[#082438]/10 rounded-lg shrink-0">
+                              <Sparkles className="h-5 w-5 text-[#0a3a54]" />
                             </div>
                             <div>
                               <h3 className="font-semibold text-slate-900 mb-2">AI-Generated Summary</h3>
@@ -508,8 +508,8 @@ export default function CallLogs() {
                           </div>
 
                           {selectedCall.appointment && (
-                            <div className="bg-emerald-50 rounded-lg p-4 border border-emerald-200">
-                              <h4 className="text-sm font-medium text-emerald-800 mb-3 flex items-center gap-2">
+                            <div className="bg-[#082438]/5 rounded-lg p-4 border border-[#082438]/20">
+                              <h4 className="text-sm font-medium text-[#0a3a54] mb-3 flex items-center gap-2">
                                 <CheckCircle2 className="h-4 w-4" />
                                 Appointment Booked
                               </h4>
@@ -547,7 +547,7 @@ export default function CallLogs() {
                               )}>
                                 <span className={cn(
                                   'text-xs font-medium',
-                                  msg.isAgent ? 'text-violet-600' : 'text-blue-600'
+                                  msg.isAgent ? 'text-[#0a3a54]' : 'text-slate-600'
                                 )}>
                                   {msg.speaker}
                                 </span>
@@ -555,20 +555,20 @@ export default function CallLogs() {
                               <div className={cn(
                                 'rounded-2xl px-4 py-3 text-sm',
                                 msg.isAgent 
-                                  ? 'bg-gradient-to-br from-violet-50 to-violet-100 text-slate-800 rounded-tl-sm border border-violet-200' 
-                                  : 'bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-tr-sm'
+                                  ? 'bg-[#082438]/5 text-slate-800 rounded-tl-sm border border-[#082438]/20' 
+                                  : 'bg-gradient-to-br from-[#0a3a54] to-[#082438] text-white rounded-tr-sm'
                               )}>
                                 {msg.text}
                               </div>
                             </div>
                             <div className={cn(
                               'w-8 h-8 rounded-full flex items-center justify-center shrink-0 mx-2',
-                              msg.isAgent ? 'bg-violet-100 order-1' : 'bg-blue-100 order-2'
+                              msg.isAgent ? 'bg-[#082438]/10 order-1' : 'bg-slate-100 order-2'
                             )}>
                               {msg.isAgent ? (
-                                <Mic className="h-4 w-4 text-violet-600" />
+                                <Mic className="h-4 w-4 text-[#0a3a54]" />
                               ) : (
-                                <User className="h-4 w-4 text-blue-600" />
+                                <User className="h-4 w-4 text-slate-600" />
                               )}
                             </div>
                           </div>

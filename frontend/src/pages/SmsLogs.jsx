@@ -88,13 +88,13 @@ export default function SmsLogs() {
     switch (status) {
       case 'sent':
       case 'delivered':
-        return <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+        return <CheckCircle2 className="h-4 w-4 text-[#0a3a54]" />
       case 'failed':
-        return <XCircle className="h-4 w-4 text-red-500" />
+        return <XCircle className="h-4 w-4 text-slate-500" />
       case 'received':
-        return <ArrowDownLeft className="h-4 w-4 text-blue-500" />
+        return <ArrowDownLeft className="h-4 w-4 text-[#0d4a6a]" />
       default:
-        return <Clock className="h-4 w-4 text-amber-500" />
+        return <Clock className="h-4 w-4 text-slate-400" />
     }
   }
 
@@ -102,26 +102,26 @@ export default function SmsLogs() {
     switch (status) {
       case 'sent':
       case 'delivered':
-        return <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100">Delivered</Badge>
+        return <Badge className="bg-[#082438]/10 text-[#0a3a54] hover:bg-[#082438]/10">Delivered</Badge>
       case 'failed':
-        return <Badge className="bg-red-100 text-red-700 hover:bg-red-100">Failed</Badge>
+        return <Badge className="bg-slate-100 text-slate-600 hover:bg-slate-100">Failed</Badge>
       case 'received':
-        return <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100">Received</Badge>
+        return <Badge className="bg-[#0d4a6a]/10 text-[#0d4a6a] hover:bg-[#0d4a6a]/10">Received</Badge>
       default:
-        return <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100">Pending</Badge>
+        return <Badge className="bg-slate-100 text-slate-600 hover:bg-slate-100">Pending</Badge>
     }
   }
 
   const getTypeConfig = (type) => {
     switch (type) {
       case 'confirmation':
-        return { label: 'Confirmation', icon: CheckCircle2, color: 'text-blue-600', bg: 'bg-blue-100' }
+        return { label: 'Confirmation', icon: CheckCircle2, color: 'text-[#0a3a54]', bg: 'bg-[#082438]/10' }
       case 'reminder':
-        return { label: 'Reminder', icon: Bell, color: 'text-violet-600', bg: 'bg-violet-100' }
+        return { label: 'Reminder', icon: Bell, color: 'text-[#0d4a6a]', bg: 'bg-[#0d4a6a]/10' }
       case 'cancellation':
-        return { label: 'Cancellation', icon: XCircle, color: 'text-red-600', bg: 'bg-red-100' }
+        return { label: 'Cancellation', icon: XCircle, color: 'text-slate-600', bg: 'bg-slate-100' }
       case 'reply':
-        return { label: 'Reply', icon: ArrowDownLeft, color: 'text-emerald-600', bg: 'bg-emerald-100' }
+        return { label: 'Reply', icon: ArrowDownLeft, color: 'text-[#105a80]', bg: 'bg-[#105a80]/10' }
       default:
         return { label: 'Message', icon: MessageSquare, color: 'text-slate-600', bg: 'bg-slate-100' }
     }
@@ -386,7 +386,7 @@ export default function SmsLogs() {
                       "rounded-2xl p-5 shadow-sm max-w-lg",
                       selectedSms.message_type === 'reply' 
                         ? "bg-slate-100 text-slate-800 rounded-tl-sm ml-0" 
-                        : "bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-br-sm ml-auto"
+                        : "bg-gradient-to-br from-[#0a3a54] to-[#082438] text-white rounded-br-sm ml-auto"
                     )}>
                       <p className="text-sm whitespace-pre-wrap leading-relaxed">
                         {selectedSms.message_body}

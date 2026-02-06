@@ -7,38 +7,38 @@
 
 @layer base {
   :root {
-    /* Salesforce-inspired professional palette */
+    /* Premier Auto professional palette - based on sidebar #082438 */
     --background: 210 20% 98%;
-    --foreground: 222 47% 11%;
+    --foreground: 201 75% 12%;
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --card-foreground: 201 75% 12%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
-    --primary: 213 94% 40%;
+    --popover-foreground: 201 75% 12%;
+    --primary: 201 75% 12%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 214 20% 94%;
-    --secondary-foreground: 222 47% 11%;
-    --muted: 214 20% 94%;
-    --muted-foreground: 215 16% 47%;
-    --accent: 214 20% 94%;
-    --accent-foreground: 222 47% 11%;
+    --secondary: 201 15% 94%;
+    --secondary-foreground: 201 75% 12%;
+    --muted: 201 15% 94%;
+    --muted-foreground: 201 20% 45%;
+    --accent: 201 15% 94%;
+    --accent-foreground: 201 75% 12%;
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
-    --border: 214 20% 88%;
-    --input: 214 20% 88%;
-    --ring: 213 94% 40%;
+    --border: 201 15% 88%;
+    --input: 201 15% 88%;
+    --ring: 201 75% 12%;
     --radius: 0.5rem;
     
-    /* Professional accent colors */
-    --success: 158 64% 32%;
-    --warning: 32 95% 44%;
-    --info: 213 94% 40%;
+    /* Professional accent colors - muted versions */
+    --success: 158 40% 35%;
+    --warning: 32 60% 45%;
+    --info: 201 50% 35%;
     
     /* Sidebar-matching teal colors (based on #082438) */
     --sidebar: 201 75% 12%;
-    --sidebar-light: 201 40% 20%;
-    --sidebar-lighter: 201 30% 30%;
-    --sidebar-muted: 201 20% 45%;
+    --sidebar-light: 201 50% 18%;
+    --sidebar-lighter: 201 40% 25%;
+    --sidebar-muted: 201 25% 45%;
   }
 
   .dark {
@@ -142,39 +142,39 @@
                 0 1px 2px rgba(0, 0, 0, 0.06);
   }
   
-  /* Salesforce-style gradient */
+  /* Premier Auto gradient - based on sidebar teal */
   .gradient-primary {
-    background: linear-gradient(135deg, #0176D3 0%, #032D60 100%);
+    background: linear-gradient(135deg, #0a3a54 0%, #082438 100%);
   }
   
   .gradient-header {
-    background: linear-gradient(90deg, #032D60 0%, #0176D3 100%);
+    background: linear-gradient(90deg, #082438 0%, #0d4a6a 100%);
   }
   
-  /* Professional stat card backgrounds - subtle, not pastel */
+  /* Professional stat card backgrounds - unified teal theme */
   .stat-blue {
     background: linear-gradient(135deg, #F4F6F9 0%, #EEF1F6 100%);
-    border-left: 3px solid #0176D3;
+    border-left: 3px solid #082438;
   }
   
   .stat-green {
     background: linear-gradient(135deg, #F4F6F9 0%, #EEF1F6 100%);
-    border-left: 3px solid #2E844A;
+    border-left: 3px solid #0a3a54;
   }
   
   .stat-purple {
     background: linear-gradient(135deg, #F4F6F9 0%, #EEF1F6 100%);
-    border-left: 3px solid #5A1BA9;
+    border-left: 3px solid #0d4a6a;
   }
   
   .stat-amber {
     background: linear-gradient(135deg, #F4F6F9 0%, #EEF1F6 100%);
-    border-left: 3px solid #DD7A01;
+    border-left: 3px solid #105a80;
   }
   
   .stat-slate {
     background: linear-gradient(135deg, #F4F6F9 0%, #EEF1F6 100%);
-    border-left: 3px solid #5C6A7A;
+    border-left: 3px solid #64748b;
   }
   
   /* Professional card styles */
