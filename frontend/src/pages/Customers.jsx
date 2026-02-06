@@ -218,8 +218,8 @@ export default function Customers() {
   // Get avatar color based on name
   const getAvatarColor = (name) => {
     const colors = [
-      'bg-blue-500', 'bg-emerald-500', 'bg-violet-500', 'bg-amber-500', 
-      'bg-rose-500', 'bg-cyan-500', 'bg-indigo-500', 'bg-pink-500'
+      'bg-slate-400', 'bg-slate-500', 'bg-gray-400', 'bg-gray-500', 
+      'bg-zinc-400', 'bg-zinc-500', 'bg-neutral-400', 'bg-neutral-500'
     ]
     const index = (name || '').charCodeAt(0) % colors.length
     return colors[index]
@@ -368,14 +368,7 @@ export default function Customers() {
                           {selectedCustomer.first_name} {selectedCustomer.last_name}
                         </h2>
                         {healthData && (
-                          <span className={cn(
-                            'text-xs px-2 py-0.5 rounded font-medium',
-                            healthData.health_color === 'green' ? 'bg-green-100 text-green-700' :
-                            healthData.health_color === 'blue' ? 'bg-blue-100 text-blue-700' :
-                            healthData.health_color === 'yellow' ? 'bg-amber-100 text-amber-700' :
-                            healthData.health_color === 'purple' ? 'bg-slate-100 text-slate-600' :
-                            'bg-red-100 text-red-700'
-                          )}>
+                          <span className="text-xs px-2 py-0.5 rounded font-medium bg-slate-100 text-slate-600">
                             {healthData.health_status}
                           </span>
                         )}
@@ -494,12 +487,7 @@ export default function Customers() {
                                 <circle cx="40" cy="40" r="32" fill="none" stroke="#e2e8f0" strokeWidth="6" />
                                 <circle
                                   cx="40" cy="40" r="32" fill="none"
-                                  stroke={
-                                    healthData.health_color === 'green' ? '#059669' :
-                                    healthData.health_color === 'blue' ? '#2563eb' :
-                                    healthData.health_color === 'yellow' ? '#d97706' :
-                                    healthData.health_color === 'purple' ? '#64748b' : '#dc2626'
-                                  }
+                                  stroke="#64748b"
                                   strokeWidth="6" strokeLinecap="round"
                                   strokeDasharray={`${(healthData.health_score / 100) * 201} 201`}
                                 />
@@ -531,16 +519,16 @@ export default function Customers() {
                       )}
 
                       {/* Recent Activity */}
-                      <div className="bg-gradient-to-br from-slate-50 to-white rounded-xl border border-slate-200 p-5">
-                        <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2">
-                          <Clock className="h-4 w-4 text-blue-500" />
+                      <div className="border border-slate-200 rounded-lg p-4">
+                        <h3 className="text-sm font-medium text-slate-700 mb-3 flex items-center gap-2">
+                          <Clock className="h-4 w-4 text-slate-400" />
                           Recent Activity
                         </h3>
                         <div className="space-y-3">
                           {healthData?.stats?.last_visit && (
                             <div className="flex items-center gap-3">
-                              <div className="h-8 w-8 rounded-full bg-emerald-100 flex items-center justify-center">
-                                <CalendarCheck className="h-4 w-4 text-emerald-600" />
+                              <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center">
+                                <CalendarCheck className="h-4 w-4 text-slate-500" />
                               </div>
                               <div>
                                 <p className="text-sm font-medium text-slate-900">Last Visit</p>
@@ -552,8 +540,8 @@ export default function Customers() {
                           )}
                           {appointmentsData?.appointments?.[0] && (
                             <div className="flex items-center gap-3">
-                              <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
-                                <Calendar className="h-4 w-4 text-blue-600" />
+                              <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center">
+                                <Calendar className="h-4 w-4 text-slate-500" />
                               </div>
                               <div>
                                 <p className="text-sm font-medium text-slate-900">Next Appointment</p>
@@ -565,14 +553,11 @@ export default function Customers() {
                           )}
                           {interactionsData?.interactions?.[0] && (
                             <div className="flex items-center gap-3">
-                              <div className={cn(
-                                "h-8 w-8 rounded-full flex items-center justify-center",
-                                interactionsData.interactions[0].type === 'call' ? 'bg-violet-100' : 'bg-amber-100'
-                              )}>
+                              <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center">
                                 {interactionsData.interactions[0].type === 'call' ? (
-                                  <PhoneCall className="h-4 w-4 text-violet-600" />
+                                  <PhoneCall className="h-4 w-4 text-slate-500" />
                                 ) : (
-                                  <MessageSquare className="h-4 w-4 text-amber-600" />
+                                  <MessageSquare className="h-4 w-4 text-slate-500" />
                                 )}
                               </div>
                               <div>
@@ -590,9 +575,9 @@ export default function Customers() {
 
                       {/* Primary Vehicle */}
                       {selectedCustomer.vehicles?.length > 0 && (
-                        <div className="sm:col-span-2 bg-gradient-to-br from-slate-50 to-white rounded-xl border border-slate-200 p-4 sm:p-5">
-                          <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2">
-                            <Car className="h-4 w-4 text-slate-500" />
+                        <div className="sm:col-span-2 border border-slate-200 rounded-lg p-4">
+                          <h3 className="text-sm font-medium text-slate-700 mb-3 flex items-center gap-2">
+                            <Car className="h-4 w-4 text-slate-400" />
                             Primary Vehicle
                           </h3>
                           <div className="flex items-center gap-3 sm:gap-4">
@@ -651,7 +636,7 @@ export default function Customers() {
                                     {vehicle.year} {vehicle.make} {vehicle.model}
                                   </p>
                                   {vehicle.is_primary && (
-                                    <Badge className="bg-amber-100 text-amber-700 text-xs">Primary</Badge>
+                                    <Badge className="bg-slate-100 text-slate-600 text-xs">Primary</Badge>
                                   )}
                                 </div>
                                 <p className="text-sm text-slate-500 mt-1">
@@ -731,7 +716,7 @@ export default function Customers() {
                   {/* Interactions Tab */}
                   <TabsContent value="interactions" className="m-0 p-4 sm:p-6">
                     <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2 text-sm sm:text-base">
-                      <MessageSquare className="h-4 w-4 text-blue-500" />
+                      <MessageSquare className="h-4 w-4 text-slate-400" />
                       Communication History
                     </h3>
                     {interactionsData?.interactions?.length > 0 ? (
@@ -744,26 +729,16 @@ export default function Customers() {
                           >
                             <div className="flex items-start gap-4">
                               {/* Icon */}
-                              <div className={cn(
-                                "h-10 w-10 rounded-full flex items-center justify-center shrink-0",
-                                interaction.type === 'call' 
-                                  ? interaction.outcome === 'booked' ? 'bg-emerald-100' : 'bg-blue-100'
-                                  : interaction.message_type === 'confirmation' ? 'bg-blue-100' 
-                                  : interaction.message_type === 'reminder' ? 'bg-violet-100'
-                                  : 'bg-slate-100'
-                              )}>
+                              <div className="h-10 w-10 rounded-full flex items-center justify-center shrink-0 bg-slate-100">
                                 {interaction.type === 'call' ? (
-                                  <PhoneCall className={cn(
-                                    "h-5 w-5",
-                                    interaction.outcome === 'booked' ? 'text-emerald-600' : 'text-blue-600'
-                                  )} />
+                                  <PhoneCall className="h-5 w-5 text-slate-500" />
                                 ) : (
                                   interaction.message_type === 'confirmation' ? (
-                                    <CheckCircle2 className="h-5 w-5 text-blue-600" />
+                                    <CheckCircle2 className="h-5 w-5 text-slate-500" />
                                   ) : interaction.message_type === 'reminder' ? (
-                                    <Bell className="h-5 w-5 text-violet-600" />
+                                    <Bell className="h-5 w-5 text-slate-500" />
                                   ) : (
-                                    <MessageSquare className="h-5 w-5 text-slate-600" />
+                                    <MessageSquare className="h-5 w-5 text-slate-500" />
                                   )
                                 )}
                               </div>
@@ -776,31 +751,21 @@ export default function Customers() {
                                       {interaction.type === 'call' ? 'Phone Call' : 'SMS'}
                                     </span>
                                     {interaction.type === 'call' && interaction.outcome && (
-                                      <Badge className={cn(
-                                        "text-xs",
-                                        interaction.outcome === 'booked' ? 'bg-emerald-100 text-emerald-700' :
-                                        interaction.outcome === 'inquiry' ? 'bg-blue-100 text-blue-700' :
-                                        'bg-slate-100 text-slate-700'
-                                      )}>
+                                      <Badge className="text-xs bg-slate-100 text-slate-600">
                                         {interaction.outcome}
                                       </Badge>
                                     )}
                                     {interaction.type === 'sms' && interaction.message_type && (
-                                      <Badge className={cn(
-                                        "text-xs",
-                                        interaction.message_type === 'confirmation' ? 'bg-blue-100 text-blue-700' :
-                                        interaction.message_type === 'reminder' ? 'bg-violet-100 text-violet-700' :
-                                        'bg-slate-100 text-slate-700'
-                                      )}>
+                                      <Badge className="text-xs bg-slate-100 text-slate-600">
                                         {interaction.message_type}
                                       </Badge>
                                     )}
                                     {interaction.type === 'call' && interaction.sentiment && (
                                       <span className="text-slate-400">
                                         {interaction.sentiment === 'positive' ? (
-                                          <ThumbsUp className="h-3.5 w-3.5 text-emerald-500" />
+                                          <ThumbsUp className="h-3.5 w-3.5 text-slate-500" />
                                         ) : interaction.sentiment === 'negative' ? (
-                                          <ThumbsDown className="h-3.5 w-3.5 text-red-500" />
+                                          <ThumbsDown className="h-3.5 w-3.5 text-slate-500" />
                                         ) : (
                                           <Minus className="h-3.5 w-3.5 text-slate-400" />
                                         )}
@@ -839,33 +804,28 @@ export default function Customers() {
                   {/* AI Insights Tab */}
                   <TabsContent value="insights" className="m-0 p-4 sm:p-6">
                     <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2 text-sm sm:text-base">
-                      <Target className="h-4 w-4 text-violet-500" />
+                      <Target className="h-4 w-4 text-slate-400" />
                       AI-Powered Recommendations
                     </h3>
                     {healthData?.recommendations?.length > 0 ? (
-                      <div className="space-y-4">
+                      <div className="space-y-3">
                         {healthData.recommendations.map((rec, idx) => (
                           <div
                             key={idx}
-                            className={cn(
-                              "rounded-xl border p-4 flex items-start gap-3",
-                              rec.type === 'action' && "bg-amber-50 border-amber-200",
-                              rec.type === 'service' && "bg-blue-50 border-blue-200",
-                              rec.type === 'upsell' && "bg-violet-50 border-violet-200"
-                            )}
+                            className="rounded-lg border border-slate-200 bg-slate-50 p-4 flex items-start gap-3"
                           >
-                            {rec.type === 'action' && <AlertCircle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />}
-                            {rec.type === 'service' && <Wrench className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />}
-                            {rec.type === 'upsell' && <Target className="h-5 w-5 text-violet-500 shrink-0 mt-0.5" />}
+                            {rec.type === 'action' && <AlertCircle className="h-5 w-5 text-slate-500 shrink-0 mt-0.5" />}
+                            {rec.type === 'service' && <Wrench className="h-5 w-5 text-slate-500 shrink-0 mt-0.5" />}
+                            {rec.type === 'upsell' && <Target className="h-5 w-5 text-slate-500 shrink-0 mt-0.5" />}
                             <div>
-                              <p className="font-medium text-slate-900 capitalize">{rec.type}</p>
+                              <p className="font-medium text-slate-800 capitalize">{rec.type}</p>
                               <p className="text-sm text-slate-600 mt-1">{rec.message}</p>
                             </div>
                           </div>
                         ))}
                       </div>
                     ) : (
-                      <div className="text-center py-12 bg-slate-50 rounded-xl">
+                      <div className="text-center py-12 bg-slate-50 rounded-lg">
                         <Target className="h-12 w-12 text-slate-300 mx-auto mb-3" />
                         <p className="text-slate-500">No recommendations available yet</p>
                         <p className="text-xs text-slate-400 mt-1">More data needed to generate insights</p>
