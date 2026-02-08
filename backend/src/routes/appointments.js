@@ -731,4 +731,40 @@ function enrichAppointmentWithDynamicStatus(appointment, now = new Date()) {
   };
 }
 
+/**
+ * GET /api/appointments/debug/tech-assignments
+ * Diagnostic endpoint to verify technician-bay assignment data
+ */
+router.get('/debug/tech-assignments', async (req, res) => {
+  try {
+    const { data: assignments } = await supabase
+      .from('technician_bay_assignments')
+      .select('technician_id, bay_id, is_primary');
+
+    const { data: techs } = await supabase
+      .from('technicians')
+      .select('id, first_name, last_name, skill_level, is_active');
+
+    const { data: schedules } = await supabase
+      .from('technician_schedules')
+      .select('technician_id, day_of_week, start_time, end_time, is_active');
+
+    const { data: bays } = await supabase
+      .from('service_bays')
+      .select('id, name, bay_type, is_active');
+
+    res.json({
+      assignments_count: assignments?.length || 0,
+      technicians_count: techs?.length || 0,
+      schedules_count: schedules?.length || 0,
+      bays_count: bays?.length || 0,
+      assignments: assignments?.slice(0, 5),
+      technicians: techs,
+      bays: bays,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 export default router;
