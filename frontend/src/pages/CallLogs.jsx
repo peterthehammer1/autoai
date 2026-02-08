@@ -196,50 +196,15 @@ export default function CallLogs() {
 
   return (
     <div className="h-[calc(100vh-4rem)] flex flex-col">
-      {/* Page Header - Dark Theme with Stats */}
+      {/* Page Header */}
       <div className="bg-gradient-to-r from-slate-800 to-slate-900 -mx-4 sm:-mx-6 px-4 sm:px-6 py-4 mb-4">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Phone className="h-5 w-5 text-blue-400" />
             <div>
               <h1 className="text-lg font-semibold text-white">Call Logs</h1>
               <p className="text-xs text-slate-400">AI-powered call management</p>
             </div>
-          </div>
-        </div>
-        
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
-          <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-3">
-            <div className="flex items-center justify-between mb-1">
-              <Phone className="h-4 w-4 text-blue-400" />
-            </div>
-            <p className="text-xl font-bold text-white">{stats?.summary?.total_calls ?? 0}</p>
-            <p className="text-slate-500 text-[10px]">Total Calls</p>
-          </div>
-          
-          <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-3">
-            <div className="flex items-center justify-between mb-1">
-              <CheckCircle2 className="h-4 w-4 text-blue-400" />
-            </div>
-            <p className="text-xl font-bold text-white">{stats?.summary?.by_outcome?.booked ?? 0}</p>
-            <p className="text-slate-500 text-[10px]">Bookings Made</p>
-          </div>
-          
-          <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-3">
-            <div className="flex items-center justify-between mb-1">
-              <TrendingUp className="h-4 w-4 text-blue-400" />
-            </div>
-            <p className="text-xl font-bold text-white">{conversionRate}%</p>
-            <p className="text-slate-500 text-[10px]">Conversion Rate</p>
-          </div>
-          
-          <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-3">
-            <div className="flex items-center justify-between mb-1">
-              <Clock className="h-4 w-4 text-blue-400" />
-            </div>
-            <p className="text-xl font-bold text-white">{formatDuration(stats?.summary?.avg_duration_seconds)}</p>
-            <p className="text-slate-500 text-[10px]">Avg Duration</p>
           </div>
         </div>
       </div>

@@ -136,50 +136,15 @@ export default function SmsLogs() {
 
   return (
     <div className="h-[calc(100vh-4rem)] flex flex-col">
-      {/* Page Header - Dark Theme with Stats */}
+      {/* Page Header */}
       <div className="bg-gradient-to-r from-slate-800 to-slate-900 -mx-4 sm:-mx-6 px-4 sm:px-6 py-4 mb-4">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <MessageSquare className="h-5 w-5 text-blue-400" />
             <div>
               <h1 className="text-lg font-semibold text-white">SMS Messages</h1>
               <p className="text-xs text-slate-400">Automated messaging system</p>
             </div>
-          </div>
-        </div>
-        
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
-          <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-3">
-            <div className="flex items-center justify-between mb-1">
-              <MessageSquare className="h-4 w-4 text-blue-400" />
-            </div>
-            <p className="text-xl font-bold text-white">{stats?.total || 0}</p>
-            <p className="text-slate-500 text-[10px]">Total Messages</p>
-          </div>
-          
-          <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-3">
-            <div className="flex items-center justify-between mb-1">
-              <CheckCircle2 className="h-4 w-4 text-blue-400" />
-            </div>
-            <p className="text-xl font-bold text-white">{stats?.by_type?.confirmation || 0}</p>
-            <p className="text-slate-500 text-[10px]">Confirmations</p>
-          </div>
-          
-          <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-3">
-            <div className="flex items-center justify-between mb-1">
-              <Bell className="h-4 w-4 text-blue-400" />
-            </div>
-            <p className="text-xl font-bold text-white">{stats?.by_type?.reminder || 0}</p>
-            <p className="text-slate-500 text-[10px]">Reminders</p>
-          </div>
-          
-          <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-3">
-            <div className="flex items-center justify-between mb-1">
-              <Send className="h-4 w-4 text-blue-400" />
-            </div>
-            <p className="text-xl font-bold text-white">{successRate}%</p>
-            <p className="text-slate-500 text-[10px]">Success Rate</p>
           </div>
         </div>
       </div>

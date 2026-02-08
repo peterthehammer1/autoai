@@ -361,91 +361,29 @@ export default function Dashboard() {
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Compact Header with Stats */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-slate-800 to-slate-900 -mx-4 sm:-mx-6 px-4 sm:px-6 py-4">
-        <div className="relative z-10">
-          {/* Single row - greeting, date, and AI status */}
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <GreetingIcon className={cn("h-5 w-5", greeting.color)} />
-              <div>
-                <h1 className="text-lg font-semibold text-white">{greeting.text}</h1>
-                <p className="text-slate-400 text-xs">{format(new Date(), 'EEEE, MMMM d, yyyy')}</p>
-              </div>
-            </div>
-            <a 
-              href="https://nucleus.com" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5 px-2.5 py-1 opacity-60 hover:opacity-100 transition-opacity"
-            >
-              <span className="text-[11px] text-slate-400">Powered by</span>
-              <img 
-                src="/nucleus-logo.svg" 
-                alt="Nucleus" 
-                className="h-3.5 brightness-0 invert opacity-70"
-              />
-            </a>
-          </div>
-          
-          {/* Compact Stats Grid */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
-            {/* Today's Appointments */}
-            <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-3">
-              <div className="flex items-center justify-between mb-1">
-                <Calendar className="h-4 w-4 text-blue-400" />
-                <span className="text-slate-400 text-[10px] flex items-center gap-0.5">
-                  <TrendingUp className="h-2.5 w-2.5" />+12%
-                </span>
-              </div>
-              <p className="text-xl font-bold text-white">
-                <AnimatedNumber value={overview?.today?.appointments ?? 0} />
-              </p>
-              <p className="text-slate-500 text-[10px]">Today's Appointments</p>
-            </div>
-            
-            {/* AI Calls */}
-            <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-3">
-              <div className="flex items-center justify-between mb-1">
-                <Mic className="h-4 w-4 text-blue-400" />
-                <span className="text-slate-400 text-[10px] flex items-center gap-0.5">
-                  <Activity className="h-2.5 w-2.5" />Live
-                </span>
-              </div>
-              <p className="text-xl font-bold text-white">
-                <AnimatedNumber value={overview?.today?.calls ?? 0} />
-              </p>
-              <p className="text-slate-500 text-[10px]">AI Calls Today</p>
-            </div>
-            
-            {/* Conversion Rate */}
-            <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-3">
-              <div className="flex items-center justify-between mb-1">
-                <Target className="h-4 w-4 text-blue-400" />
-                <span className="text-slate-400 text-[10px] flex items-center gap-0.5">
-                  <TrendingUp className="h-2.5 w-2.5" />+5%
-                </span>
-              </div>
-              <p className="text-xl font-bold text-white">
-                <AnimatedNumber value={overview?.week?.conversion_rate ?? 0} suffix="%" />
-              </p>
-              <p className="text-slate-500 text-[10px]">Conversion Rate</p>
-            </div>
-            
-            {/* Revenue */}
-            <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-3">
-              <div className="flex items-center justify-between mb-1">
-                <DollarSign className="h-4 w-4 text-blue-400" />
-                <span className="text-slate-400 text-[10px] flex items-center gap-0.5">
-                  <TrendingUp className="h-2.5 w-2.5" />+18%
-                </span>
-              </div>
-              <p className="text-xl font-bold text-white">
-                {overview?.month?.revenue_booked ? formatCents(overview.month.revenue_booked) : '$0'}
-              </p>
-              <p className="text-slate-500 text-[10px]">Revenue (MTD)</p>
+      {/* Page Header */}
+      <div className="bg-gradient-to-r from-slate-800 to-slate-900 -mx-4 sm:-mx-6 px-4 sm:px-6 py-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <GreetingIcon className={cn("h-5 w-5", greeting.color)} />
+            <div>
+              <h1 className="text-lg font-semibold text-white">{greeting.text}</h1>
+              <p className="text-xs text-slate-400">{format(new Date(), 'EEEE, MMMM d, yyyy')}</p>
             </div>
           </div>
+          <a 
+            href="https://nucleus.com" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 px-2.5 py-1 opacity-60 hover:opacity-100 transition-opacity"
+          >
+            <span className="text-[11px] text-slate-400">Powered by</span>
+            <img 
+              src="/nucleus-logo.svg" 
+              alt="Nucleus" 
+              className="h-3.5 brightness-0 invert opacity-70"
+            />
+          </a>
         </div>
       </div>
 

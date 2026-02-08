@@ -227,50 +227,15 @@ export default function Customers() {
 
   return (
     <div className="h-[calc(100vh-4rem)] flex flex-col">
-      {/* Page Header - Dark Theme with Stats */}
+      {/* Page Header */}
       <div className="bg-gradient-to-r from-slate-800 to-slate-900 -mx-4 sm:-mx-6 px-4 sm:px-6 py-4 mb-4">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Users className="h-5 w-5 text-blue-400" />
             <div>
               <h1 className="text-lg font-semibold text-white">Customers</h1>
               <p className="text-xs text-slate-400">Customer relationship management</p>
             </div>
-          </div>
-        </div>
-        
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
-          <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-3">
-            <div className="flex items-center justify-between mb-1">
-              <Users className="h-4 w-4 text-blue-400" />
-            </div>
-            <p className="text-xl font-bold text-white">{data?.customers?.length || 0}</p>
-            <p className="text-slate-500 text-[10px]">Total Customers</p>
-          </div>
-          
-          <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-3">
-            <div className="flex items-center justify-between mb-1">
-              <Car className="h-4 w-4 text-blue-400" />
-            </div>
-            <p className="text-xl font-bold text-white">{totalVehicles}</p>
-            <p className="text-slate-500 text-[10px]">Vehicles</p>
-          </div>
-          
-          <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-3">
-            <div className="flex items-center justify-between mb-1">
-              <CalendarCheck className="h-4 w-4 text-blue-400" />
-            </div>
-            <p className="text-xl font-bold text-white">{totalVisits}</p>
-            <p className="text-slate-500 text-[10px]">Total Visits</p>
-          </div>
-          
-          <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-3">
-            <div className="flex items-center justify-between mb-1">
-              <TrendingUp className="h-4 w-4 text-blue-400" />
-            </div>
-            <p className="text-xl font-bold text-white">{totalVehicles > 0 ? (totalVisits / (data?.customers?.length || 1)).toFixed(1) : '0'}</p>
-            <p className="text-slate-500 text-[10px]">Avg Visits/Customer</p>
           </div>
         </div>
       </div>
