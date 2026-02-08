@@ -141,14 +141,58 @@ export default function Appointments() {
     return format(date, 'EEEE, MMMM d')
   }
 
+  // Calculate stats from upcoming data
+  const totalUpcoming = upcomingData?.appointments?.length || 0
+  const todayCount = upcomingData?.by_date?.[format(new Date(), 'yyyy-MM-dd')]?.length || 0
+  const confirmedCount = upcomingData?.appointments?.filter(a => a.status === 'confirmed')?.length || 0
+  const scheduledCount = upcomingData?.appointments?.filter(a => a.status === 'scheduled')?.length || 0
+
   return (
     <div className="space-y-4">
-      {/* Page Header - With Teal Accent */}
-      <div className="bg-gradient-to-r from-teal-dark to-teal px-4 py-4 rounded-lg">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-lg font-semibold text-white">Appointments</h1>
-            <p className="text-sm text-white/70">Manage scheduled appointments</p>
+      {/* Page Header - Dark Theme with Stats */}
+      <div className="bg-gradient-to-r from-slate-800 to-slate-900 -mx-4 sm:-mx-6 -mt-4 sm:-mt-6 px-4 sm:px-6 py-4">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <Calendar className="h-5 w-5 text-teal-400" />
+            <div>
+              <h1 className="text-lg font-semibold text-white">Appointments</h1>
+              <p className="text-xs text-slate-400">Manage scheduled appointments</p>
+            </div>
+          </div>
+        </div>
+        
+        {/* Stats Grid */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
+          <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-3">
+            <div className="flex items-center justify-between mb-1">
+              <Calendar className="h-4 w-4 text-slate-400" />
+            </div>
+            <p className="text-xl font-bold text-white">{todayCount}</p>
+            <p className="text-slate-500 text-[10px]">Today</p>
+          </div>
+          
+          <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-3">
+            <div className="flex items-center justify-between mb-1">
+              <Clock className="h-4 w-4 text-slate-400" />
+            </div>
+            <p className="text-xl font-bold text-white">{totalUpcoming}</p>
+            <p className="text-slate-500 text-[10px]">Upcoming</p>
+          </div>
+          
+          <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-3">
+            <div className="flex items-center justify-between mb-1">
+              <User className="h-4 w-4 text-slate-400" />
+            </div>
+            <p className="text-xl font-bold text-white">{confirmedCount}</p>
+            <p className="text-slate-500 text-[10px]">Confirmed</p>
+          </div>
+          
+          <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-3">
+            <div className="flex items-center justify-between mb-1">
+              <CalendarDays className="h-4 w-4 text-slate-400" />
+            </div>
+            <p className="text-xl font-bold text-white">{scheduledCount}</p>
+            <p className="text-slate-500 text-[10px]">Scheduled</p>
           </div>
         </div>
       </div>
@@ -216,13 +260,16 @@ export default function Appointments() {
                 </div>
 
                 {/* Appointments for this date */}
-                <div className="bg-white border border-slate-200">
-                  <div className="divide-y divide-slate-200">
-                    {apts.map((apt) => (
+                <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
+                  <div className="divide-y divide-slate-100">
+                    {apts.map((apt, index) => (
                       <Link
                         key={apt.id}
                         to={`/appointments/${apt.id}`}
-                        className="block p-3 hover:bg-slate-50 transition-colors"
+                        className={cn(
+                          "block p-3 hover:bg-teal-50/50 transition-colors",
+                          index % 2 === 1 && "bg-slate-50/50"
+                        )}
                       >
                         <div className="flex items-start gap-3">
                           {/* Time */}
@@ -351,19 +398,30 @@ export default function Appointments() {
                           {/* Appointment indicators */}
                           {dayAppointments.length > 0 && (
                             <div className="mt-1 space-y-0.5">
-                              {dayAppointments.slice(0, 3).map((apt) => (
-                                <div
-                                  key={apt.id}
-                                  className="text-[10px] sm:text-xs px-1 py-0.5 bg-slate-100 text-slate-600 truncate"
-                                >
-                                  <span className="hidden sm:inline">
-                                    {formatTime12Hour(apt.scheduled_time).split(' ')[0]} - {apt.customer?.first_name}
-                                  </span>
-                                  <span className="sm:hidden">
-                                    {formatTime12Hour(apt.scheduled_time).split(':')[0]}
-                                  </span>
-                                </div>
-                              ))}
+                              {dayAppointments.slice(0, 3).map((apt, aptIndex) => {
+                                const colors = [
+                                  'bg-teal-100 text-teal-700 border-l-2 border-teal-400',
+                                  'bg-sky-100 text-sky-700 border-l-2 border-sky-400',
+                                  'bg-amber-100 text-amber-700 border-l-2 border-amber-400',
+                                  'bg-rose-100 text-rose-700 border-l-2 border-rose-400',
+                                  'bg-violet-100 text-violet-700 border-l-2 border-violet-400',
+                                  'bg-emerald-100 text-emerald-700 border-l-2 border-emerald-400',
+                                ]
+                                const colorClass = colors[aptIndex % colors.length]
+                                return (
+                                  <div
+                                    key={apt.id}
+                                    className={cn("text-[10px] sm:text-xs px-1 py-0.5 truncate rounded-sm", colorClass)}
+                                  >
+                                    <span className="hidden sm:inline">
+                                      {formatTime12Hour(apt.scheduled_time).split(' ')[0]} - {apt.customer?.first_name}
+                                    </span>
+                                    <span className="sm:hidden">
+                                      {formatTime12Hour(apt.scheduled_time).split(':')[0]}
+                                    </span>
+                                  </div>
+                                )
+                              })}
                               {dayAppointments.length > 3 && (
                                 <div className="text-[10px] text-slate-500 px-1">
                                   +{dayAppointments.length - 3} more
@@ -385,11 +443,14 @@ export default function Appointments() {
                             </p>
                           </div>
                           <div className="max-h-64 overflow-y-auto">
-                            {dayAppointments.map((apt) => (
+                            {dayAppointments.map((apt, index) => (
                               <Link
                                 key={apt.id}
                                 to={`/appointments/${apt.id}`}
-                                className="block p-3 hover:bg-slate-50 border-b border-slate-100 last:border-0"
+                                className={cn(
+                                  "block p-3 hover:bg-teal-50/50 border-b border-slate-100 last:border-0",
+                                  index % 2 === 1 && "bg-slate-50/70"
+                                )}
                               >
                                 <div className="flex items-start justify-between gap-2 mb-1">
                                   <span className="text-sm font-medium text-slate-800">
@@ -514,12 +575,15 @@ export default function Appointments() {
             ) : (
               <>
                 {/* Mobile Card View */}
-                <div className="sm:hidden divide-y divide-slate-200">
-                  {dateData.appointments.map((apt) => (
+                <div className="sm:hidden divide-y divide-slate-100">
+                  {dateData.appointments.map((apt, index) => (
                     <Link
                       key={apt.id}
                       to={`/appointments/${apt.id}`}
-                      className="block p-3 hover:bg-slate-50"
+                      className={cn(
+                        "block p-3 hover:bg-teal-50/50",
+                        index % 2 === 1 && "bg-slate-50/50"
+                      )}
                     >
                       <div className="flex items-start gap-3">
                         <div className="flex h-12 w-14 flex-col items-center justify-center rounded bg-slate-100 shrink-0">
@@ -565,8 +629,8 @@ export default function Appointments() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {dateData.appointments.map((apt) => (
-                      <TableRow key={apt.id} className="hover:bg-slate-50">
+                    {dateData.appointments.map((apt, index) => (
+                      <TableRow key={apt.id} className={cn("hover:bg-teal-50/50", index % 2 === 1 && "bg-slate-50/50")}>
                         <TableCell className="font-mono text-sm text-slate-700">
                           {formatTime12Hour(apt.scheduled_time)}
                         </TableCell>
