@@ -227,23 +227,23 @@ export default function Customers() {
 
   return (
     <div className="h-[calc(100vh-6rem)] flex flex-col">
-      {/* Top Header Bar - Professional/Conservative */}
-      <div className="bg-white border-b border-slate-200 px-4 py-3 mb-4">
+      {/* Top Header Bar - With Teal Accent */}
+      <div className="bg-gradient-to-r from-[#082438] to-[#0a3a54] px-4 py-4 mb-4 rounded-lg mx-4 mt-2">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-lg font-semibold text-slate-800">Customers</h1>
-            <p className="text-sm text-slate-500">{data?.customers?.length || 0} total customers</p>
+            <h1 className="text-lg font-semibold text-white">Customers</h1>
+            <p className="text-sm text-white/70">{data?.customers?.length || 0} total customers</p>
           </div>
           
           <div className="flex items-center gap-6">
             <div className="text-right hidden sm:block">
-              <p className="text-sm text-slate-500">Vehicles</p>
-              <p className="text-lg font-semibold text-slate-800">{totalVehicles}</p>
+              <p className="text-sm text-white/70">Vehicles</p>
+              <p className="text-lg font-semibold text-white">{totalVehicles}</p>
             </div>
-            <div className="h-8 w-px bg-slate-200 hidden sm:block" />
+            <div className="h-8 w-px bg-white/20 hidden sm:block" />
             <div className="text-right hidden sm:block">
-              <p className="text-sm text-slate-500">Total Visits</p>
-              <p className="text-lg font-semibold text-slate-800">{totalVisits}</p>
+              <p className="text-sm text-white/70">Total Visits</p>
+              <p className="text-lg font-semibold text-white">{totalVisits}</p>
             </div>
           </div>
         </div>
@@ -308,7 +308,7 @@ export default function Customers() {
                       </p>
                     </div>
                     {customer.total_visits > 0 && (
-                      <span className="text-xs text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
+                      <span className="text-xs text-[#0a3a54] bg-[#082438]/10 px-1.5 py-0.5 rounded font-medium">
                         {customer.total_visits}
                       </span>
                     )}
@@ -405,27 +405,27 @@ export default function Customers() {
                 </div>
 
                 {/* Quick Stats */}
-                <div className="grid grid-cols-4 gap-4 mt-4">
-                  <div className="text-center">
-                    <p className="text-lg font-semibold text-slate-800">
+                <div className="grid grid-cols-4 gap-3 mt-4">
+                  <div className="text-center bg-white rounded-lg p-2 border border-slate-200">
+                    <p className="text-lg font-semibold text-[#082438]">
                       {healthData?.stats?.total_visits || selectedCustomer.total_visits || 0}
                     </p>
                     <p className="text-xs text-slate-500">Visits</p>
                   </div>
-                  <div className="text-center">
-                    <p className="text-lg font-semibold text-slate-800">
+                  <div className="text-center bg-white rounded-lg p-2 border border-slate-200">
+                    <p className="text-lg font-semibold text-[#0a3a54]">
                       {healthData?.stats?.total_spend ? formatCents(healthData.stats.total_spend) : '$0'}
                     </p>
                     <p className="text-xs text-slate-500">Total Spend</p>
                   </div>
-                  <div className="text-center">
-                    <p className="text-lg font-semibold text-slate-800">
+                  <div className="text-center bg-white rounded-lg p-2 border border-slate-200">
+                    <p className="text-lg font-semibold text-[#0d4a6a]">
                       {selectedCustomer.vehicles?.length || 0}
                     </p>
                     <p className="text-xs text-slate-500">Vehicles</p>
                   </div>
-                  <div className="text-center">
-                    <p className="text-lg font-semibold text-slate-800">
+                  <div className="text-center bg-white rounded-lg p-2 border border-slate-200">
+                    <p className="text-lg font-semibold text-[#105a80]">
                       {healthData?.health_score || '-'}
                     </p>
                     <p className="text-xs text-slate-500">Health Score</p>
@@ -680,11 +680,11 @@ export default function Customers() {
                           >
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-4">
-                                <div className="text-center bg-slate-100 rounded-lg px-3 py-2">
-                                  <p className="text-lg font-bold text-slate-900">
+                                <div className="text-center bg-gradient-to-br from-[#082438] to-[#0a3a54] rounded-lg px-3 py-2 min-w-[52px]">
+                                  <p className="text-lg font-bold text-white">
                                     {format(new Date(apt.scheduled_date), 'd')}
                                   </p>
-                                  <p className="text-xs text-slate-500 uppercase">
+                                  <p className="text-xs text-white/70 uppercase">
                                     {format(new Date(apt.scheduled_date), 'MMM')}
                                   </p>
                                 </div>
