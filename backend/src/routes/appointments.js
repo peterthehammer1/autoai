@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { supabase, normalizePhone } from '../config/database.js';
 import { format, parseISO } from 'date-fns';
+import { assignTechnician, getRequiredSkillLevel, getBestBayType } from './retell-functions.js';
 
 const router = Router();
 
@@ -125,7 +126,7 @@ router.post('/', async (req, res, next) => {
     
     const { data: services, error: servicesError } = await supabase
       .from('services')
-      .select('id, name, duration_minutes, price_min, price_max, required_bay_type')
+      .select('id, name, duration_minutes, price_min, price_max, required_bay_type, required_skill_level')
       .in('id', serviceIdList);
 
     if (servicesError) throw servicesError;
@@ -133,22 +134,33 @@ router.post('/', async (req, res, next) => {
     const totalDuration = services.reduce((sum, s) => sum + s.duration_minutes, 0);
     const quotedTotal = services.reduce((sum, s) => sum + (s.price_min || 0), 0);
 
-    // 4. Find available bay if not specified
+    // 4. Find available bay if not specified (using most specialized bay type)
     let assignedBayId = bay_id;
     
     if (!assignedBayId) {
-      // Get required bay type from services
-      const requiredBayType = services[0]?.required_bay_type || 'general_service';
+      const requiredBayType = getBestBayType(services);
 
-      // Find available bay at this time
-      const { data: availableSlot } = await supabase
-        .from('time_slots')
-        .select('bay_id')
-        .eq('slot_date', appointment_date)
-        .eq('start_time', appointment_time + ':00')
-        .eq('is_available', true)
-        .limit(1)
-        .single();
+      // Find compatible bays
+      const { data: compatibleBays } = await supabase
+        .from('service_bays')
+        .select('id')
+        .eq('is_active', true)
+        .eq('bay_type', requiredBayType);
+
+      const compatibleBayIds = compatibleBays?.map(b => b.id) || [];
+
+      // Find available slot in compatible bays
+      const { data: availableSlot } = compatibleBayIds.length > 0
+        ? await supabase
+          .from('time_slots')
+          .select('bay_id')
+          .eq('slot_date', appointment_date)
+          .eq('start_time', appointment_time + ':00')
+          .eq('is_available', true)
+          .in('bay_id', compatibleBayIds)
+          .limit(1)
+          .single()
+        : { data: null };
 
       if (!availableSlot) {
         return res.status(409).json({
@@ -161,25 +173,38 @@ router.post('/', async (req, res, next) => {
       assignedBayId = availableSlot.bay_id;
     }
 
+    // 4b. Auto-assign technician
+    const requiredSkill = getRequiredSkillLevel(services);
+    const technicianId = await assignTechnician({
+      bay_id: assignedBayId,
+      appointment_date,
+      appointment_time,
+      duration_minutes: totalDuration,
+      required_skill_level: requiredSkill,
+    });
+
     // 5. Create appointment
+    const appointmentPayload = {
+      customer_id: customer.id,
+      vehicle_id: vehicleId,
+      scheduled_date: appointment_date,
+      scheduled_time: appointment_time,
+      estimated_duration_minutes: totalDuration,
+      bay_id: assignedBayId,
+      loaner_requested: loaner_requested || false,
+      shuttle_requested: shuttle_requested || false,
+      waiter: waiter || false,
+      customer_notes: notes,
+      quoted_total: quotedTotal,
+      created_by,
+      call_id,
+      status: 'scheduled'
+    };
+    if (technicianId) appointmentPayload.technician_id = technicianId;
+
     const { data: appointment, error: appointmentError } = await supabase
       .from('appointments')
-      .insert({
-        customer_id: customer.id,
-        vehicle_id: vehicleId,
-        scheduled_date: appointment_date,
-        scheduled_time: appointment_time,
-        estimated_duration_minutes: totalDuration,
-        bay_id: assignedBayId,
-        loaner_requested: loaner_requested || false,
-        shuttle_requested: shuttle_requested || false,
-        waiter: waiter || false,
-        customer_notes: notes,
-        quoted_total: quotedTotal,
-        created_by,
-        call_id,
-        status: 'scheduled'
-      })
+      .insert(appointmentPayload)
       .select(`
         *,
         customer:customers (first_name, last_name, phone, email),

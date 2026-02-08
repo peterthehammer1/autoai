@@ -6,6 +6,192 @@ import { sendConfirmationEmail } from '../services/email.js';
 
 const router = Router();
 
+// Skill level hierarchy for comparison (higher = more skilled)
+const SKILL_RANK = { junior: 1, intermediate: 2, senior: 3, master: 4 };
+
+// Bay type specialization hierarchy (higher = more specialized)
+const BAY_TYPE_RANK = {
+  express_lane: 1,
+  quick_service: 2,
+  general_service: 3,
+  alignment: 4,
+  diagnostic: 5,
+  heavy_repair: 6,
+};
+
+/**
+ * Determine the best bay type when multiple services require different bay types.
+ * Uses the most specialized (highest rank) bay type needed.
+ */
+function getBestBayType(services) {
+  let bestType = services[0]?.required_bay_type || 'general_service';
+  let bestRank = BAY_TYPE_RANK[bestType] || 0;
+
+  for (const svc of services) {
+    const rank = BAY_TYPE_RANK[svc.required_bay_type] || 0;
+    if (rank > bestRank) {
+      bestRank = rank;
+      bestType = svc.required_bay_type;
+    }
+  }
+  return bestType;
+}
+
+/**
+ * Determine the highest required skill level across a set of services.
+ */
+function getRequiredSkillLevel(services) {
+  let best = 'junior';
+  let bestRank = 1;
+
+  for (const svc of services) {
+    const rank = SKILL_RANK[svc.required_skill_level] || 1;
+    if (rank > bestRank) {
+      bestRank = rank;
+      best = svc.required_skill_level;
+    }
+  }
+  return best;
+}
+
+/**
+ * Automatically assign the best available technician for an appointment.
+ * 
+ * Logic:
+ * 1. Find technicians assigned to the given bay
+ * 2. Filter: working that day (technician_schedules)
+ * 3. Filter: shift covers appointment time window
+ * 4. Filter: skill_level >= required
+ * 5. Filter: not already booked at that time (existing appointments)
+ * 6. Pick best: prefer primary bay assignment, then closest skill match
+ * 
+ * Returns technician_id or null if no technician available.
+ */
+async function assignTechnician({ bay_id, appointment_date, appointment_time, duration_minutes, required_skill_level }) {
+  try {
+    const requiredRank = SKILL_RANK[required_skill_level] || 1;
+
+    // Parse appointment time window
+    const [aptH, aptM] = appointment_time.split(':').map(Number);
+    const aptStartMins = aptH * 60 + aptM;
+    const aptEndMins = aptStartMins + (duration_minutes || 60);
+
+    // Convert to day_of_week (0=Sunday, 1=Monday, ... 6=Saturday)
+    const dateObj = parseISO(appointment_date);
+    const dayOfWeek = dateObj.getDay(); // JS: 0=Sunday
+
+    // 1. Find technicians assigned to this bay
+    const { data: bayAssignments, error: baError } = await supabase
+      .from('technician_bay_assignments')
+      .select(`
+        technician_id,
+        is_primary,
+        technician:technicians (id, first_name, last_name, skill_level, is_active)
+      `)
+      .eq('bay_id', bay_id);
+
+    if (baError || !bayAssignments || bayAssignments.length === 0) {
+      console.log('assignTechnician: No technicians assigned to bay', bay_id);
+      return null;
+    }
+
+    // Filter to active technicians with sufficient skill
+    const qualifiedTechs = bayAssignments.filter(ba => {
+      const tech = ba.technician;
+      if (!tech || !tech.is_active) return false;
+      const techRank = SKILL_RANK[tech.skill_level] || 1;
+      return techRank >= requiredRank;
+    });
+
+    if (qualifiedTechs.length === 0) {
+      console.log('assignTechnician: No qualified technicians for skill level', required_skill_level);
+      return null;
+    }
+
+    // 2. Check schedules - which techs work this day and time
+    const techIds = qualifiedTechs.map(ba => ba.technician_id);
+
+    const { data: schedules, error: schError } = await supabase
+      .from('technician_schedules')
+      .select('technician_id, start_time, end_time')
+      .in('technician_id', techIds)
+      .eq('day_of_week', dayOfWeek)
+      .eq('is_active', true);
+
+    if (schError || !schedules || schedules.length === 0) {
+      console.log('assignTechnician: No technicians scheduled for day', dayOfWeek);
+      return null;
+    }
+
+    // Filter by shift covering the appointment window
+    const aptStartTime = `${String(aptH).padStart(2, '0')}:${String(aptM).padStart(2, '0')}:00`;
+    const endH = Math.floor(aptEndMins / 60);
+    const endM = aptEndMins % 60;
+    const aptEndTime = `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}:00`;
+
+    const workingTechIds = schedules
+      .filter(s => s.start_time <= aptStartTime && s.end_time >= aptEndTime)
+      .map(s => s.technician_id);
+
+    if (workingTechIds.length === 0) {
+      console.log('assignTechnician: No technicians working during appointment time');
+      return null;
+    }
+
+    // 3. Check for conflicting appointments
+    const { data: conflicts, error: confError } = await supabase
+      .from('appointments')
+      .select('technician_id, scheduled_time, estimated_duration_minutes')
+      .in('technician_id', workingTechIds)
+      .eq('scheduled_date', appointment_date)
+      .not('status', 'in', '("cancelled","no_show")');
+
+    // Build set of busy technician IDs
+    const busyTechIds = new Set();
+    if (conflicts) {
+      for (const conf of conflicts) {
+        if (!conf.technician_id) continue;
+        const [cH, cM] = conf.scheduled_time.split(':').map(Number);
+        const confStart = cH * 60 + cM;
+        const confEnd = confStart + (conf.estimated_duration_minutes || 60);
+
+        // Check overlap: appointment overlaps if it starts before conf ends and ends after conf starts
+        if (aptStartMins < confEnd && aptEndMins > confStart) {
+          busyTechIds.add(conf.technician_id);
+        }
+      }
+    }
+
+    // Final available technicians
+    const available = qualifiedTechs.filter(ba =>
+      workingTechIds.includes(ba.technician_id) && !busyTechIds.has(ba.technician_id)
+    );
+
+    if (available.length === 0) {
+      console.log('assignTechnician: All qualified technicians are booked at this time');
+      return null;
+    }
+
+    // 4. Pick best: prefer primary bay assignment, then closest skill match (not over-qualified)
+    available.sort((a, b) => {
+      // Primary bay first
+      if (a.is_primary !== b.is_primary) return a.is_primary ? -1 : 1;
+      // Then closest skill match (prefer least over-qualified to save senior techs for harder jobs)
+      const aRank = SKILL_RANK[a.technician.skill_level] || 1;
+      const bRank = SKILL_RANK[b.technician.skill_level] || 1;
+      return aRank - bRank;
+    });
+
+    const chosen = available[0];
+    console.log(`assignTechnician: Assigned ${chosen.technician.first_name} ${chosen.technician.last_name} (${chosen.technician.skill_level}) to bay ${bay_id}`);
+    return chosen.technician_id;
+
+  } catch (err) {
+    console.error('assignTechnician error:', err);
+    return null; // Graceful fallback - don't block booking
+  }
+}
+
 /**
  * POST /api/voice/lookup_customer
  * Nucleus AI function: Look up customer by phone
@@ -520,8 +706,8 @@ router.post('/check_availability', async (req, res, next) => {
     }
 
     const totalDuration = services.reduce((sum, s) => sum + s.duration_minutes, 0);
-    const primaryBayType = services[0].required_bay_type;
-    console.log('Total duration:', totalDuration, 'Bay type:', primaryBayType);
+    const primaryBayType = getBestBayType(services);
+    console.log('Total duration:', totalDuration, 'Bay type:', primaryBayType, '(selected from', services.map(s => s.required_bay_type).join(', '), ')');
 
     // Get compatible bays
     const { data: bays } = await supabase
@@ -928,7 +1114,7 @@ router.post('/book_appointment', async (req, res, next) => {
     // 3. Get services
     const { data: services, error: serviceError } = await supabase
       .from('services')
-      .select('id, name, duration_minutes, price_min, required_bay_type')
+      .select('id, name, duration_minutes, price_min, required_bay_type, required_skill_level')
       .in('id', serviceIdList);
 
     if (serviceError || !services?.length) {
@@ -960,15 +1146,27 @@ router.post('/book_appointment', async (req, res, next) => {
       });
     }
 
-    // 4. Find available bay
-    const { data: availableSlot } = await supabase
-      .from('time_slots')
-      .select('bay_id')
-      .eq('slot_date', appointment_date)
-      .eq('start_time', `${appointment_time}:00`)
-      .eq('is_available', true)
-      .limit(1)
-      .single();
+    // 4. Find available bay (matching most specialized required bay type)
+    const bookingBayType = getBestBayType(services);
+    const { data: compatibleBays } = await supabase
+      .from('service_bays')
+      .select('id')
+      .eq('is_active', true)
+      .eq('bay_type', bookingBayType);
+
+    const compatibleBayIds = compatibleBays?.map(b => b.id) || [];
+
+    const { data: availableSlot } = compatibleBayIds.length > 0
+      ? await supabase
+        .from('time_slots')
+        .select('bay_id')
+        .eq('slot_date', appointment_date)
+        .eq('start_time', `${appointment_time}:00`)
+        .eq('is_available', true)
+        .in('bay_id', compatibleBayIds)
+        .limit(1)
+        .single()
+      : { data: null };
 
     if (!availableSlot) {
       return res.json({
@@ -978,24 +1176,37 @@ router.post('/book_appointment', async (req, res, next) => {
       });
     }
 
-    // 5. Create appointment
+    // 5. Auto-assign technician
+    const requiredSkill = getRequiredSkillLevel(services);
+    const technicianId = await assignTechnician({
+      bay_id: availableSlot.bay_id,
+      appointment_date,
+      appointment_time,
+      duration_minutes: totalDuration,
+      required_skill_level: requiredSkill,
+    });
+
+    // 6. Create appointment
+    const appointmentPayload = {
+      customer_id: customer.id,
+      vehicle_id: vehicleId,
+      scheduled_date: appointment_date,
+      scheduled_time: appointment_time,
+      estimated_duration_minutes: totalDuration,
+      bay_id: availableSlot.bay_id,
+      loaner_requested: loaner_requested || false,
+      shuttle_requested: shuttle_requested || false,
+      customer_notes: notes,
+      quoted_total: services.reduce((sum, s) => sum + (s.price_min || 0), 0),
+      created_by: 'ai_agent',
+      call_id,
+      status: 'scheduled'
+    };
+    if (technicianId) appointmentPayload.technician_id = technicianId;
+
     const { data: appointment, error: aptError } = await supabase
       .from('appointments')
-      .insert({
-        customer_id: customer.id,
-        vehicle_id: vehicleId,
-        scheduled_date: appointment_date,
-        scheduled_time: appointment_time,
-        estimated_duration_minutes: totalDuration,
-        bay_id: availableSlot.bay_id,
-        loaner_requested: loaner_requested || false,
-        shuttle_requested: shuttle_requested || false,
-        customer_notes: notes,
-        quoted_total: services.reduce((sum, s) => sum + (s.price_min || 0), 0),
-        created_by: 'ai_agent',
-        call_id,
-        status: 'scheduled'
-      })
+      .insert(appointmentPayload)
       .select('id')
       .single();
 
@@ -2614,4 +2825,5 @@ function getOrdinalSuffix(day) {
   }
 }
 
+export { assignTechnician, getRequiredSkillLevel, getBestBayType };
 export default router;
