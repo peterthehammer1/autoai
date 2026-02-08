@@ -17,7 +17,7 @@ import {
 
 export default function Settings() {
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pt-4 sm:pt-6">
       <Tabs defaultValue="business">
         <TabsList>
           <TabsTrigger value="business">Business</TabsTrigger>

@@ -228,7 +228,7 @@ export default function Customers() {
   return (
     <div className="h-[calc(100vh-4rem)] flex flex-col">
       {/* Page Header - Dark Theme with Stats */}
-      <div className="bg-gradient-to-r from-slate-800 to-slate-900 -mx-4 sm:-mx-6 -mt-4 sm:-mt-6 px-4 sm:px-6 py-4 mb-4">
+      <div className="bg-gradient-to-r from-slate-800 to-slate-900 -mx-4 sm:-mx-6 px-4 sm:px-6 py-4 mb-4">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <Users className="h-5 w-5 text-blue-400" />

@@ -26,6 +26,7 @@ const CircularProgress = React.forwardRef(({
     red: "#ef4444",
     violet: "#8b5cf6",
     blue: "#3b82f6",
+    slate: "#475569",
   }
 
   const strokeColor = colorMap[color] || color

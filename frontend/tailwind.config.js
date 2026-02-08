@@ -65,6 +65,11 @@ export default {
           light: "#fbbf24",
           dark: "#d97706",
         },
+        slateblue: {
+          DEFAULT: "#475569",
+          light: "#64748b",
+          dark: "#334155",
+        },
         emerald: {
           DEFAULT: "#10b981",
           light: "#34d399",

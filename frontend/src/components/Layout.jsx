@@ -215,37 +215,20 @@ export default function Layout() {
 
       {/* Main content */}
       <div className="lg:pl-64">
-        {/* Top bar */}
-        <div className="sticky top-0 z-40 flex h-14 sm:h-16 items-center gap-4 bg-white border-b border-slate-200 px-4 sm:px-6">
+        {/* Mobile menu button - fixed position */}
+        <div className="lg:hidden fixed top-3 left-3 z-50">
           <Button
             variant="ghost"
             size="icon"
-            className="lg:hidden h-9 w-9"
+            className="h-9 w-9 bg-white/90 backdrop-blur shadow-md border border-slate-200"
             onClick={() => setSidebarOpen(true)}
           >
             <Menu className="h-5 w-5 text-slate-600" />
           </Button>
-          
-          <div className="flex-1" />
-          
-          {/* Powered by Nucleus */}
-          <a 
-            href="https://nucleus.com" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-slate-50 transition-colors group"
-          >
-            <span className="text-xs text-slate-400 group-hover:text-slate-500 transition-colors">Powered by</span>
-            <img 
-              src="/nucleus-logo.svg" 
-              alt="Nucleus" 
-              className="h-4 opacity-70 group-hover:opacity-100 transition-opacity"
-            />
-          </a>
         </div>
 
         {/* Page content */}
-        <main className="p-4 sm:p-6">
+        <main className="px-4 sm:px-6 pb-4 sm:pb-6">
           <Outlet />
         </main>
       </div>

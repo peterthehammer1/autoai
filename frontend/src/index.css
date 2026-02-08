@@ -167,9 +167,9 @@
     border-left: 3px solid #0d4a6a;
   }
   
-  .stat-amber {
+  .stat-slate-blue {
     background: linear-gradient(135deg, #F4F6F9 0%, #EEF1F6 100%);
-    border-left: 3px solid #105a80;
+    border-left: 3px solid #475569;
   }
   
   .stat-slate {

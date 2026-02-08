@@ -199,7 +199,7 @@ export default function Analytics() {
   return (
     <div className="space-y-4">
       {/* Page Header - Dark Theme */}
-      <div className="bg-gradient-to-r from-slate-800 to-slate-900 -mx-4 sm:-mx-6 -mt-4 sm:-mt-6 px-4 sm:px-6 py-4 mb-2">
+      <div className="bg-gradient-to-r from-slate-800 to-slate-900 -mx-4 sm:-mx-6 px-4 sm:px-6 py-4 mb-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <BarChart3 className="h-5 w-5 text-blue-400" />

@@ -362,7 +362,7 @@ export default function Dashboard() {
   return (
     <div className="flex flex-col gap-4">
       {/* Compact Header with Stats */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-slate-800 to-slate-900 -mx-4 sm:-mx-6 -mt-4 sm:-mt-6 px-4 sm:px-6 py-4">
+      <div className="relative overflow-hidden bg-gradient-to-r from-slate-800 to-slate-900 -mx-4 sm:-mx-6 px-4 sm:px-6 py-4">
         <div className="relative z-10">
           {/* Single row - greeting, date, and AI status */}
           <div className="flex items-center justify-between mb-4">
@@ -373,13 +373,19 @@ export default function Dashboard() {
                 <p className="text-slate-400 text-xs">{format(new Date(), 'EEEE, MMMM d, yyyy')}</p>
               </div>
             </div>
-            <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-              </span>
-              <span className="text-blue-400 text-xs font-medium">AI Agent Live</span>
-            </div>
+            <a 
+              href="https://nucleus.com" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 px-2.5 py-1 opacity-60 hover:opacity-100 transition-opacity"
+            >
+              <span className="text-[11px] text-slate-400">Powered by</span>
+              <img 
+                src="/nucleus-logo.svg" 
+                alt="Nucleus" 
+                className="h-3.5 brightness-0 invert opacity-70"
+              />
+            </a>
           </div>
           
           {/* Compact Stats Grid */}
