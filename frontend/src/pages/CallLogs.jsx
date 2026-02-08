@@ -196,28 +196,28 @@ export default function CallLogs() {
 
   return (
     <div className="h-[calc(100vh-6rem)] flex flex-col">
-      {/* Page Header - Professional */}
-      <div className="bg-white border-b border-slate-200 px-4 py-3 mb-4">
+      {/* Page Header - With Teal Accent */}
+      <div className="bg-gradient-to-r from-[#082438] to-[#0a3a54] px-4 py-4 mb-4 rounded-lg mx-4 mt-2">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-lg font-semibold text-slate-800">Call Logs</h1>
-            <p className="text-sm text-slate-500">{stats?.summary?.total_calls ?? 0} calls this week</p>
+            <h1 className="text-lg font-semibold text-white">Call Logs</h1>
+            <p className="text-sm text-white/70">{stats?.summary?.total_calls ?? 0} calls this week</p>
           </div>
           
           <div className="flex items-center gap-6">
             <div className="text-right hidden sm:block">
-              <p className="text-sm text-slate-500">Avg Duration</p>
-              <p className="text-lg font-semibold text-slate-800">{formatDuration(stats?.summary?.avg_duration_seconds)}</p>
+              <p className="text-sm text-white/70">Avg Duration</p>
+              <p className="text-lg font-semibold text-white">{formatDuration(stats?.summary?.avg_duration_seconds)}</p>
             </div>
-            <div className="h-8 w-px bg-slate-200 hidden sm:block" />
+            <div className="h-8 w-px bg-white/20 hidden sm:block" />
             <div className="text-right hidden sm:block">
-              <p className="text-sm text-slate-500">Bookings</p>
-              <p className="text-lg font-semibold text-slate-800">{stats?.summary?.by_outcome?.booked ?? 0}</p>
+              <p className="text-sm text-white/70">Bookings</p>
+              <p className="text-lg font-semibold text-white">{stats?.summary?.by_outcome?.booked ?? 0}</p>
             </div>
-            <div className="h-8 w-px bg-slate-200 hidden sm:block" />
+            <div className="h-8 w-px bg-white/20 hidden sm:block" />
             <div className="text-right">
-              <p className="text-sm text-slate-500">Conversion</p>
-              <p className="text-lg font-semibold text-slate-800">{conversionRate}%</p>
+              <p className="text-sm text-white/70">Conversion</p>
+              <p className="text-lg font-semibold text-white">{conversionRate}%</p>
             </div>
           </div>
         </div>
@@ -278,7 +278,7 @@ export default function CallLogs() {
                     onClick={() => setSelectedCallId(call.id)}
                     className={cn(
                       "w-full p-3 text-left hover:bg-slate-50 transition-colors",
-                      selectedCallId === call.id && "bg-slate-100 border-l-2 border-l-slate-600"
+                      selectedCallId === call.id && "bg-[#082438]/5 border-l-2 border-l-[#082438]"
                     )}
                   >
                     <div className="flex items-start gap-3">
