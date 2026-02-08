@@ -80,66 +80,75 @@ async function assignTechnician({ bay_id, appointment_date, appointment_time, du
     const dateObj = parseISO(appointment_date);
     const dayOfWeek = dateObj.getDay(); // JS: 0=Sunday
 
-    // 1. Find technicians assigned to this bay
+    // 1. Find technician IDs assigned to this bay
     const { data: bayAssignments, error: baError } = await supabase
       .from('technician_bay_assignments')
-      .select(`
-        technician_id,
-        is_primary,
-        technician:technicians (id, first_name, last_name, skill_level, is_active)
-      `)
+      .select('technician_id, is_primary')
       .eq('bay_id', bay_id);
 
-    if (baError || !bayAssignments || bayAssignments.length === 0) {
+    if (baError) {
+      console.log('assignTechnician: bay assignment query error:', baError.message);
+      return null;
+    }
+    if (!bayAssignments || bayAssignments.length === 0) {
       console.log('assignTechnician: No technicians assigned to bay', bay_id);
       return null;
     }
+    console.log(`assignTechnician: Found ${bayAssignments.length} tech(s) assigned to bay ${bay_id}`);
 
-    // Filter to active technicians with sufficient skill
-    const qualifiedTechs = bayAssignments.filter(ba => {
-      const tech = ba.technician;
-      if (!tech || !tech.is_active) return false;
-      const techRank = SKILL_RANK[tech.skill_level] || 1;
-      return techRank >= requiredRank;
-    });
+    // 2. Fetch those technicians with sufficient skill
+    const assignedTechIds = bayAssignments.map(ba => ba.technician_id);
+    const { data: technicians, error: techError } = await supabase
+      .from('technicians')
+      .select('id, first_name, last_name, skill_level, is_active')
+      .in('id', assignedTechIds)
+      .eq('is_active', true);
 
-    if (qualifiedTechs.length === 0) {
-      console.log('assignTechnician: No qualified technicians for skill level', required_skill_level);
+    if (techError || !technicians || technicians.length === 0) {
+      console.log('assignTechnician: No active technicians found');
       return null;
     }
 
-    // 2. Check schedules - which techs work this day and time
-    const techIds = qualifiedTechs.map(ba => ba.technician_id);
+    // Filter by skill level
+    const qualified = technicians.filter(t => (SKILL_RANK[t.skill_level] || 1) >= requiredRank);
+    if (qualified.length === 0) {
+      console.log('assignTechnician: No technicians meet skill level', required_skill_level);
+      return null;
+    }
+    console.log(`assignTechnician: ${qualified.length} qualified tech(s) for skill ${required_skill_level}`);
 
+    // 3. Check schedules - which techs work this day and time
+    const qualifiedIds = qualified.map(t => t.id);
     const { data: schedules, error: schError } = await supabase
       .from('technician_schedules')
       .select('technician_id, start_time, end_time')
-      .in('technician_id', techIds)
+      .in('technician_id', qualifiedIds)
       .eq('day_of_week', dayOfWeek)
       .eq('is_active', true);
 
     if (schError || !schedules || schedules.length === 0) {
-      console.log('assignTechnician: No technicians scheduled for day', dayOfWeek);
+      console.log('assignTechnician: No technicians scheduled for day_of_week', dayOfWeek);
       return null;
     }
 
     // Filter by shift covering the appointment window
     const aptStartTime = `${String(aptH).padStart(2, '0')}:${String(aptM).padStart(2, '0')}:00`;
     const endH = Math.floor(aptEndMins / 60);
-    const endM = aptEndMins % 60;
-    const aptEndTime = `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}:00`;
+    const endMn = aptEndMins % 60;
+    const aptEndTime = `${String(endH).padStart(2, '0')}:${String(endMn).padStart(2, '0')}:00`;
 
     const workingTechIds = schedules
       .filter(s => s.start_time <= aptStartTime && s.end_time >= aptEndTime)
       .map(s => s.technician_id);
 
     if (workingTechIds.length === 0) {
-      console.log('assignTechnician: No technicians working during appointment time');
+      console.log(`assignTechnician: No technicians working ${aptStartTime}-${aptEndTime} on day ${dayOfWeek}`);
       return null;
     }
+    console.log(`assignTechnician: ${workingTechIds.length} tech(s) working during ${aptStartTime}-${aptEndTime}`);
 
-    // 3. Check for conflicting appointments
-    const { data: conflicts, error: confError } = await supabase
+    // 4. Check for conflicting appointments
+    const { data: conflicts } = await supabase
       .from('appointments')
       .select('technician_id, scheduled_time, estimated_duration_minutes')
       .in('technician_id', workingTechIds)
@@ -155,39 +164,39 @@ async function assignTechnician({ bay_id, appointment_date, appointment_time, du
         const confStart = cH * 60 + cM;
         const confEnd = confStart + (conf.estimated_duration_minutes || 60);
 
-        // Check overlap: appointment overlaps if it starts before conf ends and ends after conf starts
         if (aptStartMins < confEnd && aptEndMins > confStart) {
           busyTechIds.add(conf.technician_id);
         }
       }
     }
 
-    // Final available technicians
-    const available = qualifiedTechs.filter(ba =>
-      workingTechIds.includes(ba.technician_id) && !busyTechIds.has(ba.technician_id)
-    );
-
+    // 5. Final available technicians
+    const available = workingTechIds.filter(id => !busyTechIds.has(id));
     if (available.length === 0) {
       console.log('assignTechnician: All qualified technicians are booked at this time');
       return null;
     }
 
-    // 4. Pick best: prefer primary bay assignment, then closest skill match (not over-qualified)
-    available.sort((a, b) => {
-      // Primary bay first
-      if (a.is_primary !== b.is_primary) return a.is_primary ? -1 : 1;
-      // Then closest skill match (prefer least over-qualified to save senior techs for harder jobs)
-      const aRank = SKILL_RANK[a.technician.skill_level] || 1;
-      const bRank = SKILL_RANK[b.technician.skill_level] || 1;
-      return aRank - bRank;
+    // 6. Pick best: prefer primary bay assignment, then closest skill match
+    const candidates = available.map(techId => {
+      const tech = qualified.find(t => t.id === techId);
+      const ba = bayAssignments.find(b => b.technician_id === techId);
+      return { techId, tech, isPrimary: ba?.is_primary || false };
     });
 
-    const chosen = available[0];
-    console.log(`assignTechnician: Assigned ${chosen.technician.first_name} ${chosen.technician.last_name} (${chosen.technician.skill_level}) to bay ${bay_id}`);
-    return chosen.technician_id;
+    candidates.sort((a, b) => {
+      if (a.isPrimary !== b.isPrimary) return a.isPrimary ? -1 : 1;
+      const aRank = SKILL_RANK[a.tech?.skill_level] || 1;
+      const bRank = SKILL_RANK[b.tech?.skill_level] || 1;
+      return aRank - bRank; // prefer least over-qualified
+    });
+
+    const chosen = candidates[0];
+    console.log(`assignTechnician: ✓ Assigned ${chosen.tech?.first_name} ${chosen.tech?.last_name} (${chosen.tech?.skill_level}) [${chosen.isPrimary ? 'primary' : 'secondary'} bay]`);
+    return chosen.techId;
 
   } catch (err) {
-    console.error('assignTechnician error:', err);
+    console.error('assignTechnician error:', err.message || err);
     return null; // Graceful fallback - don't block booking
   }
 }

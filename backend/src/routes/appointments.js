@@ -209,7 +209,8 @@ router.post('/', async (req, res, next) => {
         *,
         customer:customers (first_name, last_name, phone, email),
         vehicle:vehicles (year, make, model, color),
-        bay:service_bays (name, bay_type)
+        bay:service_bays (name, bay_type),
+        technician:technicians (id, first_name, last_name, skill_level)
       `)
       .single();
 
