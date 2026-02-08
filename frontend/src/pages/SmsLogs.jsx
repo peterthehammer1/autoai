@@ -225,8 +225,8 @@ export default function SmsLogs() {
                     >
                       <div className="flex items-start gap-3">
                         {/* Type indicator */}
-                        <div className="w-8 h-8 rounded bg-slate-100 flex items-center justify-center shrink-0">
-                          <MessageSquare className="h-4 w-4 text-slate-500" />
+                        <div className="w-8 h-8 rounded-lg bg-[#082438]/10 flex items-center justify-center shrink-0">
+                          <MessageSquare className="h-4 w-4 text-[#0a3a54]" />
                         </div>
                         
                         <div className="flex-1 min-w-0">
@@ -284,8 +284,8 @@ export default function SmsLogs() {
                     >
                       <ChevronLeft className="h-5 w-5" />
                     </Button>
-                    <div className="h-10 w-10 rounded bg-slate-200 flex items-center justify-center shrink-0">
-                      <MessageSquare className="h-5 w-5 text-slate-500" />
+                    <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-[#082438] to-[#0a3a54] flex items-center justify-center shrink-0">
+                      <MessageSquare className="h-5 w-5 text-white" />
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
@@ -295,7 +295,7 @@ export default function SmsLogs() {
                             : 'Unknown Recipient'
                           }
                         </h2>
-                        <span className="text-xs px-2 py-0.5 bg-slate-200 text-slate-600 rounded capitalize">{selectedSms.status}</span>
+                        <span className="text-xs px-2 py-0.5 bg-[#082438]/10 text-[#0a3a54] rounded font-medium capitalize">{selectedSms.status}</span>
                       </div>
                       <div className="flex items-center gap-2 sm:gap-3 mt-1 text-xs sm:text-sm text-slate-500 flex-wrap">
                         <span className="flex items-center gap-1">
