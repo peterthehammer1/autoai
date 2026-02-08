@@ -105,7 +105,7 @@ export default function CallLogs() {
   const getSentimentIcon = (sentiment) => {
     switch (sentiment) {
       case 'positive':
-        return <ThumbsUp className="h-4 w-4 text-[#0a3a54]" />
+        return <ThumbsUp className="h-4 w-4 text-teal" />
       case 'negative':
         return <ThumbsDown className="h-4 w-4 text-slate-500" />
       default:
@@ -116,7 +116,7 @@ export default function CallLogs() {
   const getSentimentBadge = (sentiment) => {
     switch (sentiment) {
       case 'positive':
-        return <Badge className="bg-[#082438]/10 text-[#0a3a54] hover:bg-[#082438]/10">Positive</Badge>
+        return <Badge className="bg-teal-dark/10 text-teal hover:bg-teal-dark/10">Positive</Badge>
       case 'negative':
         return <Badge className="bg-slate-100 text-slate-600 hover:bg-slate-100">Negative</Badge>
       default:
@@ -126,9 +126,9 @@ export default function CallLogs() {
 
   const getOutcomeBadge = (outcome) => {
     const config = {
-      booked: { bg: 'bg-[#082438]/10 text-[#0a3a54]', label: 'Booked', icon: CheckCircle2 },
-      completed: { bg: 'bg-[#082438]/10 text-[#0a3a54]', label: 'Completed', icon: CheckCircle2 },
-      inquiry: { bg: 'bg-[#0d4a6a]/10 text-[#0d4a6a]', label: 'Inquiry', icon: MessageSquare },
+      booked: { bg: 'bg-teal-dark/10 text-teal', label: 'Booked', icon: CheckCircle2 },
+      completed: { bg: 'bg-teal-dark/10 text-teal', label: 'Completed', icon: CheckCircle2 },
+      inquiry: { bg: 'bg-teal-medium/10 text-teal-medium', label: 'Inquiry', icon: MessageSquare },
       transferred: { bg: 'bg-slate-100 text-slate-600', label: 'Transferred', icon: PhoneOutgoing },
       abandoned: { bg: 'bg-slate-100 text-slate-600', label: 'Abandoned', icon: XCircle },
     }
@@ -146,11 +146,11 @@ export default function CallLogs() {
     switch (outcome) {
       case 'booked':
       case 'completed':
-        return 'bg-[#082438]'
+        return 'bg-teal-dark'
       case 'inquiry':
-        return 'bg-[#0d4a6a]'
+        return 'bg-teal-medium'
       case 'transferred':
-        return 'bg-[#105a80]'
+        return 'bg-teal-light'
       case 'abandoned':
         return 'bg-slate-400'
       default:
@@ -197,7 +197,7 @@ export default function CallLogs() {
   return (
     <div className="h-[calc(100vh-6rem)] flex flex-col">
       {/* Page Header - With Teal Accent */}
-      <div className="bg-gradient-to-r from-[#082438] to-[#0a3a54] px-4 py-4 mb-4 rounded-lg mx-4 mt-2">
+      <div className="bg-gradient-to-r from-teal-dark to-teal px-4 py-4 mb-4 rounded-lg mx-4 mt-2">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-lg font-semibold text-white">Call Logs</h1>
@@ -278,16 +278,16 @@ export default function CallLogs() {
                     onClick={() => setSelectedCallId(call.id)}
                     className={cn(
                       "w-full p-3 text-left hover:bg-slate-50 transition-colors",
-                      selectedCallId === call.id && "bg-[#082438]/5 border-l-2 border-l-[#082438]"
+                      selectedCallId === call.id && "bg-teal-dark/5 border-l-2 border-l-teal-dark"
                     )}
                   >
                     <div className="flex items-start gap-3">
                       {/* Outcome indicator */}
-                      <div className="w-8 h-8 rounded-lg bg-[#082438]/10 flex items-center justify-center shrink-0">
+                      <div className="w-8 h-8 rounded-lg bg-teal-dark/10 flex items-center justify-center shrink-0">
                         {call.direction === 'outbound' ? (
-                          <PhoneOutgoing className="h-4 w-4 text-[#0a3a54]" />
+                          <PhoneOutgoing className="h-4 w-4 text-teal" />
                         ) : (
-                          <PhoneIncoming className="h-4 w-4 text-[#0a3a54]" />
+                          <PhoneIncoming className="h-4 w-4 text-teal" />
                         )}
                       </div>
                       
@@ -347,7 +347,7 @@ export default function CallLogs() {
                     >
                       <ChevronLeft className="h-5 w-5" />
                     </Button>
-                    <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-[#082438] to-[#0a3a54] flex items-center justify-center shrink-0">
+                    <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-teal-dark to-teal flex items-center justify-center shrink-0">
                       <PhoneIncoming className="h-5 w-5 text-white" />
                     </div>
                     <div className="min-w-0">
@@ -358,7 +358,7 @@ export default function CallLogs() {
                             : 'Unknown Caller'
                           }
                         </h2>
-                        <span className="text-xs px-2 py-0.5 bg-[#082438]/10 text-[#0a3a54] rounded font-medium capitalize">{selectedCall.outcome || 'Unknown'}</span>
+                        <span className="text-xs px-2 py-0.5 bg-teal-dark/10 text-teal rounded font-medium capitalize">{selectedCall.outcome || 'Unknown'}</span>
                       </div>
                       <div className="flex items-center gap-2 sm:gap-3 mt-1 text-xs sm:text-sm text-slate-500 flex-wrap">
                         <span className="flex items-center gap-1">
@@ -441,14 +441,14 @@ export default function CallLogs() {
                 <TabsList className="w-full justify-start rounded-none border-b border-slate-200 bg-slate-50 p-0 h-auto">
                   <TabsTrigger 
                     value="summary" 
-                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-[#082438] data-[state=active]:bg-transparent data-[state=active]:text-[#082438] py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm text-slate-500"
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-teal-dark data-[state=active]:bg-transparent data-[state=active]:text-teal-dark py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm text-slate-500"
                   >
                     <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-1.5" />
                     <span className="hidden sm:inline">AI Summary</span>
                   </TabsTrigger>
                   <TabsTrigger 
                     value="transcript" 
-                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-[#082438] data-[state=active]:bg-transparent data-[state=active]:text-[#082438] py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm text-slate-500"
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-teal-dark data-[state=active]:bg-transparent data-[state=active]:text-teal-dark py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm text-slate-500"
                   >
                     <MessageSquare className="h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-1.5" />
                     <span className="hidden sm:inline">Transcript</span>
@@ -456,7 +456,7 @@ export default function CallLogs() {
                   {selectedCall.recording_url && (
                     <TabsTrigger 
                       value="recording" 
-                      className="rounded-none border-b-2 border-transparent data-[state=active]:border-[#082438] data-[state=active]:bg-transparent data-[state=active]:text-[#082438] py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm text-slate-500"
+                      className="rounded-none border-b-2 border-transparent data-[state=active]:border-teal-dark data-[state=active]:bg-transparent data-[state=active]:text-teal-dark py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm text-slate-500"
                     >
                       <Volume2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-1.5" />
                       <span className="hidden sm:inline">Recording</span>
@@ -469,10 +469,10 @@ export default function CallLogs() {
                   <TabsContent value="summary" className="m-0 p-4 sm:p-6">
                     {selectedCall.transcript_summary ? (
                       <div className="space-y-6">
-                        <div className="bg-[#082438]/5 rounded-xl p-6 border border-[#082438]/20">
+                        <div className="bg-teal-dark/5 rounded-xl p-6 border border-teal-dark/20">
                           <div className="flex items-start gap-3">
-                            <div className="p-2 bg-[#082438]/10 rounded-lg shrink-0">
-                              <Sparkles className="h-5 w-5 text-[#0a3a54]" />
+                            <div className="p-2 bg-teal-dark/10 rounded-lg shrink-0">
+                              <Sparkles className="h-5 w-5 text-teal" />
                             </div>
                             <div>
                               <h3 className="font-semibold text-slate-900 mb-2">AI-Generated Summary</h3>
@@ -508,8 +508,8 @@ export default function CallLogs() {
                           </div>
 
                           {selectedCall.appointment && (
-                            <div className="bg-[#082438]/5 rounded-lg p-4 border border-[#082438]/20">
-                              <h4 className="text-sm font-medium text-[#0a3a54] mb-3 flex items-center gap-2">
+                            <div className="bg-teal-dark/5 rounded-lg p-4 border border-teal-dark/20">
+                              <h4 className="text-sm font-medium text-teal mb-3 flex items-center gap-2">
                                 <CheckCircle2 className="h-4 w-4" />
                                 Appointment Booked
                               </h4>
@@ -547,7 +547,7 @@ export default function CallLogs() {
                               )}>
                                 <span className={cn(
                                   'text-xs font-medium',
-                                  msg.isAgent ? 'text-[#0a3a54]' : 'text-slate-600'
+                                  msg.isAgent ? 'text-teal' : 'text-slate-600'
                                 )}>
                                   {msg.speaker}
                                 </span>
@@ -555,18 +555,18 @@ export default function CallLogs() {
                               <div className={cn(
                                 'rounded-2xl px-4 py-3 text-sm',
                                 msg.isAgent 
-                                  ? 'bg-[#082438]/5 text-slate-800 rounded-tl-sm border border-[#082438]/20' 
-                                  : 'bg-gradient-to-br from-[#0a3a54] to-[#082438] text-white rounded-tr-sm'
+                                  ? 'bg-teal-dark/5 text-slate-800 rounded-tl-sm border border-teal-dark/20' 
+                                  : 'bg-gradient-to-br from-teal to-teal-dark text-white rounded-tr-sm'
                               )}>
                                 {msg.text}
                               </div>
                             </div>
                             <div className={cn(
                               'w-8 h-8 rounded-full flex items-center justify-center shrink-0 mx-2',
-                              msg.isAgent ? 'bg-[#082438]/10 order-1' : 'bg-slate-100 order-2'
+                              msg.isAgent ? 'bg-teal-dark/10 order-1' : 'bg-slate-100 order-2'
                             )}>
                               {msg.isAgent ? (
-                                <Mic className="h-4 w-4 text-[#0a3a54]" />
+                                <Mic className="h-4 w-4 text-teal" />
                               ) : (
                                 <User className="h-4 w-4 text-slate-600" />
                               )}

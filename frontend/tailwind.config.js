@@ -54,6 +54,12 @@ export default {
           lighter: "hsl(var(--sidebar-lighter))",
           muted: "hsl(var(--sidebar-muted))",
         },
+        teal: {
+          dark: "#082438",
+          DEFAULT: "#0a3a54",
+          medium: "#0d4a6a",
+          light: "#105a80",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",

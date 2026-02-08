@@ -88,11 +88,11 @@ export default function SmsLogs() {
     switch (status) {
       case 'sent':
       case 'delivered':
-        return <CheckCircle2 className="h-4 w-4 text-[#0a3a54]" />
+        return <CheckCircle2 className="h-4 w-4 text-teal" />
       case 'failed':
         return <XCircle className="h-4 w-4 text-slate-500" />
       case 'received':
-        return <ArrowDownLeft className="h-4 w-4 text-[#0d4a6a]" />
+        return <ArrowDownLeft className="h-4 w-4 text-teal-medium" />
       default:
         return <Clock className="h-4 w-4 text-slate-400" />
     }
@@ -102,11 +102,11 @@ export default function SmsLogs() {
     switch (status) {
       case 'sent':
       case 'delivered':
-        return <Badge className="bg-[#082438]/10 text-[#0a3a54] hover:bg-[#082438]/10">Delivered</Badge>
+        return <Badge className="bg-teal-dark/10 text-teal hover:bg-teal-dark/10">Delivered</Badge>
       case 'failed':
         return <Badge className="bg-slate-100 text-slate-600 hover:bg-slate-100">Failed</Badge>
       case 'received':
-        return <Badge className="bg-[#0d4a6a]/10 text-[#0d4a6a] hover:bg-[#0d4a6a]/10">Received</Badge>
+        return <Badge className="bg-teal-medium/10 text-teal-medium hover:bg-teal-medium/10">Received</Badge>
       default:
         return <Badge className="bg-slate-100 text-slate-600 hover:bg-slate-100">Pending</Badge>
     }
@@ -115,13 +115,13 @@ export default function SmsLogs() {
   const getTypeConfig = (type) => {
     switch (type) {
       case 'confirmation':
-        return { label: 'Confirmation', icon: CheckCircle2, color: 'text-[#0a3a54]', bg: 'bg-[#082438]/10' }
+        return { label: 'Confirmation', icon: CheckCircle2, color: 'text-teal', bg: 'bg-teal-dark/10' }
       case 'reminder':
-        return { label: 'Reminder', icon: Bell, color: 'text-[#0d4a6a]', bg: 'bg-[#0d4a6a]/10' }
+        return { label: 'Reminder', icon: Bell, color: 'text-teal-medium', bg: 'bg-teal-medium/10' }
       case 'cancellation':
         return { label: 'Cancellation', icon: XCircle, color: 'text-slate-600', bg: 'bg-slate-100' }
       case 'reply':
-        return { label: 'Reply', icon: ArrowDownLeft, color: 'text-[#105a80]', bg: 'bg-[#105a80]/10' }
+        return { label: 'Reply', icon: ArrowDownLeft, color: 'text-teal-light', bg: 'bg-teal-light/10' }
       default:
         return { label: 'Message', icon: MessageSquare, color: 'text-slate-600', bg: 'bg-slate-100' }
     }
@@ -137,7 +137,7 @@ export default function SmsLogs() {
   return (
     <div className="h-[calc(100vh-6rem)] flex flex-col">
       {/* Page Header - With Teal Accent */}
-      <div className="bg-gradient-to-r from-[#082438] to-[#0a3a54] px-4 py-4 mb-4 rounded-lg mx-4 mt-2">
+      <div className="bg-gradient-to-r from-teal-dark to-teal px-4 py-4 mb-4 rounded-lg mx-4 mt-2">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-lg font-semibold text-white">SMS Messages</h1>
@@ -220,13 +220,13 @@ export default function SmsLogs() {
                       onClick={() => setSelectedSmsId(sms.id)}
                       className={cn(
                         "w-full p-3 text-left hover:bg-slate-50 transition-colors",
-                        selectedSmsId === sms.id && "bg-[#082438]/5 border-l-2 border-l-[#082438]"
+                        selectedSmsId === sms.id && "bg-teal-dark/5 border-l-2 border-l-teal-dark"
                       )}
                     >
                       <div className="flex items-start gap-3">
                         {/* Type indicator */}
-                        <div className="w-8 h-8 rounded-lg bg-[#082438]/10 flex items-center justify-center shrink-0">
-                          <MessageSquare className="h-4 w-4 text-[#0a3a54]" />
+                        <div className="w-8 h-8 rounded-lg bg-teal-dark/10 flex items-center justify-center shrink-0">
+                          <MessageSquare className="h-4 w-4 text-teal" />
                         </div>
                         
                         <div className="flex-1 min-w-0">
@@ -284,7 +284,7 @@ export default function SmsLogs() {
                     >
                       <ChevronLeft className="h-5 w-5" />
                     </Button>
-                    <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-[#082438] to-[#0a3a54] flex items-center justify-center shrink-0">
+                    <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-teal-dark to-teal flex items-center justify-center shrink-0">
                       <MessageSquare className="h-5 w-5 text-white" />
                     </div>
                     <div className="min-w-0">
@@ -295,7 +295,7 @@ export default function SmsLogs() {
                             : 'Unknown Recipient'
                           }
                         </h2>
-                        <span className="text-xs px-2 py-0.5 bg-[#082438]/10 text-[#0a3a54] rounded font-medium capitalize">{selectedSms.status}</span>
+                        <span className="text-xs px-2 py-0.5 bg-teal-dark/10 text-teal rounded font-medium capitalize">{selectedSms.status}</span>
                       </div>
                       <div className="flex items-center gap-2 sm:gap-3 mt-1 text-xs sm:text-sm text-slate-500 flex-wrap">
                         <span className="flex items-center gap-1">
@@ -386,7 +386,7 @@ export default function SmsLogs() {
                       "rounded-2xl p-5 shadow-sm max-w-lg",
                       selectedSms.message_type === 'reply' 
                         ? "bg-slate-100 text-slate-800 rounded-tl-sm ml-0" 
-                        : "bg-gradient-to-br from-[#0a3a54] to-[#082438] text-white rounded-br-sm ml-auto"
+                        : "bg-gradient-to-br from-teal to-teal-dark text-white rounded-br-sm ml-auto"
                     )}>
                       <p className="text-sm whitespace-pre-wrap leading-relaxed">
                         {selectedSms.message_body}

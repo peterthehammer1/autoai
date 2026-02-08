@@ -228,7 +228,7 @@ export default function Customers() {
   return (
     <div className="h-[calc(100vh-6rem)] flex flex-col">
       {/* Top Header Bar - With Teal Accent */}
-      <div className="bg-gradient-to-r from-[#082438] to-[#0a3a54] px-4 py-4 mb-4 rounded-lg mx-4 mt-2">
+      <div className="bg-gradient-to-r from-teal-dark to-teal px-4 py-4 mb-4 rounded-lg mx-4 mt-2">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-lg font-semibold text-white">Customers</h1>
@@ -308,7 +308,7 @@ export default function Customers() {
                       </p>
                     </div>
                     {customer.total_visits > 0 && (
-                      <span className="text-xs text-[#0a3a54] bg-[#082438]/10 px-1.5 py-0.5 rounded font-medium">
+                      <span className="text-xs text-teal bg-teal-dark/10 px-1.5 py-0.5 rounded font-medium">
                         {customer.total_visits}
                       </span>
                     )}
@@ -407,25 +407,25 @@ export default function Customers() {
                 {/* Quick Stats */}
                 <div className="grid grid-cols-4 gap-3 mt-4">
                   <div className="text-center bg-white rounded-lg p-2 border border-slate-200">
-                    <p className="text-lg font-semibold text-[#082438]">
+                    <p className="text-lg font-semibold text-teal-dark">
                       {healthData?.stats?.total_visits || selectedCustomer.total_visits || 0}
                     </p>
                     <p className="text-xs text-slate-500">Visits</p>
                   </div>
                   <div className="text-center bg-white rounded-lg p-2 border border-slate-200">
-                    <p className="text-lg font-semibold text-[#0a3a54]">
+                    <p className="text-lg font-semibold text-teal">
                       {healthData?.stats?.total_spend ? formatCents(healthData.stats.total_spend) : '$0'}
                     </p>
                     <p className="text-xs text-slate-500">Total Spend</p>
                   </div>
                   <div className="text-center bg-white rounded-lg p-2 border border-slate-200">
-                    <p className="text-lg font-semibold text-[#0d4a6a]">
+                    <p className="text-lg font-semibold text-teal-medium">
                       {selectedCustomer.vehicles?.length || 0}
                     </p>
                     <p className="text-xs text-slate-500">Vehicles</p>
                   </div>
                   <div className="text-center bg-white rounded-lg p-2 border border-slate-200">
-                    <p className="text-lg font-semibold text-[#105a80]">
+                    <p className="text-lg font-semibold text-teal-light">
                       {healthData?.health_score || '-'}
                     </p>
                     <p className="text-xs text-slate-500">Health Score</p>
@@ -680,7 +680,7 @@ export default function Customers() {
                           >
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-4">
-                                <div className="text-center bg-gradient-to-br from-[#082438] to-[#0a3a54] rounded-lg px-3 py-2 min-w-[52px]">
+                                <div className="text-center bg-gradient-to-br from-teal-dark to-teal rounded-lg px-3 py-2 min-w-[52px]">
                                   <p className="text-lg font-bold text-white">
                                     {format(new Date(apt.scheduled_date), 'd')}
                                   </p>
