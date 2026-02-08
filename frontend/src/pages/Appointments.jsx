@@ -64,12 +64,53 @@ import NewAppointmentModal from '@/components/NewAppointmentModal'
 import PhoneNumber from '@/components/PhoneNumber'
 import CarImage from '@/components/CarImage'
 
+// Post-it color palette for appointment cards
+const postItColors = [
+  { bg: 'bg-violet-100', border: 'border-l-violet-400', text: 'text-violet-800' },
+  { bg: 'bg-emerald-100', border: 'border-l-emerald-400', text: 'text-emerald-800' },
+  { bg: 'bg-sky-100', border: 'border-l-sky-400', text: 'text-sky-800' },
+  { bg: 'bg-amber-100', border: 'border-l-amber-400', text: 'text-amber-800' },
+  { bg: 'bg-teal-100', border: 'border-l-teal-400', text: 'text-teal-800' },
+  { bg: 'bg-rose-100', border: 'border-l-rose-400', text: 'text-rose-800' },
+]
+
+const getPostItColor = (apt) => {
+  const name = `${apt.customer?.first_name || ''}${apt.customer?.last_name || ''}`
+  const hash = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
+  return postItColors[hash % postItColors.length]
+}
+
+const parseTimeToHours = (timeStr) => {
+  if (!timeStr) return 8
+  const [h, m] = timeStr.split(':').map(Number)
+  return h + m / 60
+}
+
+const formatEndTime = (startTime, durationMinutes) => {
+  if (!startTime) return ''
+  const [h, m] = startTime.split(':').map(Number)
+  const totalMins = h * 60 + m + (durationMinutes || 60)
+  const endH = Math.floor(totalMins / 60)
+  const endM = totalMins % 60
+  return formatTime12Hour(`${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}:00`)
+}
+
+const START_HOUR = 7
+const END_HOUR = 19
+const HOUR_HEIGHT = 80
+const hours = Array.from({ length: END_HOUR - START_HOUR }, (_, i) => START_HOUR + i)
+
 export default function Appointments() {
   const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('calendar')
   const [isNewModalOpen, setIsNewModalOpen] = useState(false)
+  
+  // Calendar view state
+  const [calendarView, setCalendarView] = useState('week')
   const [calendarMonth, setCalendarMonth] = useState(new Date())
+  const [weekStart, setWeekStart] = useState(startOfWeek(new Date(), { weekStartsOn: 1 }))
+  const [calendarDay, setCalendarDay] = useState(format(new Date(), 'yyyy-MM-dd'))
   
   const dateFilter = searchParams.get('date') || format(new Date(), 'yyyy-MM-dd')
   const statusFilter = searchParams.get('status') || ''
@@ -81,7 +122,7 @@ export default function Appointments() {
     enabled: activeTab === 'upcoming',
   })
 
-  // Fetch appointments for specific date
+  // Fetch appointments for specific date (By Date tab)
   const { data: dateData, isLoading: dateLoading } = useQuery({
     queryKey: ['appointments', dateFilter, statusFilter],
     queryFn: () => {
@@ -92,13 +133,17 @@ export default function Appointments() {
     enabled: activeTab === 'by-date',
   })
 
-  // Fetch appointments for calendar month
-  const calendarStart = format(startOfMonth(calendarMonth), 'yyyy-MM-dd')
-  const calendarEnd = format(endOfMonth(calendarMonth), 'yyyy-MM-dd')
-  
+  // Compute calendar query range based on view
+  const calViewRange = calendarView === 'week'
+    ? { start: format(weekStart, 'yyyy-MM-dd'), end: format(addDays(weekStart, 6), 'yyyy-MM-dd') }
+    : calendarView === 'day'
+    ? { start: calendarDay, end: calendarDay }
+    : { start: format(startOfMonth(calendarMonth), 'yyyy-MM-dd'), end: format(endOfMonth(calendarMonth), 'yyyy-MM-dd') }
+
+  // Fetch appointments for calendar view
   const { data: calendarData, isLoading: calendarLoading } = useQuery({
-    queryKey: ['appointments', 'calendar', calendarStart, calendarEnd],
-    queryFn: () => appointments.list({ start_date: calendarStart, end_date: calendarEnd, limit: 200 }),
+    queryKey: ['appointments', 'calendar', calViewRange.start, calViewRange.end],
+    queryFn: () => appointments.list({ start_date: calViewRange.start, end_date: calViewRange.end, limit: 200 }),
     enabled: activeTab === 'calendar',
   })
 
@@ -113,7 +158,13 @@ export default function Appointments() {
     })
   }
 
-  // Generate calendar days (Monday start)
+  // Week days
+  const weekDays = eachDayOfInterval({
+    start: weekStart,
+    end: addDays(weekStart, 6),
+  })
+
+  // Generate month calendar days (Monday start)
   const monthStart = startOfMonth(calendarMonth)
   const monthEnd = endOfMonth(calendarMonth)
   const calendarDays = eachDayOfInterval({
@@ -141,6 +192,51 @@ export default function Appointments() {
     return format(date, 'EEEE, MMMM d')
   }
 
+  // Navigation helpers
+  const navigateWeek = (dir) => setWeekStart(addDays(weekStart, dir * 7))
+  const navigateDay = (dir) => setCalendarDay(format(addDays(parseISO(calendarDay), dir), 'yyyy-MM-dd'))
+  const goToToday = () => {
+    setWeekStart(startOfWeek(new Date(), { weekStartsOn: 1 }))
+    setCalendarDay(format(new Date(), 'yyyy-MM-dd'))
+    setCalendarMonth(new Date())
+  }
+
+  // Renders a single post-it appointment card (used in week + day views)
+  const renderPostItCard = (apt, style = {}) => {
+    const color = getPostItColor(apt)
+    const serviceName = apt.appointment_services?.[0]?.service_name || 'Service'
+    const endTime = formatEndTime(apt.scheduled_time, apt.estimated_duration_minutes)
+    
+    return (
+      <Link
+        key={apt.id}
+        to={`/appointments/${apt.id}`}
+        className={cn(
+          'absolute left-1 right-1 rounded-lg border-l-[4px] px-2 py-1.5 overflow-hidden transition-all hover:shadow-md hover:opacity-90 cursor-pointer',
+          color.bg, color.border, color.text
+        )}
+        style={style}
+      >
+        <p className="text-xs font-semibold truncate">
+          {apt.customer?.first_name} {apt.customer?.last_name}
+        </p>
+        <p className="text-[10px] truncate opacity-70">
+          {serviceName}
+        </p>
+        <p className="text-[10px] opacity-60">
+          {formatTime12Hour(apt.scheduled_time)} - {endTime}
+        </p>
+      </Link>
+    )
+  }
+
+  // Calendar navigation header label
+  const calendarNavLabel = calendarView === 'week'
+    ? `${format(weekStart, 'MMM d')} — ${format(addDays(weekStart, 6), 'MMM d, yyyy')}`
+    : calendarView === 'day'
+    ? format(parseISO(calendarDay), 'EEEE, MMMM d, yyyy')
+    : format(calendarMonth, 'MMMM yyyy')
+
   return (
     <div className="space-y-4">
       {/* Page Header - Dark Theme */}
@@ -156,7 +252,7 @@ export default function Appointments() {
         </div>
       </div>
 
-      {/* View Tabs with New Appointment Button */}
+      {/* View Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <TabsList className="w-full sm:w-auto bg-slate-100 p-1">
@@ -170,12 +266,6 @@ export default function Appointments() {
               By Date
             </TabsTrigger>
           </TabsList>
-{/* Hidden for demo - use AI to book appointments
-          <Button onClick={() => setIsNewModalOpen(true)} className="w-full sm:w-auto">
-            <Plus className="mr-2 h-4 w-4" />
-            New Appointment
-          </Button>
-*/}
         </div>
 
         {/* Upcoming Appointments Tab */}
@@ -197,7 +287,6 @@ export default function Appointments() {
           ) : (
             Object.entries(upcomingData.by_date || {}).map(([date, apts]) => (
               <div key={date} className="space-y-2">
-                {/* Date Header */}
                 <div className="flex items-center gap-3">
                   <div className={cn(
                     "flex h-10 w-10 flex-col items-center justify-center rounded-lg",
@@ -218,7 +307,6 @@ export default function Appointments() {
                   </div>
                 </div>
 
-                {/* Appointments for this date */}
                 <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
                   <div className="divide-y divide-slate-100">
                     {apts.map((apt, index) => (
@@ -231,7 +319,6 @@ export default function Appointments() {
                         )}
                       >
                         <div className="flex items-start gap-3">
-                          {/* Time */}
                           <div className="flex h-12 w-14 flex-col items-center justify-center rounded bg-slate-100 shrink-0">
                             <span className="text-sm font-semibold text-slate-700">
                               {formatTime12Hour(apt.scheduled_time).split(' ')[0]}
@@ -240,8 +327,6 @@ export default function Appointments() {
                               {formatTime12Hour(apt.scheduled_time).split(' ')[1]}
                             </span>
                           </div>
-
-                          {/* Details */}
                           <div className="flex-1 min-w-0">
                             <div className="flex items-start justify-between gap-2 mb-1">
                               <span className="text-sm font-medium text-slate-800">
@@ -251,17 +336,14 @@ export default function Appointments() {
                                 {(apt.display_status || apt.status).replace('_', ' ')}
                               </span>
                             </div>
-                            
                             {apt.vehicle && (
                               <p className="text-xs text-slate-500 mb-1">
                                 {apt.vehicle.year} {apt.vehicle.make} {apt.vehicle.model}
                               </p>
                             )}
-                            
                             <p className="text-xs text-slate-500 truncate">
                               {apt.appointment_services?.map((s) => s.service_name).join(', ') || 'Service'}
                             </p>
-                            
                             <div className="flex items-center gap-3 mt-1.5 text-xs text-slate-400">
                               <span className="flex items-center gap-1">
                                 <Clock className="h-3 w-3" />
@@ -282,111 +364,297 @@ export default function Appointments() {
         {/* Calendar View Tab */}
         <TabsContent value="calendar" className="mt-4">
           <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
-            {/* Month Navigation */}
-            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setCalendarMonth(subMonths(calendarMonth, 1))}
-                className="h-8 w-8"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <div className="text-center">
-                <h2 className="text-base font-semibold text-slate-800">
-                  {format(calendarMonth, 'MMMM yyyy')}
+            {/* Calendar Header: Navigation + View Toggle */}
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-4 sm:px-5 py-3 border-b border-slate-200">
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 px-3 text-xs"
+                  onClick={goToToday}
+                >
+                  Today
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => {
+                    if (calendarView === 'week') navigateWeek(-1)
+                    else if (calendarView === 'day') navigateDay(-1)
+                    else setCalendarMonth(subMonths(calendarMonth, 1))
+                  }}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => {
+                    if (calendarView === 'week') navigateWeek(1)
+                    else if (calendarView === 'day') navigateDay(1)
+                    else setCalendarMonth(addMonths(calendarMonth, 1))
+                  }}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+                <h2 className="text-sm sm:text-base font-semibold text-slate-800 ml-1">
+                  {calendarNavLabel}
                 </h2>
-                <button 
-                  className="text-xs text-slate-500 hover:text-slate-700"
-                  onClick={() => setCalendarMonth(new Date())}
-                >
-                  Go to today
-                </button>
               </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setCalendarMonth(addMonths(calendarMonth, 1))}
-                className="h-8 w-8"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
 
-            {/* Calendar Grid */}
-            <div className="grid grid-cols-7">
-              {/* Day Headers */}
-              {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => (
-                <div
-                  key={day}
-                  className="text-center text-xs font-semibold text-slate-500 uppercase tracking-wider py-3 border-b border-slate-200 bg-slate-50"
-                >
-                  {day}
-                </div>
-              ))}
-
-              {/* Calendar Days */}
-              {calendarDays.map((day) => {
-                const dateKey = format(day, 'yyyy-MM-dd')
-                const dayAppointments = appointmentsByDate[dateKey] || []
-                const isCurrentMonth = isSameMonth(day, calendarMonth)
-                const isCurrentDay = isToday(day)
-                const maxVisible = 4
-
-                return (
-                  <div
-                    key={dateKey}
+              <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-0.5">
+                {['week', 'day', 'month'].map((view) => (
+                  <button
+                    key={view}
+                    onClick={() => setCalendarView(view)}
                     className={cn(
-                      'min-h-[120px] sm:min-h-[140px] p-1.5 sm:p-2 border-b border-r border-slate-200 text-left flex flex-col',
-                      !isCurrentMonth && 'bg-slate-50/50',
-                      isCurrentDay && 'bg-indigo-50/30'
+                      'px-3 py-1.5 text-xs font-medium rounded-md transition-colors capitalize',
+                      calendarView === view
+                        ? 'bg-white text-slate-800 shadow-sm'
+                        : 'text-slate-500 hover:text-slate-700'
                     )}
                   >
-                    {/* Day Number */}
-                    <span className={cn(
-                      'text-lg sm:text-xl font-light mb-1',
-                      isCurrentMonth ? 'text-slate-400' : 'text-slate-300',
-                      isCurrentDay && 'text-indigo-500 font-normal'
+                    {view === 'week' ? 'Week' : view === 'day' ? 'Day' : 'Month'}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* ===== WEEK VIEW ===== */}
+            {calendarView === 'week' && (
+              <div className="overflow-x-auto">
+                <div className="min-w-[700px]">
+                  {/* Day column headers */}
+                  <div className="grid grid-cols-[60px_repeat(7,1fr)] border-b border-slate-200 bg-slate-50/50">
+                    <div />
+                    {weekDays.map((day) => (
+                      <div
+                        key={format(day, 'yyyy-MM-dd')}
+                        className={cn(
+                          'text-center py-3 border-l border-slate-200',
+                          isToday(day) && 'bg-indigo-50/50'
+                        )}
+                      >
+                        <p className="text-xs font-medium text-slate-500 uppercase">{format(day, 'EEE')}</p>
+                        <p className={cn(
+                          'text-xl font-semibold mt-0.5',
+                          isToday(day) ? 'text-indigo-600' : 'text-slate-800'
+                        )}>
+                          {format(day, 'd')}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Time grid */}
+                  <div className="grid grid-cols-[60px_repeat(7,1fr)] relative">
+                    {/* Time gutter */}
+                    <div>
+                      {hours.map((hour) => (
+                        <div key={hour} className="relative border-b border-slate-100" style={{ height: HOUR_HEIGHT }}>
+                          <span className="absolute -top-2.5 right-2 text-[11px] text-slate-400 font-medium">
+                            {hour === 12 ? '12 PM' : hour > 12 ? `${hour - 12} PM` : `${hour} AM`}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Day columns */}
+                    {weekDays.map((day) => {
+                      const dateKey = format(day, 'yyyy-MM-dd')
+                      const dayApts = appointmentsByDate[dateKey] || []
+
+                      return (
+                        <div
+                          key={dateKey}
+                          className={cn(
+                            'relative border-l border-slate-200',
+                            isToday(day) && 'bg-indigo-50/20'
+                          )}
+                          style={{ height: hours.length * HOUR_HEIGHT }}
+                        >
+                          {/* Hour grid lines */}
+                          {hours.map((hour, i) => (
+                            <div
+                              key={hour}
+                              className="absolute w-full border-b border-slate-100"
+                              style={{ top: i * HOUR_HEIGHT, height: HOUR_HEIGHT }}
+                            />
+                          ))}
+
+                          {/* Appointment cards */}
+                          {dayApts.map((apt) => {
+                            const startH = parseTimeToHours(apt.scheduled_time)
+                            const duration = apt.estimated_duration_minutes || 60
+                            const top = Math.max((startH - START_HOUR) * HOUR_HEIGHT, 0)
+                            const height = Math.max((duration / 60) * HOUR_HEIGHT, 40)
+
+                            return renderPostItCard(apt, { top, height })
+                          })}
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ===== DAY VIEW ===== */}
+            {calendarView === 'day' && (
+              <div className="overflow-x-auto">
+                <div className="min-w-[400px]">
+                  {/* Day header */}
+                  <div className="grid grid-cols-[60px_1fr] border-b border-slate-200 bg-slate-50/50">
+                    <div />
+                    <div className={cn(
+                      'text-center py-3 border-l border-slate-200',
+                      isToday(parseISO(calendarDay)) && 'bg-indigo-50/50'
                     )}>
-                      {format(day, 'd')}
-                    </span>
-                    
-                    {/* Appointment Pills */}
-                    {dayAppointments.length > 0 && (
-                      <div className="flex-1 space-y-1 min-w-0">
-                        {dayAppointments.slice(0, maxVisible).map((apt) => (
-                          <Link
-                            key={apt.id}
-                            to={`/appointments/${apt.id}`}
-                            className="block bg-indigo-50 border-l-[3px] border-indigo-500 rounded-md px-1.5 sm:px-2 py-0.5 sm:py-1 hover:bg-indigo-100 transition-colors truncate"
-                          >
-                            <span className="text-[10px] sm:text-[13px] font-medium text-indigo-700 truncate">
-                              <span className="hidden sm:inline">
-                                {formatTime12Hour(apt.scheduled_time).split(' ')[0]} - {apt.customer?.first_name}
-                              </span>
-                              <span className="sm:hidden">
-                                {formatTime12Hour(apt.scheduled_time).split(' ')[0]}
-                              </span>
-                            </span>
-                          </Link>
-                        ))}
-                        {dayAppointments.length > maxVisible && (
-                          <button
-                            className="text-[10px] sm:text-xs text-slate-400 hover:text-indigo-600 px-1.5 transition-colors"
-                            onClick={() => {
-                              setActiveTab('by-date')
-                              setSearchParams({ date: dateKey, status: statusFilter })
-                            }}
-                          >
-                            +{dayAppointments.length - maxVisible} more
-                          </button>
+                      <p className="text-xs font-medium text-slate-500 uppercase">
+                        {format(parseISO(calendarDay), 'EEEE')}
+                      </p>
+                      <p className={cn(
+                        'text-xl font-semibold mt-0.5',
+                        isToday(parseISO(calendarDay)) ? 'text-indigo-600' : 'text-slate-800'
+                      )}>
+                        {format(parseISO(calendarDay), 'MMMM d')}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Time grid */}
+                  <div className="grid grid-cols-[60px_1fr] relative">
+                    {/* Time gutter */}
+                    <div>
+                      {hours.map((hour) => (
+                        <div key={hour} className="relative border-b border-slate-100" style={{ height: HOUR_HEIGHT }}>
+                          <span className="absolute -top-2.5 right-2 text-[11px] text-slate-400 font-medium">
+                            {hour === 12 ? '12 PM' : hour > 12 ? `${hour - 12} PM` : `${hour} AM`}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Single day column */}
+                    <div
+                      className={cn(
+                        'relative border-l border-slate-200',
+                        isToday(parseISO(calendarDay)) && 'bg-indigo-50/20'
+                      )}
+                      style={{ height: hours.length * HOUR_HEIGHT }}
+                    >
+                      {/* Hour grid lines */}
+                      {hours.map((hour, i) => (
+                        <div
+                          key={hour}
+                          className="absolute w-full border-b border-slate-100"
+                          style={{ top: i * HOUR_HEIGHT, height: HOUR_HEIGHT }}
+                        />
+                      ))}
+
+                      {/* Appointment cards */}
+                      {(appointmentsByDate[calendarDay] || []).map((apt) => {
+                        const startH = parseTimeToHours(apt.scheduled_time)
+                        const duration = apt.estimated_duration_minutes || 60
+                        const top = Math.max((startH - START_HOUR) * HOUR_HEIGHT, 0)
+                        const height = Math.max((duration / 60) * HOUR_HEIGHT, 40)
+
+                        return renderPostItCard(apt, { top, height })
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ===== MONTH VIEW ===== */}
+            {calendarView === 'month' && (
+              <>
+                {/* Calendar Grid */}
+                <div className="grid grid-cols-7">
+                  {/* Day Headers */}
+                  {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => (
+                    <div
+                      key={day}
+                      className="text-center text-xs font-semibold text-slate-500 uppercase tracking-wider py-3 border-b border-slate-200 bg-slate-50"
+                    >
+                      {day}
+                    </div>
+                  ))}
+
+                  {/* Calendar Days */}
+                  {calendarDays.map((day) => {
+                    const dateKey = format(day, 'yyyy-MM-dd')
+                    const dayAppointments = appointmentsByDate[dateKey] || []
+                    const isCurrentMonth = isSameMonth(day, calendarMonth)
+                    const isCurrentDay = isToday(day)
+                    const maxVisible = 3
+
+                    return (
+                      <div
+                        key={dateKey}
+                        className={cn(
+                          'min-h-[130px] sm:min-h-[150px] p-1.5 sm:p-2 border-b border-r border-slate-200 text-left flex flex-col',
+                          !isCurrentMonth && 'bg-slate-50/50',
+                          isCurrentDay && 'bg-indigo-50/30'
+                        )}
+                      >
+                        <span className={cn(
+                          'text-lg sm:text-xl font-light mb-1',
+                          isCurrentMonth ? 'text-slate-400' : 'text-slate-300',
+                          isCurrentDay && 'text-indigo-500 font-normal'
+                        )}>
+                          {format(day, 'd')}
+                        </span>
+                        
+                        {dayAppointments.length > 0 && (
+                          <div className="flex-1 space-y-1 min-w-0">
+                            {dayAppointments.slice(0, maxVisible).map((apt) => {
+                              const color = getPostItColor(apt)
+                              return (
+                                <Link
+                                  key={apt.id}
+                                  to={`/appointments/${apt.id}`}
+                                  className={cn(
+                                    'block rounded-md border-l-[3px] px-1.5 sm:px-2 py-0.5 sm:py-1 hover:shadow-sm transition-all truncate',
+                                    color.bg, color.border, color.text
+                                  )}
+                                >
+                                  <span className="text-[10px] sm:text-xs font-semibold truncate block">
+                                    <span className="hidden sm:inline">
+                                      {apt.customer?.first_name} {apt.customer?.last_name}
+                                    </span>
+                                    <span className="sm:hidden">
+                                      {apt.customer?.first_name}
+                                    </span>
+                                  </span>
+                                  <span className="text-[9px] sm:text-[10px] opacity-60 truncate block hidden sm:block">
+                                    {formatTime12Hour(apt.scheduled_time)}
+                                  </span>
+                                </Link>
+                              )
+                            })}
+                            {dayAppointments.length > maxVisible && (
+                              <button
+                                className="text-[10px] sm:text-xs text-slate-400 hover:text-indigo-600 px-1.5 transition-colors"
+                                onClick={() => {
+                                  setCalendarView('day')
+                                  setCalendarDay(dateKey)
+                                }}
+                              >
+                                +{dayAppointments.length - maxVisible} more
+                              </button>
+                            )}
+                          </div>
                         )}
                       </div>
-                    )}
-                  </div>
-                )
-              })}
-            </div>
+                    )
+                  })}
+                </div>
+              </>
+            )}
           </div>
         </TabsContent>
 
