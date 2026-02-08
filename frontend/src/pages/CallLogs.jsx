@@ -195,30 +195,51 @@ export default function CallLogs() {
     : 0
 
   return (
-    <div className="h-[calc(100vh-6rem)] flex flex-col">
-      {/* Page Header - With Teal Accent */}
-      <div className="bg-gradient-to-r from-teal-dark to-teal px-4 py-4 mb-4 rounded-lg mx-4 mt-2">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-lg font-semibold text-white">Call Logs</h1>
-            <p className="text-sm text-white/70">{stats?.summary?.total_calls ?? 0} calls this week</p>
+    <div className="h-[calc(100vh-4rem)] flex flex-col">
+      {/* Page Header - Dark Theme with Stats */}
+      <div className="bg-gradient-to-r from-slate-800 to-slate-900 -mx-4 sm:-mx-6 -mt-4 sm:-mt-6 px-4 sm:px-6 py-4 mb-4">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <Phone className="h-5 w-5 text-blue-400" />
+            <div>
+              <h1 className="text-lg font-semibold text-white">Call Logs</h1>
+              <p className="text-xs text-slate-400">AI-powered call management</p>
+            </div>
+          </div>
+        </div>
+        
+        {/* Stats Grid */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
+          <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-3">
+            <div className="flex items-center justify-between mb-1">
+              <Phone className="h-4 w-4 text-blue-400" />
+            </div>
+            <p className="text-xl font-bold text-white">{stats?.summary?.total_calls ?? 0}</p>
+            <p className="text-slate-500 text-[10px]">Total Calls</p>
           </div>
           
-          <div className="flex items-center gap-6">
-            <div className="text-right hidden sm:block">
-              <p className="text-sm text-white/70">Avg Duration</p>
-              <p className="text-lg font-semibold text-white">{formatDuration(stats?.summary?.avg_duration_seconds)}</p>
+          <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-3">
+            <div className="flex items-center justify-between mb-1">
+              <CheckCircle2 className="h-4 w-4 text-blue-400" />
             </div>
-            <div className="h-8 w-px bg-white/20 hidden sm:block" />
-            <div className="text-right hidden sm:block">
-              <p className="text-sm text-white/70">Bookings</p>
-              <p className="text-lg font-semibold text-white">{stats?.summary?.by_outcome?.booked ?? 0}</p>
+            <p className="text-xl font-bold text-white">{stats?.summary?.by_outcome?.booked ?? 0}</p>
+            <p className="text-slate-500 text-[10px]">Bookings Made</p>
+          </div>
+          
+          <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-3">
+            <div className="flex items-center justify-between mb-1">
+              <TrendingUp className="h-4 w-4 text-blue-400" />
             </div>
-            <div className="h-8 w-px bg-white/20 hidden sm:block" />
-            <div className="text-right">
-              <p className="text-sm text-white/70">Conversion</p>
-              <p className="text-lg font-semibold text-white">{conversionRate}%</p>
+            <p className="text-xl font-bold text-white">{conversionRate}%</p>
+            <p className="text-slate-500 text-[10px]">Conversion Rate</p>
+          </div>
+          
+          <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-3">
+            <div className="flex items-center justify-between mb-1">
+              <Clock className="h-4 w-4 text-blue-400" />
             </div>
+            <p className="text-xl font-bold text-white">{formatDuration(stats?.summary?.avg_duration_seconds)}</p>
+            <p className="text-slate-500 text-[10px]">Avg Duration</p>
           </div>
         </div>
       </div>
@@ -421,7 +442,7 @@ export default function CallLogs() {
                       {selectedCall.intent_detected || 'Unknown'}
                     </p>
                   </div>
-                  <div className="bg-gradient-to-br from-amber-dark to-amber rounded-lg p-2 sm:p-3 shadow-sm">
+                  <div className="bg-gradient-to-br from-slateblue-dark to-slateblue rounded-lg p-2 sm:p-3 shadow-sm">
                     <div className="flex items-center gap-1.5 sm:gap-2 text-white/70 text-[10px] sm:text-xs mb-0.5 sm:mb-1">
                       <PhoneIncoming className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                       Direction

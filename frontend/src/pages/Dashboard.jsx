@@ -1,7 +1,7 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, isToday, addMonths, subMonths, getDay } from 'date-fns'
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isToday, addMonths, subMonths, getDay } from 'date-fns'
 import {
   AreaChart,
   Area,
@@ -23,12 +23,9 @@ import {
   TrendingDown,
   DollarSign,
   ArrowRight,
-  ArrowUpRight,
-  Zap,
   Users,
   CheckCircle2,
   Clock,
-  Lightbulb,
   AlertTriangle,
   Info,
   Target,
@@ -39,11 +36,45 @@ import {
   Sunrise,
   ChevronLeft,
   ChevronRight,
-  PhoneCall,
   Bot,
+  Activity,
+  Mic,
+  Car,
+  Wrench,
 } from 'lucide-react'
 import { cn, formatTime12Hour, getStatusColor, formatCents } from '@/lib/utils'
-import CarImage from '@/components/CarImage'
+
+// Animated number component for impact
+function AnimatedNumber({ value, prefix = '', suffix = '', duration = 1000 }) {
+  const [displayValue, setDisplayValue] = useState(0)
+  const numericValue = typeof value === 'string' ? parseFloat(value.replace(/[^0-9.-]/g, '')) || 0 : value || 0
+  
+  useEffect(() => {
+    const startTime = Date.now()
+    const startValue = displayValue
+    
+    const animate = () => {
+      const now = Date.now()
+      const progress = Math.min((now - startTime) / duration, 1)
+      const easeOut = 1 - Math.pow(1 - progress, 3)
+      const current = startValue + (numericValue - startValue) * easeOut
+      
+      setDisplayValue(current)
+      
+      if (progress < 1) {
+        requestAnimationFrame(animate)
+      }
+    }
+    
+    requestAnimationFrame(animate)
+  }, [numericValue])
+  
+  return (
+    <span>
+      {prefix}{Math.round(displayValue).toLocaleString()}{suffix}
+    </span>
+  )
+}
 
 // Get greeting based on time of day
 function getGreeting() {
@@ -108,51 +139,14 @@ export default function Dashboard() {
     })
   }
 
-  const stats = [
-    {
-      name: "Today's Appointments",
-      value: overview?.today?.appointments ?? '0',
-      change: '+12%',
-      icon: Calendar,
-      iconColor: 'text-blue-600',
-      bgClass: 'stat-blue',
-    },
-    {
-      name: "AI Calls Handled",
-      value: overview?.today?.calls ?? '0',
-      change: '+8%',
-      icon: Phone,
-      iconColor: 'text-emerald-600',
-      bgClass: 'stat-green',
-    },
-    {
-      name: 'Conversion Rate',
-      value: overview?.week?.conversion_rate ? `${overview.week.conversion_rate}%` : '0%',
-      change: '+5%',
-      icon: TrendingUp,
-      iconColor: 'text-violet-600',
-      bgClass: 'stat-purple',
-    },
-    {
-      name: 'Revenue (MTD)',
-      value: overview?.month?.revenue_booked
-        ? formatCents(overview.month.revenue_booked)
-        : '$0',
-      change: '+18%',
-      icon: DollarSign,
-      iconColor: 'text-amber-600',
-      bgClass: 'stat-amber',
-    },
-  ]
-
   // AI Insights Panel Component (reusable)
   const AIInsightsPanel = () => (
     insightsData?.insights?.length > 0 ? (
       <div className="bg-gradient-to-r from-slate-900 to-slate-800 rounded-lg overflow-hidden shadow-card">
         <div className="p-4 sm:p-5">
           <div className="flex items-center gap-2 mb-4">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-purple-600">
-              <Sparkles className="h-4 w-4 text-white" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-slate-600 to-slate-700">
+              <Sparkles className="h-4 w-4 text-blue-300" />
             </div>
             <div>
               <h2 className="text-base font-semibold text-white">AI Insights</h2>
@@ -286,37 +280,37 @@ export default function Dashboard() {
     const startDayOfWeek = getDay(monthStart)
     
     return (
-      <div className="bg-white border border-slate-200 overflow-hidden flex-1">
-        <div className="px-3 py-2 border-b border-slate-200 bg-slate-50">
+      <>
+        <CardHeader className="pb-2 bg-gradient-to-r from-slate-50 to-white border-b">
           <div className="flex items-center justify-between">
             <button 
               onClick={() => setCalendarMonth(subMonths(calendarMonth, 1))}
-              className="p-1 hover:bg-slate-200 rounded transition-colors"
+              className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors"
             >
               <ChevronLeft className="h-4 w-4 text-slate-500" />
             </button>
-            <span className="text-sm font-medium text-slate-700">
+            <span className="text-sm font-semibold text-slate-800">
               {format(calendarMonth, 'MMMM yyyy')}
             </span>
             <button 
               onClick={() => setCalendarMonth(addMonths(calendarMonth, 1))}
-              className="p-1 hover:bg-slate-200 rounded transition-colors"
+              className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors"
             >
               <ChevronRight className="h-4 w-4 text-slate-500" />
             </button>
           </div>
-        </div>
-        <div className="p-2">
+        </CardHeader>
+        <CardContent className="p-3">
           {/* Day headers */}
-          <div className="grid grid-cols-7 mb-1">
-            {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
-              <div key={i} className="text-center text-[10px] font-medium text-slate-400 py-1">
-                {day}
+          <div className="grid grid-cols-7 mb-2">
+            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, i) => (
+              <div key={i} className="text-center text-[10px] font-semibold text-slate-400 py-1 uppercase tracking-wide">
+                {day.charAt(0)}
               </div>
             ))}
           </div>
           {/* Calendar grid */}
-          <div className="grid grid-cols-7 gap-0.5">
+          <div className="grid grid-cols-7 gap-1">
             {/* Empty cells for days before month starts */}
             {Array.from({ length: startDayOfWeek }).map((_, i) => (
               <div key={`empty-${i}`} className="aspect-square" />
@@ -332,275 +326,362 @@ export default function Dashboard() {
                   key={dateStr}
                   to={`/appointments?date=${dateStr}`}
                   className={cn(
-                    'aspect-square flex flex-col items-center justify-center text-xs transition-colors relative',
+                    'aspect-square flex flex-col items-center justify-center text-xs rounded-lg transition-all relative',
                     isCurrentDay 
-                      ? 'bg-slate-700 text-white font-medium' 
+                      ? 'bg-gradient-to-br from-blue-600 to-blue-700 text-white font-semibold shadow-md shadow-blue-500/25' 
                       : 'hover:bg-slate-100 text-slate-700',
-                    count > 0 && !isCurrentDay && 'font-medium'
+                    count > 0 && !isCurrentDay && 'font-semibold bg-slate-50'
                   )}
                 >
                   <span>{format(day, 'd')}</span>
                   {count > 0 && (
                     <span className={cn(
-                      'absolute bottom-0.5 w-1 h-1 rounded-full',
-                      isCurrentDay ? 'bg-white' : 'bg-slate-400'
+                      'absolute bottom-1 w-1 h-1 rounded-full',
+                      isCurrentDay ? 'bg-white' : 'bg-teal-500'
                     )} />
                   )}
                 </Link>
               )
             })}
           </div>
-        </div>
-        <div className="px-3 py-2 border-t border-slate-100 bg-slate-50">
+        </CardContent>
+        <div className="px-4 py-2.5 border-t border-slate-100 bg-slate-50/50">
           <p className="text-[10px] text-slate-500 text-center">Click a date to view appointments</p>
         </div>
-      </div>
+      </>
     )
+  }
+
+  // Generate mini sparkline data
+  const generateSparkline = (base, variance = 10) => {
+    return Array.from({ length: 7 }, (_, i) => ({
+      value: base + Math.floor(Math.random() * variance * 2) - variance
+    }))
   }
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Welcome Header - Professional */}
-      <div className="bg-white border-b border-slate-200 -mx-4 sm:-mx-6 -mt-4 sm:-mt-6 px-4 sm:px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-lg font-semibold text-slate-800">{greeting.text}</h1>
-            <p className="text-sm text-slate-500">
-              {format(new Date(), 'EEEE, MMMM d, yyyy')} • {todayData?.summary?.total || 0} appointments today
-            </p>
+      {/* Compact Header with Stats */}
+      <div className="relative overflow-hidden bg-gradient-to-r from-slate-800 to-slate-900 -mx-4 sm:-mx-6 -mt-4 sm:-mt-6 px-4 sm:px-6 py-4">
+        <div className="relative z-10">
+          {/* Single row - greeting, date, and AI status */}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <GreetingIcon className={cn("h-5 w-5", greeting.color)} />
+              <div>
+                <h1 className="text-lg font-semibold text-white">{greeting.text}</h1>
+                <p className="text-slate-400 text-xs">{format(new Date(), 'EEEE, MMMM d, yyyy')}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              <span className="text-blue-400 text-xs font-medium">AI Agent Live</span>
+            </div>
           </div>
-          <div className="flex items-center gap-2 text-sm">
-            <span className="flex h-2 w-2 rounded-full bg-green-500" />
-            <span className="text-slate-600">AI Agent Online</span>
+          
+          {/* Compact Stats Grid */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
+            {/* Today's Appointments */}
+            <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-3">
+              <div className="flex items-center justify-between mb-1">
+                <Calendar className="h-4 w-4 text-blue-400" />
+                <span className="text-slate-400 text-[10px] flex items-center gap-0.5">
+                  <TrendingUp className="h-2.5 w-2.5" />+12%
+                </span>
+              </div>
+              <p className="text-xl font-bold text-white">
+                <AnimatedNumber value={overview?.today?.appointments ?? 0} />
+              </p>
+              <p className="text-slate-500 text-[10px]">Today's Appointments</p>
+            </div>
+            
+            {/* AI Calls */}
+            <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-3">
+              <div className="flex items-center justify-between mb-1">
+                <Mic className="h-4 w-4 text-blue-400" />
+                <span className="text-slate-400 text-[10px] flex items-center gap-0.5">
+                  <Activity className="h-2.5 w-2.5" />Live
+                </span>
+              </div>
+              <p className="text-xl font-bold text-white">
+                <AnimatedNumber value={overview?.today?.calls ?? 0} />
+              </p>
+              <p className="text-slate-500 text-[10px]">AI Calls Today</p>
+            </div>
+            
+            {/* Conversion Rate */}
+            <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-3">
+              <div className="flex items-center justify-between mb-1">
+                <Target className="h-4 w-4 text-blue-400" />
+                <span className="text-slate-400 text-[10px] flex items-center gap-0.5">
+                  <TrendingUp className="h-2.5 w-2.5" />+5%
+                </span>
+              </div>
+              <p className="text-xl font-bold text-white">
+                <AnimatedNumber value={overview?.week?.conversion_rate ?? 0} suffix="%" />
+              </p>
+              <p className="text-slate-500 text-[10px]">Conversion Rate</p>
+            </div>
+            
+            {/* Revenue */}
+            <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-3">
+              <div className="flex items-center justify-between mb-1">
+                <DollarSign className="h-4 w-4 text-blue-400" />
+                <span className="text-slate-400 text-[10px] flex items-center gap-0.5">
+                  <TrendingUp className="h-2.5 w-2.5" />+18%
+                </span>
+              </div>
+              <p className="text-xl font-bold text-white">
+                {overview?.month?.revenue_booked ? formatCents(overview.month.revenue_booked) : '$0'}
+              </p>
+              <p className="text-slate-500 text-[10px]">Revenue (MTD)</p>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Stats Grid - Conservative */}
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        {stats.map((stat, index) => (
-          <div
-            key={stat.name}
-            className="bg-white border border-slate-200 p-4"
-          >
-            <div className="flex items-center justify-between mb-2">
-              <stat.icon className="h-4 w-4 text-slate-400" />
-              <span className="text-xs text-green-600">{stat.change}</span>
-            </div>
-            <p className="text-xl font-semibold text-slate-800">{stat.value}</p>
-            <p className="text-sm text-slate-500">{stat.name}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* Sentiment Chart - Hidden on mobile, shown on desktop */}
-      <div className="hidden sm:block">
-        {sentimentChartContent}
-      </div>
-
-      {/* Main Content Grid - Equal height columns */}
-      <div className="grid gap-4 lg:grid-cols-5 lg:items-stretch">
-        {/* Left Column - 3/5 width - Single card with schedule + summary */}
-        <div className="lg:col-span-3 bg-white border border-slate-200 overflow-hidden flex flex-col">
-          {/* Today's Schedule Header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-slate-50">
-            <div>
-              <h2 className="text-sm font-medium text-slate-700">Today's Schedule</h2>
-              <p className="text-xs text-slate-500">
-                {todayData?.summary?.total || 0} appointments
-              </p>
-            </div>
-            <Button variant="ghost" size="sm" asChild className="text-slate-600 hover:text-slate-800">
-              <Link to="/appointments">
-                View All
-                <ArrowRight className="ml-1 h-3.5 w-3.5" />
-              </Link>
-            </Button>
-          </div>
-          
-          {/* Appointments List */}
-          <div className="p-3 sm:p-4 flex-1">
-            {todayLoading ? (
-              <div className="space-y-3">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="h-16 animate-pulse bg-slate-100" />
-                ))}
-              </div>
-            ) : todayData?.appointments?.length > 0 ? (
-              <div className="space-y-2">
-                {todayData.appointments.slice(0, 5).map((apt) => (
-                  <Link
-                    key={apt.id}
-                    to={`/appointments/${apt.id}`}
-                    className="flex items-center gap-3 sm:gap-4 rounded-lg p-3 transition-colors hover:bg-slate-50 group"
-                  >
-                    <div className="flex h-12 w-14 flex-col items-center justify-center rounded-lg bg-slate-100 group-hover:bg-white group-hover:shadow-sm transition-all">
-                      <span className="text-base font-bold text-slate-900">
-                        {formatTime12Hour(apt.scheduled_time).split(':')[0]}
-                      </span>
-                      <span className="text-[10px] font-medium text-slate-500 uppercase">
-                        {formatTime12Hour(apt.scheduled_time).includes('PM') ? 'PM' : 'AM'}
-                      </span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-slate-900 truncate">
-                        {apt.customer?.first_name} {apt.customer?.last_name}
-                      </p>
-                      {apt.vehicle && (
-                        <div className="flex items-center gap-2 text-sm text-slate-500">
-                          <CarImage 
-                            make={apt.vehicle.make} 
-                            model={apt.vehicle.model} 
-                            year={apt.vehicle.year}
-                            size="xs"
-                          />
-                          <span className="truncate">{apt.vehicle.year} {apt.vehicle.make} {apt.vehicle.model}</span>
-                        </div>
-                      )}
-                    </div>
-                    <Badge className={cn(
-                      'shrink-0 text-xs font-medium',
-                      getStatusColor(apt.display_status || apt.status)
-                    )}>
-                      {(apt.display_status || apt.status).replace('_', ' ')}
-                    </Badge>
-                  </Link>
-                ))}
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center py-12 text-center">
-                <div className="rounded-lg bg-slate-100 p-3 mb-3">
-                  <Calendar className="h-6 w-6 text-slate-400" />
-                </div>
-                <p className="font-medium text-slate-900">No appointments today</p>
-                <p className="text-sm text-slate-500">Your schedule is clear</p>
-              </div>
-            )}
-          </div>
-          
-          {/* Status Summary - Bottom of card */}
-          <div className="border-t border-slate-100 p-4 sm:p-5 bg-slate-50/50">
-            <div className="grid grid-cols-5 gap-2">
-              {[
-                { label: 'Completed', color: 'bg-emerald-500', count: todayData?.by_status?.completed?.length || 0 },
-                { label: 'In Progress', color: 'bg-amber-500', count: todayData?.by_status?.in_progress?.length || 0 },
-                { label: 'Checked In', color: 'bg-blue-500', count: todayData?.by_status?.checked_in?.length || 0 },
-                { label: 'Confirmed', color: 'bg-violet-500', count: todayData?.by_status?.confirmed?.length || 0 },
-                { label: 'Scheduled', color: 'bg-slate-400', count: todayData?.by_status?.scheduled?.length || 0 },
-              ].map((item) => (
-                <div key={item.label} className="text-center">
-                  <p className="text-lg font-bold text-slate-900">{item.count}</p>
-                  <div className="flex items-center justify-center gap-1 mt-0.5">
-                    <div className={cn('h-1.5 w-1.5 rounded-full', item.color)} />
-                    <span className="text-[10px] text-slate-500">{item.label}</span>
+      {/* Main Content Grid */}
+      <div className="grid gap-5 lg:grid-cols-3">
+        {/* Left Column - 2/3 width */}
+        <div className="lg:col-span-2 space-y-5">
+          {/* Today's Schedule Card - Enhanced */}
+          <Card className="shadow-lg border-0 overflow-hidden">
+            <CardHeader className="pb-3 bg-gradient-to-r from-slate-50 to-white border-b">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 rounded-xl bg-gradient-to-br from-slate-700 to-slate-800 shadow-lg shadow-slate-500/15">
+                    <Calendar className="h-5 w-5 text-blue-300" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg">Today's Schedule</CardTitle>
+                    <CardDescription className="flex items-center gap-2">
+                      <span className="font-semibold text-blue-600">{todayData?.summary?.total || 0}</span> appointments scheduled
+                    </CardDescription>
                   </div>
                 </div>
-              ))}
-            </div>
-          </div>
+                <Button variant="outline" size="sm" asChild className="gap-1.5 shadow-sm">
+                  <Link to="/appointments">
+                    View All
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </Link>
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="p-0">
+              {/* Status Pills */}
+              <div className="flex items-center gap-2 px-5 py-3 bg-slate-50/50 border-b overflow-x-auto">
+                {[
+                  { label: 'Completed', color: 'bg-blue-700', count: todayData?.by_status?.completed?.length || 0 },
+                  { label: 'In Progress', color: 'bg-blue-500', count: todayData?.by_status?.in_progress?.length || 0 },
+                  { label: 'Checked In', color: 'bg-blue-400', count: todayData?.by_status?.checked_in?.length || 0 },
+                  { label: 'Confirmed', color: 'bg-slate-600', count: todayData?.by_status?.confirmed?.length || 0 },
+                  { label: 'Scheduled', color: 'bg-slate-400', count: todayData?.by_status?.scheduled?.length || 0 },
+                ].map((item) => (
+                  <div key={item.label} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border shadow-sm whitespace-nowrap">
+                    <div className={cn('h-2 w-2 rounded-full', item.color)} />
+                    <span className="text-xs font-medium text-slate-600">{item.count}</span>
+                    <span className="text-xs text-slate-400">{item.label}</span>
+                  </div>
+                ))}
+              </div>
+              
+              {/* Appointments List */}
+              <div className="p-4">
+                {todayLoading ? (
+                  <div className="space-y-3">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="h-20 animate-pulse bg-slate-100 rounded-xl" />
+                    ))}
+                  </div>
+                ) : todayData?.appointments?.length > 0 ? (
+                  <div className="space-y-2">
+                    {todayData.appointments.slice(0, 5).map((apt, index) => (
+                      <Link
+                        key={apt.id}
+                        to={`/appointments/${apt.id}`}
+                        className="flex items-center gap-4 rounded-xl p-4 transition-all hover:bg-slate-50 hover:shadow-md group border border-transparent hover:border-slate-200"
+                      >
+                        <div className="relative">
+                          <div className="flex h-14 w-16 flex-col items-center justify-center rounded-xl bg-gradient-to-br from-slate-100 to-slate-50 group-hover:from-blue-50 group-hover:to-white group-hover:shadow-lg transition-all border border-slate-200 group-hover:border-blue-200">
+                            <span className="text-lg font-bold text-slate-900 group-hover:text-blue-700">
+                              {formatTime12Hour(apt.scheduled_time).split(':')[0]}:{formatTime12Hour(apt.scheduled_time).split(':')[1]?.split(' ')[0]}
+                            </span>
+                            <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">
+                              {formatTime12Hour(apt.scheduled_time).includes('PM') ? 'PM' : 'AM'}
+                            </span>
+                          </div>
+                          {index === 0 && (
+                            <div className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-emerald-500 border-2 border-white shadow animate-pulse" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-slate-900 truncate group-hover:text-blue-700">
+                            {apt.customer?.first_name} {apt.customer?.last_name}
+                          </p>
+                          {apt.vehicle && (
+                            <div className="flex items-center gap-2 text-sm text-slate-500 mt-0.5">
+                              <Car className="h-3.5 w-3.5" />
+                              <span className="truncate">{apt.vehicle.year} {apt.vehicle.make} {apt.vehicle.model}</span>
+                            </div>
+                          )}
+                          {apt.services?.[0] && (
+                            <div className="flex items-center gap-2 text-xs text-slate-400 mt-1">
+                              <Wrench className="h-3 w-3" />
+                              <span className="truncate">{apt.services[0].name}</span>
+                            </div>
+                          )}
+                        </div>
+                        <Badge className={cn(
+                          'shrink-0 text-xs font-semibold px-3 py-1 rounded-full',
+                          getStatusColor(apt.display_status || apt.status)
+                        )}>
+                          {(apt.display_status || apt.status).replace('_', ' ')}
+                        </Badge>
+                      </Link>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-16 text-center">
+                    <div className="rounded-2xl bg-gradient-to-br from-slate-100 to-slate-50 p-5 mb-4 shadow-inner">
+                      <Calendar className="h-10 w-10 text-slate-300" />
+                    </div>
+                    <p className="font-semibold text-slate-900 text-lg">No appointments today</p>
+                    <p className="text-sm text-slate-500 mt-1">Your schedule is clear for now</p>
+                    <Button variant="outline" size="sm" asChild className="mt-4">
+                      <Link to="/appointments">
+                        Browse Schedule
+                        <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+                      </Link>
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Sentiment Chart */}
+          {sentimentChartContent}
         </div>
 
-        {/* Right Column - 2/5 width */}
-        <div className="lg:col-span-2 flex flex-col gap-4">
-          {/* AI Performance Card - Professional */}
-          <div className="bg-white border border-slate-200 overflow-hidden">
-            <div className="px-4 py-3 border-b border-slate-200 bg-slate-50">
+        {/* Right Column - 1/3 width */}
+        <div className="space-y-5">
+          {/* AI Performance Card - Enhanced */}
+          <Card className="shadow-lg border-0 overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
+            <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <h2 className="text-sm font-medium text-slate-700">AI Agent Performance</h2>
-                <div className="flex items-center gap-1.5 text-xs text-green-600">
-                  <span className="flex h-1.5 w-1.5 rounded-full bg-green-500" />
-                  Online
+                <div className="flex items-center gap-3">
+                  <div className="relative">
+                    <div className="p-2.5 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 shadow-lg">
+                      <Bot className="h-5 w-5 text-white" />
+                    </div>
+                    <span className="absolute -bottom-0.5 -right-0.5 flex h-3 w-3">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500 border-2 border-slate-900"></span>
+                    </span>
+                  </div>
+                  <div>
+                    <CardTitle className="text-white text-base">AI Agent</CardTitle>
+                    <CardDescription className="text-slate-400 text-xs">Performance this week</CardDescription>
+                  </div>
                 </div>
+                <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 hover:bg-blue-500/30">
+                  Live
+                </Badge>
               </div>
-              <p className="text-xs text-slate-500">This week</p>
-            </div>
-            <div className="p-4">
-              {/* Stats Grid */}
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div className="text-center">
-                  <p className="text-2xl font-semibold text-slate-800">{overview?.week?.calls ?? 0}</p>
-                  <p className="text-xs text-slate-500">Calls Handled</p>
+            </CardHeader>
+            <CardContent className="pt-2">
+              {/* Main Stats */}
+              <div className="grid grid-cols-2 gap-4 mb-5">
+                <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Phone className="h-4 w-4 text-blue-400" />
+                    <span className="text-xs text-slate-400">Calls Handled</span>
+                  </div>
+                  <p className="text-2xl font-bold text-white">
+                    <AnimatedNumber value={overview?.week?.calls ?? 0} />
+                  </p>
                 </div>
-                <div className="text-center">
-                  <p className="text-2xl font-semibold text-slate-800">{overview?.week?.ai_bookings ?? 0}</p>
-                  <p className="text-xs text-slate-500">Bookings Made</p>
+                <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+                  <div className="flex items-center gap-2 mb-2">
+                    <CheckCircle2 className="h-4 w-4 text-blue-400" />
+                    <span className="text-xs text-slate-400">Bookings Made</span>
+                  </div>
+                  <p className="text-2xl font-bold text-white">
+                    <AnimatedNumber value={overview?.week?.ai_bookings ?? 0} />
+                  </p>
                 </div>
               </div>
               
-              {/* Conversion Rate Bar */}
-              <div className="mb-4">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs text-slate-500">Conversion Rate</span>
-                  <span className="text-sm font-medium text-slate-700">{overview?.week?.conversion_rate ?? 0}%</span>
+              {/* Conversion Rate */}
+              <div className="mb-5">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm text-slate-400">Conversion Rate</span>
+                  <span className="text-lg font-bold text-blue-400">{overview?.week?.conversion_rate ?? 0}%</span>
                 </div>
-                <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                <div className="h-2 bg-white/10 rounded-full overflow-hidden">
                   <div 
-                    className="h-full bg-slate-600 rounded-full transition-all duration-500"
+                    className="h-full bg-gradient-to-r from-blue-500 to-blue-400 rounded-full transition-all duration-1000"
                     style={{ width: `${Math.min(overview?.week?.conversion_rate ?? 0, 100)}%` }}
                   />
                 </div>
               </div>
               
-              {/* Additional Stats */}
-              <div className="space-y-2 pt-3 border-t border-slate-100">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-slate-500">Avg. Call Duration</span>
-                  <span className="text-slate-700">{overview?.week?.avg_call_duration ?? '2:30'}</span>
+              {/* Additional Metrics */}
+              <div className="space-y-3 pt-4 border-t border-white/10">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-slate-500" />
+                    <span className="text-sm text-slate-400">Avg. Duration</span>
+                  </div>
+                  <span className="text-sm font-semibold text-white">{overview?.week?.avg_call_duration ?? '2:30'}</span>
                 </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-slate-500">Satisfaction</span>
-                  <span className="text-slate-700">{overview?.week?.satisfaction ?? '94'}%</span>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Smile className="h-4 w-4 text-slate-500" />
+                    <span className="text-sm text-slate-400">Satisfaction</span>
+                  </div>
+                  <span className="text-sm font-semibold text-blue-400">{overview?.week?.satisfaction ?? '94'}%</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Users className="h-4 w-4 text-slate-500" />
+                    <span className="text-sm text-slate-400">New Customers</span>
+                  </div>
+                  <span className="text-sm font-semibold text-white">{overview?.week?.new_customers ?? 0}</span>
                 </div>
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
           
-          {/* Mini Calendar */}
-          <MiniCalendar />
+          {/* Mini Calendar - Enhanced */}
+          <Card className="shadow-lg border-0 overflow-hidden">
+            <MiniCalendar />
+          </Card>
+          
+          {/* Quick Stats */}
+          <div className="grid grid-cols-2 gap-3">
+            <Card className="shadow-md border-0 bg-gradient-to-br from-slate-700 to-slate-800 text-white">
+              <CardContent className="p-4">
+                <CheckCircle2 className="h-5 w-5 text-blue-300 mb-2" />
+                <p className="text-2xl font-bold">{overview?.week?.ai_bookings ?? 0}</p>
+                <p className="text-xs text-slate-400">AI Bookings</p>
+              </CardContent>
+            </Card>
+            <Card className="shadow-md border-0 bg-gradient-to-br from-slate-700 to-slate-800 text-white">
+              <CardContent className="p-4">
+                <Users className="h-5 w-5 text-blue-300 mb-2" />
+                <p className="text-2xl font-bold">{overview?.week?.new_customers ?? 0}</p>
+                <p className="text-xs text-slate-400">New Customers</p>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
 
-      {/* Bottom Stats */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        {[
-          {
-            icon: CheckCircle2,
-            label: 'AI Bookings This Week',
-            value: overview?.week?.ai_bookings ?? 0,
-            iconColor: 'text-slate-400',
-            bgColor: 'bg-white',
-          },
-          {
-            icon: Phone,
-            label: 'Total Calls This Week',
-            value: overview?.week?.calls ?? 0,
-            iconColor: 'text-slate-400',
-            bgColor: 'bg-white',
-          },
-          {
-            icon: Users,
-            label: 'New Customers This Week',
-            value: overview?.week?.new_customers ?? 0,
-            iconColor: 'text-slate-400',
-            bgColor: 'bg-white',
-          },
-        ].map((item) => (
-          <div key={item.label} className="bg-white border border-slate-200 p-4 flex items-center gap-3">
-            <item.icon className={cn('h-5 w-5', item.iconColor)} />
-            <div>
-              <p className="text-lg font-semibold text-slate-800">{item.value}</p>
-              <p className="text-sm text-slate-500">{item.label}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Sentiment Chart - shown at bottom on mobile */}
-      <div className="sm:hidden">
-        {sentimentChartContent}
-      </div>
-
-      {/* AI Insights - at bottom so it doesn't cause layout shift when loading */}
+      {/* AI Insights Panel */}
       <AIInsightsPanel />
     </div>
   )

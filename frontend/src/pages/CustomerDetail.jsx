@@ -150,23 +150,26 @@ export default function CustomerDetail() {
 
   return (
     <div className="space-y-4">
-      {/* Header */}
-      <div className="flex items-center gap-3 pb-2">
-        <Button variant="ghost" size="icon" asChild className="h-8 w-8">
-          <Link to="/customers">
-            <ArrowLeft className="h-4 w-4" />
-          </Link>
-        </Button>
-        <div className="flex-1">
-          <h1 className="text-lg font-semibold text-slate-800">
-            {customer.first_name} {customer.last_name}
-          </h1>
-          <p className="text-sm text-slate-500">Customer Profile</p>
+      {/* Header - Dark Theme */}
+      <div className="bg-gradient-to-r from-slate-800 to-slate-900 -mx-4 sm:-mx-6 -mt-4 sm:-mt-6 px-4 sm:px-6 py-4">
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="icon" asChild className="h-8 w-8 text-slate-400 hover:text-white hover:bg-slate-700">
+            <Link to="/customers">
+              <ArrowLeft className="h-4 w-4" />
+            </Link>
+          </Button>
+          <User className="h-5 w-5 text-blue-400" />
+          <div className="flex-1">
+            <h1 className="text-lg font-semibold text-white">
+              {customer.first_name} {customer.last_name}
+            </h1>
+            <p className="text-xs text-slate-400">Customer Profile</p>
+          </div>
+          <Button variant="outline" size="sm" onClick={handleEditOpen} className="text-xs border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white">
+            <Edit className="mr-1.5 h-3.5 w-3.5" />
+            Edit
+          </Button>
         </div>
-        <Button variant="outline" size="sm" onClick={handleEditOpen} className="text-xs">
-          <Edit className="mr-1.5 h-3.5 w-3.5" />
-          Edit
-        </Button>
       </div>
 
       {/* Customer Info Card */}

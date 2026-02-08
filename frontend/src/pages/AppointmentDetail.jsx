@@ -95,30 +95,33 @@ export default function AppointmentDetail() {
 
   return (
     <div className="space-y-4">
-      {/* Header */}
-      <div className="flex items-center gap-3 pb-2">
-        <Button variant="ghost" size="icon" asChild className="h-8 w-8">
-          <Link to="/appointments">
-            <ArrowLeft className="h-4 w-4" />
-          </Link>
-        </Button>
-        <div className="flex-1">
-          <h1 className="text-lg font-semibold text-slate-800">
-            Appointment Details
-          </h1>
-          <p className="text-sm text-slate-500">
-            {format(new Date(apt.scheduled_date), 'EEEE, MMMM d, yyyy')} at{' '}
-            {formatTime12Hour(apt.scheduled_time)}
-          </p>
+      {/* Header - Dark Theme */}
+      <div className="bg-gradient-to-r from-slate-800 to-slate-900 -mx-4 sm:-mx-6 -mt-4 sm:-mt-6 px-4 sm:px-6 py-4">
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="icon" asChild className="h-8 w-8 text-slate-400 hover:text-white hover:bg-slate-700">
+            <Link to="/appointments">
+              <ArrowLeft className="h-4 w-4" />
+            </Link>
+          </Button>
+          <Calendar className="h-5 w-5 text-blue-400" />
+          <div className="flex-1">
+            <h1 className="text-lg font-semibold text-white">
+              Appointment Details
+            </h1>
+            <p className="text-xs text-slate-400">
+              {format(new Date(apt.scheduled_date), 'EEEE, MMMM d, yyyy')} at{' '}
+              {formatTime12Hour(apt.scheduled_time)}
+            </p>
+          </div>
+          <span className="text-xs px-2 py-1 bg-slate-700 text-slate-300 rounded capitalize">
+            {apt.status.replace('_', ' ')}
+          </span>
         </div>
-        <span className="text-xs px-2 py-1 bg-slate-100 text-slate-600 rounded capitalize">
-          {apt.status.replace('_', ' ')}
-        </span>
       </div>
 
       {/* Quick Actions */}
       {availableActions.length > 0 && (
-        <div className="bg-white border border-slate-200 p-3">
+        <div className="bg-white border border-slate-200 rounded-lg p-3">
           <div className="flex flex-wrap gap-2">
             {availableActions.includes('confirmed') && (
               <Button
@@ -187,10 +190,10 @@ export default function AppointmentDetail() {
       {/* Details Grid */}
       <div className="grid gap-4 md:grid-cols-2">
         {/* Customer Info */}
-        <div className="bg-white border border-slate-200">
-          <div className="px-4 py-3 border-b border-slate-200 bg-slate-50">
+        <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
+          <div className="px-4 py-3 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-blue-50/30">
             <h3 className="text-sm font-medium text-slate-700 flex items-center gap-2">
-              <User className="h-4 w-4 text-slate-400" />
+              <User className="h-4 w-4 text-blue-400" />
               Customer
             </h3>
           </div>
@@ -217,10 +220,10 @@ export default function AppointmentDetail() {
         </div>
 
         {/* Vehicle Info */}
-        <div className="bg-white border border-slate-200">
-          <div className="px-4 py-3 border-b border-slate-200 bg-slate-50">
+        <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
+          <div className="px-4 py-3 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-blue-50/30">
             <h3 className="text-sm font-medium text-slate-700 flex items-center gap-2">
-              <Car className="h-4 w-4 text-slate-400" />
+              <Car className="h-4 w-4 text-blue-400" />
               Vehicle
             </h3>
           </div>
@@ -259,10 +262,10 @@ export default function AppointmentDetail() {
         </div>
 
         {/* Appointment Details */}
-        <div className="bg-white border border-slate-200">
-          <div className="px-4 py-3 border-b border-slate-200 bg-slate-50">
+        <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
+          <div className="px-4 py-3 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-blue-50/30">
             <h3 className="text-sm font-medium text-slate-700 flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-slate-400" />
+              <Calendar className="h-4 w-4 text-blue-400" />
               Appointment
             </h3>
           </div>
@@ -314,10 +317,10 @@ export default function AppointmentDetail() {
         </div>
 
         {/* Services */}
-        <div className="bg-white border border-slate-200">
-          <div className="px-4 py-3 border-b border-slate-200 bg-slate-50">
+        <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
+          <div className="px-4 py-3 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-blue-50/30">
             <h3 className="text-sm font-medium text-slate-700 flex items-center gap-2">
-              <Wrench className="h-4 w-4 text-slate-400" />
+              <Wrench className="h-4 w-4 text-blue-400" />
               Services
             </h3>
           </div>
@@ -349,7 +352,7 @@ export default function AppointmentDetail() {
       </div>
 
       {/* Metadata */}
-      <div className="bg-white border border-slate-200 p-3">
+      <div className="bg-white border border-slate-200 rounded-lg p-3">
         <div className="flex flex-wrap gap-4 text-xs text-slate-500">
           <div>
             <span>Created: </span>

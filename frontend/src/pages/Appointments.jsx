@@ -143,12 +143,15 @@ export default function Appointments() {
 
   return (
     <div className="space-y-4">
-      {/* Page Header - With Teal Accent */}
-      <div className="bg-gradient-to-r from-teal-dark to-teal px-4 py-4 rounded-lg">
+      {/* Page Header - Dark Theme */}
+      <div className="bg-gradient-to-r from-slate-800 to-slate-900 -mx-4 sm:-mx-6 -mt-4 sm:-mt-6 px-4 sm:px-6 py-4">
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-lg font-semibold text-white">Appointments</h1>
-            <p className="text-sm text-white/70">Manage scheduled appointments</p>
+          <div className="flex items-center gap-3">
+            <Calendar className="h-5 w-5 text-blue-400" />
+            <div>
+              <h1 className="text-lg font-semibold text-white">Appointments</h1>
+              <p className="text-xs text-slate-400">Manage scheduled appointments</p>
+            </div>
           </div>
         </div>
       </div>
@@ -356,12 +359,12 @@ export default function Appointments() {
                             <div className="mt-1 space-y-0.5">
                               {dayAppointments.slice(0, 3).map((apt, aptIndex) => {
                                 const colors = [
-                                  'bg-teal-100 text-teal-700 border-l-2 border-teal-400',
+                                  'bg-blue-100 text-blue-700 border-l-2 border-blue-400',
+                                  'bg-slate-100 text-slate-700 border-l-2 border-slate-400',
                                   'bg-sky-100 text-sky-700 border-l-2 border-sky-400',
-                                  'bg-amber-100 text-amber-700 border-l-2 border-amber-400',
-                                  'bg-rose-100 text-rose-700 border-l-2 border-rose-400',
-                                  'bg-violet-100 text-violet-700 border-l-2 border-violet-400',
-                                  'bg-emerald-100 text-emerald-700 border-l-2 border-emerald-400',
+                                  'bg-indigo-100 text-indigo-700 border-l-2 border-indigo-300',
+                                  'bg-blue-50 text-blue-600 border-l-2 border-blue-300',
+                                  'bg-slate-50 text-slate-600 border-l-2 border-slate-300',
                                 ]
                                 const colorClass = colors[aptIndex % colors.length]
                                 return (

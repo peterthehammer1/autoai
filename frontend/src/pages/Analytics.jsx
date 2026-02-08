@@ -198,19 +198,24 @@ export default function Analytics() {
 
   return (
     <div className="space-y-4">
-      {/* Page Header - Professional */}
-      <div className="flex items-center justify-between pb-2">
-        <div>
-          <h1 className="text-lg font-semibold text-slate-800">Analytics</h1>
-          <p className="text-sm text-slate-500">Business performance metrics</p>
+      {/* Page Header - Dark Theme */}
+      <div className="bg-gradient-to-r from-slate-800 to-slate-900 -mx-4 sm:-mx-6 -mt-4 sm:-mt-6 px-4 sm:px-6 py-4 mb-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <BarChart3 className="h-5 w-5 text-blue-400" />
+            <div>
+              <h1 className="text-lg font-semibold text-white">Analytics</h1>
+              <p className="text-xs text-slate-400">Business performance metrics</p>
+            </div>
+          </div>
+          <Tabs value={period} onValueChange={setPeriod}>
+            <TabsList className="bg-slate-700/50 p-1 border border-slate-600">
+              <TabsTrigger value="day" className="text-xs text-slate-300 data-[state=active]:bg-slate-600 data-[state=active]:text-white">Today</TabsTrigger>
+              <TabsTrigger value="week" className="text-xs text-slate-300 data-[state=active]:bg-slate-600 data-[state=active]:text-white">Week</TabsTrigger>
+              <TabsTrigger value="month" className="text-xs text-slate-300 data-[state=active]:bg-slate-600 data-[state=active]:text-white">Month</TabsTrigger>
+            </TabsList>
+          </Tabs>
         </div>
-        <Tabs value={period} onValueChange={setPeriod}>
-          <TabsList className="bg-slate-100 p-1">
-            <TabsTrigger value="day" className="text-xs data-[state=active]:bg-white">Today</TabsTrigger>
-            <TabsTrigger value="week" className="text-xs data-[state=active]:bg-white">Week</TabsTrigger>
-            <TabsTrigger value="month" className="text-xs data-[state=active]:bg-white">Month</TabsTrigger>
-          </TabsList>
-        </Tabs>
       </div>
 
       {/* Hero Stats Row */}
@@ -240,8 +245,8 @@ export default function Analytics() {
           change={comprehensive?.revenue?.change}
           changeLabel="vs last"
           icon={DollarSign}
-          iconColor="text-amber-600"
-          iconBg="bg-amber-100"
+          iconColor="text-slate-600"
+          iconBg="bg-slate-100"
           loading={compLoading}
         />
         <StatCard
@@ -334,7 +339,7 @@ export default function Analytics() {
                 value={bayStats?.overall?.utilization_percent || 0} 
                 size={70}
                 strokeWidth={6}
-                color="amber"
+                color="slate"
                 showValue={false}
               />
               <div className="flex-1 min-w-0">
@@ -358,8 +363,8 @@ export default function Analytics() {
             <CardHeader className="pb-2">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                 <div className="flex items-center gap-2">
-                  <div className="p-2 rounded-lg bg-amber-100">
-                    <DollarSign className="h-4 w-4 text-amber-600" />
+                  <div className="p-2 rounded-lg bg-slate-100">
+                    <DollarSign className="h-4 w-4 text-slate-600" />
                   </div>
                   <div>
                     <CardTitle className="text-base">Revenue Trend</CardTitle>
@@ -462,26 +467,26 @@ export default function Analytics() {
               </div>
               <p className="text-lg font-bold text-blue-900">{comprehensive?.calls?.total || 0}</p>
             </div>
-            <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-lg p-2.5 border border-emerald-200">
+            <div className="bg-gradient-to-br from-sky-50 to-sky-100 rounded-lg p-2.5 border border-sky-200">
               <div className="flex items-center gap-1.5 mb-0.5">
-                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
-                <span className="text-[10px] font-medium text-emerald-600">Booked</span>
+                <CheckCircle2 className="h-3.5 w-3.5 text-sky-600" />
+                <span className="text-[10px] font-medium text-sky-600">Booked</span>
               </div>
-              <p className="text-lg font-bold text-emerald-900">{comprehensive?.calls?.booked || 0}</p>
+              <p className="text-lg font-bold text-sky-900">{comprehensive?.calls?.booked || 0}</p>
             </div>
-            <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-lg p-2.5 border border-amber-200">
+            <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-lg p-2.5 border border-slate-200">
               <div className="flex items-center gap-1.5 mb-0.5">
-                <DollarSign className="h-3.5 w-3.5 text-amber-600" />
-                <span className="text-[10px] font-medium text-amber-600">Revenue</span>
+                <DollarSign className="h-3.5 w-3.5 text-slate-600" />
+                <span className="text-[10px] font-medium text-slate-600">Revenue</span>
               </div>
-              <p className="text-lg font-bold text-amber-900">{formatCents(comprehensive?.revenue?.period_total || 0)}</p>
+              <p className="text-lg font-bold text-slate-900">{formatCents(comprehensive?.revenue?.period_total || 0)}</p>
             </div>
-            <div className="bg-gradient-to-br from-violet-50 to-violet-100 rounded-lg p-2.5 border border-violet-200">
+            <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-lg p-2.5 border border-indigo-200">
               <div className="flex items-center gap-1.5 mb-0.5">
-                <Smile className="h-3.5 w-3.5 text-violet-600" />
-                <span className="text-[10px] font-medium text-violet-600">Happy</span>
+                <Smile className="h-3.5 w-3.5 text-indigo-600" />
+                <span className="text-[10px] font-medium text-indigo-600">Happy</span>
               </div>
-              <p className="text-lg font-bold text-violet-900">{comprehensive?.calls?.satisfaction_rate || 0}%</p>
+              <p className="text-lg font-bold text-indigo-900">{comprehensive?.calls?.satisfaction_rate || 0}%</p>
             </div>
           </div>
 
@@ -620,7 +625,7 @@ export default function Analytics() {
                     <p className="text-xs text-slate-500">Avg Ticket</p>
                   </div>
                   <div className="bg-slate-50 rounded-lg p-2.5 text-center">
-                    <p className="text-xl font-bold text-amber-600">{comprehensive?.today?.appointments || 0}</p>
+                    <p className="text-xl font-bold text-slate-600">{comprehensive?.today?.appointments || 0}</p>
                     <p className="text-xs text-slate-500">Today's Appts</p>
                   </div>
                 </div>
@@ -635,8 +640,8 @@ export default function Analytics() {
           <Card className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white border-0">
             <CardHeader className="pb-2">
               <div className="flex items-center gap-2">
-                <div className="p-1.5 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600">
-                  <Sparkles className="h-3.5 w-3.5 text-white" />
+                <div className="p-1.5 rounded-lg bg-gradient-to-br from-slate-600 to-slate-700">
+                  <Sparkles className="h-3.5 w-3.5 text-blue-300" />
                 </div>
                 <div>
                   <CardTitle className="text-sm text-white">AI Insights</CardTitle>

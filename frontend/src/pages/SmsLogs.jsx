@@ -135,30 +135,51 @@ export default function SmsLogs() {
   const successRate = stats?.total ? Math.round(((stats.by_status?.sent || 0) + (stats.by_status?.delivered || 0)) / stats.total * 100) : 0
 
   return (
-    <div className="h-[calc(100vh-6rem)] flex flex-col">
-      {/* Page Header - With Teal Accent */}
-      <div className="bg-gradient-to-r from-teal-dark to-teal px-4 py-4 mb-4 rounded-lg mx-4 mt-2">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-lg font-semibold text-white">SMS Messages</h1>
-            <p className="text-sm text-white/70">{stats?.total || 0} messages this week</p>
+    <div className="h-[calc(100vh-4rem)] flex flex-col">
+      {/* Page Header - Dark Theme with Stats */}
+      <div className="bg-gradient-to-r from-slate-800 to-slate-900 -mx-4 sm:-mx-6 -mt-4 sm:-mt-6 px-4 sm:px-6 py-4 mb-4">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <MessageSquare className="h-5 w-5 text-blue-400" />
+            <div>
+              <h1 className="text-lg font-semibold text-white">SMS Messages</h1>
+              <p className="text-xs text-slate-400">Automated messaging system</p>
+            </div>
+          </div>
+        </div>
+        
+        {/* Stats Grid */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
+          <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-3">
+            <div className="flex items-center justify-between mb-1">
+              <MessageSquare className="h-4 w-4 text-blue-400" />
+            </div>
+            <p className="text-xl font-bold text-white">{stats?.total || 0}</p>
+            <p className="text-slate-500 text-[10px]">Total Messages</p>
           </div>
           
-          <div className="flex items-center gap-6">
-            <div className="text-right hidden sm:block">
-              <p className="text-sm text-white/70">Confirmations</p>
-              <p className="text-lg font-semibold text-white">{stats?.by_type?.confirmation || 0}</p>
+          <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-3">
+            <div className="flex items-center justify-between mb-1">
+              <CheckCircle2 className="h-4 w-4 text-blue-400" />
             </div>
-            <div className="h-8 w-px bg-white/20 hidden sm:block" />
-            <div className="text-right hidden sm:block">
-              <p className="text-sm text-white/70">Reminders</p>
-              <p className="text-lg font-semibold text-white">{stats?.by_type?.reminder || 0}</p>
+            <p className="text-xl font-bold text-white">{stats?.by_type?.confirmation || 0}</p>
+            <p className="text-slate-500 text-[10px]">Confirmations</p>
+          </div>
+          
+          <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-3">
+            <div className="flex items-center justify-between mb-1">
+              <Bell className="h-4 w-4 text-blue-400" />
             </div>
-            <div className="h-8 w-px bg-white/20 hidden sm:block" />
-            <div className="text-right">
-              <p className="text-sm text-white/70">Success Rate</p>
-              <p className="text-lg font-semibold text-white">{successRate}%</p>
+            <p className="text-xl font-bold text-white">{stats?.by_type?.reminder || 0}</p>
+            <p className="text-slate-500 text-[10px]">Reminders</p>
+          </div>
+          
+          <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-3">
+            <div className="flex items-center justify-between mb-1">
+              <Send className="h-4 w-4 text-blue-400" />
             </div>
+            <p className="text-xl font-bold text-white">{successRate}%</p>
+            <p className="text-slate-500 text-[10px]">Success Rate</p>
           </div>
         </div>
       </div>
@@ -358,7 +379,7 @@ export default function SmsLogs() {
                       {selectedSms.created_at ? formatDistanceToNow(new Date(selectedSms.created_at), { addSuffix: true }) : '-'}
                     </p>
                   </div>
-                  <div className="bg-gradient-to-br from-amber-dark to-amber rounded-lg p-2 sm:p-3 shadow-sm">
+                  <div className="bg-gradient-to-br from-slateblue-dark to-slateblue rounded-lg p-2 sm:p-3 shadow-sm">
                     <div className="flex items-center gap-1.5 sm:gap-2 text-white/70 text-[10px] sm:text-xs mb-0.5 sm:mb-1">
                       <ArrowUpFromLine className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                       Direction

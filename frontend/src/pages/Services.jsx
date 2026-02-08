@@ -28,10 +28,15 @@ export default function Services() {
 
   return (
     <div className="space-y-6">
-      {/* Page Header - With Teal Accent */}
-      <div className="bg-gradient-to-r from-teal-dark to-teal px-4 py-4 rounded-lg">
-        <h1 className="text-lg font-semibold text-white">Services</h1>
-        <p className="text-sm text-white/70">Manage your service offerings</p>
+      {/* Page Header - Dark Theme */}
+      <div className="bg-gradient-to-r from-slate-800 to-slate-900 -mx-4 sm:-mx-6 -mt-4 sm:-mt-6 px-4 sm:px-6 py-4">
+        <div className="flex items-center gap-3">
+          <Wrench className="h-5 w-5 text-blue-400" />
+          <div>
+            <h1 className="text-lg font-semibold text-white">Services</h1>
+            <p className="text-xs text-slate-400">Manage your service offerings</p>
+          </div>
+        </div>
       </div>
 
       {/* Categories Overview */}
@@ -41,7 +46,7 @@ export default function Services() {
             'from-teal-dark to-teal',
             'from-emerald-dark to-emerald',
             'from-teal-medium to-teal-light',
-            'from-amber-dark to-amber',
+            'from-slateblue-dark to-slateblue',
           ]
           return (
             <div key={cat.id} className={`bg-gradient-to-br ${gradients[index % 4]} p-4 rounded-lg shadow-sm`}>
