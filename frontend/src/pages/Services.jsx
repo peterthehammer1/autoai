@@ -28,16 +28,28 @@ export default function Services() {
 
   return (
     <div className="space-y-6">
+      {/* Page Header - With Teal Accent */}
+      <div className="bg-gradient-to-r from-teal-dark to-teal px-4 py-4 rounded-lg">
+        <h1 className="text-lg font-semibold text-white">Services</h1>
+        <p className="text-sm text-white/70">Manage your service offerings</p>
+      </div>
+
       {/* Categories Overview */}
       <div className="grid gap-4 md:grid-cols-4">
-        {categories?.categories?.slice(0, 4).map((cat) => (
-          <Card key={cat.id}>
-            <CardContent className="p-4">
-              <p className="font-medium">{cat.name}</p>
-              <p className="text-sm text-muted-foreground">{cat.description}</p>
-            </CardContent>
-          </Card>
-        ))}
+        {categories?.categories?.slice(0, 4).map((cat, index) => {
+          const gradients = [
+            'from-teal-dark to-teal',
+            'from-emerald-dark to-emerald',
+            'from-teal-medium to-teal-light',
+            'from-amber-dark to-amber',
+          ]
+          return (
+            <div key={cat.id} className={`bg-gradient-to-br ${gradients[index % 4]} p-4 rounded-lg shadow-sm`}>
+              <p className="font-medium text-white">{cat.name}</p>
+              <p className="text-sm text-white/70">{cat.description}</p>
+            </div>
+          )
+        })}
       </div>
 
       {/* Services Table */}

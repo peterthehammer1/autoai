@@ -143,11 +143,13 @@ export default function Appointments() {
 
   return (
     <div className="space-y-4">
-      {/* Page Header - Professional */}
-      <div className="flex items-center justify-between pb-2">
-        <div>
-          <h1 className="text-lg font-semibold text-slate-800">Appointments</h1>
-          <p className="text-sm text-slate-500">Manage scheduled appointments</p>
+      {/* Page Header - With Teal Accent */}
+      <div className="bg-gradient-to-r from-teal-dark to-teal px-4 py-4 rounded-lg">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-lg font-semibold text-white">Appointments</h1>
+            <p className="text-sm text-white/70">Manage scheduled appointments</p>
+          </div>
         </div>
       </div>
 
@@ -195,8 +197,8 @@ export default function Appointments() {
                 {/* Date Header */}
                 <div className="flex items-center gap-3">
                   <div className={cn(
-                    "flex h-10 w-10 flex-col items-center justify-center rounded bg-slate-100",
-                    isToday(parseISO(date)) ? "bg-slate-700 text-white" : "text-slate-600"
+                    "flex h-10 w-10 flex-col items-center justify-center rounded-lg",
+                    isToday(parseISO(date)) ? "bg-gradient-to-br from-teal-dark to-teal text-white" : "bg-slate-100 text-slate-600"
                   )}>
                     <span className="text-[10px] font-medium uppercase">
                       {format(parseISO(date), 'MMM')}
@@ -473,8 +475,8 @@ export default function Appointments() {
           {/* Date Header */}
           <div className="flex items-center gap-3">
             <div className={cn(
-              "flex h-10 w-10 flex-col items-center justify-center rounded bg-slate-100",
-              isToday(new Date(dateFilter)) ? "bg-slate-700 text-white" : "text-slate-600"
+              "flex h-10 w-10 flex-col items-center justify-center rounded-lg",
+              isToday(new Date(dateFilter)) ? "bg-gradient-to-br from-teal-dark to-teal text-white" : "bg-slate-100 text-slate-600"
             )}>
               <span className="text-[10px] font-medium uppercase">
                 {format(new Date(dateFilter), 'MMM')}

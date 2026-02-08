@@ -355,37 +355,45 @@ export default function Dashboard() {
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Welcome Header - Professional */}
-      <div className="bg-white border-b border-slate-200 -mx-4 sm:-mx-6 -mt-4 sm:-mt-6 px-4 sm:px-6 py-4">
+      {/* Welcome Header - With Teal Accent */}
+      <div className="bg-gradient-to-r from-teal-dark to-teal -mx-4 sm:-mx-6 -mt-4 sm:-mt-6 px-4 sm:px-6 py-4 rounded-b-lg">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-lg font-semibold text-slate-800">{greeting.text}</h1>
-            <p className="text-sm text-slate-500">
+            <h1 className="text-lg font-semibold text-white">{greeting.text}</h1>
+            <p className="text-sm text-white/70">
               {format(new Date(), 'EEEE, MMMM d, yyyy')} • {todayData?.summary?.total || 0} appointments today
             </p>
           </div>
           <div className="flex items-center gap-2 text-sm">
-            <span className="flex h-2 w-2 rounded-full bg-green-500" />
-            <span className="text-slate-600">AI Agent Online</span>
+            <span className="flex h-2 w-2 rounded-full bg-emerald-light animate-pulse" />
+            <span className="text-white/80">AI Agent Online</span>
           </div>
         </div>
       </div>
 
-      {/* Stats Grid - Conservative */}
+      {/* Stats Grid - Colorful */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        {stats.map((stat, index) => (
-          <div
-            key={stat.name}
-            className="bg-white border border-slate-200 p-4"
-          >
-            <div className="flex items-center justify-between mb-2">
-              <stat.icon className="h-4 w-4 text-slate-400" />
-              <span className="text-xs text-green-600">{stat.change}</span>
+        {stats.map((stat, index) => {
+          const gradients = [
+            'from-teal-dark to-teal',
+            'from-emerald-dark to-emerald',
+            'from-teal-medium to-teal-light',
+            'from-amber-dark to-amber',
+          ]
+          return (
+            <div
+              key={stat.name}
+              className={`bg-gradient-to-br ${gradients[index]} p-4 rounded-lg shadow-sm`}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <stat.icon className="h-4 w-4 text-white/70" />
+                <span className="text-xs text-white/80 bg-white/20 px-1.5 py-0.5 rounded">{stat.change}</span>
+              </div>
+              <p className="text-xl font-semibold text-white">{stat.value}</p>
+              <p className="text-sm text-white/70">{stat.name}</p>
             </div>
-            <p className="text-xl font-semibold text-slate-800">{stat.value}</p>
-            <p className="text-sm text-slate-500">{stat.name}</p>
-          </div>
-        ))}
+          )
+        })}
       </div>
 
       {/* Sentiment Chart - Hidden on mobile, shown on desktop */}
