@@ -136,28 +136,28 @@ export default function SmsLogs() {
 
   return (
     <div className="h-[calc(100vh-6rem)] flex flex-col">
-      {/* Page Header - Professional */}
-      <div className="bg-white border-b border-slate-200 px-4 py-3 mb-4">
+      {/* Page Header - With Teal Accent */}
+      <div className="bg-gradient-to-r from-[#082438] to-[#0a3a54] px-4 py-4 mb-4 rounded-lg mx-4 mt-2">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-lg font-semibold text-slate-800">SMS Messages</h1>
-            <p className="text-sm text-slate-500">{stats?.total || 0} messages this week</p>
+            <h1 className="text-lg font-semibold text-white">SMS Messages</h1>
+            <p className="text-sm text-white/70">{stats?.total || 0} messages this week</p>
           </div>
           
           <div className="flex items-center gap-6">
             <div className="text-right hidden sm:block">
-              <p className="text-sm text-slate-500">Confirmations</p>
-              <p className="text-lg font-semibold text-slate-800">{stats?.by_type?.confirmation || 0}</p>
+              <p className="text-sm text-white/70">Confirmations</p>
+              <p className="text-lg font-semibold text-white">{stats?.by_type?.confirmation || 0}</p>
             </div>
-            <div className="h-8 w-px bg-slate-200 hidden sm:block" />
+            <div className="h-8 w-px bg-white/20 hidden sm:block" />
             <div className="text-right hidden sm:block">
-              <p className="text-sm text-slate-500">Reminders</p>
-              <p className="text-lg font-semibold text-slate-800">{stats?.by_type?.reminder || 0}</p>
+              <p className="text-sm text-white/70">Reminders</p>
+              <p className="text-lg font-semibold text-white">{stats?.by_type?.reminder || 0}</p>
             </div>
-            <div className="h-8 w-px bg-slate-200 hidden sm:block" />
+            <div className="h-8 w-px bg-white/20 hidden sm:block" />
             <div className="text-right">
-              <p className="text-sm text-slate-500">Success Rate</p>
-              <p className="text-lg font-semibold text-slate-800">{successRate}%</p>
+              <p className="text-sm text-white/70">Success Rate</p>
+              <p className="text-lg font-semibold text-white">{successRate}%</p>
             </div>
           </div>
         </div>
@@ -220,7 +220,7 @@ export default function SmsLogs() {
                       onClick={() => setSelectedSmsId(sms.id)}
                       className={cn(
                         "w-full p-3 text-left hover:bg-slate-50 transition-colors",
-                        selectedSmsId === sms.id && "bg-slate-100 border-l-2 border-l-slate-600"
+                        selectedSmsId === sms.id && "bg-[#082438]/5 border-l-2 border-l-[#082438]"
                       )}
                     >
                       <div className="flex items-start gap-3">
