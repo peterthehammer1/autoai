@@ -141,58 +141,14 @@ export default function Appointments() {
     return format(date, 'EEEE, MMMM d')
   }
 
-  // Calculate stats from upcoming data
-  const totalUpcoming = upcomingData?.appointments?.length || 0
-  const todayCount = upcomingData?.by_date?.[format(new Date(), 'yyyy-MM-dd')]?.length || 0
-  const confirmedCount = upcomingData?.appointments?.filter(a => a.status === 'confirmed')?.length || 0
-  const scheduledCount = upcomingData?.appointments?.filter(a => a.status === 'scheduled')?.length || 0
-
   return (
     <div className="space-y-4">
-      {/* Page Header - Dark Theme with Stats */}
-      <div className="bg-gradient-to-r from-slate-800 to-slate-900 -mx-4 sm:-mx-6 -mt-4 sm:-mt-6 px-4 sm:px-6 py-4">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <Calendar className="h-5 w-5 text-teal-400" />
-            <div>
-              <h1 className="text-lg font-semibold text-white">Appointments</h1>
-              <p className="text-xs text-slate-400">Manage scheduled appointments</p>
-            </div>
-          </div>
-        </div>
-        
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
-          <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-3">
-            <div className="flex items-center justify-between mb-1">
-              <Calendar className="h-4 w-4 text-slate-400" />
-            </div>
-            <p className="text-xl font-bold text-white">{todayCount}</p>
-            <p className="text-slate-500 text-[10px]">Today</p>
-          </div>
-          
-          <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-3">
-            <div className="flex items-center justify-between mb-1">
-              <Clock className="h-4 w-4 text-slate-400" />
-            </div>
-            <p className="text-xl font-bold text-white">{totalUpcoming}</p>
-            <p className="text-slate-500 text-[10px]">Upcoming</p>
-          </div>
-          
-          <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-3">
-            <div className="flex items-center justify-between mb-1">
-              <User className="h-4 w-4 text-slate-400" />
-            </div>
-            <p className="text-xl font-bold text-white">{confirmedCount}</p>
-            <p className="text-slate-500 text-[10px]">Confirmed</p>
-          </div>
-          
-          <div className="bg-slate-800/60 border border-slate-700/50 rounded-lg p-3">
-            <div className="flex items-center justify-between mb-1">
-              <CalendarDays className="h-4 w-4 text-slate-400" />
-            </div>
-            <p className="text-xl font-bold text-white">{scheduledCount}</p>
-            <p className="text-slate-500 text-[10px]">Scheduled</p>
+      {/* Page Header - With Teal Accent */}
+      <div className="bg-gradient-to-r from-teal-dark to-teal px-4 py-4 rounded-lg">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-lg font-semibold text-white">Appointments</h1>
+            <p className="text-sm text-white/70">Manage scheduled appointments</p>
           </div>
         </div>
       </div>
@@ -267,7 +223,7 @@ export default function Appointments() {
                         key={apt.id}
                         to={`/appointments/${apt.id}`}
                         className={cn(
-                          "block p-3 hover:bg-teal-50/50 transition-colors",
+                          "block p-3 hover:bg-slate-100 transition-colors",
                           index % 2 === 1 && "bg-slate-50/50"
                         )}
                       >
@@ -448,7 +404,7 @@ export default function Appointments() {
                                 key={apt.id}
                                 to={`/appointments/${apt.id}`}
                                 className={cn(
-                                  "block p-3 hover:bg-teal-50/50 border-b border-slate-100 last:border-0",
+                                  "block p-3 hover:bg-slate-100 border-b border-slate-100 last:border-0",
                                   index % 2 === 1 && "bg-slate-50/70"
                                 )}
                               >
@@ -581,7 +537,7 @@ export default function Appointments() {
                       key={apt.id}
                       to={`/appointments/${apt.id}`}
                       className={cn(
-                        "block p-3 hover:bg-teal-50/50",
+                        "block p-3 hover:bg-slate-100",
                         index % 2 === 1 && "bg-slate-50/50"
                       )}
                     >
@@ -630,7 +586,7 @@ export default function Appointments() {
                   </TableHeader>
                   <TableBody>
                     {dateData.appointments.map((apt, index) => (
-                      <TableRow key={apt.id} className={cn("hover:bg-teal-50/50", index % 2 === 1 && "bg-slate-50/50")}>
+                      <TableRow key={apt.id} className={cn("hover:bg-slate-100", index % 2 === 1 && "bg-slate-50/50")}>
                         <TableCell className="font-mono text-sm text-slate-700">
                           {formatTime12Hour(apt.scheduled_time)}
                         </TableCell>
