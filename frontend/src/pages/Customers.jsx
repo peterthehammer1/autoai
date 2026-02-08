@@ -406,29 +406,29 @@ export default function Customers() {
 
                 {/* Quick Stats */}
                 <div className="grid grid-cols-4 gap-3 mt-4">
-                  <div className="text-center bg-white rounded-lg p-2 border border-slate-200">
-                    <p className="text-lg font-semibold text-teal-dark">
+                  <div className="text-center bg-gradient-to-br from-teal-dark to-teal rounded-lg p-2 shadow-sm">
+                    <p className="text-lg font-semibold text-white">
                       {healthData?.stats?.total_visits || selectedCustomer.total_visits || 0}
                     </p>
-                    <p className="text-xs text-slate-500">Visits</p>
+                    <p className="text-xs text-white/70">Visits</p>
                   </div>
-                  <div className="text-center bg-white rounded-lg p-2 border border-slate-200">
-                    <p className="text-lg font-semibold text-teal">
+                  <div className="text-center bg-gradient-to-br from-emerald-dark to-emerald rounded-lg p-2 shadow-sm">
+                    <p className="text-lg font-semibold text-white">
                       {healthData?.stats?.total_spend ? formatCents(healthData.stats.total_spend) : '$0'}
                     </p>
-                    <p className="text-xs text-slate-500">Total Spend</p>
+                    <p className="text-xs text-white/70">Total Spend</p>
                   </div>
-                  <div className="text-center bg-white rounded-lg p-2 border border-slate-200">
-                    <p className="text-lg font-semibold text-teal-medium">
+                  <div className="text-center bg-gradient-to-br from-teal-medium to-teal-light rounded-lg p-2 shadow-sm">
+                    <p className="text-lg font-semibold text-white">
                       {selectedCustomer.vehicles?.length || 0}
                     </p>
-                    <p className="text-xs text-slate-500">Vehicles</p>
+                    <p className="text-xs text-white/70">Vehicles</p>
                   </div>
-                  <div className="text-center bg-white rounded-lg p-2 border border-slate-200">
-                    <p className="text-lg font-semibold text-teal-light">
+                  <div className="text-center bg-gradient-to-br from-amber-dark to-amber rounded-lg p-2 shadow-sm">
+                    <p className="text-lg font-semibold text-white">
                       {healthData?.health_score || '-'}
                     </p>
-                    <p className="text-xs text-slate-500">Health Score</p>
+                    <p className="text-xs text-white/70">Health Score</p>
                   </div>
                 </div>
               </div>

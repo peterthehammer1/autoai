@@ -394,42 +394,39 @@ export default function CallLogs() {
 
                 {/* Quick Stats */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 mt-4 sm:mt-6">
-                  <div className="bg-white rounded-lg p-2 sm:p-3 border border-slate-200 shadow-sm">
-                    <div className="flex items-center gap-1.5 sm:gap-2 text-slate-500 text-[10px] sm:text-xs mb-0.5 sm:mb-1">
+                  <div className="bg-gradient-to-br from-teal-dark to-teal rounded-lg p-2 sm:p-3 shadow-sm">
+                    <div className="flex items-center gap-1.5 sm:gap-2 text-white/70 text-[10px] sm:text-xs mb-0.5 sm:mb-1">
                       <Clock className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                       Duration
                     </div>
-                    <p className="text-lg sm:text-xl font-bold text-slate-900">
+                    <p className="text-lg sm:text-xl font-bold text-white">
                       {formatDuration(selectedCall.duration_seconds)}
                     </p>
                   </div>
-                  <div className="bg-white rounded-lg p-2 sm:p-3 border border-slate-200 shadow-sm">
-                    <div className="flex items-center gap-1.5 sm:gap-2 text-slate-500 text-[10px] sm:text-xs mb-0.5 sm:mb-1">
+                  <div className="bg-gradient-to-br from-emerald-dark to-emerald rounded-lg p-2 sm:p-3 shadow-sm">
+                    <div className="flex items-center gap-1.5 sm:gap-2 text-white/70 text-[10px] sm:text-xs mb-0.5 sm:mb-1">
                       <TrendingUp className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                       Sentiment
                     </div>
-                    <div className="flex items-center gap-1 sm:gap-2">
-                      {getSentimentIcon(selectedCall.sentiment)}
-                      <span className="text-lg sm:text-xl font-bold text-slate-900 capitalize truncate">
-                        {selectedCall.sentiment || 'Neutral'}
-                      </span>
-                    </div>
+                    <p className="text-lg sm:text-xl font-bold text-white capitalize truncate">
+                      {selectedCall.sentiment || 'Neutral'}
+                    </p>
                   </div>
-                  <div className="bg-white rounded-lg p-2 sm:p-3 border border-slate-200 shadow-sm">
-                    <div className="flex items-center gap-1.5 sm:gap-2 text-slate-500 text-[10px] sm:text-xs mb-0.5 sm:mb-1">
+                  <div className="bg-gradient-to-br from-teal-medium to-teal-light rounded-lg p-2 sm:p-3 shadow-sm">
+                    <div className="flex items-center gap-1.5 sm:gap-2 text-white/70 text-[10px] sm:text-xs mb-0.5 sm:mb-1">
                       <Sparkles className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                       Intent
                     </div>
-                    <p className="text-lg sm:text-xl font-bold text-slate-900 capitalize truncate">
+                    <p className="text-lg sm:text-xl font-bold text-white capitalize truncate">
                       {selectedCall.intent_detected || 'Unknown'}
                     </p>
                   </div>
-                  <div className="bg-white rounded-lg p-2 sm:p-3 border border-slate-200 shadow-sm">
-                    <div className="flex items-center gap-1.5 sm:gap-2 text-slate-500 text-[10px] sm:text-xs mb-0.5 sm:mb-1">
+                  <div className="bg-gradient-to-br from-amber-dark to-amber rounded-lg p-2 sm:p-3 shadow-sm">
+                    <div className="flex items-center gap-1.5 sm:gap-2 text-white/70 text-[10px] sm:text-xs mb-0.5 sm:mb-1">
                       <PhoneIncoming className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                       Direction
                     </div>
-                    <p className="text-lg sm:text-xl font-bold text-slate-900 capitalize">
+                    <p className="text-lg sm:text-xl font-bold text-white capitalize">
                       {selectedCall.direction || 'Inbound'}
                     </p>
                   </div>

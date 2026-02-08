@@ -60,6 +60,16 @@ export default {
           medium: "#0d4a6a",
           light: "#105a80",
         },
+        amber: {
+          DEFAULT: "#f59e0b",
+          light: "#fbbf24",
+          dark: "#d97706",
+        },
+        emerald: {
+          DEFAULT: "#10b981",
+          light: "#34d399",
+          dark: "#059669",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
