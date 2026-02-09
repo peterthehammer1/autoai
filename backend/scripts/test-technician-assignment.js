@@ -67,40 +67,40 @@ const CUSTOMERS = [
 // Test appointments: 20 varied scenarios
 const TESTS = [
   // Quick service - different times on different days
-  { customer: 0, services: ['quick_service', 0], date: '2026-02-23', time: '08:00', desc: 'Oil change - Mon morning' },
-  { customer: 1, services: ['quick_service', 1], date: '2026-02-23', time: '09:30', desc: 'Tire rotation - Mon mid-morning' },
-  { customer: 2, services: ['quick_service', 2], date: '2026-02-24', time: '08:00', desc: 'Synthetic blend oil - Tue early' },
-  { customer: 3, services: ['quick_service', 3], date: '2026-02-24', time: '14:00', desc: 'Full synthetic oil - Tue afternoon' },
+  { customer: 0, services: ['quick_service', 0], date: '2026-03-02', time: '08:00', desc: 'Oil change - Mon morning' },
+  { customer: 1, services: ['quick_service', 1], date: '2026-03-02', time: '09:30', desc: 'Tire rotation - Mon mid-morning' },
+  { customer: 2, services: ['quick_service', 2], date: '2026-03-03', time: '08:00', desc: 'Synthetic blend oil - Tue early' },
+  { customer: 3, services: ['quick_service', 3], date: '2026-03-03', time: '14:00', desc: 'Full synthetic oil - Tue afternoon' },
 
   // Express lane
-  { customer: 4, services: ['express_lane', 0], date: '2026-02-25', time: '08:00', desc: 'Battery test - Wed morning' },
-  { customer: 5, services: ['express_lane', 1], date: '2026-02-25', time: '10:00', desc: 'Wiper blades - Wed mid-morning' },
-  { customer: 6, services: ['express_lane', 2], date: '2026-02-26', time: '09:00', desc: 'Battery replacement - Thu morning' },
+  { customer: 4, services: ['express_lane', 0], date: '2026-03-04', time: '08:00', desc: 'Battery test - Wed morning' },
+  { customer: 5, services: ['express_lane', 1], date: '2026-03-04', time: '10:00', desc: 'Wiper blades - Wed mid-morning' },
+  { customer: 6, services: ['express_lane', 2], date: '2026-03-05', time: '09:00', desc: 'Battery replacement - Thu morning' },
 
   // General service
-  { customer: 7, services: ['general_service', 0], date: '2026-02-23', time: '11:00', desc: 'Car wash - Mon late morning' },
-  { customer: 8, services: ['general_service', 1], date: '2026-02-26', time: '13:00', desc: 'Interior clean - Thu afternoon' },
-  { customer: 9, services: ['general_service', 2], date: '2026-02-27', time: '08:00', desc: 'Exterior detail - Fri morning' },
+  { customer: 7, services: ['general_service', 0], date: '2026-03-02', time: '11:00', desc: 'Car wash - Mon late morning' },
+  { customer: 8, services: ['general_service', 1], date: '2026-03-05', time: '13:00', desc: 'Interior clean - Thu afternoon' },
+  { customer: 9, services: ['general_service', 2], date: '2026-03-06', time: '08:00', desc: 'Exterior detail - Fri morning' },
 
   // Diagnostic - specialist bay
-  { customer: 0, services: ['diagnostic', 0], date: '2026-02-25', time: '11:00', desc: 'Check engine light - Wed' },
-  { customer: 1, services: ['diagnostic', 1], date: '2026-02-27', time: '10:00', desc: 'Pre-purchase inspection - Fri' },
+  { customer: 0, services: ['diagnostic', 0], date: '2026-03-04', time: '11:00', desc: 'Check engine light - Wed' },
+  { customer: 1, services: ['diagnostic', 1], date: '2026-03-06', time: '10:00', desc: 'Pre-purchase inspection - Fri' },
 
   // Alignment - specialist bay
-  { customer: 2, services: ['alignment', 0], date: '2026-02-24', time: '10:00', desc: 'Wheel alignment - Tue' },
-  { customer: 3, services: ['alignment', 0], date: '2026-02-26', time: '08:00', desc: 'Wheel alignment - Thu early' },
+  { customer: 2, services: ['alignment', 0], date: '2026-03-03', time: '10:00', desc: 'Wheel alignment - Tue' },
+  { customer: 3, services: ['alignment', 0], date: '2026-03-05', time: '08:00', desc: 'Wheel alignment - Thu early' },
 
   // Multi-service combos (same bay type)
-  { customer: 4, services: [['quick_service', 0], ['quick_service', 1]], date: '2026-02-27', time: '09:00', desc: 'Oil change + tire rotation combo - Fri' },
-  { customer: 5, services: [['express_lane', 0], ['express_lane', 1]], date: '2026-02-23', time: '13:00', desc: 'Battery test + wipers combo - Mon' },
+  { customer: 4, services: [['quick_service', 0], ['quick_service', 1]], date: '2026-03-06', time: '09:00', desc: 'Oil change + tire rotation combo - Fri' },
+  { customer: 5, services: [['express_lane', 0], ['express_lane', 1]], date: '2026-03-02', time: '13:00', desc: 'Battery test + wipers combo - Mon' },
 
   // Same time slot different days (test tech availability spread)
-  { customer: 6, services: ['quick_service', 0], date: '2026-02-27', time: '08:00', desc: 'Oil change - Fri 8am (parallel)' },
-  { customer: 7, services: ['quick_service', 1], date: '2026-02-27', time: '08:00', desc: 'Tire rotation - Fri 8am (parallel)' },
+  { customer: 6, services: ['quick_service', 0], date: '2026-03-06', time: '08:00', desc: 'Oil change - Fri 8am (parallel)' },
+  { customer: 7, services: ['quick_service', 1], date: '2026-03-06', time: '08:00', desc: 'Tire rotation - Fri 8am (parallel)' },
 
   // Late afternoon slots
-  { customer: 8, services: ['general_service', 0], date: '2026-02-24', time: '15:00', desc: 'Car wash - Tue 3pm' },
-  { customer: 9, services: ['express_lane', 2], date: '2026-02-25', time: '15:00', desc: 'Battery replace - Wed 3pm' },
+  { customer: 8, services: ['general_service', 0], date: '2026-03-03', time: '15:00', desc: 'Car wash - Tue 3pm' },
+  { customer: 9, services: ['express_lane', 2], date: '2026-03-04', time: '15:00', desc: 'Battery replace - Wed 3pm' },
 ];
 
 function resolveServices(spec) {

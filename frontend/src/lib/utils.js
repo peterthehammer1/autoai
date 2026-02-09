@@ -26,13 +26,13 @@ export function formatCurrency(dollars) {
   }).format(dollars)
 }
 
-// Format cent amounts (for appointment totals stored as cents)
-export function formatCents(cents) {
-  if (cents === null || cents === undefined) return '-'
+// Format price amounts (stored as dollars in DB)
+export function formatCents(amount) {
+  if (amount === null || amount === undefined) return '-'
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
-  }).format(cents / 100)
+  }).format(amount)
 }
 
 export function formatDuration(minutes) {
