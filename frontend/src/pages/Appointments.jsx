@@ -800,6 +800,7 @@ export default function Appointments() {
                       <TableHead className="text-xs font-medium text-slate-600">Customer</TableHead>
                       <TableHead className="text-xs font-medium text-slate-600">Vehicle</TableHead>
                       <TableHead className="text-xs font-medium text-slate-600">Services</TableHead>
+                      <TableHead className="text-xs font-medium text-slate-600">Technician</TableHead>
                       <TableHead className="w-24 text-xs font-medium text-slate-600">Duration</TableHead>
                       <TableHead className="w-28 text-xs font-medium text-slate-600">Status</TableHead>
                       <TableHead className="w-20"></TableHead>
@@ -832,6 +833,18 @@ export default function Appointments() {
                           <div className="max-w-xs truncate text-sm text-slate-600">
                             {apt.appointment_services?.map((s) => s.service_name).join(', ')}
                           </div>
+                        </TableCell>
+                        <TableCell>
+                          {apt.technician ? (
+                            <div>
+                              <p className="text-sm text-slate-700">{apt.technician.first_name} {apt.technician.last_name}</p>
+                              {apt.technician.skill_level && (
+                                <p className="text-xs text-slate-400 capitalize">{apt.technician.skill_level}</p>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-slate-400">-</span>
+                          )}
                         </TableCell>
                         <TableCell>
                           <span className="text-sm text-slate-700">

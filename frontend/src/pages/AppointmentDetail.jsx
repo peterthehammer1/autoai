@@ -293,6 +293,15 @@ export default function AppointmentDetail() {
                 <p className="text-xs text-slate-500">Bay</p>
                 <p className="text-sm text-slate-800">{apt.bay?.name || '-'}</p>
               </div>
+              <div>
+                <p className="text-xs text-slate-500">Technician</p>
+                <p className="text-sm text-slate-800">
+                  {apt.technician ? `${apt.technician.first_name} ${apt.technician.last_name}` : '-'}
+                </p>
+                {apt.technician?.skill_level && (
+                  <p className="text-xs text-slate-500 capitalize">{apt.technician.skill_level}</p>
+                )}
+              </div>
             </div>
             {(apt.loaner_requested || apt.shuttle_requested || apt.waiter) && (
               <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-100">
