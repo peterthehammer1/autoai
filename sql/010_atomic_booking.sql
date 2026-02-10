@@ -24,14 +24,22 @@ BEGIN
         v_slot_times := array_append(v_slot_times, p_start_time + (v_i * INTERVAL '30 minutes'));
     END LOOP;
 
-    -- Lock and count available slots (FOR UPDATE prevents concurrent booking)
-    SELECT COUNT(*) INTO v_available_count
+    -- Lock matching rows first (FOR UPDATE prevents concurrent booking),
+    -- then count them separately (FOR UPDATE can't be used with aggregates)
+    PERFORM id
     FROM time_slots
     WHERE bay_id = p_bay_id
       AND slot_date = p_date
       AND start_time = ANY(v_slot_times)
       AND is_available = true
     FOR UPDATE;
+
+    SELECT COUNT(*) INTO v_available_count
+    FROM time_slots
+    WHERE bay_id = p_bay_id
+      AND slot_date = p_date
+      AND start_time = ANY(v_slot_times)
+      AND is_available = true;
 
     IF v_available_count < v_slots_needed THEN
         RETURN jsonb_build_object('success', false, 'error', 'slots_unavailable',
