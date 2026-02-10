@@ -490,7 +490,24 @@ router.post('/get_services', async (req, res, next) => {
       'brake caliper': 'Brake Caliper',
       'caliper': 'Brake Caliper',
       'abs': 'ABS',
-      'abs sensor': 'ABS'
+      'abs sensor': 'ABS',
+      'brakes': 'Brake',
+      'brake': 'Brake',
+      'brake pads': 'Brake Pad',
+      'brake pads and rotors': 'Brake Pads & Rotors',
+      'pads and rotors': 'Brake Pads & Rotors',
+      'brake job': 'Complete Brake Service',
+      'complete brake': 'Complete Brake Service',
+      'full brake': 'Complete Brake Service',
+      'all brakes': 'Complete Brake Service',
+      'four wheel brake': 'Complete Brake Service',
+      'detail': 'Detail',
+      'detailing': 'Detail',
+      'car wash': 'Car Wash',
+      'wash': 'Car Wash',
+      'interior clean': 'Interior',
+      'oil change': 'Oil Change',
+      'oil': 'Oil Change',
     };
 
     // Apply synonym mapping
@@ -537,6 +554,22 @@ router.post('/get_services', async (req, res, next) => {
     }
 
     let { data: services, error } = await query.order('is_popular', { ascending: false }).limit(15);
+
+    // Fallback: if no results with full phrase, try splitting into individual words
+    if ((!services || services.length === 0) && normalizedSearch && normalizedSearch.includes(' ')) {
+      const words = normalizedSearch.split(/\s+/).filter(w => w.length > 2);
+      if (words.length > 1) {
+        const wordFilters = words.map(w => `name.ilike.%${w}%`).join(',');
+        const { data: wordServices } = await supabase
+          .from('services')
+          .select('id, name, description, duration_minutes, price_min, price_display, is_popular, mileage_interval, category:service_categories(name)')
+          .eq('is_active', true)
+          .or(wordFilters)
+          .order('is_popular', { ascending: false })
+          .limit(15);
+        if (wordServices?.length) services = wordServices;
+      }
+    }
 
     if (error) throw error;
 
