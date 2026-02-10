@@ -1190,7 +1190,7 @@ router.post('/book_appointment', async (req, res, next) => {
       });
     }
 
-    // 4. Find available bay (matching most specialized required bay type)
+    // 4. Find available bay with enough consecutive slots for full appointment
     const bookingBayType = getBestBayType(services);
     const { data: compatibleBays } = await supabase
       .from('service_bays')
@@ -1199,18 +1199,35 @@ router.post('/book_appointment', async (req, res, next) => {
       .eq('bay_type', bookingBayType);
 
     const compatibleBayIds = compatibleBays?.map(b => b.id) || [];
+    const slotsNeeded = Math.ceil(totalDuration / 30);
 
-    const { data: availableSlot } = compatibleBayIds.length > 0
-      ? await supabase
-        .from('time_slots')
-        .select('bay_id')
-        .eq('slot_date', appointment_date)
-        .eq('start_time', `${appointment_time}:00`)
-        .eq('is_available', true)
-        .in('bay_id', compatibleBayIds)
-        .limit(1)
-        .single()
-      : { data: null };
+    // Calculate all required slot times
+    const [bookH, bookM] = appointment_time.split(':').map(Number);
+    let bookMins = bookH * 60 + bookM;
+    const requiredSlotTimes = [];
+    for (let i = 0; i < slotsNeeded; i++) {
+      requiredSlotTimes.push(`${String(Math.floor(bookMins / 60)).padStart(2, '0')}:${String(bookMins % 60).padStart(2, '0')}:00`);
+      bookMins += 30;
+    }
+
+    // Find a bay that has ALL required consecutive slots available
+    let availableSlot = null;
+    if (compatibleBayIds.length > 0) {
+      for (const bayId of compatibleBayIds) {
+        const { data: baySlots } = await supabase
+          .from('time_slots')
+          .select('start_time')
+          .eq('slot_date', appointment_date)
+          .eq('bay_id', bayId)
+          .eq('is_available', true)
+          .in('start_time', requiredSlotTimes);
+
+        if (baySlots && baySlots.length === slotsNeeded) {
+          availableSlot = { bay_id: bayId };
+          break;
+        }
+      }
+    }
 
     if (!availableSlot) {
       return res.json({
