@@ -55,6 +55,7 @@ export default function Layout() {
       >
         <div
           className="fixed inset-0 bg-slate-900/50"
+          role="presentation"
           onClick={() => setSidebarOpen(false)}
         />
         
@@ -72,16 +73,18 @@ export default function Layout() {
               size="icon"
               className="h-8 w-8 text-slate-400 hover:text-white hover:bg-slate-800"
               onClick={() => setSidebarOpen(false)}
+              aria-label="Close menu"
             >
               <X className="h-4 w-4" />
             </Button>
           </div>
-          <nav className="flex flex-col gap-0.5 p-3 flex-1">
+          <nav className="flex flex-col gap-0.5 p-3 flex-1" aria-label="Main navigation">
             {navigation.map((item) => (
               <Link
                 key={item.name}
                 to={item.href}
                 onClick={() => setSidebarOpen(false)}
+                aria-current={isActive(item.href) ? 'page' : undefined}
                 className={cn(
                   'group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
                   isActive(item.href)
@@ -89,7 +92,7 @@ export default function Layout() {
                     : 'text-slate-300 hover:bg-slate-800 hover:text-white'
                 )}
               >
-                <item.icon className="h-5 w-5" />
+                <item.icon className="h-5 w-5" aria-hidden="true" />
                 {item.name}
               </Link>
             ))}
@@ -104,7 +107,7 @@ export default function Layout() {
                 className="flex items-center gap-3 rounded-lg bg-primary/10 border border-primary/20 p-2.5"
               >
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-                  <PhoneCall className="h-3.5 w-3.5 text-white" />
+                  <PhoneCall className="h-3.5 w-3.5 text-white" aria-hidden="true" />
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-white">{num.phone}</p>
@@ -142,7 +145,7 @@ export default function Layout() {
           </div>
           
           {/* Navigation */}
-          <nav className="flex flex-col gap-0.5 p-3 flex-1">
+          <nav className="flex flex-col gap-0.5 p-3 flex-1" aria-label="Main navigation">
             <p className="px-3 py-2 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
               Main
             </p>
@@ -150,6 +153,7 @@ export default function Layout() {
               <Link
                 key={item.name}
                 to={item.href}
+                aria-current={isActive(item.href) ? 'page' : undefined}
                 className={cn(
                   'group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
                   isActive(item.href)
@@ -157,10 +161,10 @@ export default function Layout() {
                     : 'text-slate-300 hover:bg-slate-800 hover:text-white'
                 )}
               >
-                <item.icon className="h-[18px] w-[18px]" />
+                <item.icon className="h-[18px] w-[18px]" aria-hidden="true" />
                 {item.name}
                 {isActive(item.href) && (
-                  <ChevronRight className="h-4 w-4 ml-auto opacity-60" />
+                  <ChevronRight className="h-4 w-4 ml-auto opacity-60" aria-hidden="true" />
                 )}
               </Link>
             ))}
@@ -176,7 +180,7 @@ export default function Layout() {
                 className="flex items-center gap-3 rounded-lg bg-primary/10 border border-primary/20 p-2.5 hover:bg-primary/20 transition-colors group"
               >
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-                  <PhoneCall className="h-3.5 w-3.5 text-white" />
+                  <PhoneCall className="h-3.5 w-3.5 text-white" aria-hidden="true" />
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-white">{num.phone}</p>
@@ -188,7 +192,7 @@ export default function Layout() {
             {/* AI Status */}
             <div className="rounded-lg bg-slate-800 p-3">
               <div className="flex items-center gap-2 mb-1.5">
-                <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse" aria-hidden="true" />
                 <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">AI Active</span>
               </div>
               <p className="text-sm font-medium text-white">Voice Agent Online</p>
@@ -222,13 +226,14 @@ export default function Layout() {
             size="icon"
             className="h-9 w-9 bg-white/90 backdrop-blur shadow-md border border-slate-200"
             onClick={() => setSidebarOpen(true)}
+            aria-label="Open menu"
           >
             <Menu className="h-5 w-5 text-slate-600" />
           </Button>
         </div>
 
         {/* Page content */}
-        <main className="px-4 sm:px-6 pb-4 sm:pb-6">
+        <main id="main-content" className="px-4 sm:px-6 pb-4 sm:pb-6" role="main">
           <Outlet />
         </main>
       </div>

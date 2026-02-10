@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { supabase, normalizePhone, formatPhone } from '../config/database.js';
+import { isValidPhone, isValidEmail, validationError } from '../middleware/validate.js';
 
 const router = Router();
 
@@ -139,9 +140,13 @@ router.post('/', async (req, res, next) => {
     const { phone, email, first_name, last_name, preferred_contact } = req.body;
     
     if (!phone) {
-      return res.status(400).json({ 
-        error: { message: 'Phone number is required' } 
-      });
+      return validationError(res, 'Phone number is required');
+    }
+    if (!isValidPhone(phone)) {
+      return validationError(res, 'Invalid phone number format');
+    }
+    if (email && !isValidEmail(email)) {
+      return validationError(res, 'Invalid email format');
     }
 
     const { data: customer, error } = await supabase
@@ -221,6 +226,13 @@ router.patch('/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
     const { first_name, last_name, email, phone, preferred_contact, notes } = req.body;
+
+    if (phone !== undefined && !isValidPhone(phone)) {
+      return validationError(res, 'Invalid phone number format');
+    }
+    if (email !== undefined && email !== null && email !== '' && !isValidEmail(email)) {
+      return validationError(res, 'Invalid email format');
+    }
 
     const updates = {};
     if (first_name !== undefined) updates.first_name = first_name;

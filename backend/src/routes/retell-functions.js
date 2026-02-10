@@ -1329,22 +1329,26 @@ router.post('/book_appointment', async (req, res, next) => {
         .eq('retell_call_id', call_id);
     }
 
-    // 7. Mark slots as booked
-    const slotTimes = [];
-    const [h, m] = appointment_time.split(':').map(Number);
-    let mins = h * 60 + m;
+    // 7. Atomically book slots (prevents double-booking race condition)
+    const { data: bookingResult, error: rpcError } = await supabase
+      .rpc('book_appointment_slots', {
+        p_bay_id: availableSlot.bay_id,
+        p_date: appointment_date,
+        p_start_time: appointment_time,
+        p_duration_minutes: totalDuration,
+        p_appointment_id: appointment.id
+      });
 
-    for (let i = 0; i < slotsNeeded; i++) {
-      slotTimes.push(`${String(Math.floor(mins / 60)).padStart(2, '0')}:${String(mins % 60).padStart(2, '0')}:00`);
-      mins += 30;
+    if (rpcError || !bookingResult?.success) {
+      console.error('Atomic booking failed:', rpcError || bookingResult);
+      await supabase.from('appointments').delete().eq('id', appointment.id);
+      await supabase.from('appointment_services').delete().eq('appointment_id', appointment.id);
+      return res.json({
+        success: false,
+        booked: false,
+        message: 'That time just got taken. Let me check what else is available for you.'
+      });
     }
-
-    await supabase
-      .from('time_slots')
-      .update({ is_available: false, appointment_id: appointment.id })
-      .eq('slot_date', appointment_date)
-      .eq('bay_id', availableSlot.bay_id)
-      .in('start_time', slotTimes);
 
     // 8. Format response
     const date = parseISO(appointment_date);
@@ -1590,11 +1594,8 @@ router.post('/modify_appointment', async (req, res, next) => {
     }
 
     if (action === 'cancel') {
-      // Free up slots
-      await supabase
-        .from('time_slots')
-        .update({ is_available: true, appointment_id: null })
-        .eq('appointment_id', appointment_id);
+      // Free up slots atomically
+      await supabase.rpc('free_appointment_slots', { p_appointment_id: appointment_id });
 
       // Update status
       await supabase
@@ -1724,13 +1725,35 @@ router.post('/modify_appointment', async (req, res, next) => {
         });
       }
 
-      // Free old slots
-      await supabase
-        .from('time_slots')
-        .update({ is_available: true, appointment_id: null })
-        .eq('appointment_id', appointment_id);
+      // Free old slots atomically
+      await supabase.rpc('free_appointment_slots', { p_appointment_id: appointment_id });
 
-      // Update appointment
+      // Atomically book new slots (prevents double-booking race condition)
+      const { data: bookingResult, error: rpcError } = await supabase
+        .rpc('book_appointment_slots', {
+          p_bay_id: slot.bay_id,
+          p_date: new_date,
+          p_start_time: new_time,
+          p_duration_minutes: appointment.estimated_duration_minutes,
+          p_appointment_id: appointment_id
+        });
+
+      if (rpcError || !bookingResult?.success) {
+        // Re-book old slots since reschedule failed
+        await supabase.rpc('book_appointment_slots', {
+          p_bay_id: appointment.bay_id,
+          p_date: appointment.scheduled_date,
+          p_start_time: appointment.scheduled_time,
+          p_duration_minutes: appointment.estimated_duration_minutes,
+          p_appointment_id: appointment_id
+        });
+        return res.json({
+          success: false,
+          message: 'That time just got taken. Would you like me to check for other options?'
+        });
+      }
+
+      // Update appointment record
       await supabase
         .from('appointments')
         .update({
@@ -1739,24 +1762,6 @@ router.post('/modify_appointment', async (req, res, next) => {
           bay_id: slot.bay_id
         })
         .eq('id', appointment_id);
-
-      // Book new slots
-      const slotsNeeded = Math.ceil(appointment.estimated_duration_minutes / 30);
-      const slotTimes = [];
-      const [h, m] = new_time.split(':').map(Number);
-      let mins = h * 60 + m;
-
-      for (let i = 0; i < slotsNeeded; i++) {
-        slotTimes.push(`${String(Math.floor(mins / 60)).padStart(2, '0')}:${String(mins % 60).padStart(2, '0')}:00`);
-        mins += 30;
-      }
-
-      await supabase
-        .from('time_slots')
-        .update({ is_available: false, appointment_id })
-        .eq('slot_date', new_date)
-        .eq('bay_id', slot.bay_id)
-        .in('start_time', slotTimes);
 
       // Send updated confirmation SMS (async, don't block response)
       const { data: aptForSms } = await supabase

@@ -216,6 +216,8 @@ When a requested day has no availability:
 
 ## Functions
 
+If any function returns an error or times out, refer to the error handling knowledge base for how to respond naturally.
+
 ### lookup_customer
 Start of call - returns customer info, vehicles, **upcoming appointments**, **service history**, and **intelligence alerts**. Check these fields to be proactive about duplicate bookings and service timing.
 

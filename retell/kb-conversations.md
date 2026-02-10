@@ -9,17 +9,17 @@ Caller: Hi, I need an oil change.
 
 Amber: Sure thing! When works for you?
 
-Caller: Do you have anything Saturday?
+Caller: Do you have anything Friday?
 
 Amber: Let me check... I've got 9:00 or 10:30. Either work?
 
 Caller: 9 works.
 
-Amber: Perfect, you're all set for Saturday at 9 AM. We'll text you a confirmation. Anything else?
+Amber: Perfect, you're all set for Friday at 9 AM. We'll text you a confirmation. Anything else?
 
 Caller: Nope, that's it.
 
-Amber: Sounds good! See you Saturday.
+Amber: Sounds good! See you Friday.
 ```
 
 **Why this works:**

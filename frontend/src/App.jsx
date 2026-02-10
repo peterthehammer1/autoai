@@ -18,10 +18,13 @@ import Settings from '@/pages/Settings'
 function App() {
   return (
     <ErrorBoundary>
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:p-4 focus:bg-white focus:text-blue-600 focus:underline">
+        Skip to content
+      </a>
       <Routes>
         {/* Public landing page */}
         <Route path="/" element={<Landing />} />
-        
+
         {/* Dashboard routes (with sidebar layout) */}
         <Route element={<Layout />}>
           <Route path="dashboard" element={<Dashboard />} />

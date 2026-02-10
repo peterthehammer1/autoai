@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { supabase } from '../config/database.js';
 import { format, addDays, parseISO, isAfter, isBefore, setHours, setMinutes } from 'date-fns';
 import { formatInTimeZone, toZonedTime } from 'date-fns-tz';
+import { isValidDate, isValidUUID, validationError } from '../middleware/validate.js';
 
 const router = Router();
 const TIMEZONE = process.env.TIMEZONE || 'America/Toronto';
@@ -25,12 +26,16 @@ router.get('/check', async (req, res, next) => {
     } = req.query;
 
     if (!service_ids) {
-      return res.status(400).json({ 
-        error: { message: 'service_ids is required' } 
-      });
+      return validationError(res, 'service_ids is required');
     }
 
     const serviceIdList = service_ids.split(',').map(id => id.trim());
+    if (!serviceIdList.every(id => isValidUUID(id))) {
+      return validationError(res, 'service_ids must be valid UUIDs');
+    }
+    if (date && !isValidDate(date)) {
+      return validationError(res, 'Invalid date format. Use YYYY-MM-DD');
+    }
 
     // Get services to determine total duration and required bay types
     const { data: services, error: serviceError } = await supabase

@@ -283,18 +283,20 @@ export default function Dashboard() {
       <>
         <CardHeader className="pb-2 bg-gradient-to-r from-slate-50 to-white border-b">
           <div className="flex items-center justify-between">
-            <button 
+            <button
               onClick={() => setCalendarMonth(subMonths(calendarMonth, 1))}
               className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors"
+              aria-label="Previous month"
             >
               <ChevronLeft className="h-4 w-4 text-slate-500" />
             </button>
             <span className="text-sm font-semibold text-slate-800">
               {format(calendarMonth, 'MMMM yyyy')}
             </span>
-            <button 
+            <button
               onClick={() => setCalendarMonth(addMonths(calendarMonth, 1))}
               className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors"
+              aria-label="Next month"
             >
               <ChevronRight className="h-4 w-4 text-slate-500" />
             </button>
@@ -303,8 +305,8 @@ export default function Dashboard() {
         <CardContent className="p-3">
           {/* Day headers */}
           <div className="grid grid-cols-7 mb-2">
-            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, i) => (
-              <div key={i} className="text-center text-[10px] font-semibold text-slate-400 py-1 uppercase tracking-wide">
+            {['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map((day, i) => (
+              <div key={i} className="text-center text-[10px] font-semibold text-slate-400 py-1 uppercase tracking-wide" aria-label={day}>
                 {day.charAt(0)}
               </div>
             ))}
@@ -325,10 +327,11 @@ export default function Dashboard() {
                 <Link
                   key={dateStr}
                   to={`/appointments?date=${dateStr}`}
+                  aria-label={`${format(day, 'MMMM d')}${count > 0 ? `, ${count} appointment${count > 1 ? 's' : ''}` : ''}`}
                   className={cn(
                     'aspect-square flex flex-col items-center justify-center text-xs rounded-lg transition-all relative',
-                    isCurrentDay 
-                      ? 'bg-gradient-to-br from-blue-600 to-blue-700 text-white font-semibold shadow-md shadow-blue-500/25' 
+                    isCurrentDay
+                      ? 'bg-gradient-to-br from-blue-600 to-blue-700 text-white font-semibold shadow-md shadow-blue-500/25'
                       : 'hover:bg-slate-100 text-slate-700',
                     count > 0 && !isCurrentDay && 'font-semibold bg-slate-50'
                   )}
@@ -365,7 +368,7 @@ export default function Dashboard() {
       <div className="bg-gradient-to-r from-slate-800 to-slate-900 -mx-4 sm:-mx-6 px-4 sm:px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <GreetingIcon className={cn("h-5 w-5", greeting.color)} />
+            <GreetingIcon className={cn("h-5 w-5", greeting.color)} aria-hidden="true" />
             <div>
               <h1 className="text-lg font-semibold text-white">{greeting.text}</h1>
               <p className="text-xs text-slate-400">{format(new Date(), 'EEEE, MMMM d, yyyy')}</p>
@@ -478,10 +481,13 @@ export default function Dashboard() {
                             </div>
                           )}
                         </div>
-                        <Badge className={cn(
-                          'shrink-0 text-xs font-semibold px-3 py-1 rounded-full',
-                          getStatusColor(apt.display_status || apt.status)
-                        )}>
+                        <Badge
+                          className={cn(
+                            'shrink-0 text-xs font-semibold px-3 py-1 rounded-full',
+                            getStatusColor(apt.display_status || apt.status)
+                          )}
+                          aria-label={`Status: ${(apt.display_status || apt.status).replace('_', ' ')}`}
+                        >
                           {(apt.display_status || apt.status).replace('_', ' ')}
                         </Badge>
                       </Link>
@@ -565,8 +571,8 @@ export default function Dashboard() {
                   <span className="text-sm text-slate-400">Conversion Rate</span>
                   <span className="text-lg font-bold text-blue-400">{overview?.week?.conversion_rate ?? 0}%</span>
                 </div>
-                <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                  <div 
+                <div className="h-2 bg-white/10 rounded-full overflow-hidden" role="progressbar" aria-valuenow={overview?.week?.conversion_rate ?? 0} aria-valuemin={0} aria-valuemax={100} aria-label="Conversion rate">
+                  <div
                     className="h-full bg-gradient-to-r from-blue-500 to-blue-400 rounded-full transition-all duration-1000"
                     style={{ width: `${Math.min(overview?.week?.conversion_rate ?? 0, 100)}%` }}
                   />

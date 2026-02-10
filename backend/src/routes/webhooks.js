@@ -21,8 +21,8 @@ function verifyRetellSignature(req) {
     return true;
   }
   if (!RETELL_API_KEY) {
-    console.warn('NUCLEUS_API_KEY / RETELL_API_KEY not set - skipping webhook verification');
-    return true; // Allow in development
+    console.error('NUCLEUS_API_KEY / RETELL_API_KEY not set - rejecting webhook');
+    return false;
   }
 
   const signature = req.headers['x-retell-signature'];

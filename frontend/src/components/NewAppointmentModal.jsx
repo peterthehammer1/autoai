@@ -282,7 +282,7 @@ export default function NewAppointmentModal({ open, onOpenChange, onSuccess }) {
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col" aria-label="New Appointment">
         <DialogHeader>
           <DialogTitle>New Appointment</DialogTitle>
           <DialogDescription>
@@ -348,7 +348,7 @@ export default function NewAppointmentModal({ open, onOpenChange, onSuccess }) {
                   onKeyDown={(e) => e.key === 'Enter' && handlePhoneSearch()}
                   className="flex-1"
                 />
-                <Button onClick={handlePhoneSearch} disabled={isSearching}>
+                <Button onClick={handlePhoneSearch} disabled={isSearching} aria-label="Search customer">
                   {isSearching ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
@@ -393,6 +393,7 @@ export default function NewAppointmentModal({ open, onOpenChange, onSuccess }) {
                       <Button
                         variant="ghost"
                         size="sm"
+                        aria-label="Clear selected customer"
                         onClick={() => {
                           setCustomer(null)
                           setPhoneSearch('')
@@ -424,6 +425,7 @@ export default function NewAppointmentModal({ open, onOpenChange, onSuccess }) {
                         </label>
                         <Input
                           placeholder="First name"
+                          aria-required="true"
                           value={newCustomerForm.first_name}
                           onChange={(e) =>
                             setNewCustomerForm((prev) => ({
@@ -454,6 +456,7 @@ export default function NewAppointmentModal({ open, onOpenChange, onSuccess }) {
                         </label>
                         <Input
                           placeholder="Phone number"
+                          aria-required="true"
                           value={newCustomerForm.phone}
                           onChange={(e) =>
                             setNewCustomerForm((prev) => ({
@@ -675,6 +678,7 @@ export default function NewAppointmentModal({ open, onOpenChange, onSuccess }) {
                     variant="ghost"
                     size="icon"
                     onClick={() => setServiceSearch('')}
+                    aria-label="Clear search"
                   >
                     <X className="h-4 w-4" />
                   </Button>
@@ -817,8 +821,8 @@ export default function NewAppointmentModal({ open, onOpenChange, onSuccess }) {
                   <span>Checking availability...</span>
                 </div>
               ) : !availabilityData?.available ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <AlertCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <div className="text-center py-8 text-muted-foreground" role="alert">
+                  <AlertCircle className="h-12 w-12 mx-auto mb-4 opacity-50" aria-hidden="true" />
                   <p>No availability found</p>
                   <p className="text-sm">
                     Try selecting different services or check back later

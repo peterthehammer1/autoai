@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { supabase, normalizePhone } from '../config/database.js';
 import { format, parseISO } from 'date-fns';
 import { assignTechnician, getRequiredSkillLevel, getBestBayType } from './retell-functions.js';
+import { isValidDate, isValidTime, isValidPhone, isValidUUID, isValidUUIDArray, isWeekday, isWithinBusinessHours, validationError } from '../middleware/validate.js';
 
 const router = Router();
 
@@ -44,11 +45,29 @@ router.post('/', async (req, res, next) => {
 
     // Validate required fields
     if (!customer_phone || !service_ids || !appointment_date || !appointment_time) {
-      return res.status(400).json({
-        error: { 
-          message: 'Missing required fields: customer_phone, service_ids, appointment_date, appointment_time' 
-        }
-      });
+      return validationError(res, 'Missing required fields: customer_phone, service_ids, appointment_date, appointment_time');
+    }
+    if (!isValidPhone(customer_phone)) {
+      return validationError(res, 'Invalid phone number format');
+    }
+    if (!isValidDate(appointment_date)) {
+      return validationError(res, 'Invalid date format. Use YYYY-MM-DD');
+    }
+    if (!isValidTime(appointment_time)) {
+      return validationError(res, 'Invalid time format. Use HH:MM');
+    }
+    if (!isWeekday(appointment_date)) {
+      return validationError(res, 'Appointments are only available Monday-Friday');
+    }
+    if (!isWithinBusinessHours(appointment_time)) {
+      return validationError(res, 'Appointments are only available 7:00 AM - 4:00 PM');
+    }
+    const serviceIdList = Array.isArray(service_ids) ? service_ids : [service_ids];
+    if (!isValidUUIDArray(serviceIdList)) {
+      return validationError(res, 'service_ids must be valid UUIDs');
+    }
+    if (bay_id && !isValidUUID(bay_id)) {
+      return validationError(res, 'Invalid bay_id format');
     }
 
     const normalizedPhone = normalizePhone(customer_phone);
@@ -122,8 +141,6 @@ router.post('/', async (req, res, next) => {
     }
 
     // 3. Get services and calculate duration
-    const serviceIdList = Array.isArray(service_ids) ? service_ids : [service_ids];
-    
     const { data: services, error: servicesError } = await supabase
       .from('services')
       .select('id, name, duration_minutes, price_min, price_max, required_bay_type, required_skill_level')
@@ -231,32 +248,24 @@ router.post('/', async (req, res, next) => {
 
     if (servicesInsertError) throw servicesInsertError;
 
-    // 7. Mark time slots as unavailable
-    const slotsNeeded = Math.ceil(totalDuration / 30);
-    const startTime = appointment_time;
-    
-    // Calculate all slot times needed
-    const slotTimes = [];
-    const [startHour, startMin] = startTime.split(':').map(Number);
-    let currentMinutes = startHour * 60 + startMin;
-    
-    for (let i = 0; i < slotsNeeded; i++) {
-      const hour = Math.floor(currentMinutes / 60);
-      const min = currentMinutes % 60;
-      slotTimes.push(`${String(hour).padStart(2, '0')}:${String(min).padStart(2, '0')}:00`);
-      currentMinutes += 30;
-    }
+    // 7. Atomically book time slots (prevents double-booking race condition)
+    const { data: bookingResult, error: rpcError } = await supabase
+      .rpc('book_appointment_slots', {
+        p_bay_id: assignedBayId,
+        p_date: appointment_date,
+        p_start_time: appointment_time,
+        p_duration_minutes: totalDuration,
+        p_appointment_id: appointment.id
+      });
 
-    const { error: slotUpdateError } = await supabase
-      .from('time_slots')
-      .update({ is_available: false, appointment_id: appointment.id })
-      .eq('slot_date', appointment_date)
-      .eq('bay_id', assignedBayId)
-      .in('start_time', slotTimes);
-
-    if (slotUpdateError) {
-      console.error('Error updating slots:', slotUpdateError);
-      // Don't fail the booking, but log the error
+    if (rpcError || !bookingResult?.success) {
+      // Slot was taken between check and book — delete the appointment and return error
+      console.error('Atomic booking failed:', rpcError || bookingResult);
+      await supabase.from('appointments').delete().eq('id', appointment.id);
+      await supabase.from('appointment_services').delete().eq('appointment_id', appointment.id);
+      return res.status(409).json({
+        error: { message: 'That time slot was just taken. Please choose a different time.' }
+      });
     }
 
     // 8. Format response for voice agent
@@ -518,9 +527,8 @@ router.patch('/:id', async (req, res, next) => {
     const { id } = req.params;
     const updates = req.body;
 
-    // If rescheduling, need to handle slot changes
+    // If rescheduling, atomically free old + book new slots
     if (updates.scheduled_date || updates.scheduled_time) {
-      // Get current appointment
       const { data: current } = await supabase
         .from('appointments')
         .select('scheduled_date, scheduled_time, bay_id, estimated_duration_minutes')
@@ -528,45 +536,43 @@ router.patch('/:id', async (req, res, next) => {
         .single();
 
       if (current) {
-        // Free up old slots
-        await supabase
-          .from('time_slots')
-          .update({ is_available: true, appointment_id: null })
-          .eq('appointment_id', id);
-
-        // Book new slots
         const newDate = updates.scheduled_date || current.scheduled_date;
         const newTime = updates.scheduled_time || current.scheduled_time;
         const bayId = updates.bay_id || current.bay_id;
         const duration = current.estimated_duration_minutes;
 
-        const slotsNeeded = Math.ceil(duration / 30);
-        const slotTimes = [];
-        const [startHour, startMin] = newTime.split(':').map(Number);
-        let currentMinutes = startHour * 60 + startMin;
+        // Free old slots
+        await supabase.rpc('free_appointment_slots', { p_appointment_id: id });
 
-        for (let i = 0; i < slotsNeeded; i++) {
-          const hour = Math.floor(currentMinutes / 60);
-          const min = currentMinutes % 60;
-          slotTimes.push(`${String(hour).padStart(2, '0')}:${String(min).padStart(2, '0')}:00`);
-          currentMinutes += 30;
+        // Atomically book new slots
+        const { data: bookingResult, error: rpcError } = await supabase
+          .rpc('book_appointment_slots', {
+            p_bay_id: bayId,
+            p_date: newDate,
+            p_start_time: newTime,
+            p_duration_minutes: duration,
+            p_appointment_id: id
+          });
+
+        if (rpcError || !bookingResult?.success) {
+          // Re-book old slots since reschedule failed
+          await supabase.rpc('book_appointment_slots', {
+            p_bay_id: current.bay_id,
+            p_date: current.scheduled_date,
+            p_start_time: current.scheduled_time,
+            p_duration_minutes: duration,
+            p_appointment_id: id
+          });
+          return res.status(409).json({
+            error: { message: 'That time slot is not available. Please choose a different time.' }
+          });
         }
-
-        await supabase
-          .from('time_slots')
-          .update({ is_available: false, appointment_id: id })
-          .eq('slot_date', newDate)
-          .eq('bay_id', bayId)
-          .in('start_time', slotTimes);
       }
     }
 
     // If cancelling, free up slots
     if (updates.status === 'cancelled' || updates.status === 'no_show') {
-      await supabase
-        .from('time_slots')
-        .update({ is_available: true, appointment_id: null })
-        .eq('appointment_id', id);
+      await supabase.rpc('free_appointment_slots', { p_appointment_id: id });
     }
 
     // Update appointment
