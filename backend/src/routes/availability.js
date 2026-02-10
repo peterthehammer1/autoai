@@ -63,7 +63,7 @@ router.get('/check', async (req, res, next) => {
                           requiredBayTypes.includes('diagnostic') ? 'diagnostic' :
                           requiredBayTypes.includes('alignment') ? 'alignment' :
                           requiredBayTypes.includes('general_service') ? 'general_service' :
-                          requiredBayTypes[0];
+                          requiredBayTypes[0] || 'general_service';
 
     // Determine date range
     const startDate = date ? parseISO(date) : new Date();
