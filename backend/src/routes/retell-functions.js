@@ -3,6 +3,7 @@ import { supabase, normalizePhone, formatPhone } from '../config/database.js';
 import { format, parseISO, addDays } from 'date-fns';
 import { sendConfirmationSMS } from '../services/sms.js';
 import { sendConfirmationEmail } from '../services/email.js';
+import { nowEST, todayEST, daysAgoEST } from '../utils/timezone.js';
 
 const router = Router();
 
@@ -272,7 +273,7 @@ router.post('/lookup_customer', async (req, res, next) => {
     }
 
     // Get upcoming appointments
-    const today = format(new Date(), 'yyyy-MM-dd');
+    const today = todayEST();
     const { data: upcomingAppointments } = await supabase
       .from('appointments')
       .select(`
@@ -290,7 +291,7 @@ router.post('/lookup_customer', async (req, res, next) => {
       .limit(5);
 
     // Get recent completed appointments (service history) - last 6 months
-    const sixMonthsAgo = format(addDays(new Date(), -180), 'yyyy-MM-dd');
+    const sixMonthsAgo = daysAgoEST(180);
     const { data: recentAppointments } = await supabase
       .from('appointments')
       .select(`
@@ -330,7 +331,7 @@ router.post('/lookup_customer', async (req, res, next) => {
             service_name: svc.service_name,
             service_id: svc.service_id,
             last_date: apt.scheduled_date,
-            days_ago: Math.floor((new Date() - parseISO(apt.scheduled_date)) / (1000 * 60 * 60 * 24))
+            days_ago: Math.floor((nowEST() - parseISO(apt.scheduled_date)) / (1000 * 60 * 60 * 24))
           };
         }
       });
@@ -358,7 +359,7 @@ router.post('/lookup_customer', async (req, res, next) => {
 
     // Last visit info
     if (customer.last_visit_date) {
-      const daysSinceVisit = Math.floor((new Date() - new Date(customer.last_visit_date)) / (1000 * 60 * 60 * 24));
+      const daysSinceVisit = Math.floor((nowEST() - new Date(customer.last_visit_date)) / (1000 * 60 * 60 * 24));
       if (daysSinceVisit > 180) {
         intelligenceSummary.push(`Last visit was ${daysSinceVisit} days ago - welcome them back!`);
       }
@@ -769,7 +770,7 @@ router.post('/check_availability', async (req, res, next) => {
     const bayIds = bays.map(b => b.id);
 
     // Determine date range - ALWAYS start from today or future, never past
-    const today = new Date();
+    const today = nowEST();
     let startDate = today;
     
     if (preferred_date) {
@@ -862,10 +863,10 @@ router.post('/check_availability', async (req, res, next) => {
     }
 
     // Get current time for filtering out past slots on today's date
-    const now = new Date();
+    const now = nowEST();
     const currentHour = now.getHours();
     const currentMinute = now.getMinutes();
-    const todayStr = format(now, 'yyyy-MM-dd');
+    const todayStr = todayEST();
     
     for (const [key, baySlots] of Object.entries(slotsByDateBay)) {
       const [slotDate] = key.split('_');
@@ -1498,7 +1499,7 @@ router.post('/get_customer_appointments', async (req, res, next) => {
       .order('scheduled_date')
       .order('scheduled_time');
 
-    const today = format(new Date(), 'yyyy-MM-dd');
+    const today = todayEST();
     if (status === 'upcoming') {
       query = query.gte('scheduled_date', today).not('status', 'in', '("cancelled","completed","no_show")');
     }
@@ -2475,8 +2476,8 @@ router.post('/get_repair_status', async (req, res, next) => {
       });
     }
     
-    const today = format(new Date(), 'yyyy-MM-dd');
-    const now = new Date();
+    const today = todayEST();
+    const now = nowEST();
     const currentTimeMinutes = now.getHours() * 60 + now.getMinutes();
     
     // Look for today's appointments (scheduled, checked_in, or in_progress)

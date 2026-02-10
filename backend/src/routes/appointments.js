@@ -3,6 +3,7 @@ import { supabase, normalizePhone } from '../config/database.js';
 import { format, parseISO } from 'date-fns';
 import { assignTechnician, getRequiredSkillLevel, getBestBayType } from './retell-functions.js';
 import { isValidDate, isValidTime, isValidPhone, isValidUUID, isValidUUIDArray, isWeekday, isWithinBusinessHours, validationError } from '../middleware/validate.js';
+import { nowEST, todayEST } from '../utils/timezone.js';
 
 const router = Router();
 
@@ -346,7 +347,7 @@ router.get('/', async (req, res, next) => {
     if (error) throw error;
 
     // Enrich appointments with dynamic status
-    const now = new Date();
+    const now = nowEST();
     const enrichedAppointments = appointments.map(apt => enrichAppointmentWithDynamicStatus(apt, now));
 
     res.json({
@@ -371,7 +372,7 @@ router.get('/', async (req, res, next) => {
 router.get('/upcoming', async (req, res, next) => {
   try {
     const { limit = 50, status } = req.query;
-    const today = format(new Date(), 'yyyy-MM-dd');
+    const today = todayEST();
 
     let query = supabase
       .from('appointments')
@@ -422,8 +423,8 @@ router.get('/upcoming', async (req, res, next) => {
  */
 router.get('/today', async (req, res, next) => {
   try {
-    const now = new Date();
-    const today = format(now, 'yyyy-MM-dd');
+    const now = nowEST();
+    const today = todayEST();
 
     const { data: appointments, error } = await supabase
       .from('appointments')
@@ -664,7 +665,7 @@ function formatTime12Hour(timeStr) {
  * Calculate dynamic status based on scheduled time, duration, and current time
  * Only applies to appointments scheduled for today
  */
-function calculateDynamicStatus(appointment, now = new Date()) {
+function calculateDynamicStatus(appointment, now = nowEST()) {
   const today = format(now, 'yyyy-MM-dd');
   
   // Only calculate dynamic status for today's appointments
@@ -714,7 +715,7 @@ function calculateDynamicStatus(appointment, now = new Date()) {
 /**
  * Add dynamic status and estimated end time to appointments
  */
-function enrichAppointmentWithDynamicStatus(appointment, now = new Date()) {
+function enrichAppointmentWithDynamicStatus(appointment, now = nowEST()) {
   const dynamicStatus = calculateDynamicStatus(appointment, now);
   
   // Calculate estimated end time

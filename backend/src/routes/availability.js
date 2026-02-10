@@ -3,9 +3,9 @@ import { supabase } from '../config/database.js';
 import { format, addDays, parseISO, isAfter, isBefore, setHours, setMinutes } from 'date-fns';
 import { formatInTimeZone, toZonedTime } from 'date-fns-tz';
 import { isValidDate, isValidUUID, validationError } from '../middleware/validate.js';
+import { nowEST, todayEST } from '../utils/timezone.js';
 
 const router = Router();
-const TIMEZONE = process.env.TIMEZONE || 'America/Toronto';
 
 /**
  * GET /api/availability/check
@@ -66,7 +66,7 @@ router.get('/check', async (req, res, next) => {
                           requiredBayTypes[0] || 'general_service';
 
     // Determine date range
-    const startDate = date ? parseISO(date) : new Date();
+    const startDate = date ? parseISO(date) : nowEST();
     const endDate = addDays(startDate, parseInt(days_to_check, 10));
 
     // Service department hours: Mon-Fri 7am-4pm only (no evenings, no weekends)
@@ -355,7 +355,7 @@ router.get('/next', async (req, res, next) => {
     }
 
     // Find next available slot (service department: Mon-Fri 7am-4pm only)
-    const today = format(new Date(), 'yyyy-MM-dd');
+    const today = todayEST();
     const isWeekday = (dateStr) => {
       const d = new Date(dateStr + 'T12:00:00');
       const day = d.getDay();

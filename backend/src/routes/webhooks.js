@@ -3,6 +3,7 @@ import { Retell } from 'retell-sdk';
 import { supabase, normalizePhone } from '../config/database.js';
 import { toZonedTime, format as formatTz } from 'date-fns-tz';
 import { format, addDays, parseISO } from 'date-fns';
+import { todayEST, daysAgoEST } from '../utils/timezone.js';
 
 const router = Router();
 
@@ -230,7 +231,7 @@ router.post('/voice/inbound', async (req, res) => {
     const dateInfo = getCurrentDateInfo();
     
     // Get upcoming appointments for this customer
-    const today = format(new Date(), 'yyyy-MM-dd');
+    const today = todayEST();
     const { data: upcomingAppointments } = await supabase
       .from('appointments')
       .select(`
@@ -248,7 +249,7 @@ router.post('/voice/inbound', async (req, res) => {
       .limit(3);
     
     // Get recent completed appointments (service history) - last 6 months
-    const sixMonthsAgo = format(addDays(new Date(), -180), 'yyyy-MM-dd');
+    const sixMonthsAgo = daysAgoEST(180);
     const { data: recentAppointments } = await supabase
       .from('appointments')
       .select(`
@@ -287,7 +288,7 @@ router.post('/voice/inbound', async (req, res) => {
       recentAppointments.forEach(apt => {
         apt.appointment_services?.forEach(svc => {
           if (!serviceMap[svc.service_name]) {
-            const daysAgo = Math.floor((new Date() - parseISO(apt.scheduled_date)) / (1000 * 60 * 60 * 24));
+            const daysAgo = Math.floor((new Date(todayEST() + 'T12:00:00') - parseISO(apt.scheduled_date)) / (1000 * 60 * 60 * 24));
             serviceMap[svc.service_name] = `${svc.service_name} ${daysAgo} days ago`;
           }
         });

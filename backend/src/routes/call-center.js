@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { supabase } from '../config/database.js';
 import { format, parseISO } from 'date-fns';
+import { nowEST } from '../utils/timezone.js';
 
 const router = Router();
 
@@ -208,8 +209,8 @@ router.get('/stats', async (req, res, next) => {
     const { start_date, end_date } = req.query;
 
     // Default to last 7 days
-    const endDate = end_date || new Date().toISOString();
-    const startDate = start_date || new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const endDate = end_date || nowEST().toISOString();
+    const startDate = start_date || new Date(nowEST().getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
     // Get call counts by outcome
     const { data: outcomeCounts } = await supabase

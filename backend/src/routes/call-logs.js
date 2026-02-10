@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { supabase } from '../config/database.js';
+import { nowEST } from '../utils/timezone.js';
 
 const router = Router();
 
@@ -129,21 +130,25 @@ router.get('/stats/summary', async (req, res, next) => {
     const { period = 'week' } = req.query;
     
     // Calculate date range
-    const now = new Date();
+    const now = nowEST();
     let startDate;
-    
+
     switch (period) {
       case 'today':
-        startDate = new Date(now.setHours(0, 0, 0, 0));
+        startDate = new Date(now);
+        startDate.setHours(0, 0, 0, 0);
         break;
       case 'week':
-        startDate = new Date(now.setDate(now.getDate() - 7));
+        startDate = new Date(now);
+        startDate.setDate(startDate.getDate() - 7);
         break;
       case 'month':
-        startDate = new Date(now.setMonth(now.getMonth() - 1));
+        startDate = new Date(now);
+        startDate.setMonth(startDate.getMonth() - 1);
         break;
       default:
-        startDate = new Date(now.setDate(now.getDate() - 7));
+        startDate = new Date(now);
+        startDate.setDate(startDate.getDate() - 7);
     }
 
     // Get all calls in period

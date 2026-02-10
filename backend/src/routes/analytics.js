@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { supabase } from '../config/database.js';
 import { format, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, differenceInDays, addDays } from 'date-fns';
+import { nowEST, todayEST, weekStartEST, weekEndEST, monthStartEST, monthEndEST, daysAgoEST, formatDateEST } from '../utils/timezone.js';
 
 const router = Router();
 
@@ -10,11 +11,11 @@ const router = Router();
  */
 router.get('/overview', async (req, res, next) => {
   try {
-    const today = format(new Date(), 'yyyy-MM-dd');
-    const weekStart = format(startOfWeek(new Date()), 'yyyy-MM-dd');
-    const weekEnd = format(endOfWeek(new Date()), 'yyyy-MM-dd');
-    const monthStart = format(startOfMonth(new Date()), 'yyyy-MM-dd');
-    const monthEnd = format(endOfMonth(new Date()), 'yyyy-MM-dd');
+    const today = todayEST();
+    const weekStart = weekStartEST();
+    const weekEnd = weekEndEST();
+    const monthStart = monthStartEST();
+    const monthEnd = monthEndEST();
 
     // Today's appointments
     const { count: todayAppointments } = await supabase
@@ -105,24 +106,24 @@ router.get('/appointments', async (req, res, next) => {
     const { period = 'week' } = req.query;
 
     let startDate, endDate;
-    const now = new Date();
+    const today = todayEST();
 
     switch (period) {
       case 'day':
-        startDate = format(now, 'yyyy-MM-dd');
-        endDate = startDate;
+        startDate = today;
+        endDate = today;
         break;
       case 'week':
-        startDate = format(subDays(now, 7), 'yyyy-MM-dd');
-        endDate = format(now, 'yyyy-MM-dd');
+        startDate = daysAgoEST(7);
+        endDate = today;
         break;
       case 'month':
-        startDate = format(subDays(now, 30), 'yyyy-MM-dd');
-        endDate = format(now, 'yyyy-MM-dd');
+        startDate = daysAgoEST(30);
+        endDate = today;
         break;
       default:
-        startDate = format(subDays(now, 7), 'yyyy-MM-dd');
-        endDate = format(now, 'yyyy-MM-dd');
+        startDate = daysAgoEST(7);
+        endDate = today;
     }
 
     // Get appointments by status
@@ -186,7 +187,7 @@ router.get('/calls', async (req, res, next) => {
     const { period = 'week' } = req.query;
 
     const days = period === 'day' ? 1 : period === 'month' ? 30 : 7;
-    const startDate = format(subDays(new Date(), days), 'yyyy-MM-dd');
+    const startDate = daysAgoEST(days);
 
     const { data: calls } = await supabase
       .from('call_logs')
@@ -253,7 +254,7 @@ router.get('/services', async (req, res, next) => {
     const { period = 'month' } = req.query;
 
     const days = period === 'week' ? 7 : 30;
-    const startDate = format(subDays(new Date(), days), 'yyyy-MM-dd');
+    const startDate = daysAgoEST(days);
 
     const { data: services } = await supabase
       .from('appointment_services')
@@ -303,7 +304,7 @@ router.get('/services', async (req, res, next) => {
 router.get('/bay-utilization', async (req, res, next) => {
   try {
     const { date } = req.query;
-    const targetDate = date || format(new Date(), 'yyyy-MM-dd');
+    const targetDate = date || todayEST();
 
     // Get all bays
     const { data: bays } = await supabase
@@ -359,10 +360,10 @@ router.get('/bay-utilization', async (req, res, next) => {
  */
 router.get('/insights', async (req, res, next) => {
   try {
-    const today = new Date();
-    const todayStr = format(today, 'yyyy-MM-dd');
-    const weekStart = format(startOfWeek(today), 'yyyy-MM-dd');
-    const weekEnd = format(endOfWeek(today), 'yyyy-MM-dd');
+    const today = nowEST();
+    const todayStr = todayEST();
+    const weekStart = weekStartEST();
+    const weekEnd = weekEndEST();
     const lastWeekStart = format(subDays(startOfWeek(today), 7), 'yyyy-MM-dd');
     const lastWeekEnd = format(subDays(endOfWeek(today), 7), 'yyyy-MM-dd');
     
@@ -710,7 +711,7 @@ router.get('/customer-health/:id', async (req, res, next) => {
       .order('scheduled_date', { ascending: false });
 
     // Calculate health score components
-    const today = new Date();
+    const today = nowEST();
     const scores = {
       recency: 0,     // 0-30 points: how recently they visited
       frequency: 0,   // 0-30 points: how often they visit
@@ -849,7 +850,7 @@ router.get('/call-trends', async (req, res, next) => {
   try {
     const { period = 'week' } = req.query;
     const days = period === 'day' ? 1 : period === 'month' ? 30 : 7;
-    const startDate = format(subDays(new Date(), days), 'yyyy-MM-dd');
+    const startDate = daysAgoEST(days);
 
     // Get all calls for the period
     const { data: calls } = await supabase
@@ -946,9 +947,9 @@ router.get('/call-trends', async (req, res, next) => {
 router.get('/revenue', async (req, res, next) => {
   try {
     const { period = 'month' } = req.query;
-    const today = new Date();
+    const today = nowEST();
     const days = period === 'week' ? 7 : period === 'day' ? 1 : 30;
-    const startDate = format(subDays(today, days), 'yyyy-MM-dd');
+    const startDate = daysAgoEST(days);
     const prevStartDate = format(subDays(today, days * 2), 'yyyy-MM-dd');
     const prevEndDate = format(subDays(today, days + 1), 'yyyy-MM-dd');
 
@@ -1069,9 +1070,9 @@ router.get('/revenue', async (req, res, next) => {
 router.get('/customers', async (req, res, next) => {
   try {
     const { period = 'month' } = req.query;
-    const today = new Date();
+    const today = nowEST();
     const days = period === 'week' ? 7 : period === 'day' ? 1 : 30;
-    const startDate = format(subDays(today, days), 'yyyy-MM-dd');
+    const startDate = daysAgoEST(days);
     const prevStartDate = format(subDays(today, days * 2), 'yyyy-MM-dd');
     const prevEndDate = format(subDays(today, days + 1), 'yyyy-MM-dd');
 
@@ -1231,13 +1232,13 @@ router.get('/customers', async (req, res, next) => {
 router.get('/comprehensive', async (req, res, next) => {
   try {
     const { period = 'week' } = req.query;
-    const today = new Date();
-    const todayStr = format(today, 'yyyy-MM-dd');
+    const today = nowEST();
+    const todayStr = todayEST();
     const days = period === 'week' ? 7 : period === 'day' ? 1 : 30;
-    const startDate = format(subDays(today, days), 'yyyy-MM-dd');
+    const startDate = daysAgoEST(days);
     const prevStartDate = format(subDays(today, days * 2), 'yyyy-MM-dd');
     const prevEndDate = format(subDays(today, days + 1), 'yyyy-MM-dd');
-    const monthStart = format(startOfMonth(today), 'yyyy-MM-dd');
+    const monthStart = monthStartEST();
 
     // Parallel queries for performance
     const [

@@ -10,6 +10,7 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
+import { toZonedTime } from 'date-fns-tz';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -87,7 +88,7 @@ async function main() {
     .limit(1)
     .single();
 
-  const today = new Date();
+  const today = toZonedTime(new Date(), 'America/New_York');
   today.setHours(0, 0, 0, 0);
   const targetEnd = addDays(today, FORWARD_DAYS);
   const startFrom = latestSlot

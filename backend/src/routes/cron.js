@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { supabase } from '../config/database.js';
+import { nowEST } from '../utils/timezone.js';
 
 const router = Router();
 
@@ -80,7 +81,7 @@ router.get('/regenerate-slots', async (req, res) => {
       .limit(1)
       .single();
 
-    const today = new Date();
+    const today = nowEST();
     today.setHours(0, 0, 0, 0);
     const targetEnd = addDays(today, FORWARD_DAYS);
     const startFrom = latestSlot

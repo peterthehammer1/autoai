@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { supabase } from '../config/database.js';
 import { format, addDays } from 'date-fns';
 import { sendReminderSMS } from '../services/sms.js';
+import { nowEST, daysFromNowEST } from '../utils/timezone.js';
 
 const router = Router();
 
@@ -13,8 +14,7 @@ const router = Router();
 router.post('/send-24h', async (req, res, next) => {
   try {
     // Get tomorrow's date
-    const tomorrow = addDays(new Date(), 1);
-    const tomorrowDate = format(tomorrow, 'yyyy-MM-dd');
+    const tomorrowDate = daysFromNowEST(1);
     
     console.log(`[Reminders] Checking for appointments on ${tomorrowDate}`);
 
@@ -120,8 +120,7 @@ router.post('/send-24h', async (req, res, next) => {
  */
 router.get('/pending', async (req, res, next) => {
   try {
-    const tomorrow = addDays(new Date(), 1);
-    const tomorrowDate = format(tomorrow, 'yyyy-MM-dd');
+    const tomorrowDate = daysFromNowEST(1);
 
     const { data: appointments, error } = await supabase
       .from('appointments')

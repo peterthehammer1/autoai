@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { supabase } from '../config/database.js';
+import { nowEST } from '../utils/timezone.js';
 
 const router = Router();
 
@@ -80,7 +81,7 @@ router.get('/stats', async (req, res, next) => {
   try {
     const { period = 'week' } = req.query;
     
-    let dateFilter = new Date();
+    let dateFilter = nowEST();
     if (period === 'today') {
       dateFilter.setHours(0, 0, 0, 0);
     } else if (period === 'week') {

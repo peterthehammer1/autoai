@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { supabase, normalizePhone, formatPhone } from '../config/database.js';
 import { isValidPhone, isValidEmail, validationError } from '../middleware/validate.js';
+import { todayEST } from '../utils/timezone.js';
 
 const router = Router();
 
@@ -292,7 +293,7 @@ router.get('/:id/appointments', async (req, res, next) => {
       .order('scheduled_time', { ascending: false });
 
     // Filter by status
-    const today = new Date().toISOString().split('T')[0];
+    const today = todayEST();
     if (status === 'upcoming') {
       query = query.gte('scheduled_date', today)
         .not('status', 'in', '("cancelled","no_show","completed")');
