@@ -21,6 +21,7 @@ import smsLogRoutes from './routes/sms-logs.js';
 import callCenterRoutes from './routes/call-center.js';
 import cronRoutes from './routes/cron.js';
 import { supabase } from './config/database.js';
+import { logger } from './utils/logger.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -120,8 +121,14 @@ app.use('/api/cron', cronRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error('Error:', err);
-  res.status(err.status || 500).json({
+  const status = err.status || 500;
+  logger.error('Request error', {
+    error: err,
+    status,
+    method: req.method,
+    path: req.originalUrl
+  });
+  res.status(status).json({
     error: {
       message: err.message || 'Internal server error',
       ...(process.env.NODE_ENV === 'development' && { stack: err.stack })

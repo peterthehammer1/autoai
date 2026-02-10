@@ -4,6 +4,7 @@ import { supabase, normalizePhone } from '../config/database.js';
 import { toZonedTime, format as formatTz } from 'date-fns-tz';
 import { format, addDays, parseISO } from 'date-fns';
 import { todayEST, daysAgoEST } from '../utils/timezone.js';
+import { logger } from '../utils/logger.js';
 
 const router = Router();
 
@@ -18,17 +19,17 @@ const RETELL_SKIP_WEBHOOK_VERIFY = process.env.RETELL_SKIP_WEBHOOK_VERIFY === 't
  */
 function verifyRetellSignature(req) {
   if (RETELL_SKIP_WEBHOOK_VERIFY) {
-    console.warn('RETELL_SKIP_WEBHOOK_VERIFY is set - skipping webhook signature verification');
+    logger.warn('Webhook signature verification skipped', { reason: 'RETELL_SKIP_WEBHOOK_VERIFY' });
     return true;
   }
   if (!RETELL_API_KEY) {
-    console.error('NUCLEUS_API_KEY / RETELL_API_KEY not set - rejecting webhook');
+    logger.error('Webhook rejected: API key not configured');
     return false;
   }
 
   const signature = req.headers['x-retell-signature'];
   if (!signature) {
-    console.warn('No x-retell-signature header present');
+    logger.warn('Webhook rejected: no x-retell-signature header');
     return false;
   }
 
@@ -39,7 +40,7 @@ function verifyRetellSignature(req) {
       signature
     );
   } catch (error) {
-    console.error('Webhook verification error:', error);
+    logger.error('Webhook signature verification failed', { error });
     return false;
   }
 }

@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import { supabase } from '../config/database.js';
-import { nowEST } from '../utils/timezone.js';
+import { nowEST, daysFromNowEST } from '../utils/timezone.js';
+import { sendReminderSMS } from '../services/sms.js';
+import { logger } from '../utils/logger.js';
 
 const router = Router();
 
@@ -14,7 +16,7 @@ const CLEANUP_DAYS = 90;
 function verifyCronAuth(req, res) {
   const auth = req.headers['authorization'];
   if (!CRON_SECRET) {
-    console.error('CRON_SECRET not set — rejecting cron request');
+    logger.error('CRON_SECRET not set — rejecting cron request');
     res.status(401).json({ error: 'Cron not configured' });
     return false;
   }
@@ -116,7 +118,7 @@ router.get('/regenerate-slots', async (req, res) => {
             .upsert(rows, { onConflict: 'slot_date,start_time,bay_id', ignoreDuplicates: true });
 
           if (error) {
-            console.error(`Cron: error inserting slots for ${dateStr}:`, error.message);
+            logger.error('Cron: slot insert failed', { date: dateStr, error });
           } else {
             totalInserted += rows.length;
             daysProcessed++;
@@ -135,7 +137,7 @@ router.get('/regenerate-slots', async (req, res) => {
       .eq('is_available', true);
 
     if (deleteError) {
-      console.error('Cron: cleanup error:', deleteError.message);
+      logger.error('Cron: slot cleanup failed', { error: deleteError });
     }
 
     res.json({
@@ -151,7 +153,101 @@ router.get('/regenerate-slots', async (req, res) => {
     });
 
   } catch (err) {
-    console.error('Cron regenerate-slots error:', err);
+    logger.error('Cron regenerate-slots failed', { error: err });
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * GET /api/cron/send-reminders
+ * Called by Vercel Cron daily at 9am EST to send 24-hour appointment reminders.
+ * Requires CRON_SECRET in Authorization header.
+ */
+router.get('/send-reminders', async (req, res) => {
+  if (!verifyCronAuth(req, res)) return;
+
+  try {
+    const tomorrowDate = daysFromNowEST(1);
+
+    // Get appointments for tomorrow that haven't been reminded
+    const { data: appointments, error } = await supabase
+      .from('appointments')
+      .select(`
+        id,
+        scheduled_date,
+        scheduled_time,
+        reminder_sent_at,
+        customer:customers (
+          id,
+          first_name,
+          phone
+        ),
+        vehicle:vehicles (
+          year,
+          make,
+          model
+        ),
+        appointment_services (
+          service_name
+        )
+      `)
+      .eq('scheduled_date', tomorrowDate)
+      .in('status', ['scheduled', 'confirmed'])
+      .is('reminder_sent_at', null);
+
+    if (error) throw error;
+
+    if (!appointments || appointments.length === 0) {
+      return res.json({ success: true, sent: 0, total: 0, date: tomorrowDate });
+    }
+
+    let sent = 0;
+    let failed = 0;
+
+    for (const apt of appointments) {
+      if (!apt.customer?.phone) continue;
+
+      const services = apt.appointment_services?.map(s => s.service_name).join(', ') || 'Service';
+      const vehicleDescription = apt.vehicle
+        ? `${apt.vehicle.year} ${apt.vehicle.make} ${apt.vehicle.model}`
+        : null;
+
+      try {
+        const smsResult = await sendReminderSMS({
+          customerPhone: apt.customer.phone,
+          customerName: apt.customer.first_name,
+          appointmentDate: apt.scheduled_date,
+          appointmentTime: apt.scheduled_time,
+          services,
+          vehicleDescription,
+          customerId: apt.customer.id,
+          appointmentId: apt.id
+        });
+
+        if (smsResult.success) {
+          await supabase
+            .from('appointments')
+            .update({ reminder_sent_at: new Date().toISOString() })
+            .eq('id', apt.id);
+          sent++;
+        } else {
+          failed++;
+        }
+      } catch (smsErr) {
+        failed++;
+      }
+    }
+
+    res.json({
+      success: true,
+      date: tomorrowDate,
+      sent,
+      failed,
+      total: appointments.length
+    });
+
+  } catch (err) {
+    logger.error('Cron send-reminders failed', { error: err });
     res.status(500).json({ error: err.message });
   }
 });
