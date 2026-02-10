@@ -1297,7 +1297,6 @@ router.post('/book_appointment', async (req, res, next) => {
     }
 
     // 7. Mark slots as booked
-    const slotsNeeded = Math.ceil(totalDuration / 30);
     const slotTimes = [];
     const [h, m] = appointment_time.split(':').map(Number);
     let mins = h * 60 + m;
