@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 
 // Load environment variables
@@ -18,9 +19,36 @@ import callLogRoutes from './routes/call-logs.js';
 import reminderRoutes from './routes/reminders.js';
 import smsLogRoutes from './routes/sms-logs.js';
 import callCenterRoutes from './routes/call-center.js';
+import cronRoutes from './routes/cron.js';
+import { supabase } from './config/database.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+
+// Rate limiters
+const generalLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 60,                  // 60 requests per minute per IP
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: { message: 'Too many requests, please try again later' } }
+});
+
+const bookingLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000,
+  max: 10,                  // 10 booking attempts per minute per IP
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: { message: 'Too many booking attempts, please try again later' } }
+});
+
+const webhookLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000,
+  max: 120,                 // higher limit for voice webhooks (rapid-fire during calls)
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: { message: 'Rate limit exceeded' } }
+});
 
 // Middleware
 app.use(helmet());
@@ -45,25 +73,50 @@ app.get('/', (req, res) => {
   });
 });
 
-// Health check
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+// Health check — pings the database to verify connectivity
+app.get('/health', async (req, res) => {
+  const start = Date.now();
+  try {
+    const { count, error } = await supabase
+      .from('service_bays')
+      .select('id', { count: 'exact', head: true });
+
+    if (error) throw error;
+
+    res.json({
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      database: 'connected',
+      response_ms: Date.now() - start
+    });
+  } catch (err) {
+    res.status(503).json({
+      status: 'degraded',
+      timestamp: new Date().toISOString(),
+      database: 'unreachable',
+      error: err.message,
+      response_ms: Date.now() - start
+    });
+  }
 });
 
-// API Routes
-app.use('/api/customers', customerRoutes);
-app.use('/api/services', serviceRoutes);
-app.use('/api/appointments', appointmentRoutes);
-app.use('/api/availability', availabilityRoutes);
-app.use('/api/webhooks', webhookRoutes);
-app.use('/api/analytics', analyticsRoutes);
-app.use('/api/call-logs', callLogRoutes);
-app.use('/api/reminders', reminderRoutes);
-app.use('/api/sms-logs', smsLogRoutes);
-app.use('/api/call-center', callCenterRoutes);
+// API Routes (general rate limit on all API endpoints)
+app.use('/api/customers', generalLimiter, customerRoutes);
+app.use('/api/services', generalLimiter, serviceRoutes);
+app.use('/api/appointments', bookingLimiter, appointmentRoutes);
+app.use('/api/availability', generalLimiter, availabilityRoutes);
+app.use('/api/webhooks', webhookLimiter, webhookRoutes);
+app.use('/api/analytics', generalLimiter, analyticsRoutes);
+app.use('/api/call-logs', generalLimiter, callLogRoutes);
+app.use('/api/reminders', generalLimiter, reminderRoutes);
+app.use('/api/sms-logs', generalLimiter, smsLogRoutes);
+app.use('/api/call-center', generalLimiter, callCenterRoutes);
 
-// Voice AI function endpoints (used by voice agent for booking, etc.)
-app.use('/api/voice', (await import('./routes/retell-functions.js')).default);
+// Voice AI function endpoints (higher limit — rapid-fire during calls)
+app.use('/api/voice', webhookLimiter, (await import('./routes/retell-functions.js')).default);
+
+// Cron endpoint for scheduled tasks (Vercel Cron)
+app.use('/api/cron', cronRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

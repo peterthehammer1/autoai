@@ -12,6 +12,12 @@
       "dest": "src/index.js"
     }
   ],
+  "crons": [
+    {
+      "path": "/api/cron/regenerate-slots",
+      "schedule": "0 3 * * 1"
+    }
+  ],
   "env": {
     "NODE_ENV": "production"
   }
