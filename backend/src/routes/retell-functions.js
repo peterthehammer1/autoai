@@ -753,11 +753,46 @@ router.post('/check_availability', async (req, res, next) => {
     // Service department hours: Mon-Fri 7am-4pm only (no evenings, no weekends)
     let timeStart = '07:00';
     let timeEnd = '16:00';
-    if (preferred_time === 'morning') {
-      timeEnd = '12:00';
-    } else if (preferred_time === 'afternoon') {
-      timeStart = '12:00';
+    if (preferred_time) {
+      const timeLower = preferred_time.toLowerCase().trim();
+      if (timeLower === 'morning' || timeLower === 'am') {
+        timeEnd = '12:00';
+      } else if (timeLower === 'afternoon' || timeLower === 'pm') {
+        timeStart = '12:00';
+      } else if (timeLower === 'early morning') {
+        timeEnd = '09:00';
+      } else if (timeLower === 'late afternoon') {
+        timeStart = '14:00';
+      } else {
+        // Handle specific times: "15:00", "3:00 PM", "after 3", etc.
+        const timeMatch = timeLower.match(/(\d{1,2}):?(\d{2})?\s*(am|pm)?/);
+        if (timeMatch) {
+          let hour = parseInt(timeMatch[1], 10);
+          const min = timeMatch[2] ? parseInt(timeMatch[2], 10) : 0;
+          const ampm = timeMatch[3];
+          if (ampm === 'pm' && hour < 12) hour += 12;
+          if (ampm === 'am' && hour === 12) hour = 0;
+          const specificTime = `${String(hour).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
+          // If it looks like a start time preference ("after 3pm"), use as start
+          if (timeLower.includes('after') || timeLower.includes('from') || timeLower.includes('no earlier')) {
+            timeStart = specificTime;
+          } else if (timeLower.includes('before') || timeLower.includes('by') || timeLower.includes('no later')) {
+            timeEnd = specificTime;
+          } else {
+            // Exact time or close to it - search in a window around it
+            const startHour = Math.max(hour - 1, 7);
+            timeStart = `${String(startHour).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
+            const endHour = Math.min(hour + 2, 16);
+            timeEnd = `${String(endHour).padStart(2, '0')}:00`;
+          }
+        }
+      }
+      // Clamp to business hours
+      if (timeStart < '07:00') timeStart = '07:00';
+      if (timeEnd > '16:00') timeEnd = '16:00';
+      if (timeStart >= timeEnd) timeStart = '07:00'; // fallback to full range
     }
+    console.log('Time filter:', timeStart, '-', timeEnd, '(preferred_time:', preferred_time, ')');
 
     // Get available slots
     const { data: rawSlots, error: slotError } = await supabase

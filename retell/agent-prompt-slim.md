@@ -218,7 +218,10 @@ Search for services. For oil changes:
 - "oil change" → search "synthetic blend oil change"
 
 ### check_availability
-Input: service_ids, preferred_date (YYYY-MM-DD)
+Input: service_ids, preferred_date (YYYY-MM-DD), preferred_time (optional)
+- Pass preferred_time when the customer specifies a time preference
+- Examples: "after 3pm", "morning", "afternoon", "before noon", "around 2", "15:00"
+- ALWAYS pass their time preference — don't ignore it and offer random times
 
 ### book_appointment
 Required: date, time, service_ids, customer_phone
