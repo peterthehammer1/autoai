@@ -1216,7 +1216,7 @@ router.post('/book_appointment', async (req, res, next) => {
       return res.json({
         success: false,
         booked: false,
-        message: 'I\'m sorry, that time slot was just taken. Would you like me to find another available time?'
+        message: 'I\'m sorry, that time isn\'t available. Let me find another option for you.'
       });
     }
 
