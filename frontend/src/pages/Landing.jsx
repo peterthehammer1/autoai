@@ -685,19 +685,22 @@ export default function Landing() {
             {/* Right — form */}
             <div className="lg:col-span-2">
               {leadStatus === 'success' ? (
-                <div className="bg-slate-800 rounded-2xl border border-slate-700 p-10 text-center">
+                <div className="bg-slate-800/80 backdrop-blur rounded-2xl border border-slate-700/80 p-10 text-center shadow-xl shadow-black/20">
                   <div className="h-14 w-14 rounded-full bg-emerald-500/20 flex items-center justify-center mx-auto mb-5">
                     <CheckCircle2 className="h-7 w-7 text-emerald-400" />
                   </div>
-                  <h3 className="text-2xl font-semibold mb-2">Thanks for reaching out!</h3>
-                  <p className="text-slate-400">We'll be in touch shortly to schedule your demo.</p>
+                  <h3 className="text-2xl font-semibold mb-2">You're on the list!</h3>
+                  <p className="text-slate-400">We'll reach out as soon as a spot opens up.</p>
                 </div>
               ) : (
-                <form onSubmit={handleLeadSubmit} className="bg-slate-800 rounded-2xl border border-slate-700 p-8">
-                  <h3 className="text-lg font-semibold mb-6">Request a Demo</h3>
-                  <div className="space-y-4">
+                <form onSubmit={handleLeadSubmit} className="bg-slate-800/80 backdrop-blur rounded-2xl border border-slate-700/80 shadow-xl shadow-black/20 overflow-hidden">
+                  <div className="px-7 pt-7 pb-5 border-b border-slate-700/60">
+                    <h3 className="text-lg font-semibold">Request a Demo</h3>
+                    <p className="text-sm text-slate-400 mt-1">Fill out the form and we'll be in touch.</p>
+                  </div>
+                  <div className="px-7 pt-5 pb-7 space-y-4">
                     <div>
-                      <label htmlFor="lead-name" className="block text-sm font-medium text-slate-400 mb-1.5">Name</label>
+                      <label htmlFor="lead-name" className="block text-xs font-medium text-slate-400 uppercase tracking-wide mb-1.5">Name</label>
                       <input
                         id="lead-name"
                         type="text"
@@ -705,11 +708,11 @@ export default function Landing() {
                         required
                         value={leadForm.name}
                         onChange={e => setLeadForm(f => ({ ...f, name: e.target.value }))}
-                        className="w-full px-4 py-2.5 rounded-lg bg-slate-700/50 border border-slate-600 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                        className="w-full px-3.5 py-2.5 rounded-lg bg-slate-700/40 border border-slate-600/80 text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
                       />
                     </div>
                     <div>
-                      <label htmlFor="lead-email" className="block text-sm font-medium text-slate-400 mb-1.5">Email</label>
+                      <label htmlFor="lead-email" className="block text-xs font-medium text-slate-400 uppercase tracking-wide mb-1.5">Email</label>
                       <input
                         id="lead-email"
                         type="email"
@@ -717,42 +720,42 @@ export default function Landing() {
                         required
                         value={leadForm.email}
                         onChange={e => setLeadForm(f => ({ ...f, email: e.target.value }))}
-                        className="w-full px-4 py-2.5 rounded-lg bg-slate-700/50 border border-slate-600 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                        className="w-full px-3.5 py-2.5 rounded-lg bg-slate-700/40 border border-slate-600/80 text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
                       />
                     </div>
                     <div>
-                      <label htmlFor="lead-phone" className="block text-sm font-medium text-slate-400 mb-1.5">Phone <span className="text-slate-500 font-normal">(optional)</span></label>
+                      <label htmlFor="lead-phone" className="block text-xs font-medium text-slate-400 uppercase tracking-wide mb-1.5">Phone <span className="text-slate-500 font-normal normal-case tracking-normal">(optional)</span></label>
                       <input
                         id="lead-phone"
                         type="tel"
                         placeholder="(555) 123-4567"
                         value={leadForm.phone}
                         onChange={e => setLeadForm(f => ({ ...f, phone: e.target.value }))}
-                        className="w-full px-4 py-2.5 rounded-lg bg-slate-700/50 border border-slate-600 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                        className="w-full px-3.5 py-2.5 rounded-lg bg-slate-700/40 border border-slate-600/80 text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
                       />
                     </div>
-                  </div>
 
-                  {leadError && (
-                    <p className="mt-3 text-sm text-red-400">{leadError}</p>
-                  )}
-
-                  <Button
-                    type="submit"
-                    size="lg"
-                    disabled={leadStatus === 'submitting'}
-                    className="mt-6 w-full bg-blue-600 hover:bg-blue-500 text-white h-12"
-                  >
-                    {leadStatus === 'submitting' ? (
-                      <><Loader2 className="h-5 w-5 mr-2 animate-spin" /> Submitting...</>
-                    ) : (
-                      <>Add Me To The Waitlist!</>
+                    {leadError && (
+                      <p className="text-sm text-red-400">{leadError}</p>
                     )}
-                  </Button>
 
-                  <p className="mt-4 text-xs text-slate-500 text-center">
-                    We'll reach out within one business day.
-                  </p>
+                    <Button
+                      type="submit"
+                      size="lg"
+                      disabled={leadStatus === 'submitting'}
+                      className="w-full bg-blue-600 hover:bg-blue-500 text-white h-11 text-sm font-semibold mt-1"
+                    >
+                      {leadStatus === 'submitting' ? (
+                        <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Submitting...</>
+                      ) : (
+                        <>Add Me To The Waitlist!</>
+                      )}
+                    </Button>
+
+                    <p className="text-xs text-slate-500 text-center pt-1">
+                      No spam — we'll only reach out when it's your turn.
+                    </p>
+                  </div>
                 </form>
               )}
             </div>
