@@ -425,9 +425,9 @@ export default function Appointments() {
             {/* ===== WEEK VIEW ===== */}
             {calendarView === 'week' && (
               <div className="overflow-x-auto">
-                <div className="min-w-[700px]">
+                <div className="min-w-[600px]">
                   {/* Day column headers */}
-                  <div className="grid grid-cols-[60px_repeat(7,1fr)] border-b border-slate-200 bg-slate-50/50">
+                  <div className="grid grid-cols-[48px_repeat(7,1fr)] border-b border-slate-200 bg-slate-50/50">
                     <div />
                     {weekDays.map((day) => (
                       <div
@@ -449,12 +449,12 @@ export default function Appointments() {
                   </div>
 
                   {/* Time grid */}
-                  <div className="grid grid-cols-[60px_repeat(7,1fr)] relative">
+                  <div className="grid grid-cols-[48px_repeat(7,1fr)] relative">
                     {/* Time gutter */}
                     <div>
                       {hours.map((hour) => (
                         <div key={hour} className="relative border-b border-slate-100" style={{ height: HOUR_HEIGHT }}>
-                          <span className="absolute -top-2.5 right-2 text-[11px] text-slate-400 font-medium">
+                          <span className="absolute -top-2.5 right-1 text-[10px] text-slate-400 font-medium">
                             {hour === 12 ? '12 PM' : hour > 12 ? `${hour - 12} PM` : `${hour} AM`}
                           </span>
                         </div>

@@ -67,10 +67,10 @@ export default function Services() {
             <TableHeader>
               <TableRow>
                 <TableHead>Service</TableHead>
-                <TableHead>Category</TableHead>
+                <TableHead className="hidden sm:table-cell">Category</TableHead>
                 <TableHead>Duration</TableHead>
                 <TableHead>Price</TableHead>
-                <TableHead>Bay Type</TableHead>
+                <TableHead className="hidden md:table-cell">Bay Type</TableHead>
                 <TableHead></TableHead>
               </TableRow>
             </TableHeader>
@@ -99,7 +99,7 @@ export default function Services() {
                         </p>
                       )}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden sm:table-cell">
                       <Badge variant="outline">
                         {service.category?.name || '-'}
                       </Badge>
@@ -111,12 +111,12 @@ export default function Services() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      {service.price_min > 0 
+                      {service.price_min > 0
                         ? `$${service.price_min.toLocaleString()}`
                         : (service.price_display || 'Free')
                       }
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden md:table-cell">
                       <Badge variant="secondary">
                         {service.required_bay_type?.replace('_', ' ') || '-'}
                       </Badge>
