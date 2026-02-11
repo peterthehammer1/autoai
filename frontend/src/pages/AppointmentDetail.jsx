@@ -31,6 +31,7 @@ import {
 import { useToast } from '@/hooks/use-toast'
 import PhoneNumber, { Email } from '@/components/PhoneNumber'
 import CarImage from '@/components/CarImage'
+import { useAppointmentTour } from '@/hooks/use-appointment-tour'
 
 export default function AppointmentDetail() {
   const { id } = useParams()
@@ -63,6 +64,7 @@ export default function AppointmentDetail() {
   })
 
   const apt = data?.appointment
+  useAppointmentTour(!isLoading && !!apt)
 
   if (isLoading) {
     return (
@@ -121,7 +123,7 @@ export default function AppointmentDetail() {
 
       {/* Quick Actions */}
       {availableActions.length > 0 && (
-        <div className="bg-white border border-slate-200 rounded-lg p-3">
+        <div data-tour="apt-quick-actions" className="bg-white border border-slate-200 rounded-lg p-3">
           <div className="flex flex-wrap gap-2">
             {availableActions.includes('confirmed') && (
               <Button
@@ -190,7 +192,7 @@ export default function AppointmentDetail() {
       {/* Details Grid */}
       <div className="grid gap-4 md:grid-cols-2">
         {/* Customer Info */}
-        <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
+        <div data-tour="apt-customer-info" className="bg-white border border-slate-200 rounded-lg overflow-hidden">
           <div className="px-4 py-3 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-blue-50/30">
             <h3 className="text-sm font-medium text-slate-700 flex items-center gap-2">
               <User className="h-4 w-4 text-blue-400" />
@@ -220,7 +222,7 @@ export default function AppointmentDetail() {
         </div>
 
         {/* Vehicle Info */}
-        <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
+        <div data-tour="apt-vehicle-info" className="bg-white border border-slate-200 rounded-lg overflow-hidden">
           <div className="px-4 py-3 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-blue-50/30">
             <h3 className="text-sm font-medium text-slate-700 flex items-center gap-2">
               <Car className="h-4 w-4 text-blue-400" />
@@ -326,7 +328,7 @@ export default function AppointmentDetail() {
         </div>
 
         {/* Services */}
-        <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
+        <div data-tour="apt-services" className="bg-white border border-slate-200 rounded-lg overflow-hidden">
           <div className="px-4 py-3 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-blue-50/30">
             <h3 className="text-sm font-medium text-slate-700 flex items-center gap-2">
               <Wrench className="h-4 w-4 text-blue-400" />

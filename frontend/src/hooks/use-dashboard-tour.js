@@ -2,8 +2,9 @@ import { useEffect, useRef, useCallback } from 'react'
 import { driver } from 'driver.js'
 import 'driver.js/dist/driver.css'
 
-const TOUR_VERSION = 'v1'
-const STORAGE_KEY = 'dashboard-tour-completed'
+const TOUR_VERSION = 'v2'
+const COMPLETED_KEY = 'dashboard-tour-completed'
+const PROGRESS_KEY = 'dashboard-tour-progress'
 
 const TOUR_STEPS = [
   {
@@ -64,10 +65,12 @@ const TOUR_STEPS = [
 
 export function useDashboardTour(ready = false) {
   const driverRef = useRef(null)
+  const unmountingRef = useRef(false)
+  const tourCompletedRef = useRef(false)
+  const currentStepRef = useRef(0)
 
-  const startTour = useCallback(() => {
+  const startTour = useCallback((resumeFromStep = 0) => {
     try {
-      // Filter steps to only include elements that exist in the DOM
       const isMobile = window.innerWidth < 1024
       const availableSteps = TOUR_STEPS.filter((step) => {
         if (isMobile && step.element === '[data-tour="sidebar-nav"]') return false
@@ -76,9 +79,15 @@ export function useDashboardTour(ready = false) {
 
       if (availableSteps.length === 0) return
 
+      const startIndex = Math.max(0, Math.min(resumeFromStep, availableSteps.length - 1))
+
       if (driverRef.current) {
         driverRef.current.destroy()
       }
+
+      // Reset refs for new tour session
+      tourCompletedRef.current = false
+      currentStepRef.current = startIndex
 
       driverRef.current = driver({
         showProgress: true,
@@ -90,23 +99,63 @@ export function useDashboardTour(ready = false) {
         nextBtnText: 'Next',
         prevBtnText: 'Back',
         doneBtnText: 'Done',
+        onHighlighted: (_element, step, opts) => {
+          currentStepRef.current = opts.state.activeIndex ?? currentStepRef.current
+        },
+        onNextClick: (_element, step, opts) => {
+          const isLast = opts.state.activeIndex === availableSteps.length - 1
+          if (isLast) {
+            tourCompletedRef.current = true
+          }
+          driverRef.current?.moveNext()
+        },
+        onCloseClick: () => {
+          driverRef.current?.destroy()
+        },
         onDestroyed: () => {
-          localStorage.setItem(STORAGE_KEY, TOUR_VERSION)
+          if (tourCompletedRef.current) {
+            // User clicked "Done" on last step — tour complete
+            localStorage.setItem(COMPLETED_KEY, TOUR_VERSION)
+            sessionStorage.removeItem(PROGRESS_KEY)
+          } else if (unmountingRef.current) {
+            // Component unmounting (navigation) — save progress
+            sessionStorage.setItem(
+              PROGRESS_KEY,
+              JSON.stringify({ step: currentStepRef.current, version: TOUR_VERSION })
+            )
+          } else {
+            // User clicked X to dismiss — treat as complete
+            localStorage.setItem(COMPLETED_KEY, TOUR_VERSION)
+            sessionStorage.removeItem(PROGRESS_KEY)
+          }
         },
         steps: availableSteps,
       })
 
-      driverRef.current.drive()
+      driverRef.current.drive(startIndex)
     } catch (e) {
       console.warn('Dashboard tour failed to start:', e)
     }
   }, [])
 
   // Auto-start on first visit once data is ready
-  // Polls for tour target elements to handle lazy-loading and slow API responses
   useEffect(() => {
     if (!ready) return
-    if (localStorage.getItem(STORAGE_KEY) === TOUR_VERSION) return
+    if (localStorage.getItem(COMPLETED_KEY) === TOUR_VERSION) return
+
+    // Check for saved progress to resume from
+    let resumeStep = 0
+    try {
+      const saved = sessionStorage.getItem(PROGRESS_KEY)
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        if (parsed.version === TOUR_VERSION && typeof parsed.step === 'number') {
+          resumeStep = parsed.step
+        }
+      }
+    } catch {
+      // ignore malformed data
+    }
 
     let cancelled = false
     let timer = null
@@ -118,14 +167,13 @@ export function useDashboardTour(ready = false) {
       )
       if (hasElements) {
         requestAnimationFrame(() => {
-          if (!cancelled) startTour()
+          if (!cancelled) startTour(resumeStep)
         })
       } else if (attemptsLeft > 0) {
         timer = setTimeout(() => tryStart(attemptsLeft - 1), 500)
       }
     }
 
-    // Initial delay for animations to settle, then up to 5 retries (3.5s total max)
     timer = setTimeout(() => tryStart(5), 1000)
 
     return () => {
@@ -136,14 +184,18 @@ export function useDashboardTour(ready = false) {
 
   // Listen for manual trigger from sidebar button
   useEffect(() => {
-    const handler = () => startTour()
+    const handler = () => {
+      sessionStorage.removeItem(PROGRESS_KEY)
+      startTour(0)
+    }
     window.addEventListener('start-dashboard-tour', handler)
     return () => window.removeEventListener('start-dashboard-tour', handler)
   }, [startTour])
 
-  // Cleanup on unmount
+  // Cleanup on unmount — set unmountingRef so onDestroyed saves progress
   useEffect(() => {
     return () => {
+      unmountingRef.current = true
       if (driverRef.current) {
         driverRef.current.destroy()
       }
