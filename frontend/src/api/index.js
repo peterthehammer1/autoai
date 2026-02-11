@@ -183,6 +183,22 @@ export const smsLogs = {
   stats: (period = 'week') => fetchAPI(`/sms-logs/stats?period=${period}`),
 }
 
+// Leads (public — no API key)
+export const leads = {
+  submit: async (data) => {
+    const response = await fetch(`${API_BASE}/leads`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    })
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}))
+      throw new Error(err.error?.message || `API error: ${response.status}`)
+    }
+    return response.json()
+  },
+}
+
 export default {
   appointments,
   customers,
@@ -191,4 +207,5 @@ export default {
   analytics,
   callLogs,
   smsLogs,
+  leads,
 }

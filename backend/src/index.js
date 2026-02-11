@@ -20,6 +20,7 @@ import reminderRoutes from './routes/reminders.js';
 import smsLogRoutes from './routes/sms-logs.js';
 import callCenterRoutes from './routes/call-center.js';
 import cronRoutes from './routes/cron.js';
+import createLeadsRouter from './routes/leads.js';
 import { supabase } from './config/database.js';
 import { logger } from './utils/logger.js';
 
@@ -141,6 +142,9 @@ app.use('/api/call-center', generalLimiter, requireApiKey, callCenterRoutes);
 app.use('/api/webhooks', webhookLimiter, webhookRoutes);
 app.use('/api/voice', webhookLimiter, (await import('./routes/retell-functions.js')).default);
 app.use('/api/cron', cronRoutes);
+
+// Leads — POST is public (landing page form), GET requires API key
+app.use('/api/leads', bookingLimiter, createLeadsRouter(requireApiKey));
 
 // Error handling middleware
 app.use((err, req, res, next) => {
