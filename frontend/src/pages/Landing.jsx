@@ -111,10 +111,10 @@ const features = [
 ]
 
 const stats = [
-  { value: '24/7', label: 'AI Availability', icon: Clock },
-  { value: '95%', label: 'Booking Rate', icon: TrendingUp },
-  { value: '<3s', label: 'Response Time', icon: Zap },
-  { value: '4.9★', label: 'Customer Rating', icon: Star },
+  { value: '15+', label: 'Hours Saved per Week', icon: Clock },
+  { value: '30%', label: 'More Bookings Captured', icon: TrendingUp },
+  { value: '24/7', label: 'After-Hours Coverage', icon: Zap },
+  { value: '$0', label: 'Missed Call Revenue Lost', icon: Star },
 ]
 
 const capabilities = [
@@ -132,37 +132,37 @@ const testimonials = [
   {
     quote: "Nucleus gives us peace of mind and time freedom. We never miss a call anymore — Amber handles everything while we focus on the shop floor.",
     author: "Nikita Nathwani",
-    role: "9Round Owner",
+    role: "Multi-Location Franchise Owner",
     rating: 5,
   },
   {
     quote: "I've tried six or seven AI receptionist services. They're not as good at carrying on a conversation as Nucleus AI. The difference is night and day.",
     author: "Richard M Sedler",
-    role: "President & CEO, RMS Media Group Inc.",
+    role: "CEO, RMS Media Group",
     rating: 5,
   },
 ]
 
 const faqs = [
   {
-    question: 'What is Premier Auto Service?',
-    answer: 'Premier Auto Service is an AI-powered auto service booking platform that allows customers to book appointments 24/7 through an intelligent AI voice assistant named Amber. The platform is powered by Nucleus AI and offers services including oil changes, brake service, tire service, engine diagnostics, and more.',
+    question: 'How quickly can I get Amber set up for my shop?',
+    answer: 'Most shops are fully live within 48 hours. We configure Amber with your services, hours, and pricing, then port or forward your existing number. There\'s no hardware to install — everything runs in the cloud.',
   },
   {
-    question: 'How do I book an appointment with Premier Auto Service?',
-    answer: 'You can book an appointment by calling (647) 371-1990 anytime, 24 hours a day, 7 days a week. Our AI assistant Amber will help you schedule your service, check availability, and send you an SMS confirmation. You can also visit premierauto.ai to access the dashboard.',
+    question: 'Will my customers know they\'re talking to AI?',
+    answer: 'Amber is designed to sound natural and conversational — most callers don\'t realize they\'re speaking with AI. She greets customers by name, references their vehicle history, and handles complex requests like multi-service bookings and recall checks.',
   },
   {
-    question: 'What services does Premier Auto Service offer?',
-    answer: 'Premier Auto Service offers a full range of automotive maintenance and repair services including oil changes, brake inspection and repair, tire rotation and replacement, engine diagnostics, transmission service, air conditioning repair, battery replacement, and scheduled maintenance.',
+    question: 'What happens if Amber can\'t handle a call?',
+    answer: 'If Amber encounters a question outside her scope, she seamlessly offers to take a message or transfer the call to your team. You get a full transcript and recording of every call, so nothing falls through the cracks.',
   },
   {
-    question: 'Is the AI booking system available 24/7?',
-    answer: 'Yes! Our AI assistant Amber is available 24 hours a day, 7 days a week, 365 days a year. You can call anytime to book, reschedule, or cancel appointments. There are no wait times and you\'ll receive instant SMS confirmation.',
+    question: 'How does pricing work?',
+    answer: 'Pricing is based on your call volume and the features you need. There are no long-term contracts and you can cancel anytime. Request a demo and we\'ll walk you through a plan that fits your shop.',
   },
   {
-    question: 'What is Nucleus AI?',
-    answer: 'Nucleus AI is the technology company that powers Premier Auto Service\'s AI booking system. Nucleus provides enterprise-ready conversational AI for automated phone calls, enabling businesses to offer 24/7 customer service through natural, human-like AI conversations.',
+    question: 'Can I try it before committing?',
+    answer: 'Absolutely. We offer a free demo where you can hear Amber handle real calls for your shop. Call (647) 371-1990 right now to experience it yourself, or request a personalized demo and we\'ll set up a walkthrough.',
   },
 ]
 
@@ -261,49 +261,53 @@ export default function Landing() {
             <div className="text-center lg:text-left">
               <Badge className="mb-4 bg-violet-100 text-violet-700 hover:bg-violet-100 px-4 py-1.5">
                 <Sparkles className="h-3.5 w-3.5 mr-1.5" />
-                AI-Powered Auto Service
+                AI-Powered Receptionist for Auto Shops
               </Badge>
 
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-slate-900 leading-tight" itemProp="name">
-                Your AI Service Advisor,{' '}
+                Never Miss Another Call.{' '}
                 <span className="bg-gradient-to-r from-blue-600 to-violet-600 bg-clip-text text-transparent">
-                  Available 24/7
+                  Never Lose Another Booking.
                 </span>
               </h1>
 
               <p className="mt-6 text-lg sm:text-xl text-slate-600 max-w-2xl mx-auto lg:mx-0" itemProp="description">
-                Meet Amber — your AI voice agent who books appointments, checks recalls,
-                recommends services by mileage, and delights customers around the clock.
-                Never miss another call.
+                Amber answers your shop's phone 24/7 — booking appointments, quoting services,
+                and sending confirmations. Your customers can't tell she's AI.
               </p>
 
               <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                 <Button size="lg" className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-lg px-8 h-14" asChild>
-                  <a href="tel:+16473711990" itemProp="telephone">
-                    <PhoneCall className="h-5 w-5 mr-2" />
-                    Call to Book: (647) 371-1990
+                  <a href="#contact">
+                    <ArrowRight className="h-5 w-5 mr-2" />
+                    Request a Demo
                   </a>
                 </Button>
                 <Button size="lg" variant="outline" className="text-lg px-8 h-14" asChild>
-                  <Link to="/dashboard">
-                    View Dashboard
-                    <ArrowRight className="h-5 w-5 ml-2" />
-                  </Link>
+                  <a href="tel:+16473711990" itemProp="telephone">
+                    <PhoneCall className="h-5 w-5 mr-2" />
+                    Hear Amber Live: (647) 371-1990
+                  </a>
                 </Button>
+              </div>
+              <div className="mt-4 text-center lg:text-left">
+                <Link to="/dashboard" className="text-sm text-blue-600 hover:text-blue-700 font-medium inline-flex items-center gap-1 transition-colors">
+                  Explore the live dashboard <ArrowRight className="h-4 w-4" />
+                </Link>
               </div>
 
               <div className="mt-10 flex items-center gap-6 justify-center lg:justify-start text-sm text-slate-500 flex-wrap">
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-                  <span>No wait times</span>
+                  <span>Set up in 48 hours</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-                  <span>Instant booking</span>
+                  <span>No contracts required</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-                  <span>SMS confirmation</span>
+                  <span>Cancel anytime</span>
                 </div>
               </div>
             </div>
@@ -646,17 +650,18 @@ export default function Landing() {
                 Get Started
               </Badge>
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6">
-                Ready to Transform Your Auto Shop?
+                See How Amber Works for Your Shop
               </h2>
               <p className="text-lg text-slate-400 mb-10 max-w-xl">
-                AI voice booking, vehicle intelligence, customer health scoring,
-                and a full management dashboard — all in one platform.
+                Request a personalized demo and see how Amber can handle your shop's calls,
+                book appointments, and keep your schedule full — without lifting a finger.
               </p>
               <div className="space-y-4">
                 {[
                   'Personalized demo of the full platform',
-                  'Custom setup for your shop\'s services and hours',
-                  'Live in as little as 48 hours',
+                  'Custom walkthrough for your services and hours',
+                  'See real AI conversations and analytics',
+                  'Live in as little as 48 hours after signup',
                 ].map((item, i) => (
                   <div key={i} className="flex items-center gap-3">
                     <div className="h-6 w-6 rounded-full bg-emerald-500/20 flex items-center justify-center shrink-0">
@@ -758,43 +763,6 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* FAQ */}
-      <section id="faq" className="py-24 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-3xl mx-auto">
-          <div className="text-center mb-16">
-            <Badge className="mb-4 bg-blue-100 text-blue-700 hover:bg-blue-100">
-              FAQ
-            </Badge>
-            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900">
-              Frequently Asked Questions
-            </h2>
-            <p className="mt-4 text-lg text-slate-600 max-w-2xl mx-auto">
-              Everything you need to know about Premier Auto Service and our AI booking platform.
-            </p>
-          </div>
-
-          <div className="divide-y divide-slate-200 border-y border-slate-200">
-            {faqs.map((faq, i) => (
-              <div key={i}>
-                <button
-                  onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                  className="flex w-full items-center justify-between py-5 text-left"
-                >
-                  <span className="text-lg font-medium text-slate-900 pr-4">{faq.question}</span>
-                  <ChevronDown className={cn(
-                    "h-5 w-5 text-slate-500 shrink-0 transition-transform duration-200",
-                    openFaq === i && "rotate-180"
-                  )} />
-                </button>
-                {openFaq === i && (
-                  <p className="pb-5 text-slate-600 leading-relaxed">{faq.answer}</p>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Testimonials */}
       <section id="testimonials" className="py-24 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
@@ -833,6 +801,43 @@ export default function Landing() {
                     <p className="text-sm text-slate-500">{testimonial.role}</p>
                   </div>
                 </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section id="faq" className="py-24 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-3xl mx-auto">
+          <div className="text-center mb-16">
+            <Badge className="mb-4 bg-blue-100 text-blue-700 hover:bg-blue-100">
+              FAQ
+            </Badge>
+            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900">
+              Frequently Asked Questions
+            </h2>
+            <p className="mt-4 text-lg text-slate-600 max-w-2xl mx-auto">
+              Common questions from shop owners considering Amber.
+            </p>
+          </div>
+
+          <div className="divide-y divide-slate-200 border-y border-slate-200">
+            {faqs.map((faq, i) => (
+              <div key={i}>
+                <button
+                  onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                  className="flex w-full items-center justify-between py-5 text-left"
+                >
+                  <span className="text-lg font-medium text-slate-900 pr-4">{faq.question}</span>
+                  <ChevronDown className={cn(
+                    "h-5 w-5 text-slate-500 shrink-0 transition-transform duration-200",
+                    openFaq === i && "rotate-180"
+                  )} />
+                </button>
+                {openFaq === i && (
+                  <p className="pb-5 text-slate-600 leading-relaxed">{faq.answer}</p>
+                )}
               </div>
             ))}
           </div>
