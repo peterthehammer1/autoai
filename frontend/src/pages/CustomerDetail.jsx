@@ -40,6 +40,7 @@ import {
   cn,
 } from '@/lib/utils'
 import PhoneNumber, { Email } from '@/components/PhoneNumber'
+import { useCustomerDetailTour } from '@/hooks/use-customer-detail-tour'
 
 export default function CustomerDetail() {
   const { id } = useParams()
@@ -101,6 +102,7 @@ export default function CustomerDetail() {
   })
 
   const customer = data?.customer
+  useCustomerDetailTour(!isLoading)
 
   const handleEditOpen = () => {
     if (customer) {
@@ -151,7 +153,7 @@ export default function CustomerDetail() {
   return (
     <div className="space-y-4">
       {/* Header - Dark Theme */}
-      <div className="bg-gradient-to-r from-slate-800 to-slate-900 -mx-4 sm:-mx-6 px-4 sm:px-6 py-4">
+      <div data-tour="custdetail-header" className="bg-gradient-to-r from-slate-800 to-slate-900 -mx-4 sm:-mx-6 px-4 sm:px-6 py-4">
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="icon" asChild className="h-8 w-8 text-slate-400 hover:text-white hover:bg-slate-700">
             <Link to="/customers">
@@ -209,7 +211,7 @@ export default function CustomerDetail() {
 
         {/* Customer Health Score Card */}
         {healthData && (
-          <div className="bg-white border border-slate-200 md:col-span-2">
+          <div data-tour="custdetail-health" className="bg-white border border-slate-200 md:col-span-2">
             <div className="px-4 py-3 border-b border-slate-200 bg-slate-50">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-medium text-slate-700 flex items-center gap-2">
@@ -325,7 +327,7 @@ export default function CustomerDetail() {
         )}
 
         {/* Vehicles */}
-        <div className="bg-white border border-slate-200 md:col-span-3">
+        <div data-tour="custdetail-vehicles" className="bg-white border border-slate-200 md:col-span-3">
           <div className="px-4 py-3 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
             <h3 className="text-sm font-medium text-slate-700">Vehicles</h3>
             <Button size="sm" onClick={() => setIsAddVehicleOpen(true)} className="text-xs h-7">
@@ -378,7 +380,7 @@ export default function CustomerDetail() {
       </div>
 
       {/* Appointments History */}
-      <div className="bg-white border border-slate-200">
+      <div data-tour="custdetail-appointments" className="bg-white border border-slate-200">
         <div className="px-4 py-3 border-b border-slate-200 bg-slate-50">
           <h3 className="text-sm font-medium text-slate-700">Appointment History</h3>
         </div>
