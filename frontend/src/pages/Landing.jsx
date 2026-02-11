@@ -753,7 +753,7 @@ export default function Landing() {
                     </Button>
 
                     <p className="text-xs text-slate-500 text-center pt-1">
-                      No spam — we'll only reach out when it's your turn.
+                      We'll be in touch within one business day.
                     </p>
                   </div>
                 </form>
