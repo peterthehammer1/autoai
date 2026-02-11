@@ -66,36 +66,40 @@ export function useDashboardTour(ready = false) {
   const driverRef = useRef(null)
 
   const startTour = useCallback(() => {
-    // Filter steps to only include elements that exist in the DOM
-    const isMobile = window.innerWidth < 1024
-    const availableSteps = TOUR_STEPS.filter((step) => {
-      if (isMobile && step.element === '[data-tour="sidebar-nav"]') return false
-      return document.querySelector(step.element)
-    })
+    try {
+      // Filter steps to only include elements that exist in the DOM
+      const isMobile = window.innerWidth < 1024
+      const availableSteps = TOUR_STEPS.filter((step) => {
+        if (isMobile && step.element === '[data-tour="sidebar-nav"]') return false
+        return document.querySelector(step.element)
+      })
 
-    if (availableSteps.length === 0) return
+      if (availableSteps.length === 0) return
 
-    if (driverRef.current) {
-      driverRef.current.destroy()
+      if (driverRef.current) {
+        driverRef.current.destroy()
+      }
+
+      driverRef.current = driver({
+        showProgress: true,
+        animate: true,
+        overlayColor: 'rgba(8, 36, 56, 0.65)',
+        stagePadding: 8,
+        stageRadius: 12,
+        popoverClass: 'dashboard-tour-popover',
+        nextBtnText: 'Next',
+        prevBtnText: 'Back',
+        doneBtnText: 'Done',
+        onDestroyed: () => {
+          localStorage.setItem(STORAGE_KEY, TOUR_VERSION)
+        },
+        steps: availableSteps,
+      })
+
+      driverRef.current.drive()
+    } catch (e) {
+      console.warn('Dashboard tour failed to start:', e)
     }
-
-    driverRef.current = driver({
-      showProgress: true,
-      animate: true,
-      overlayColor: 'rgba(8, 36, 56, 0.65)',
-      stagePadding: 8,
-      stageRadius: 12,
-      popoverClass: 'dashboard-tour-popover',
-      nextBtnText: 'Next',
-      prevBtnText: 'Back',
-      doneBtnText: 'Done',
-      onDestroyed: () => {
-        localStorage.setItem(STORAGE_KEY, TOUR_VERSION)
-      },
-      steps: availableSteps,
-    })
-
-    driverRef.current.drive()
   }, [])
 
   // Auto-start on first visit once data is ready
@@ -104,7 +108,7 @@ export function useDashboardTour(ready = false) {
     if (localStorage.getItem(STORAGE_KEY) === TOUR_VERSION) return
 
     const timeout = setTimeout(() => {
-      startTour()
+      requestAnimationFrame(() => startTour())
     }, 800)
 
     return () => clearTimeout(timeout)
