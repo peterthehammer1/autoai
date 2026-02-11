@@ -56,6 +56,7 @@ import PhoneNumber, { Email } from '@/components/PhoneNumber'
 import CarImage from '@/components/CarImage'
 import CustomerAvatar from '@/components/CustomerAvatar'
 import { Link } from 'react-router-dom'
+import { useCustomersTour } from '@/hooks/use-customers-tour'
 
 const ITEMS_PER_PAGE = 50
 
@@ -182,6 +183,8 @@ export default function Customers() {
     }
   }, [sortedAndFilteredCustomers, selectedCustomerId, hasAutoSelected])
 
+  useCustomersTour(!isLoading)
+
   const selectedCustomer = customerData?.customer
   const totalVehicles = data?.customers?.reduce((sum, c) => sum + (c.vehicle_count || 0), 0) || 0
   const totalVisits = data?.customers?.reduce((sum, c) => sum + (c.total_visits || 0), 0) || 0
@@ -230,7 +233,7 @@ export default function Customers() {
   return (
     <div className="h-[calc(100vh-4rem)] flex flex-col">
       {/* Page Header */}
-      <div className="bg-gradient-to-r from-slate-800 to-slate-900 -mx-4 sm:-mx-6 px-4 sm:px-6 py-4 mb-4">
+      <div data-tour="customers-header" className="bg-gradient-to-r from-slate-800 to-slate-900 -mx-4 sm:-mx-6 px-4 sm:px-6 py-4 mb-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Users className="h-5 w-5 text-blue-400" />
@@ -251,7 +254,7 @@ export default function Customers() {
           selectedCustomerId ? "hidden lg:flex" : "flex"
         )}>
           {/* Search Header */}
-          <div className="p-3 border-b border-slate-200">
+          <div data-tour="customers-search" className="p-3 border-b border-slate-200">
             <div className="relative">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <Input
@@ -264,7 +267,7 @@ export default function Customers() {
           </div>
 
           {/* Customer List */}
-          <ScrollArea className="flex-1">
+          <ScrollArea data-tour="customers-list" className="flex-1">
             {isLoading ? (
               <div className="p-8 text-center">
                 <div className="animate-spin h-5 w-5 border-2 border-slate-400 border-t-transparent rounded-full mx-auto mb-2" />
@@ -316,7 +319,7 @@ export default function Customers() {
         </div>
 
         {/* Right Panel - Customer Details */}
-        <div className={cn(
+        <div data-tour="customers-detail" className={cn(
           "flex-1 flex flex-col min-h-0",
           !selectedCustomerId ? "hidden lg:flex" : "flex"
         )}>
