@@ -213,8 +213,7 @@ export default function Landing() {
               </Button>
               <Button asChild className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800">
                 <a href="#contact">
-                  <ArrowRight className="h-4 w-4 mr-2" />
-                  More Info
+                  Join Waitlist
                 </a>
               </Button>
             </div>
@@ -245,8 +244,7 @@ export default function Landing() {
               </Button>
               <Button className="w-full bg-gradient-to-r from-blue-600 to-blue-700" asChild>
                 <a href="#contact" onClick={() => setMobileMenuOpen(false)}>
-                  <ArrowRight className="h-4 w-4 mr-2" />
-                  More Info
+                  Join Waitlist
                 </a>
               </Button>
             </div>
