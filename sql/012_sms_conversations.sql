@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS sms_conversations (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_sms_conversations_phone ON sms_conversations(phone) WHERE expires_at > NOW();
+CREATE INDEX IF NOT EXISTS idx_sms_conversations_phone ON sms_conversations(phone, expires_at DESC);
 
 -- Add direction column to sms_logs for tracking inbound messages
 ALTER TABLE sms_logs ADD COLUMN IF NOT EXISTS direction VARCHAR(10) DEFAULT 'outbound';
