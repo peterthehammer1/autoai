@@ -245,3 +245,65 @@
 .animate-float-delayed {
   animation: float-delayed 3s ease-in-out infinite 0.5s;
 }
+
+/* Driver.js Tour Overrides */
+.dashboard-tour-popover {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+  border-radius: 0.75rem !important;
+  box-shadow: 0 20px 60px -12px rgba(8, 36, 56, 0.25),
+              0 8px 20px -8px rgba(8, 36, 56, 0.15) !important;
+  border: 1px solid hsl(201 15% 88%) !important;
+  max-width: 340px !important;
+}
+
+.dashboard-tour-popover .driver-popover-title {
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  color: #082438 !important;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+}
+
+.dashboard-tour-popover .driver-popover-description {
+  font-size: 13px !important;
+  color: hsl(201 20% 45%) !important;
+  line-height: 1.5 !important;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+}
+
+.dashboard-tour-popover .driver-popover-progress-text {
+  font-size: 11px !important;
+  color: hsl(201 20% 45%) !important;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+}
+
+.dashboard-tour-popover .driver-popover-next-btn {
+  background-color: #082438 !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: 0.5rem !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  padding: 6px 16px !important;
+  text-shadow: none !important;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+}
+
+.dashboard-tour-popover .driver-popover-next-btn:hover {
+  background-color: #0a3a54 !important;
+}
+
+.dashboard-tour-popover .driver-popover-prev-btn {
+  background-color: transparent !important;
+  color: #082438 !important;
+  border: 1px solid hsl(201 15% 88%) !important;
+  border-radius: 0.5rem !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  padding: 6px 16px !important;
+  text-shadow: none !important;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+}
+
+.dashboard-tour-popover .driver-popover-prev-btn:hover {
+  background-color: hsl(201 15% 94%) !important;
+}

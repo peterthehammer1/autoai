@@ -17,6 +17,7 @@ import {
   X,
   ChevronRight,
   PhoneCall,
+  HelpCircle,
 } from 'lucide-react'
 
 // Business phone numbers for AI agent
@@ -146,7 +147,7 @@ export default function Layout() {
           </div>
           
           {/* Navigation */}
-          <nav className="flex flex-col gap-0.5 p-3 flex-1" aria-label="Main navigation">
+          <nav data-tour="sidebar-nav" className="flex flex-col gap-0.5 p-3 flex-1" aria-label="Main navigation">
             <p className="px-3 py-2 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
               Main
             </p>
@@ -169,6 +170,16 @@ export default function Layout() {
                 )}
               </Link>
             ))}
+            {/* Take Tour button */}
+            {location.pathname.startsWith('/dashboard') && (
+              <button
+                onClick={() => window.dispatchEvent(new CustomEvent('start-dashboard-tour'))}
+                className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white transition-colors mt-auto"
+              >
+                <HelpCircle className="h-[18px] w-[18px]" aria-hidden="true" />
+                Take Tour
+              </button>
+            )}
           </nav>
           
           {/* AI Status & Phone */}

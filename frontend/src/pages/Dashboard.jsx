@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isToday, addMonths, subMonths, getDay } from 'date-fns'
+import { useDashboardTour } from '@/hooks/use-dashboard-tour'
 import {
   AreaChart,
   Area,
@@ -116,6 +117,9 @@ export default function Dashboard() {
     refetchIntervalInBackground: false,
   })
 
+  const ready = !overviewLoading && !todayLoading && !insightsLoading
+  const { startTour } = useDashboardTour(ready)
+
   const { data: callTrends } = useQuery({
     queryKey: ['analytics', 'call-trends', 'week'],
     queryFn: () => analytics.callTrends('week'),
@@ -143,7 +147,7 @@ export default function Dashboard() {
   // AI Insights Panel Component (reusable)
   const AIInsightsPanel = () => (
     insightsData?.insights?.length > 0 ? (
-      <div className="bg-gradient-to-r from-slate-900 to-slate-800 rounded-lg overflow-hidden shadow-card">
+      <div data-tour="ai-insights" className="bg-gradient-to-r from-slate-900 to-slate-800 rounded-lg overflow-hidden shadow-card">
         <div className="p-4 sm:p-5">
           <div className="flex items-center gap-2 mb-4">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-slate-600 to-slate-700">
@@ -366,7 +370,7 @@ export default function Dashboard() {
   return (
     <div className="flex flex-col gap-4">
       {/* Page Header */}
-      <div className="bg-gradient-to-r from-slate-800 to-slate-900 -mx-4 sm:-mx-6 px-4 sm:px-6 py-4">
+      <div data-tour="dashboard-header" className="bg-gradient-to-r from-slate-800 to-slate-900 -mx-4 sm:-mx-6 px-4 sm:px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <GreetingIcon className={cn("h-5 w-5", greeting.color)} aria-hidden="true" />
@@ -396,7 +400,7 @@ export default function Dashboard() {
         {/* Left Column - 2/3 width */}
         <div className="lg:col-span-2 space-y-5">
           {/* Today's Schedule Card - Enhanced */}
-          <Card className="shadow-lg border-0 overflow-hidden">
+          <Card data-tour="todays-schedule" className="shadow-lg border-0 overflow-hidden">
             <CardHeader className="pb-3 bg-gradient-to-r from-slate-50 to-white border-b">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -520,7 +524,7 @@ export default function Dashboard() {
         {/* Right Column - 1/3 width */}
         <div className="space-y-5">
           {/* AI Performance Card - Enhanced */}
-          <Card className="shadow-lg border-0 overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
+          <Card data-tour="ai-agent" className="shadow-lg border-0 overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -608,7 +612,7 @@ export default function Dashboard() {
           </Card>
           
           {/* Mini Calendar - Enhanced */}
-          <Card className="shadow-lg border-0 overflow-hidden">
+          <Card data-tour="mini-calendar" className="shadow-lg border-0 overflow-hidden">
             <MiniCalendar />
           </Card>
           
