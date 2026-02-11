@@ -277,7 +277,6 @@ export default function Landing() {
               <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                 <Button size="lg" className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-lg px-8 h-14" asChild>
                   <a href="#contact">
-                    <ArrowRight className="h-5 w-5 mr-2" />
                     Request a Demo
                   </a>
                 </Button>
