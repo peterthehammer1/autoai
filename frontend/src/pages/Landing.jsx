@@ -645,7 +645,7 @@ export default function Landing() {
             {/* Left — copy */}
             <div className="lg:col-span-3">
               <Badge className="mb-4 bg-white/10 text-white hover:bg-white/10 border-white/20">
-                Get Started
+                Early Access
               </Badge>
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6">
                 See How Amber Works for Your Shop
