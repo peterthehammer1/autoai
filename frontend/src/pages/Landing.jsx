@@ -39,7 +39,7 @@ const features = [
   {
     icon: Bot,
     title: '24/7 AI Voice Agent',
-    description: 'Amber answers calls around the clock — booking appointments, answering questions, providing quotes, and handling reschedules. Customers can\'t tell it\'s AI.',
+    description: 'Amber answers calls around the clock — booking appointments, answering questions, providing quotes, and handling reschedules.',
     color: 'from-violet-500 to-purple-600',
     bgColor: 'bg-violet-50',
     iconColor: 'text-violet-600',
@@ -55,7 +55,7 @@ const features = [
   {
     icon: Smartphone,
     title: 'Two-Way SMS',
-    description: 'Customers reply CONFIRM, CANCEL, or RESCHEDULE to manage appointments by text. Automatic confirmations and 24-hour reminders included.',
+    description: 'Customers can reply to SMS confirmations and reminders to manage appointments by texting with Amber.',
     color: 'from-emerald-500 to-teal-500',
     bgColor: 'bg-emerald-50',
     iconColor: 'text-emerald-600',
@@ -273,7 +273,7 @@ export default function Landing() {
 
               <p className="mt-6 text-lg sm:text-xl text-slate-600 max-w-2xl mx-auto lg:mx-0" itemProp="description">
                 Amber answers your shop's phone 24/7 — booking appointments, quoting services,
-                and sending confirmations. Your customers can't tell she's AI.
+                and sending confirmations.
               </p>
 
               <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
