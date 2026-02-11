@@ -1,10 +1,10 @@
-# Premier Auto Service - AI-Powered Auto Service Booking Platform
+# Premier Auto Service - AI Receptionist Platform for Auto Shops
 # https://premierauto.ai
 # Powered by Nucleus AI
 
 ## About Premier Auto Service
 
-Premier Auto Service is an AI-powered auto service booking platform that enables automotive businesses to offer 24/7 appointment booking through an intelligent AI voice assistant named Amber. The platform is powered by Nucleus AI, a leading conversational AI company.
+Premier Auto Service is an AI receptionist platform built for auto service businesses. Our AI voice agent, Amber, answers your shop's phone 24/7 — booking appointments, quoting services, and sending SMS confirmations to customers. The platform is powered by Nucleus AI.
 
 ## Key Information
 
@@ -12,79 +12,79 @@ Premier Auto Service is an AI-powered auto service booking platform that enables
 - **Website**: https://premierauto.ai
 - **Phone**: (647) 371-1990
 - **Email**: service@premierauto.ai
-- **Location**: 1250 Industrial Boulevard, Springfield
 - **Technology Partner**: Nucleus AI (https://nucleus.com)
 
-## What We Offer
+## What We Offer (for Auto Shop Owners)
 
-### AI Voice Booking (24/7)
-Our AI agent Amber handles phone calls around the clock, booking appointments, answering questions, providing service quotes, and sending SMS confirmations. Customers can call anytime and speak naturally - Amber understands context, handles multiple vehicles, and processes requests just like a human service advisor.
+### AI Receptionist (24/7)
+Amber answers your shop's phone around the clock — booking appointments, answering customer questions, providing service quotes, and sending SMS confirmations. She handles reschedules, cancellations, and multi-vehicle customers. Set up in as little as 48 hours with no contracts required.
 
 ### Smart Scheduling
-Intelligent calendar management with real-time availability checking, service bay assignments, and estimated completion times. The system prevents double-booking and optimizes technician utilization.
+Real-time bay availability, automatic technician assignment based on skill level, and atomic booking that prevents double-booking. Manages your entire shop calendar.
 
-### Customer CRM
-Complete customer profiles including vehicle history, service records, customer health scores, and AI-powered recommendations for service upselling. Track every interaction across calls, SMS, and appointments.
+### Two-Way SMS
+Customers can reply to SMS confirmations and reminders to manage appointments by texting with Amber. Automatic confirmations and 24-hour reminders included.
+
+### Call Intelligence
+Every call is transcribed, summarized, and scored for sentiment. Searchable transcripts, recordings, and intent detection across all conversations.
+
+### Vehicle Intelligence
+VIN decoding, manufacturer recall checking, and mileage-based maintenance recommendations. Know what each vehicle needs before the customer asks.
+
+### Customer Health Scoring
+RFM-based health scores track recency, frequency, and spend. Identify at-risk customers and get AI-powered recommendations to re-engage them.
+
+### Full CRM
+Complete customer profiles with multiple vehicles, service history, call and SMS logs, appointment timeline, and lifetime value tracking.
 
 ### Analytics & Insights
-Real-time dashboards showing conversion rates, revenue trends, customer sentiment analysis, and AI-generated business insights. Understand what's working and identify opportunities for growth.
-
-### SMS & Email Automation
-Automatic appointment confirmations, reminders, and follow-ups. Keep customers informed without manual effort. All communications are logged and searchable.
+Real-time dashboards for conversion rates, revenue, sentiment trends, bay utilization, peak call hours, and AI-generated business insights.
 
 ### Enterprise Security
-Bank-level encryption, GDPR compliant data handling, and SOC 2 certified infrastructure. Customer data is protected with industry-leading security standards.
+API key authentication, CORS protection, input validation, PII scrubbing in logs, rate limiting, and parameterized queries throughout.
 
-## AI Capabilities
+## ROI for Shop Owners
 
-Amber, our AI service advisor, can:
-- Book new appointments
-- Reschedule existing bookings
-- Cancel appointments
-- Provide service quotes and pricing
-- Answer business questions (hours, location, services)
-- Handle multiple vehicles per customer
-- Process tow service requests
-- Send SMS confirmations automatically
-- Speak naturally with human-like conversation flow
+- **15+ hours saved per week** on phone calls
+- **30% more bookings captured** from after-hours and missed calls
+- **24/7 after-hours coverage** so you never miss a call
+- **$0 missed call revenue lost**
 
-## Performance Metrics
+## Onboarding
 
-- **Availability**: 24/7/365
-- **Booking Success Rate**: 95%
-- **Average Response Time**: Under 3 seconds
-- **Customer Satisfaction**: 4.9/5 stars
+- Set up in 48 hours
+- No contracts required
+- Cancel anytime
+- Personalized demo available
 
-## Services Offered
+## FAQ
 
-Premier Auto Service handles all types of automotive maintenance and repair:
-- Oil changes and fluid services
-- Brake inspection and repair
-- Tire rotation and replacement
-- Engine diagnostics
-- Transmission service
-- Air conditioning repair
-- Battery replacement
-- Scheduled maintenance
-- And more
+**How quickly can I get Amber set up for my shop?**
+Most shops are fully live within 48 hours. We configure Amber with your services, hours, and pricing, then port or forward your existing number. No hardware to install — everything runs in the cloud.
 
-## Contact Information
+**Will my customers know they're talking to AI?**
+Amber is designed to sound natural and conversational. She greets customers by name, references their vehicle history, and handles complex requests like multi-service bookings and recall checks.
 
-To book an appointment or learn more:
-- **Call**: (647) 371-1990 (AI-powered, available 24/7)
-- **Email**: service@premierauto.ai
-- **Website**: https://premierauto.ai
-- **Address**: 1250 Industrial Boulevard, Springfield
+**What happens if Amber can't handle a call?**
+She seamlessly offers to take a message or transfer the call to your team. You get a full transcript and recording of every call, so nothing falls through the cracks.
 
-## For Businesses
+**How does pricing work?**
+Pricing is based on your call volume and the features you need. There are no long-term contracts and you can cancel anytime.
 
-If you're an auto service center interested in implementing AI-powered booking for your business, contact Nucleus AI at https://nucleus.com to learn about their enterprise conversational AI platform.
+**Can I try it before committing?**
+Absolutely. We offer a free demo where you can hear Amber handle real calls for your shop. Call (647) 371-1990 to experience it yourself, or request a personalized demo.
 
 ## Testimonials
 
-"Nucleus gives us peace of mind and time freedom." - Nikita Nathwani, 9Round Owner
+"Nucleus gives us peace of mind and time freedom. We never miss a call anymore — Amber handles everything while we focus on the shop floor." - Nikita Nathwani, Multi-Location Franchise Owner
 
-"I've tried six or seven AI receptionist services. They're not as good as carrying on a conversation as Nucleus AI." - Richard M Sedler, President & CEO, RMS Media Group Inc.
+"I've tried six or seven AI receptionist services. They're not as good at carrying on a conversation as Nucleus AI. The difference is night and day." - Richard M Sedler, CEO, RMS Media Group
+
+## Contact
+
+- **Call**: (647) 371-1990 (AI-powered, available 24/7)
+- **Email**: service@premierauto.ai
+- **Website**: https://premierauto.ai
 
 ---
-Last updated: January 2026
+Last updated: February 2026

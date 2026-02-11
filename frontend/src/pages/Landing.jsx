@@ -120,7 +120,7 @@ const stats = [
 const capabilities = [
   { text: 'Book, reschedule & cancel appointments', icon: Calendar },
   { text: 'VIN decoding & recall checking', icon: FileSearch },
-  { text: 'Two-way SMS (CONFIRM / CANCEL / RESCHEDULE)', icon: Smartphone },
+  { text: 'Two-way SMS appointment management', icon: Smartphone },
   { text: 'Service quotes & mileage recommendations', icon: Wrench },
   { text: 'Tow request scheduling', icon: Truck },
   { text: 'Call transcripts with sentiment analysis', icon: Brain },
@@ -310,7 +310,7 @@ export default function Landing() {
             </div>
 
             {/* Dashboard preview */}
-            <div className="relative" role="img" aria-label="Premier Auto Service dashboard showing today's schedule, AI agent status, and key metrics like 24/7 availability, 95% booking rate, and under 3 second response time">
+            <div className="relative" role="img" aria-label="Premier Auto Service dashboard showing today's schedule, AI agent status, and key metrics like 15+ hours saved per week, 30% more bookings captured, and 24/7 after-hours coverage">
               <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-violet-500/20 rounded-3xl blur-3xl" />
               <div className="relative bg-slate-900 rounded-2xl shadow-2xl overflow-hidden border border-slate-700">
                 <div className="flex items-center gap-2 px-4 py-3 bg-slate-800 border-b border-slate-700">
@@ -746,7 +746,7 @@ export default function Landing() {
                     {leadStatus === 'submitting' ? (
                       <><Loader2 className="h-5 w-5 mr-2 animate-spin" /> Submitting...</>
                     ) : (
-                      <>Request a Demo</>
+                      <>Add Me To The Waitlist!</>
                     )}
                   </Button>
 
@@ -850,8 +850,8 @@ export default function Landing() {
                 <span className="text-2xl font-bold text-white tracking-tight">PREMIER AUTO</span>
               </div>
               <p className="text-slate-400 mb-6 max-w-md">
-                AI-powered auto service booking platform. Available 24/7 to help you
-                schedule appointments, answer questions, and keep your vehicle running smoothly.
+                AI receptionist platform for auto shops. Amber answers your phone 24/7,
+                books appointments, and keeps your schedule full.
               </p>
               <div className="flex items-center gap-6">
                 <a href="tel:+17164122499" className="flex items-center gap-2 text-white hover:text-blue-400 transition-colors text-sm">
