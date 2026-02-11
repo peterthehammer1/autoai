@@ -113,6 +113,7 @@ export default function Dashboard() {
     queryKey: ['analytics', 'insights'],
     queryFn: analytics.insights,
     refetchInterval: 5 * 60 * 1000, // Refresh every 5 minutes
+    refetchIntervalInBackground: false,
   })
 
   const { data: callTrends } = useQuery({

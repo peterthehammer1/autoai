@@ -377,199 +377,211 @@ router.post('/voice', async (req, res, next) => {
 });
 
 async function handleCallStarted(call) {
-  const { call_id, from_number, to_number, direction, start_timestamp } = call;
+  try {
+    const { call_id, from_number, to_number, direction, start_timestamp } = call;
 
-  // Create initial call log entry
-  await supabase
-    .from('call_logs')
-    .insert({
-      retell_call_id: call_id,
-      phone_number: from_number,
-      phone_normalized: normalizePhone(from_number),
-      direction: direction || 'inbound',
-      started_at: new Date(start_timestamp).toISOString(),
-      agent_id: call.agent_id
-    });
-
-  // Try to link to customer
-  const { data: customer } = await supabase
-    .from('customers')
-    .select('id')
-    .eq('phone_normalized', normalizePhone(from_number))
-    .single();
-
-  if (customer) {
+    // Create initial call log entry
     await supabase
       .from('call_logs')
-      .update({ customer_id: customer.id })
-      .eq('retell_call_id', call_id);
+      .insert({
+        retell_call_id: call_id,
+        phone_number: from_number,
+        phone_normalized: normalizePhone(from_number),
+        direction: direction || 'inbound',
+        started_at: new Date(start_timestamp).toISOString(),
+        agent_id: call.agent_id
+      });
+
+    // Try to link to customer
+    const { data: customer } = await supabase
+      .from('customers')
+      .select('id')
+      .eq('phone_normalized', normalizePhone(from_number))
+      .single();
+
+    if (customer) {
+      await supabase
+        .from('call_logs')
+        .update({ customer_id: customer.id })
+        .eq('retell_call_id', call_id);
+    }
+  } catch (error) {
+    console.error('handleCallStarted error:', error);
   }
 }
 
 async function handleCallEnded(call) {
-  const { 
-    call_id, 
-    end_timestamp, 
-    duration_ms,
-    disconnection_reason 
-  } = call;
+  try {
+    const {
+      call_id,
+      end_timestamp,
+      duration_ms,
+      disconnection_reason
+    } = call;
 
-  console.log('Call ended:', call_id, 'duration_ms:', duration_ms, 'disconnection_reason:', disconnection_reason);
+    console.log('Call ended:', call_id, 'duration_ms:', duration_ms, 'disconnection_reason:', disconnection_reason);
 
-  // Determine outcome based on call data
-  let outcome = 'inquiry';
-  
-  // Check if appointment was created during this call
-  const { data: appointment } = await supabase
-    .from('appointments')
-    .select('id')
-    .eq('call_id', call_id)
-    .single();
+    // Determine outcome based on call data
+    let outcome = 'inquiry';
 
-  if (appointment) {
-    outcome = 'booked';
-  } else if (disconnection_reason === 'user_hangup' && (duration_ms || 0) < 30000) {
-    outcome = 'abandoned';
-  } else if (disconnection_reason === 'agent_transfer') {
-    outcome = 'transferred';
-  }
-
-  await supabase
-    .from('call_logs')
-    .update({
-      ended_at: new Date(end_timestamp).toISOString(),
-      duration_seconds: Math.round((duration_ms || 0) / 1000),
-      outcome,
-      appointment_id: appointment?.id
-    })
-    .eq('retell_call_id', call_id);
-}
-
-async function handleCallAnalyzed(call) {
-  // Capture full call record: duration, summary, transcript, sentiment, date/time (started_at/ended_at)
-  const {
-    call_id,
-    from_number,
-    start_timestamp,
-    end_timestamp,
-    duration_ms,
-    transcript,
-    recording_url,
-    call_summary,
-    call_analysis,
-    agent_id,
-    direction,
-    disconnection_reason
-  } = call;
-
-  console.log('Call analyzed:', call_id, 'Capturing full call record');
-
-  // Extract analysis data (payload may use call_analysis or top-level)
-  const sentiment = (call_analysis?.user_sentiment || 'neutral').toString().toLowerCase();
-  const summary = call_analysis?.call_summary || call_summary || '';
-  const callSuccessful = call_analysis?.call_successful;
-
-  // Determine intent from summary
-  let intentDetected = 'inquiry';
-  if (summary) {
-    const lowerSummary = summary.toLowerCase();
-    if (lowerSummary.includes('book') || lowerSummary.includes('schedule') || lowerSummary.includes('appointment')) {
-      intentDetected = 'book';
-    } else if (lowerSummary.includes('reschedule') || lowerSummary.includes('move') || lowerSummary.includes('change')) {
-      intentDetected = 'reschedule';
-    } else if (lowerSummary.includes('cancel')) {
-      intentDetected = 'cancel';
-    } else if (lowerSummary.includes('tow') || lowerSummary.includes('towing')) {
-      intentDetected = 'tow';
-    }
-  }
-
-  const phoneNorm = from_number ? normalizePhone(from_number) : null;
-
-  // Get existing call log (if call_started was received)
-  const { data: existingLog } = await supabase
-    .from('call_logs')
-    .select('id, customer_id, phone_normalized, outcome, appointment_id')
-    .eq('retell_call_id', call_id)
-    .single();
-
-  const startedAt = start_timestamp ? new Date(start_timestamp).toISOString() : null;
-  const endedAt = end_timestamp ? new Date(end_timestamp).toISOString() : null;
-  const durationSeconds = duration_ms != null ? Math.round(Number(duration_ms) / 1000) : null;
-
-  if (existingLog) {
-    // Update existing call log with full analysis data
-    const updateData = {
-      transcript: transcript || existingLog.transcript,
-      recording_url: recording_url || existingLog.recording_url,
-      transcript_summary: summary,
-      sentiment,
-      intent_detected: intentDetected,
-      started_at: startedAt || existingLog.started_at,
-      ended_at: endedAt || existingLog.ended_at,
-      duration_seconds: durationSeconds ?? existingLog.duration_seconds
-    };
-
-    if (callSuccessful === true) {
-      if (existingLog.appointment_id) {
-        updateData.outcome = 'booked';
-      } else if (existingLog.outcome !== 'booked') {
-        updateData.outcome = 'completed';
-      }
-    }
-
-    if (!existingLog.customer_id && phoneNorm) {
-      const { data: customer } = await supabase
-        .from('customers')
-        .select('id')
-        .eq('phone_normalized', phoneNorm)
-        .single();
-      if (customer) updateData.customer_id = customer.id;
-    }
-
-    await supabase
-      .from('call_logs')
-      .update(updateData)
-      .eq('retell_call_id', call_id);
-  } else {
-    // call_started was missed: create full call record from call_analyzed payload so we never lose a call
-    const insertData = {
-      retell_call_id: call_id,
-      phone_number: from_number || null,
-      phone_normalized: phoneNorm || null,
-      direction: direction || 'inbound',
-      started_at: startedAt,
-      ended_at: endedAt,
-      duration_seconds: durationSeconds,
-      transcript: transcript || null,
-      transcript_summary: summary || null,
-      recording_url: recording_url || null,
-      sentiment,
-      intent_detected: intentDetected,
-      outcome: callSuccessful === true ? 'completed' : 'inquiry',
-      agent_id: agent_id || null
-    };
-
+    // Check if appointment was created during this call
     const { data: appointment } = await supabase
       .from('appointments')
       .select('id')
       .eq('call_id', call_id)
       .single();
+
     if (appointment) {
-      insertData.appointment_id = appointment.id;
-      insertData.outcome = 'booked';
+      outcome = 'booked';
+    } else if (disconnection_reason === 'user_hangup' && (duration_ms || 0) < 30000) {
+      outcome = 'abandoned';
+    } else if (disconnection_reason === 'agent_transfer') {
+      outcome = 'transferred';
     }
 
-    if (phoneNorm) {
-      const { data: customer } = await supabase
-        .from('customers')
+    await supabase
+      .from('call_logs')
+      .update({
+        ended_at: new Date(end_timestamp).toISOString(),
+        duration_seconds: Math.round((duration_ms || 0) / 1000),
+        outcome,
+        appointment_id: appointment?.id
+      })
+      .eq('retell_call_id', call_id);
+  } catch (error) {
+    console.error('handleCallEnded error:', error);
+  }
+}
+
+async function handleCallAnalyzed(call) {
+  try {
+    // Capture full call record: duration, summary, transcript, sentiment, date/time (started_at/ended_at)
+    const {
+      call_id,
+      from_number,
+      start_timestamp,
+      end_timestamp,
+      duration_ms,
+      transcript,
+      recording_url,
+      call_summary,
+      call_analysis,
+      agent_id,
+      direction,
+      disconnection_reason
+    } = call;
+
+    console.log('Call analyzed:', call_id, 'Capturing full call record');
+
+    // Extract analysis data (payload may use call_analysis or top-level)
+    const sentiment = (call_analysis?.user_sentiment || 'neutral').toString().toLowerCase();
+    const summary = call_analysis?.call_summary || call_summary || '';
+    const callSuccessful = call_analysis?.call_successful;
+
+    // Determine intent from summary
+    let intentDetected = 'inquiry';
+    if (summary) {
+      const lowerSummary = summary.toLowerCase();
+      if (lowerSummary.includes('book') || lowerSummary.includes('schedule') || lowerSummary.includes('appointment')) {
+        intentDetected = 'book';
+      } else if (lowerSummary.includes('reschedule') || lowerSummary.includes('move') || lowerSummary.includes('change')) {
+        intentDetected = 'reschedule';
+      } else if (lowerSummary.includes('cancel')) {
+        intentDetected = 'cancel';
+      } else if (lowerSummary.includes('tow') || lowerSummary.includes('towing')) {
+        intentDetected = 'tow';
+      }
+    }
+
+    const phoneNorm = from_number ? normalizePhone(from_number) : null;
+
+    // Get existing call log (if call_started was received)
+    const { data: existingLog } = await supabase
+      .from('call_logs')
+      .select('id, customer_id, phone_normalized, outcome, appointment_id')
+      .eq('retell_call_id', call_id)
+      .single();
+
+    const startedAt = start_timestamp ? new Date(start_timestamp).toISOString() : null;
+    const endedAt = end_timestamp ? new Date(end_timestamp).toISOString() : null;
+    const durationSeconds = duration_ms != null ? Math.round(Number(duration_ms) / 1000) : null;
+
+    if (existingLog) {
+      // Update existing call log with full analysis data
+      const updateData = {
+        transcript: transcript || existingLog.transcript,
+        recording_url: recording_url || existingLog.recording_url,
+        transcript_summary: summary,
+        sentiment,
+        intent_detected: intentDetected,
+        started_at: startedAt || existingLog.started_at,
+        ended_at: endedAt || existingLog.ended_at,
+        duration_seconds: durationSeconds ?? existingLog.duration_seconds
+      };
+
+      if (callSuccessful === true) {
+        if (existingLog.appointment_id) {
+          updateData.outcome = 'booked';
+        } else if (existingLog.outcome !== 'booked') {
+          updateData.outcome = 'completed';
+        }
+      }
+
+      if (!existingLog.customer_id && phoneNorm) {
+        const { data: customer } = await supabase
+          .from('customers')
+          .select('id')
+          .eq('phone_normalized', phoneNorm)
+          .single();
+        if (customer) updateData.customer_id = customer.id;
+      }
+
+      await supabase
+        .from('call_logs')
+        .update(updateData)
+        .eq('retell_call_id', call_id);
+    } else {
+      // call_started was missed: create full call record from call_analyzed payload so we never lose a call
+      const insertData = {
+        retell_call_id: call_id,
+        phone_number: from_number || null,
+        phone_normalized: phoneNorm || null,
+        direction: direction || 'inbound',
+        started_at: startedAt,
+        ended_at: endedAt,
+        duration_seconds: durationSeconds,
+        transcript: transcript || null,
+        transcript_summary: summary || null,
+        recording_url: recording_url || null,
+        sentiment,
+        intent_detected: intentDetected,
+        outcome: callSuccessful === true ? 'completed' : 'inquiry',
+        agent_id: agent_id || null
+      };
+
+      const { data: appointment } = await supabase
+        .from('appointments')
         .select('id')
-        .eq('phone_normalized', phoneNorm)
+        .eq('call_id', call_id)
         .single();
-      if (customer) insertData.customer_id = customer.id;
-    }
+      if (appointment) {
+        insertData.appointment_id = appointment.id;
+        insertData.outcome = 'booked';
+      }
 
-    await supabase.from('call_logs').insert(insertData);
+      if (phoneNorm) {
+        const { data: customer } = await supabase
+          .from('customers')
+          .select('id')
+          .eq('phone_normalized', phoneNorm)
+          .single();
+        if (customer) insertData.customer_id = customer.id;
+      }
+
+      await supabase.from('call_logs').insert(insertData);
+    }
+  } catch (error) {
+    console.error('handleCallAnalyzed error:', error);
   }
 }
 

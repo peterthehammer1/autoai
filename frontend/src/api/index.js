@@ -1,12 +1,13 @@
-// Use environment variable in production, proxy in development
-// Default to production backend URL if not set
-const API_BASE = import.meta.env.VITE_API_URL || 
-  (window.location.hostname === 'localhost' ? '/api' : 'https://www.alignedai.dev/api')
+// Use environment variable if set, otherwise proxy through same origin
+const API_BASE = import.meta.env.VITE_API_URL || '/api'
+
+const API_KEY = import.meta.env.VITE_API_KEY || ''
 
 async function fetchAPI(endpoint, options = {}) {
   const response = await fetch(`${API_BASE}${endpoint}`, {
     headers: {
       'Content-Type': 'application/json',
+      ...(API_KEY && { 'X-API-Key': API_KEY }),
       ...options.headers,
     },
     ...options,

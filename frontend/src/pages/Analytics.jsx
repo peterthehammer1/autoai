@@ -158,6 +158,7 @@ export default function Analytics() {
     queryKey: ['analytics', 'insights'],
     queryFn: analytics.insights,
     refetchInterval: 5 * 60 * 1000,
+    refetchIntervalInBackground: false,
   })
 
   const { data: bayStats } = useQuery({
