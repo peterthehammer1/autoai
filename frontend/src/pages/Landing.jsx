@@ -212,9 +212,9 @@ export default function Landing() {
                 <Link to="/dashboard">Dashboard</Link>
               </Button>
               <Button asChild className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800">
-                <a href="tel:+16473711990">
-                  <PhoneCall className="h-4 w-4 mr-2" />
-                  Book Now
+                <a href="#contact">
+                  <ArrowRight className="h-4 w-4 mr-2" />
+                  More Info
                 </a>
               </Button>
             </div>
@@ -244,9 +244,9 @@ export default function Landing() {
                 <Link to="/dashboard">Dashboard</Link>
               </Button>
               <Button className="w-full bg-gradient-to-r from-blue-600 to-blue-700" asChild>
-                <a href="tel:+16473711990">
-                  <PhoneCall className="h-4 w-4 mr-2" />
-                  Book Now
+                <a href="#contact" onClick={() => setMobileMenuOpen(false)}>
+                  <ArrowRight className="h-4 w-4 mr-2" />
+                  More Info
                 </a>
               </Button>
             </div>
@@ -637,7 +637,7 @@ export default function Landing() {
       </section>
 
       {/* CTA + Lead Capture */}
-      <section className="py-24 bg-slate-900 text-white">
+      <section id="contact" className="py-24 bg-slate-900 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-5 gap-12 lg:gap-20 items-center">
             {/* Left — copy */}
