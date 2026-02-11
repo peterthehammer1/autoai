@@ -654,81 +654,129 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="py-24 bg-gradient-to-br from-blue-600 via-blue-700 to-violet-700 text-white">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6">
-            Ready to Transform Your Auto Shop?
-          </h2>
-          <p className="text-xl text-blue-100 mb-10 max-w-2xl mx-auto">
-            AI voice booking, vehicle intelligence, customer health scoring,
-            and a full management dashboard — all in one platform.
-          </p>
-
-          {leadStatus === 'success' ? (
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 max-w-md mx-auto border border-white/20">
-              <CheckCircle2 className="h-12 w-12 text-emerald-300 mx-auto mb-4" />
-              <h3 className="text-2xl font-semibold mb-2">Thanks for your interest!</h3>
-              <p className="text-blue-100">We'll be in touch shortly to get you set up.</p>
-            </div>
-          ) : (
-            <form onSubmit={handleLeadSubmit} className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 max-w-lg mx-auto border border-white/20">
-              <h3 className="text-xl font-semibold mb-6">Get Started — It's Free to Try</h3>
-              <div className="space-y-4">
-                <input
-                  type="text"
-                  placeholder="Your name"
-                  required
-                  value={leadForm.name}
-                  onChange={e => setLeadForm(f => ({ ...f, name: e.target.value }))}
-                  className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-white/40"
-                />
-                <input
-                  type="email"
-                  placeholder="Email address"
-                  required
-                  value={leadForm.email}
-                  onChange={e => setLeadForm(f => ({ ...f, email: e.target.value }))}
-                  className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-white/40"
-                />
-                <input
-                  type="tel"
-                  placeholder="Phone number (optional)"
-                  value={leadForm.phone}
-                  onChange={e => setLeadForm(f => ({ ...f, phone: e.target.value }))}
-                  className="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-white/40"
-                />
+      {/* Lead Capture */}
+      <section className="py-24 bg-slate-50 border-y border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
+            <div>
+              <Badge className="mb-4 bg-blue-100 text-blue-700 hover:bg-blue-100">
+                Get Started
+              </Badge>
+              <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-6">
+                Ready to Transform Your Auto Shop?
+              </h2>
+              <p className="text-lg text-slate-600 mb-8">
+                AI voice booking, vehicle intelligence, customer health scoring,
+                and a full management dashboard — all in one platform.
+              </p>
+              <div className="space-y-4 text-slate-600">
+                <div className="flex items-center gap-3">
+                  <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0" />
+                  <span>Personalized demo of the full platform</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0" />
+                  <span>Custom setup for your shop's services and hours</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0" />
+                  <span>Live in as little as 48 hours</span>
+                </div>
               </div>
+            </div>
 
-              {leadError && (
-                <p className="mt-3 text-sm text-red-200">{leadError}</p>
-              )}
+            {leadStatus === 'success' ? (
+              <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-10 text-center">
+                <CheckCircle2 className="h-14 w-14 text-emerald-500 mx-auto mb-5" />
+                <h3 className="text-2xl font-semibold text-slate-900 mb-2">Thanks for reaching out!</h3>
+                <p className="text-slate-600">We'll be in touch shortly to schedule your demo.</p>
+              </div>
+            ) : (
+              <form onSubmit={handleLeadSubmit} className="bg-white rounded-2xl shadow-lg border border-slate-200 p-8 sm:p-10">
+                <h3 className="text-xl font-semibold text-slate-900 mb-6">Request a Demo</h3>
+                <div className="space-y-5">
+                  <div>
+                    <label htmlFor="lead-name" className="block text-sm font-medium text-slate-700 mb-1.5">Name</label>
+                    <input
+                      id="lead-name"
+                      type="text"
+                      placeholder="John Smith"
+                      required
+                      value={leadForm.name}
+                      onChange={e => setLeadForm(f => ({ ...f, name: e.target.value }))}
+                      className="w-full px-4 py-3 rounded-lg border border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="lead-email" className="block text-sm font-medium text-slate-700 mb-1.5">Email</label>
+                    <input
+                      id="lead-email"
+                      type="email"
+                      placeholder="john@yourshop.com"
+                      required
+                      value={leadForm.email}
+                      onChange={e => setLeadForm(f => ({ ...f, email: e.target.value }))}
+                      className="w-full px-4 py-3 rounded-lg border border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="lead-phone" className="block text-sm font-medium text-slate-700 mb-1.5">Phone <span className="text-slate-400 font-normal">(optional)</span></label>
+                    <input
+                      id="lead-phone"
+                      type="tel"
+                      placeholder="(555) 123-4567"
+                      value={leadForm.phone}
+                      onChange={e => setLeadForm(f => ({ ...f, phone: e.target.value }))}
+                      className="w-full px-4 py-3 rounded-lg border border-slate-300 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    />
+                  </div>
+                </div>
 
-              <Button
-                type="submit"
-                size="lg"
-                disabled={leadStatus === 'submitting'}
-                className="mt-6 w-full bg-white text-blue-700 hover:bg-blue-50 text-lg h-14"
-              >
-                {leadStatus === 'submitting' ? (
-                  <><Loader2 className="h-5 w-5 mr-2 animate-spin" /> Submitting...</>
-                ) : (
-                  <><Send className="h-5 w-5 mr-2" /> Get in Touch</>
+                {leadError && (
+                  <p className="mt-3 text-sm text-red-600">{leadError}</p>
                 )}
-              </Button>
-            </form>
-          )}
 
-          <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center items-center text-sm text-blue-200">
-            <a href="tel:+16473711990" className="flex items-center gap-2 hover:text-white transition-colors">
-              <Phone className="h-4 w-4" />
-              (647) 371-1990
-            </a>
-            <span className="hidden sm:inline">·</span>
-            <a href="mailto:service@premierauto.ai" className="flex items-center gap-2 hover:text-white transition-colors">
-              <MessageSquare className="h-4 w-4" />
-              service@premierauto.ai
-            </a>
+                <Button
+                  type="submit"
+                  size="lg"
+                  disabled={leadStatus === 'submitting'}
+                  className="mt-6 w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-lg h-14"
+                >
+                  {leadStatus === 'submitting' ? (
+                    <><Loader2 className="h-5 w-5 mr-2 animate-spin" /> Submitting...</>
+                  ) : (
+                    <><Send className="h-5 w-5 mr-2" /> Request a Demo</>
+                  )}
+                </Button>
+
+                <p className="mt-4 text-xs text-slate-500 text-center">
+                  We'll reach out within one business day.
+                </p>
+              </form>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="py-16 bg-gradient-to-br from-blue-600 via-blue-700 to-violet-700 text-white">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <p className="text-lg text-blue-100 mb-6">
+            Prefer to talk? Reach us directly.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <Button size="lg" className="bg-white text-blue-700 hover:bg-blue-50 text-lg px-8 h-14" asChild>
+              <a href="tel:+16473711990">
+                <PhoneCall className="h-5 w-5 mr-2" />
+                (647) 371-1990
+              </a>
+            </Button>
+            <Button size="lg" className="bg-white/20 text-white border-2 border-white hover:bg-white/30 text-lg px-8 h-14" asChild>
+              <a href="mailto:service@premierauto.ai">
+                <MessageSquare className="h-5 w-5 mr-2" />
+                service@premierauto.ai
+              </a>
+            </Button>
           </div>
         </div>
       </section>
