@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import { Outlet, Link, useLocation } from 'react-router-dom'
+import { PageLoader } from '@/App'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
@@ -234,7 +235,11 @@ export default function Layout() {
 
         {/* Page content */}
         <main id="main-content" className="px-4 sm:px-6 pb-4 sm:pb-6" role="main">
-          <Outlet />
+          <Suspense fallback={<PageLoader />}>
+            <div className="animate-fade-in">
+              <Outlet />
+            </div>
+          </Suspense>
         </main>
       </div>
     </div>
