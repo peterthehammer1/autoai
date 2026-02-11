@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { supabase } from '../config/database.js';
 import { nowEST } from '../utils/timezone.js';
+import { clampPagination } from '../middleware/validate.js';
 
 const router = Router();
 
@@ -11,13 +12,12 @@ const router = Router();
 router.get('/', async (req, res, next) => {
   try {
     const {
-      limit = 50,
-      offset = 0,
       message_type,
       status,
       date_from,
       date_to
     } = req.query;
+    const { limit, offset } = clampPagination(req.query.limit, req.query.offset);
 
     let query = supabase
       .from('sms_logs')
@@ -36,7 +36,7 @@ router.get('/', async (req, res, next) => {
         )
       `, { count: 'exact' })
       .order('created_at', { ascending: false })
-      .range(parseInt(offset), parseInt(offset) + parseInt(limit) - 1);
+      .range(offset, offset + limit - 1);
 
     if (message_type) {
       query = query.eq('message_type', message_type);
@@ -62,9 +62,9 @@ router.get('/', async (req, res, next) => {
       logs,
       pagination: {
         total: count,
-        limit: parseInt(limit),
-        offset: parseInt(offset),
-        has_more: (parseInt(offset) + logs.length) < count
+        limit,
+        offset,
+        has_more: (offset + logs.length) < count
       }
     });
 

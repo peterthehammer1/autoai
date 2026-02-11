@@ -54,6 +54,10 @@ export async function sendSMS(to, body, options = {}) {
   
   // Format phone number for Twilio (needs +1 prefix for US/Canada)
   let formattedTo = to.replace(/\D/g, '');
+  if (formattedTo.length < 10) {
+    console.error('[SMS] Invalid phone number: too few digits');
+    return { success: false, error: 'Invalid phone number' };
+  }
   if (formattedTo.length === 10) {
     formattedTo = '+1' + formattedTo;
   } else if (!formattedTo.startsWith('+')) {

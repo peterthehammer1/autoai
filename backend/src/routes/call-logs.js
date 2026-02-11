@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { supabase } from '../config/database.js';
 import { nowEST } from '../utils/timezone.js';
+import { isValidUUID, clampPagination, validationError } from '../middleware/validate.js';
 
 const router = Router();
 
@@ -10,14 +11,13 @@ const router = Router();
  */
 router.get('/', async (req, res, next) => {
   try {
-    const { 
-      limit = 50, 
-      offset = 0, 
-      outcome, 
-      date_from, 
+    const {
+      outcome,
+      date_from,
       date_to,
-      customer_id 
+      customer_id
     } = req.query;
+    const { limit, offset } = clampPagination(req.query.limit, req.query.offset);
 
     let query = supabase
       .from('call_logs')
@@ -38,7 +38,7 @@ router.get('/', async (req, res, next) => {
         )
       `, { count: 'exact' })
       .order('started_at', { ascending: false })
-      .range(parseInt(offset), parseInt(offset) + parseInt(limit) - 1);
+      .range(offset, offset + limit - 1);
 
     // Apply filters
     if (outcome) {
@@ -62,9 +62,9 @@ router.get('/', async (req, res, next) => {
       calls,
       pagination: {
         total: count,
-        limit: parseInt(limit),
-        offset: parseInt(offset),
-        has_more: (parseInt(offset) + calls.length) < count
+        limit,
+        offset,
+        has_more: (offset + calls.length) < count
       }
     });
 
@@ -80,6 +80,7 @@ router.get('/', async (req, res, next) => {
 router.get('/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
+    if (!isValidUUID(id)) return validationError(res, 'Invalid call log ID');
 
     const { data: call, error } = await supabase
       .from('call_logs')

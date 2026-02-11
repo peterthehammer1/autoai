@@ -49,6 +49,35 @@ export function isValidEmail(str) {
 }
 
 /**
+ * Clamp pagination params to safe bounds.
+ */
+export function clampPagination(limit, offset) {
+  return {
+    limit: Math.max(1, Math.min(parseInt(limit) || 50, 200)),
+    offset: Math.max(0, Math.min(parseInt(offset) || 0, 100000)),
+  };
+}
+
+/**
+ * Check that a date is not in the past and within the booking window (60 days).
+ */
+export function isFutureDate(dateStr) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const date = new Date(dateStr + 'T12:00:00');
+  return date >= today;
+}
+
+export function isWithinBookingWindow(dateStr, maxDays = 60) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const date = new Date(dateStr + 'T12:00:00');
+  const maxDate = new Date(today);
+  maxDate.setDate(maxDate.getDate() + maxDays);
+  return date <= maxDate;
+}
+
+/**
  * Returns a 400 response with a clear validation error message.
  */
 export function validationError(res, message) {

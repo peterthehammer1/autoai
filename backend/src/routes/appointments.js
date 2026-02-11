@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { supabase, normalizePhone } from '../config/database.js';
 import { format, parseISO } from 'date-fns';
 import { assignTechnician, getRequiredSkillLevel, getBestBayType } from './retell-functions.js';
-import { isValidDate, isValidTime, isValidPhone, isValidUUID, isValidUUIDArray, isWeekday, isWithinBusinessHours, validationError } from '../middleware/validate.js';
+import { isValidDate, isValidTime, isValidPhone, isValidUUID, isValidUUIDArray, isWeekday, isWithinBusinessHours, isFutureDate, isWithinBookingWindow, clampPagination, validationError } from '../middleware/validate.js';
 import { nowEST, todayEST } from '../utils/timezone.js';
 
 const router = Router();
@@ -62,6 +62,12 @@ router.post('/', async (req, res, next) => {
     }
     if (!isWithinBusinessHours(appointment_time)) {
       return validationError(res, 'Appointments are only available 7:00 AM - 4:00 PM');
+    }
+    if (!isFutureDate(appointment_date)) {
+      return validationError(res, 'Appointment date cannot be in the past');
+    }
+    if (!isWithinBookingWindow(appointment_date)) {
+      return validationError(res, 'Appointments can only be booked up to 60 days in advance');
     }
     const serviceIdList = Array.isArray(service_ids) ? service_ids : [service_ids];
     if (!isValidUUIDArray(serviceIdList)) {
@@ -298,15 +304,14 @@ router.post('/', async (req, res, next) => {
  */
 router.get('/', async (req, res, next) => {
   try {
-    const { 
-      date, 
-      start_date, 
-      end_date, 
-      status, 
+    const {
+      date,
+      start_date,
+      end_date,
+      status,
       bay_id,
-      limit = 50,
-      offset = 0
     } = req.query;
+    const { limit, offset } = clampPagination(req.query.limit, req.query.offset);
 
     let query = supabase
       .from('appointments')
@@ -356,9 +361,9 @@ router.get('/', async (req, res, next) => {
       appointments: enrichedAppointments,
       pagination: {
         total: count,
-        limit: parseInt(limit),
-        offset: parseInt(offset),
-        has_more: (parseInt(offset) + appointments.length) < count
+        limit,
+        offset,
+        has_more: (offset + appointments.length) < count
       }
     });
 
@@ -495,6 +500,7 @@ router.get('/today', async (req, res, next) => {
 router.get('/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
+    if (!isValidUUID(id)) return validationError(res, 'Invalid appointment ID');
 
     const { data: appointment, error } = await supabase
       .from('appointments')
@@ -528,10 +534,17 @@ router.get('/:id', async (req, res, next) => {
  * PATCH /api/appointments/:id
  * Update appointment (status, reschedule, etc.)
  */
+const VALID_STATUSES = ['scheduled', 'confirmed', 'checked_in', 'in_progress', 'checking_out', 'completed', 'cancelled', 'no_show', 'invoiced', 'paid'];
+
 router.patch('/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
+    if (!isValidUUID(id)) return validationError(res, 'Invalid appointment ID');
     const updates = req.body;
+
+    if (updates.status && !VALID_STATUSES.includes(updates.status)) {
+      return validationError(res, `Invalid status. Must be one of: ${VALID_STATUSES.join(', ')}`);
+    }
 
     // If rescheduling, atomically free old + book new slots
     if (updates.scheduled_date || updates.scheduled_time) {
@@ -613,6 +626,7 @@ router.patch('/:id', async (req, res, next) => {
 router.post('/:id/confirm', async (req, res, next) => {
   try {
     const { id } = req.params;
+    if (!isValidUUID(id)) return validationError(res, 'Invalid appointment ID');
 
     // Get appointment details
     const { data: appointment, error } = await supabase

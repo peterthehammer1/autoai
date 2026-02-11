@@ -101,7 +101,7 @@ router.post('/voice/inbound', async (req, res) => {
     
     const { event, call_inbound } = req.body;
     
-    console.log('Nucleus inbound webhook:', JSON.stringify(req.body));
+    console.log('Nucleus inbound webhook received, event:', req.body?.event);
     
     if (event !== 'call_inbound' || !call_inbound) {
       return res.json({ call_inbound: {} });
@@ -116,7 +116,7 @@ router.post('/voice/inbound', async (req, res) => {
     
     // Look up customer by phone number
     const normalizedPhone = normalizePhone(from_number);
-    console.log('Looking up customer for:', normalizedPhone);
+    console.log('Looking up customer by phone');
     
     const { data: customer, error } = await supabase
       .from('customers')
@@ -168,7 +168,7 @@ router.post('/voice/inbound', async (req, res) => {
       });
     }
     
-    console.log('Found customer:', customer.first_name, customer.last_name);
+    console.log('Found customer:', customer.id);
     
     // Build vehicle info string
     let vehicleInfo = '';
@@ -186,7 +186,7 @@ router.post('/voice/inbound', async (req, res) => {
     
     // If incomplete, treat as NEW customer so agent collects missing info
     if (!isComplete) {
-      console.log('Customer record incomplete - missing:', !hasName ? 'name' : '', !hasVehicle ? 'vehicle' : '');
+      console.log('Customer record incomplete:', customer.id, '- missing:', !hasName ? 'name' : '', !hasVehicle ? 'vehicle' : '');
       const dateInfo = getCurrentDateInfo();
       return res.json({
         call_inbound: {
@@ -593,7 +593,7 @@ router.post('/twilio/sms', async (req, res, next) => {
   try {
     const { From, Body } = req.body;
 
-    console.log(`SMS from ${From}: ${Body}`);
+    console.log('Inbound SMS received');
 
     // Handle STOP opt-out
     const message = (Body || '').toLowerCase().trim();

@@ -173,12 +173,14 @@ export default function Customers() {
     })
   }, [data?.customers, searchTerm])
 
-  // Auto-select first customer when data loads
+  // Auto-select first customer only on initial data load
+  const [hasAutoSelected, setHasAutoSelected] = useState(false)
   useEffect(() => {
-    if (sortedAndFilteredCustomers.length > 0 && !selectedCustomerId) {
+    if (!hasAutoSelected && sortedAndFilteredCustomers.length > 0 && !selectedCustomerId) {
       setSelectedCustomerId(sortedAndFilteredCustomers[0].id)
+      setHasAutoSelected(true)
     }
-  }, [sortedAndFilteredCustomers, selectedCustomerId])
+  }, [sortedAndFilteredCustomers, selectedCustomerId, hasAutoSelected])
 
   const selectedCustomer = customerData?.customer
   const totalVehicles = data?.customers?.reduce((sum, c) => sum + (c.vehicle_count || 0), 0) || 0

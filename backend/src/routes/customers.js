@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { supabase, normalizePhone, formatPhone } from '../config/database.js';
-import { isValidPhone, isValidEmail, validationError } from '../middleware/validate.js';
+import { isValidPhone, isValidEmail, isValidUUID, clampPagination, validationError } from '../middleware/validate.js';
 import { todayEST } from '../utils/timezone.js';
 
 const router = Router();
@@ -11,7 +11,8 @@ const router = Router();
  */
 router.get('/', async (req, res, next) => {
   try {
-    const { limit = 50, offset = 0, search } = req.query;
+    const { search } = req.query;
+    const { limit, offset } = clampPagination(req.query.limit, req.query.offset);
 
     let query = supabase
       .from('customers')
@@ -26,7 +27,7 @@ router.get('/', async (req, res, next) => {
         vehicles (id)
       `, { count: 'exact' })
       .order('created_at', { ascending: false })
-      .range(parseInt(offset), parseInt(offset) + parseInt(limit) - 1);
+      .range(offset, offset + limit - 1);
 
     // Search by name or phone
     if (search) {
@@ -45,9 +46,9 @@ router.get('/', async (req, res, next) => {
       })),
       pagination: {
         total: count,
-        limit: parseInt(limit),
-        offset: parseInt(offset),
-        has_more: (parseInt(offset) + customers.length) < count
+        limit,
+        offset,
+        has_more: (offset + customers.length) < count
       }
     });
 
@@ -185,6 +186,7 @@ router.post('/', async (req, res, next) => {
 router.get('/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
+    if (!isValidUUID(id)) return validationError(res, 'Invalid customer ID');
 
     const { data: customer, error } = await supabase
       .from('customers')
@@ -226,6 +228,7 @@ router.get('/:id', async (req, res, next) => {
 router.patch('/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
+    if (!isValidUUID(id)) return validationError(res, 'Invalid customer ID');
     const { first_name, last_name, email, phone, preferred_contact, notes } = req.body;
 
     if (phone !== undefined && !isValidPhone(phone)) {
@@ -275,6 +278,7 @@ router.patch('/:id', async (req, res, next) => {
 router.get('/:id/appointments', async (req, res, next) => {
   try {
     const { id } = req.params;
+    if (!isValidUUID(id)) return validationError(res, 'Invalid customer ID');
     const { status } = req.query; // 'upcoming', 'past', 'all'
 
     let query = supabase
@@ -320,6 +324,7 @@ router.get('/:id/appointments', async (req, res, next) => {
 router.get('/:id/calls', async (req, res, next) => {
   try {
     const { id } = req.params;
+    if (!isValidUUID(id)) return validationError(res, 'Invalid customer ID');
     const { limit = 50 } = req.query;
 
     const { data: calls, error } = await supabase
@@ -357,6 +362,7 @@ router.get('/:id/calls', async (req, res, next) => {
 router.get('/:id/sms', async (req, res, next) => {
   try {
     const { id } = req.params;
+    if (!isValidUUID(id)) return validationError(res, 'Invalid customer ID');
     const { limit = 50 } = req.query;
 
     const { data: messages, error } = await supabase
@@ -391,6 +397,7 @@ router.get('/:id/sms', async (req, res, next) => {
 router.get('/:id/interactions', async (req, res, next) => {
   try {
     const { id } = req.params;
+    if (!isValidUUID(id)) return validationError(res, 'Invalid customer ID');
     const { limit = 50 } = req.query;
 
     // Fetch calls and SMS in parallel
