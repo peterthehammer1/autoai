@@ -1,20 +1,28 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
-import prerender from '@prerenderer/rollup-plugin'
-import PuppeteerRenderer from '@prerenderer/renderer-puppeteer'
+
+const isVercel = process.env.VERCEL === '1'
 
 export default defineConfig({
   plugins: [react()],
   build: {
     rollupOptions: {
       plugins: [
-        prerender({
-          routes: ['/'],
-          renderer: new PuppeteerRenderer({
-            renderAfterDocumentEvent: 'DOMContentLoaded',
-          }),
-        }),
+        ...(!isVercel
+          ? [
+              (async () => {
+                const prerender = (await import('@prerenderer/rollup-plugin')).default
+                const PuppeteerRenderer = (await import('@prerenderer/renderer-puppeteer')).default
+                return prerender({
+                  routes: ['/'],
+                  renderer: new PuppeteerRenderer({
+                    renderAfterDocumentEvent: 'DOMContentLoaded',
+                  }),
+                })
+              })(),
+            ]
+          : []),
       ],
     },
   },
