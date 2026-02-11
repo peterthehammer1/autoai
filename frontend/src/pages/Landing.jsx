@@ -23,6 +23,7 @@ import {
   Mic,
   Menu,
   X,
+  ChevronDown,
   Wrench,
   Brain,
   Smartphone,
@@ -142,11 +143,35 @@ const testimonials = [
   },
 ]
 
+const faqs = [
+  {
+    question: 'What is Premier Auto Service?',
+    answer: 'Premier Auto Service is an AI-powered auto service booking platform that allows customers to book appointments 24/7 through an intelligent AI voice assistant named Amber. The platform is powered by Nucleus AI and offers services including oil changes, brake service, tire service, engine diagnostics, and more.',
+  },
+  {
+    question: 'How do I book an appointment with Premier Auto Service?',
+    answer: 'You can book an appointment by calling (647) 371-1990 anytime, 24 hours a day, 7 days a week. Our AI assistant Amber will help you schedule your service, check availability, and send you an SMS confirmation. You can also visit premierauto.ai to access the dashboard.',
+  },
+  {
+    question: 'What services does Premier Auto Service offer?',
+    answer: 'Premier Auto Service offers a full range of automotive maintenance and repair services including oil changes, brake inspection and repair, tire rotation and replacement, engine diagnostics, transmission service, air conditioning repair, battery replacement, and scheduled maintenance.',
+  },
+  {
+    question: 'Is the AI booking system available 24/7?',
+    answer: 'Yes! Our AI assistant Amber is available 24 hours a day, 7 days a week, 365 days a year. You can call anytime to book, reschedule, or cancel appointments. There are no wait times and you\'ll receive instant SMS confirmation.',
+  },
+  {
+    question: 'What is Nucleus AI?',
+    answer: 'Nucleus AI is the technology company that powers Premier Auto Service\'s AI booking system. Nucleus provides enterprise-ready conversational AI for automated phone calls, enabling businesses to offer 24/7 customer service through natural, human-like AI conversations.',
+  },
+]
+
 export default function Landing() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [leadForm, setLeadForm] = useState({ name: '', email: '', phone: '' })
   const [leadStatus, setLeadStatus] = useState('idle') // idle | submitting | success | error
   const [leadError, setLeadError] = useState('')
+  const [openFaq, setOpenFaq] = useState(null)
 
   async function handleLeadSubmit(e) {
     e.preventDefault()
@@ -174,6 +199,7 @@ export default function Landing() {
             <div className="hidden md:flex items-center gap-8">
               <a href="#features" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">Features</a>
               <a href="#how-it-works" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">How It Works</a>
+              <a href="#faq" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">FAQ</a>
               <a href="#testimonials" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">Testimonials</a>
               <a href="tel:+16473711990" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors flex items-center gap-1">
                 <Phone className="h-4 w-4" />
@@ -207,6 +233,7 @@ export default function Landing() {
           <div className="md:hidden bg-white border-t border-slate-200 py-4 px-4 space-y-3">
             <a href="#features" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-slate-600">Features</a>
             <a href="#how-it-works" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-slate-600">How It Works</a>
+            <a href="#faq" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-slate-600">FAQ</a>
             <a href="#testimonials" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-slate-600">Testimonials</a>
             <a href="tel:+16473711990" className="block py-2 text-slate-600 flex items-center gap-2">
               <Phone className="h-4 w-4" />
@@ -282,7 +309,7 @@ export default function Landing() {
             </div>
 
             {/* Dashboard preview */}
-            <div className="relative">
+            <div className="relative" role="img" aria-label="Premier Auto Service dashboard showing today's schedule, AI agent status, and key metrics like 24/7 availability, 95% booking rate, and under 3 second response time">
               <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-violet-500/20 rounded-3xl blur-3xl" />
               <div className="relative bg-slate-900 rounded-2xl shadow-2xl overflow-hidden border border-slate-700">
                 <div className="flex items-center gap-2 px-4 py-3 bg-slate-800 border-b border-slate-700">
@@ -731,6 +758,43 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* FAQ */}
+      <section id="faq" className="py-24 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-3xl mx-auto">
+          <div className="text-center mb-16">
+            <Badge className="mb-4 bg-blue-100 text-blue-700 hover:bg-blue-100">
+              FAQ
+            </Badge>
+            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900">
+              Frequently Asked Questions
+            </h2>
+            <p className="mt-4 text-lg text-slate-600 max-w-2xl mx-auto">
+              Everything you need to know about Premier Auto Service and our AI booking platform.
+            </p>
+          </div>
+
+          <div className="divide-y divide-slate-200 border-y border-slate-200">
+            {faqs.map((faq, i) => (
+              <div key={i}>
+                <button
+                  onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                  className="flex w-full items-center justify-between py-5 text-left"
+                >
+                  <span className="text-lg font-medium text-slate-900 pr-4">{faq.question}</span>
+                  <ChevronDown className={cn(
+                    "h-5 w-5 text-slate-500 shrink-0 transition-transform duration-200",
+                    openFaq === i && "rotate-180"
+                  )} />
+                </button>
+                {openFaq === i && (
+                  <p className="pb-5 text-slate-600 leading-relaxed">{faq.answer}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Testimonials */}
       <section id="testimonials" className="py-24 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
@@ -804,6 +868,7 @@ export default function Landing() {
               <ul className="space-y-3">
                 <li><a href="#features" className="hover:text-white transition-colors">Features</a></li>
                 <li><a href="#how-it-works" className="hover:text-white transition-colors">How It Works</a></li>
+                <li><a href="#faq" className="hover:text-white transition-colors">FAQ</a></li>
                 <li><a href="#testimonials" className="hover:text-white transition-colors">Testimonials</a></li>
                 <li><Link to="/dashboard" className="hover:text-white transition-colors">Dashboard</Link></li>
               </ul>
