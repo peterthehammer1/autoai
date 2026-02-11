@@ -17,7 +17,7 @@ if (accountSid && authToken && accountSid !== 'your-account-sid') {
 /**
  * Log SMS to database
  */
-async function logSMS({ toPhone, body, messageType, twilioSid, status, errorMessage, customerId, appointmentId }) {
+async function logSMS({ toPhone, body, messageType, twilioSid, status, errorMessage, customerId, appointmentId, direction }) {
   try {
     await supabase.from('sms_logs').insert({
       to_phone: toPhone,
@@ -28,7 +28,8 @@ async function logSMS({ toPhone, body, messageType, twilioSid, status, errorMess
       status: status || 'queued',
       error_message: errorMessage,
       customer_id: customerId,
-      appointment_id: appointmentId
+      appointment_id: appointmentId,
+      direction: direction || 'outbound'
     });
   } catch (err) {
     console.error('[SMS] Failed to log SMS:', err.message);
@@ -141,7 +142,7 @@ ${services}
 ${vehicleLine}${formattedDate} at ${formattedTime}
 1250 Industrial Boulevard, Springfield
 
-If you need to reschedule or cancel, just reply to this message or call us at (647) 371-1990.
+Reply CONFIRM to confirm, RESCHEDULE to reschedule, or CANCEL to cancel.
 
 Thanks for choosing Premier Auto Service!
 
@@ -182,7 +183,7 @@ ${services}
 ${vehicleLine}${formattedDate} at ${formattedTime}
 1250 Industrial Boulevard, Springfield
 
-If something came up and you need to reschedule, just reply to this message or call us at (647) 371-1990.
+Reply CONFIRM to confirm, or RESCHEDULE if you need to change the time.
 
 See you soon!
 
@@ -222,7 +223,7 @@ Your appointment has been cancelled:
 ${services}
 ${vehicleLine}${formattedDate} at ${formattedTime}
 
-If you'd like to reschedule, just reply to this message or call us at (647) 371-1990. We're happy to find a time that works for you.
+If you'd like to rebook, reply RESCHEDULE or call us at (647) 371-1990.
 
 - Amber`;
 
@@ -233,9 +234,13 @@ If you'd like to reschedule, just reply to this message or call us at (647) 371-
   });
 }
 
+export { logSMS, formatTime12Hour };
+
 export default {
   sendSMS,
   sendConfirmationSMS,
   sendReminderSMS,
-  sendCancellationSMS
+  sendCancellationSMS,
+  logSMS,
+  formatTime12Hour
 };

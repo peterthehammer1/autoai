@@ -3,8 +3,11 @@ import { Retell } from 'retell-sdk';
 import { supabase, normalizePhone } from '../config/database.js';
 import { toZonedTime, format as formatTz } from 'date-fns-tz';
 import { format, addDays, parseISO } from 'date-fns';
-import { todayEST, daysAgoEST } from '../utils/timezone.js';
+import { todayEST, nowEST, daysAgoEST } from '../utils/timezone.js';
 import { logger } from '../utils/logger.js';
+import { logSMS, formatTime12Hour } from '../services/sms.js';
+import { sendConfirmationSMS } from '../services/sms.js';
+import { getBestBayType } from './retell-functions.js';
 
 const router = Router();
 
@@ -573,42 +576,440 @@ async function handleCallAnalyzed(call) {
   }
 }
 
+// ── Two-Way SMS Helpers ──────────────────────────────────────────────
+
+function replyTwiML(res, message) {
+  const escaped = message
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+  res.type('text/xml').send(
+    `<?xml version="1.0" encoding="UTF-8"?><Response><Message>${escaped}</Message></Response>`
+  );
+}
+
+function emptyTwiML(res) {
+  res.type('text/xml').send(
+    '<?xml version="1.0" encoding="UTF-8"?><Response></Response>'
+  );
+}
+
+async function logInboundSMS({ phone, body, customerId }) {
+  await logSMS({
+    toPhone: process.env.TWILIO_PHONE_NUMBER || '',
+    body,
+    messageType: 'inbound',
+    status: 'received',
+    customerId,
+    direction: 'inbound'
+  });
+}
+
+async function findNextUpcomingAppointment(customerId) {
+  const today = todayEST();
+  const { data } = await supabase
+    .from('appointments')
+    .select(`
+      id,
+      scheduled_date,
+      scheduled_time,
+      status,
+      bay_id,
+      estimated_duration_minutes,
+      customer:customers (id, first_name, phone),
+      appointment_services (service_id, service_name),
+      vehicle:vehicles (year, make, model)
+    `)
+    .eq('customer_id', customerId)
+    .gte('scheduled_date', today)
+    .is('deleted_at', null)
+    .not('status', 'in', '("cancelled","completed","no_show")')
+    .order('scheduled_date')
+    .order('scheduled_time')
+    .limit(1)
+    .single();
+  return data;
+}
+
+async function getActiveConversation(phone) {
+  const { data } = await supabase
+    .from('sms_conversations')
+    .select('*')
+    .eq('phone', phone)
+    .gt('expires_at', new Date().toISOString())
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .single();
+  return data;
+}
+
+async function expireConversation(id) {
+  await supabase.from('sms_conversations').delete().eq('id', id);
+}
+
+function addMinutesToTimeSMS(timeStr, minutes) {
+  const [hours, mins] = timeStr.split(':').map(Number);
+  const totalMins = hours * 60 + mins + minutes;
+  const newHours = Math.floor(totalMins / 60);
+  const newMins = totalMins % 60;
+  return `${String(newHours).padStart(2, '0')}:${String(newMins).padStart(2, '0')}`;
+}
+
+async function handleConfirm(customer, res) {
+  const appointment = await findNextUpcomingAppointment(customer.id);
+  if (!appointment) {
+    return replyTwiML(res, "You don't have any upcoming appointments to confirm. If you'd like to book one, give us a call at (647) 371-1990.\n\n- Amber");
+  }
+
+  await supabase
+    .from('appointments')
+    .update({ status: 'confirmed' })
+    .eq('id', appointment.id);
+
+  const services = appointment.appointment_services?.map(s => s.service_name).join(', ') || '';
+  const date = parseISO(appointment.scheduled_date);
+  const formattedDate = format(date, 'EEEE, MMMM do');
+  const formattedTime = formatTime12Hour(appointment.scheduled_time);
+
+  return replyTwiML(res, `Your appointment is confirmed:\n\n${services}\n${formattedDate} at ${formattedTime}\n\nSee you then!\n\n- Amber`);
+}
+
+async function handleCancel(customer, res) {
+  const appointment = await findNextUpcomingAppointment(customer.id);
+  if (!appointment) {
+    return replyTwiML(res, "You don't have any upcoming appointments to cancel. If you need help, call us at (647) 371-1990.\n\n- Amber");
+  }
+
+  // Free slots atomically
+  await supabase.rpc('free_appointment_slots', { p_appointment_id: appointment.id });
+
+  await supabase
+    .from('appointments')
+    .update({ status: 'cancelled', internal_notes: 'Cancelled via SMS' })
+    .eq('id', appointment.id);
+
+  const services = appointment.appointment_services?.map(s => s.service_name).join(', ') || '';
+  const date = parseISO(appointment.scheduled_date);
+  const formattedDate = format(date, 'EEEE, MMMM do');
+  const formattedTime = formatTime12Hour(appointment.scheduled_time);
+
+  return replyTwiML(res, `Your appointment has been cancelled:\n\n${services}\n${formattedDate} at ${formattedTime}\n\nIf you'd like to rebook, reply RESCHEDULE or call us at (647) 371-1990.\n\n- Amber`);
+}
+
+async function handleReschedule(customer, phone, res) {
+  const appointment = await findNextUpcomingAppointment(customer.id);
+  if (!appointment) {
+    return replyTwiML(res, "You don't have any upcoming appointments to reschedule. If you'd like to book one, give us a call at (647) 371-1990.\n\n- Amber");
+  }
+
+  // Get service IDs for availability check
+  const serviceIds = appointment.appointment_services?.map(s => s.service_id) || [];
+  if (serviceIds.length === 0) {
+    return replyTwiML(res, "I couldn't find the service details for your appointment. Please call us at (647) 371-1990 and we'll help you reschedule.\n\n- Amber");
+  }
+
+  // Get services for bay type + duration
+  const { data: services } = await supabase
+    .from('services')
+    .select('id, name, duration_minutes, required_bay_type')
+    .in('id', serviceIds);
+
+  if (!services || services.length === 0) {
+    return replyTwiML(res, "I had trouble looking up your services. Please call us at (647) 371-1990.\n\n- Amber");
+  }
+
+  const totalDuration = services.reduce((sum, s) => sum + s.duration_minutes, 0);
+  const primaryBayType = getBestBayType(services);
+
+  // Get compatible bays
+  const { data: bays } = await supabase
+    .from('service_bays')
+    .select('id')
+    .eq('is_active', true)
+    .eq('bay_type', primaryBayType);
+
+  if (!bays || bays.length === 0) {
+    return replyTwiML(res, "I'm sorry, we don't have the right equipment available right now. Please call us at (647) 371-1990.\n\n- Amber");
+  }
+
+  const bayIds = bays.map(b => b.id);
+
+  // Search for available slots over the next 14 days (weekdays only, 7am-4pm)
+  const today = todayEST();
+  const endDate = format(addDays(parseISO(today), 14), 'yyyy-MM-dd');
+
+  const { data: rawSlots } = await supabase
+    .from('time_slots')
+    .select('slot_date, start_time, bay_id')
+    .in('bay_id', bayIds)
+    .eq('is_available', true)
+    .gte('slot_date', today)
+    .lte('slot_date', endDate)
+    .gte('start_time', '07:00')
+    .lt('start_time', '16:00')
+    .order('slot_date')
+    .order('start_time');
+
+  // Filter to weekdays only
+  const isWeekday = (dateStr) => {
+    const d = new Date(dateStr + 'T12:00:00');
+    const day = d.getDay();
+    return day >= 1 && day <= 5;
+  };
+  const slots = (rawSlots || []).filter(s => isWeekday(s.slot_date));
+
+  // Find consecutive slot windows
+  const slotsNeeded = Math.ceil(totalDuration / 30);
+  const availableWindows = [];
+  const slotsByDateBay = {};
+
+  for (const slot of slots) {
+    const key = `${slot.slot_date}_${slot.bay_id}`;
+    if (!slotsByDateBay[key]) slotsByDateBay[key] = [];
+    slotsByDateBay[key].push(slot);
+  }
+
+  // Filter out past slots for today
+  const now = nowEST();
+  const currentHour = now.getHours();
+  const currentMinute = now.getMinutes();
+
+  for (const [key, baySlots] of Object.entries(slotsByDateBay)) {
+    const [slotDate] = key.split('_');
+    baySlots.sort((a, b) => a.start_time.localeCompare(b.start_time));
+
+    for (let i = 0; i <= baySlots.length - slotsNeeded; i++) {
+      const slotTime = baySlots[i].start_time;
+      const [slotHour, slotMinute] = slotTime.split(':').map(Number);
+
+      if (slotDate === today) {
+        const slotMinutes = slotHour * 60 + slotMinute;
+        const currentMinutes = currentHour * 60 + currentMinute + 30;
+        if (slotMinutes <= currentMinutes) continue;
+      }
+
+      let consecutive = true;
+      for (let j = 1; j < slotsNeeded; j++) {
+        const expected = addMinutesToTimeSMS(baySlots[i + j - 1].start_time, 30);
+        const nextTime = baySlots[i + j].start_time.slice(0, 5);
+        if (nextTime !== expected) {
+          consecutive = false;
+          break;
+        }
+      }
+
+      if (consecutive) {
+        availableWindows.push({
+          date: slotDate,
+          time: baySlots[i].start_time.slice(0, 5),
+          bay_id: baySlots[i].bay_id
+        });
+      }
+    }
+  }
+
+  // Deduplicate by date+time, limit to 4
+  const uniqueSlots = [];
+  const seen = new Set();
+  for (const slot of availableWindows) {
+    const key = `${slot.date}_${slot.time}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      uniqueSlots.push(slot);
+    }
+    if (uniqueSlots.length >= 4) break;
+  }
+
+  if (uniqueSlots.length === 0) {
+    return replyTwiML(res, "I'm sorry, I don't have any available times in the next two weeks. Please call us at (647) 371-1990 and we'll find something for you.\n\n- Amber");
+  }
+
+  // Format options for SMS
+  const options = uniqueSlots.map((s, i) => {
+    const date = parseISO(s.date);
+    const dayName = format(date, 'EEEE');
+    const monthDay = format(date, 'MMMM d');
+    return `${i + 1}. ${dayName}, ${monthDay} at ${formatTime12Hour(s.time)}`;
+  });
+
+  // Create conversation state (expires in 30 minutes)
+  const expiresAt = new Date(Date.now() + 30 * 60 * 1000).toISOString();
+  await supabase.from('sms_conversations').insert({
+    customer_id: customer.id,
+    phone,
+    state: 'awaiting_reschedule_choice',
+    context: {
+      appointment_id: appointment.id,
+      service_ids: serviceIds,
+      duration_minutes: totalDuration,
+      old_bay_id: appointment.bay_id,
+      old_date: appointment.scheduled_date,
+      old_time: appointment.scheduled_time,
+      slots: uniqueSlots
+    },
+    expires_at: expiresAt
+  });
+
+  const serviceNames = appointment.appointment_services?.map(s => s.service_name).join(', ') || '';
+  return replyTwiML(res, `Here are the next available times for ${serviceNames}:\n\n${options.join('\n')}\n\nReply with the number of your choice (1-${uniqueSlots.length}).\n\n- Amber`);
+}
+
+async function handleConversationReply(conversation, message, customer, res) {
+  const choice = parseInt(message, 10);
+  const { slots, appointment_id, duration_minutes, old_bay_id, old_date, old_time } = conversation.context;
+
+  if (isNaN(choice) || choice < 1 || choice > slots.length) {
+    return replyTwiML(res, `Please reply with a number between 1 and ${slots.length}, or text CANCEL to cancel your appointment.\n\n- Amber`);
+  }
+
+  const chosen = slots[choice - 1];
+
+  // Free old slots
+  await supabase.rpc('free_appointment_slots', { p_appointment_id: appointment_id });
+
+  // Atomically book new slots
+  const { data: bookingResult, error: rpcError } = await supabase
+    .rpc('book_appointment_slots', {
+      p_bay_id: chosen.bay_id,
+      p_date: chosen.date,
+      p_start_time: chosen.time,
+      p_duration_minutes: duration_minutes,
+      p_appointment_id: appointment_id
+    });
+
+  if (rpcError || !bookingResult?.success) {
+    // Rollback — re-book old slots
+    await supabase.rpc('book_appointment_slots', {
+      p_bay_id: old_bay_id,
+      p_date: old_date,
+      p_start_time: old_time,
+      p_duration_minutes: duration_minutes,
+      p_appointment_id: appointment_id
+    });
+    await expireConversation(conversation.id);
+    return replyTwiML(res, "That time just got taken! Reply RESCHEDULE to see new options.\n\n- Amber");
+  }
+
+  // Update appointment record
+  await supabase
+    .from('appointments')
+    .update({
+      scheduled_date: chosen.date,
+      scheduled_time: chosen.time,
+      bay_id: chosen.bay_id,
+      status: 'confirmed'
+    })
+    .eq('id', appointment_id);
+
+  // Clean up conversation
+  await expireConversation(conversation.id);
+
+  const date = parseISO(chosen.date);
+  const formattedDate = format(date, 'EEEE, MMMM do');
+  const formattedTime = formatTime12Hour(chosen.time);
+
+  // Send confirmation SMS async (separate from TwiML reply)
+  const appointment = await findNextUpcomingAppointment(customer.id);
+  if (appointment) {
+    const services = appointment.appointment_services?.map(s => s.service_name).join(', ') || '';
+    const vehicleDesc = appointment.vehicle
+      ? `${appointment.vehicle.year} ${appointment.vehicle.make} ${appointment.vehicle.model}`
+      : null;
+    sendConfirmationSMS({
+      customerPhone: customer.phone,
+      customerName: customer.first_name,
+      appointmentDate: chosen.date,
+      appointmentTime: chosen.time,
+      services,
+      vehicleDescription: vehicleDesc,
+      customerId: customer.id,
+      appointmentId: appointment_id
+    }).catch(err => console.error('[SMS] Reschedule confirmation SMS failed:', err.message));
+  }
+
+  return replyTwiML(res, `You're all set! Your appointment has been rescheduled to:\n\n${formattedDate} at ${formattedTime}\n\nSee you then!\n\n- Amber`);
+}
+
+// ── SMS Webhook ─────────────────────────────────────────────────────
+
 /**
  * POST /api/webhooks/twilio/sms
- * Handle inbound SMS (for confirmations, reminders)
+ * Handle inbound SMS — two-way CONFIRM / CANCEL / RESCHEDULE
  */
 router.post('/twilio/sms', async (req, res, next) => {
   try {
-    const { From, Body, To } = req.body;
+    const { From, Body } = req.body;
+    if (!From || !Body) return emptyTwiML(res);
 
-    console.log(`SMS from ${From}: ${Body}`);
+    const rawMessage = Body.trim();
+    const message = rawMessage.toLowerCase();
+    const normalizedPhone = normalizePhone(From);
 
-    // Handle common responses
-    const message = Body.toLowerCase().trim();
+    console.log(`[SMS Inbound] From ${From}: ${rawMessage}`);
+
+    // Look up customer
+    const { data: customer } = await supabase
+      .from('customers')
+      .select('id, first_name, phone')
+      .eq('phone_normalized', normalizedPhone)
+      .single();
+
+    // Log inbound message
+    await logInboundSMS({ phone: From, body: rawMessage, customerId: customer?.id });
+
+    // Unknown phone number
+    if (!customer) {
+      return replyTwiML(res, "We couldn't find an account with this phone number. Please call us at (647) 371-1990 and we'll be happy to help.\n\n- Amber");
+    }
+
+    // Check for active conversation (reschedule flow)
+    const conversation = await getActiveConversation(normalizedPhone);
+
+    if (conversation && conversation.state === 'awaiting_reschedule_choice') {
+      // If they type a keyword instead of a number, break out and handle
+      if (['cancel'].includes(message)) {
+        await expireConversation(conversation.id);
+        return handleCancel(customer, res);
+      }
+      if (['confirm', 'yes', 'y'].includes(message)) {
+        await expireConversation(conversation.id);
+        return handleConfirm(customer, res);
+      }
+      if (['reschedule'].includes(message)) {
+        await expireConversation(conversation.id);
+        return handleReschedule(customer, normalizedPhone, res);
+      }
+      // Otherwise, treat as numeric choice
+      return handleConversationReply(conversation, rawMessage, customer, res);
+    }
+
+    // Route by keyword
+    if (['confirm', 'yes', 'y'].includes(message)) {
+      return handleConfirm(customer, res);
+    }
+
+    if (message === 'cancel') {
+      return handleCancel(customer, res);
+    }
+
+    if (message === 'reschedule') {
+      return handleReschedule(customer, normalizedPhone, res);
+    }
 
     if (message === 'stop') {
-      // Handle opt-out
-      const normalizedPhone = normalizePhone(From);
       await supabase
         .from('customers')
         .update({ marketing_opt_in: false })
         .eq('phone_normalized', normalizedPhone);
+      return emptyTwiML(res);
     }
 
-    // Could add more SMS handling here (confirm, cancel, etc.)
-
-    // Return TwiML response
-    res.type('text/xml').send(`
-      <?xml version="1.0" encoding="UTF-8"?>
-      <Response></Response>
-    `);
+    // Anything else → help text
+    return replyTwiML(res, "Hi! Here's what I can help with:\n\nReply CONFIRM to confirm your appointment\nReply CANCEL to cancel\nReply RESCHEDULE to pick a new time\n\nOr call us at (647) 371-1990.\n\n- Amber");
 
   } catch (error) {
-    console.error('SMS webhook error:', error);
-    res.type('text/xml').send(`
-      <?xml version="1.0" encoding="UTF-8"?>
-      <Response></Response>
-    `);
+    console.error('[SMS Webhook] Error:', error);
+    emptyTwiML(res);
   }
 });
 
