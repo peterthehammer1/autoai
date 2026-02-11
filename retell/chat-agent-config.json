@@ -4,12 +4,12 @@
   "agent_id": "agent_7d1d04773946ddc7c0ba693d62",
   "model": "gpt-4o-mini",
   "channel": "chat",
-  
+
   "notes": {
-    "dynamic_variables": "For chat, customer_phone must be collected from the user. Variables: {{customer_phone}}, {{customer_id}}, {{customer_name}}, {{customer_first_name}}, {{customer_last_name}}, {{is_existing_customer}}, {{vehicle_info}}, {{vehicle_id}}",
+    "dynamic_variables": "For chat, customer_phone must be collected from the user. Variables: {{customer_phone}}, {{customer_id}}, {{customer_name}}, {{customer_first_name}}, {{customer_last_name}}, {{is_existing_customer}}, {{vehicle_info}}, {{vehicle_id}}, {{upcoming_appointments}}, {{service_history}}",
     "channel": "This agent is for SMS and website chat - not voice calls"
   },
-  
+
   "general_tools": [
     {
       "type": "end_call",
@@ -19,7 +19,7 @@
     {
       "type": "custom",
       "name": "get_services",
-      "description": "Get available services. Use when you need to find service IDs for booking, or when the customer asks about services or prices.",
+      "description": "Get available services. Use when you need to find service IDs (UUIDs) for booking, or when the customer asks about services or prices. ALWAYS call this before check_availability to get valid UUIDs.",
       "url": "https://www.alignedai.dev/api/voice/get_services",
       "speak_during_execution": false,
       "speak_after_execution": true,
@@ -36,7 +36,7 @@
     {
       "type": "custom",
       "name": "check_availability",
-      "description": "Check available appointment times. Call after you know what service they need.",
+      "description": "Check available appointment times. Requires service_ids (UUIDs from get_services - NEVER pass service names or slugs).",
       "url": "https://www.alignedai.dev/api/voice/check_availability",
       "speak_during_execution": false,
       "speak_after_execution": true,
@@ -46,7 +46,7 @@
           "service_ids": {
             "type": "array",
             "items": {"type": "string"},
-            "description": "Service IDs from get_services"
+            "description": "Service UUIDs from get_services (NOT names or slugs)"
           },
           "preferred_date": {
             "type": "string",
@@ -54,7 +54,7 @@
           },
           "preferred_time": {
             "type": "string",
-            "description": "morning, afternoon, or specific time"
+            "description": "morning, afternoon, or specific time (e.g. 'after 3pm', '10:00')"
           }
         },
         "required": ["service_ids"]
@@ -63,7 +63,7 @@
     {
       "type": "custom",
       "name": "book_appointment",
-      "description": "Book the appointment after customer confirms date, time, and service.",
+      "description": "Book the appointment after customer confirms date, time, and service. Only call ONCE per attempt - if it fails, check availability again before retrying.",
       "url": "https://www.alignedai.dev/api/voice/book_appointment",
       "speak_during_execution": false,
       "speak_after_execution": true,
@@ -81,7 +81,7 @@
           "service_ids": {
             "type": "array",
             "items": {"type": "string"},
-            "description": "Service IDs to book"
+            "description": "Service UUIDs to book"
           },
           "appointment_date": {
             "type": "string",
@@ -122,7 +122,7 @@
     {
       "type": "custom",
       "name": "lookup_customer",
-      "description": "Look up a customer by phone number to check if they're in the system and get their info/vehicles. Call this FIRST when you get their phone number.",
+      "description": "Look up a customer by phone number to check if they're in the system and get their info/vehicles/upcoming appointments/service history. Call this FIRST when you get their phone number.",
       "url": "https://www.alignedai.dev/api/voice/lookup_customer",
       "speak_during_execution": false,
       "speak_after_execution": true,
@@ -185,7 +185,11 @@
           "service_ids": {
             "type": "array",
             "items": {"type": "string"},
-            "description": "Service IDs to add (required for add_services)"
+            "description": "Service UUIDs to add (required for add_services)"
+          },
+          "send_to_phone": {
+            "type": "string",
+            "description": "Optional: send confirmation SMS to a different phone number"
           }
         },
         "required": ["appointment_id", "action"]
@@ -194,7 +198,7 @@
     {
       "type": "custom",
       "name": "send_confirmation",
-      "description": "Send SMS confirmation to customer with appointment details.",
+      "description": "Send or resend SMS confirmation with appointment details. Only use when customer asks to resend - bookings, reschedules, and cancellations already send SMS automatically.",
       "url": "https://www.alignedai.dev/api/voice/send_confirmation",
       "speak_during_execution": false,
       "speak_after_execution": true,
@@ -220,7 +224,7 @@
     {
       "type": "custom",
       "name": "submit_tow_request",
-      "description": "Submit a tow-in request when the customer needs a tow.",
+      "description": "Submit a tow-in request when the customer needs a tow. Collect the full pickup address first.",
       "url": "https://www.alignedai.dev/api/voice/submit_tow_request",
       "speak_during_execution": false,
       "speak_after_execution": true,
@@ -280,6 +284,148 @@
           }
         },
         "required": ["customer_name", "customer_phone"]
+      }
+    },
+    {
+      "type": "custom",
+      "name": "transfer_to_human",
+      "description": "Connect the customer with a human service advisor. Use when: customer is frustrated and wants a person, complex issue you can't handle, customer explicitly asks for a person, or you've failed multiple times at a task.",
+      "url": "https://www.alignedai.dev/api/voice/transfer_to_human",
+      "speak_during_execution": false,
+      "speak_after_execution": true,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "customer_phone": {
+            "type": "string",
+            "description": "Customer phone number"
+          },
+          "reason": {
+            "type": "string",
+            "description": "Why the customer needs to speak with a human (e.g., 'customer frustrated', 'complex repair question', 'billing dispute')"
+          },
+          "context": {
+            "type": "string",
+            "description": "Brief summary of what you've discussed so the advisor has context"
+          }
+        },
+        "required": ["reason"]
+      }
+    },
+    {
+      "type": "custom",
+      "name": "request_callback",
+      "description": "Request a callback from a service advisor. Use when customer wants someone to call them back.",
+      "url": "https://www.alignedai.dev/api/voice/request_callback",
+      "speak_during_execution": false,
+      "speak_after_execution": true,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "customer_phone": {
+            "type": "string",
+            "description": "Customer phone number"
+          },
+          "customer_name": {
+            "type": "string",
+            "description": "Customer's name"
+          },
+          "reason": {
+            "type": "string",
+            "description": "What they need help with (e.g., 'question about repair cost', 'warranty question')"
+          },
+          "preferred_time": {
+            "type": "string",
+            "description": "When they'd like to be called back (e.g., 'this afternoon', 'tomorrow morning')"
+          }
+        },
+        "required": ["customer_phone", "reason"]
+      }
+    },
+    {
+      "type": "custom",
+      "name": "get_repair_status",
+      "description": "Check status of a vehicle currently at the shop. Use when customer asks 'is my car ready?', 'what's the status?', 'how much longer?'",
+      "url": "https://www.alignedai.dev/api/voice/get_repair_status",
+      "speak_during_execution": false,
+      "speak_after_execution": true,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "customer_phone": {
+            "type": "string",
+            "description": "Customer phone number"
+          }
+        },
+        "required": ["customer_phone"]
+      }
+    },
+    {
+      "type": "custom",
+      "name": "get_estimate",
+      "description": "Get a price estimate for a service. Use when customer asks 'how much for...', 'what does X cost?', 'can I get a quote?'",
+      "url": "https://www.alignedai.dev/api/voice/get_estimate",
+      "speak_during_execution": false,
+      "speak_after_execution": true,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "customer_phone": {
+            "type": "string",
+            "description": "Customer phone number (for logging)"
+          },
+          "service_search": {
+            "type": "string",
+            "description": "The service they want a price for (e.g., 'brake pads', 'oil change', 'alignment')"
+          },
+          "issue_description": {
+            "type": "string",
+            "description": "If they described a problem rather than a service (e.g., 'my car is making a grinding noise')"
+          },
+          "vehicle_year": {
+            "type": "integer",
+            "description": "Vehicle year if mentioned"
+          },
+          "vehicle_make": {
+            "type": "string",
+            "description": "Vehicle make if mentioned"
+          },
+          "vehicle_model": {
+            "type": "string",
+            "description": "Vehicle model if mentioned"
+          }
+        },
+        "required": []
+      }
+    },
+    {
+      "type": "custom",
+      "name": "get_vehicle_info",
+      "description": "Get detailed vehicle information including maintenance schedule and open recalls by VIN. Use when customer provides a VIN, asks about recalls, or you need to verify if a service is due.",
+      "url": "https://www.alignedai.dev/api/voice/get_vehicle_info",
+      "speak_during_execution": false,
+      "speak_after_execution": true,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "customer_phone": {
+            "type": "string",
+            "description": "Customer phone number"
+          },
+          "vin": {
+            "type": "string",
+            "description": "17-character VIN if customer provides it"
+          },
+          "current_mileage": {
+            "type": "integer",
+            "description": "Current vehicle mileage if customer mentions it"
+          },
+          "check_service": {
+            "type": "string",
+            "description": "Specific service to check if due (e.g., 'oil change', 'air filter')"
+          }
+        },
+        "required": []
       }
     }
   ]
