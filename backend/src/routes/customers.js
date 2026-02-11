@@ -289,6 +289,7 @@ router.get('/:id/appointments', async (req, res, next) => {
         )
       `)
       .eq('customer_id', id)
+      .is('deleted_at', null)
       .order('scheduled_date', { ascending: false })
       .order('scheduled_time', { ascending: false });
 

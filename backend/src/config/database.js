@@ -11,10 +11,19 @@ if (!supabaseUrl || !supabaseKey) {
   process.exit(1);
 }
 
+// Supabase JS client uses PostgREST (HTTP), which pools connections server-side.
+// AbortController timeout prevents hanging requests in serverless cold starts.
 export const supabase = createClient(supabaseUrl, supabaseKey, {
   auth: {
     autoRefreshToken: false,
     persistSession: false
+  },
+  global: {
+    fetch: (url, options = {}) => {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 15000); // 15s timeout
+      return fetch(url, { ...options, signal: controller.signal }).finally(() => clearTimeout(timeout));
+    }
   }
 });
 

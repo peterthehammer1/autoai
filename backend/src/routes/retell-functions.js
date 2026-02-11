@@ -1342,8 +1342,9 @@ router.post('/book_appointment', async (req, res, next) => {
 
     if (rpcError || !bookingResult?.success) {
       console.error('Atomic booking failed:', rpcError || bookingResult);
-      await supabase.from('appointments').delete().eq('id', appointment.id);
-      await supabase.from('appointment_services').delete().eq('appointment_id', appointment.id);
+      await supabase.from('appointments')
+        .update({ deleted_at: new Date().toISOString(), status: 'booking_failed' })
+        .eq('id', appointment.id);
       return res.json({
         success: false,
         booked: false,

@@ -9,7 +9,8 @@
     "dev": "node --watch src/index.js",
     "seed": "node scripts/seed.js",
     "retell:latest-call": "node scripts/retell-fetch-latest-call.js",
-    "regenerate-slots": "node scripts/regenerate-slots.js"
+    "regenerate-slots": "node scripts/regenerate-slots.js",
+    "test": "node --test tests/api.test.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",

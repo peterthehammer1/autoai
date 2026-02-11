@@ -260,10 +260,11 @@ router.post('/', async (req, res, next) => {
       });
 
     if (rpcError || !bookingResult?.success) {
-      // Slot was taken between check and book — delete the appointment and return error
+      // Slot was taken between check and book — soft-delete the appointment for audit trail
       console.error('Atomic booking failed:', rpcError || bookingResult);
-      await supabase.from('appointments').delete().eq('id', appointment.id);
-      await supabase.from('appointment_services').delete().eq('appointment_id', appointment.id);
+      await supabase.from('appointments')
+        .update({ deleted_at: new Date().toISOString(), status: 'booking_failed' })
+        .eq('id', appointment.id);
       return res.status(409).json({
         error: { message: 'That time slot was just taken. Please choose a different time.' }
       });
@@ -322,6 +323,7 @@ router.get('/', async (req, res, next) => {
           duration_minutes
         )
       `, { count: 'exact' })
+      .is('deleted_at', null)
       .order('scheduled_date', { ascending: true })
       .order('scheduled_time', { ascending: true })
       .range(offset, offset + limit - 1);
@@ -384,6 +386,7 @@ router.get('/upcoming', async (req, res, next) => {
         appointment_services (service_name, duration_minutes)
       `)
       .gte('scheduled_date', today)
+      .is('deleted_at', null)
       .not('status', 'in', '("cancelled","no_show","completed")')
       .order('scheduled_date', { ascending: true })
       .order('scheduled_time', { ascending: true })
@@ -436,6 +439,7 @@ router.get('/today', async (req, res, next) => {
         appointment_services (service_name, duration_minutes)
       `)
       .eq('scheduled_date', today)
+      .is('deleted_at', null)
       .order('scheduled_time');
 
     if (error) throw error;
@@ -503,6 +507,7 @@ router.get('/:id', async (req, res, next) => {
         appointment_services (*)
       `)
       .eq('id', id)
+      .is('deleted_at', null)
       .single();
 
     if (error) {
