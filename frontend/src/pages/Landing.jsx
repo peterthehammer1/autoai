@@ -740,7 +740,7 @@ export default function Landing() {
                   type="submit"
                   size="lg"
                   disabled={leadStatus === 'submitting'}
-                  className="mt-6 w-full rounded-full bg-blue-600 hover:bg-blue-700 text-white text-lg h-13 shadow-sm"
+                  className="mt-6 w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-lg h-14"
                 >
                   {leadStatus === 'submitting' ? (
                     <><Loader2 className="h-5 w-5 mr-2 animate-spin" /> Submitting...</>
@@ -765,15 +765,15 @@ export default function Landing() {
             Prefer to talk? Reach us directly.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Button size="lg" className="rounded-full bg-white text-blue-700 hover:bg-blue-50 px-8 h-12 shadow-sm" asChild>
+            <Button size="lg" className="bg-white text-blue-700 hover:bg-blue-50 text-lg px-8 h-14" asChild>
               <a href="tel:+16473711990">
-                <PhoneCall className="h-4 w-4 mr-2" />
+                <PhoneCall className="h-5 w-5 mr-2" />
                 (647) 371-1990
               </a>
             </Button>
-            <Button size="lg" className="rounded-full bg-white/15 text-white border border-white/30 hover:bg-white/25 px-8 h-12" asChild>
+            <Button size="lg" className="bg-white/20 text-white border-2 border-white hover:bg-white/30 text-lg px-8 h-14" asChild>
               <a href="mailto:service@premierauto.ai">
-                <MessageSquare className="h-4 w-4 mr-2" />
+                <MessageSquare className="h-5 w-5 mr-2" />
                 service@premierauto.ai
               </a>
             </Button>
