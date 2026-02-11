@@ -63,6 +63,7 @@ import {
 import NewAppointmentModal from '@/components/NewAppointmentModal'
 import PhoneNumber from '@/components/PhoneNumber'
 import CarImage from '@/components/CarImage'
+import { useAppointmentsTour } from '@/hooks/use-appointments-tour'
 
 // Post-it color palette for appointment cards
 const postItColors = [
@@ -146,6 +147,8 @@ export default function Appointments() {
     queryFn: () => appointments.list({ start_date: calViewRange.start, end_date: calViewRange.end, limit: 200 }),
     enabled: activeTab === 'calendar',
   })
+
+  useAppointmentsTour(!calendarLoading && !upcomingLoading)
 
   // Group calendar appointments by date
   const appointmentsByDate = {}
@@ -240,7 +243,7 @@ export default function Appointments() {
   return (
     <div className="space-y-4">
       {/* Page Header - Dark Theme */}
-      <div className="bg-gradient-to-r from-slate-800 to-slate-900 -mx-4 sm:-mx-6 px-4 sm:px-6 py-4">
+      <div data-tour="appts-header" className="bg-gradient-to-r from-slate-800 to-slate-900 -mx-4 sm:-mx-6 px-4 sm:px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Calendar className="h-5 w-5 text-blue-400" />
@@ -255,7 +258,7 @@ export default function Appointments() {
       {/* View Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <TabsList className="w-full sm:w-auto bg-slate-100 p-1">
+          <TabsList data-tour="appts-tabs" className="w-full sm:w-auto bg-slate-100 p-1">
             <TabsTrigger value="upcoming" className="flex-1 sm:flex-none data-[state=active]:bg-white data-[state=active]:text-slate-800 text-slate-600">
               Upcoming
             </TabsTrigger>
@@ -363,7 +366,7 @@ export default function Appointments() {
 
         {/* Calendar View Tab */}
         <TabsContent value="calendar" className="mt-4">
-          <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
+          <div data-tour="appts-calendar" className="bg-white border border-slate-200 rounded-lg overflow-hidden">
             {/* Calendar Header: Navigation + View Toggle */}
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-4 sm:px-5 py-3 border-b border-slate-200">
               <div className="flex items-center gap-2">
@@ -404,7 +407,7 @@ export default function Appointments() {
                 </h2>
               </div>
 
-              <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-0.5">
+              <div data-tour="appts-view-toggle" className="flex items-center gap-1 bg-slate-100 rounded-lg p-0.5">
                 {['week', 'day', 'month'].map((view) => (
                   <button
                     key={view}
