@@ -103,15 +103,35 @@ export function useDashboardTour(ready = false) {
   }, [])
 
   // Auto-start on first visit once data is ready
+  // Polls for tour target elements to handle lazy-loading and slow API responses
   useEffect(() => {
     if (!ready) return
     if (localStorage.getItem(STORAGE_KEY) === TOUR_VERSION) return
 
-    const timeout = setTimeout(() => {
-      requestAnimationFrame(() => startTour())
-    }, 800)
+    let cancelled = false
+    let timer = null
 
-    return () => clearTimeout(timeout)
+    const tryStart = (attemptsLeft) => {
+      if (cancelled) return
+      const hasElements = TOUR_STEPS.some((step) =>
+        document.querySelector(step.element)
+      )
+      if (hasElements) {
+        requestAnimationFrame(() => {
+          if (!cancelled) startTour()
+        })
+      } else if (attemptsLeft > 0) {
+        timer = setTimeout(() => tryStart(attemptsLeft - 1), 500)
+      }
+    }
+
+    // Initial delay for animations to settle, then up to 5 retries (3.5s total max)
+    timer = setTimeout(() => tryStart(5), 1000)
+
+    return () => {
+      cancelled = true
+      clearTimeout(timer)
+    }
   }, [ready, startTour])
 
   // Listen for manual trigger from sidebar button
