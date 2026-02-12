@@ -183,7 +183,7 @@ export default function Customers() {
     }
   }, [sortedAndFilteredCustomers, selectedCustomerId, hasAutoSelected])
 
-  useCustomersTour(!isLoading)
+  useCustomersTour(!isLoading && !isLoadingCustomer)
 
   const selectedCustomer = customerData?.customer
   const totalVehicles = data?.customers?.reduce((sum, c) => sum + (c.vehicle_count || 0), 0) || 0
