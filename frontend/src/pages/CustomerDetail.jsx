@@ -70,7 +70,7 @@ export default function CustomerDetail() {
     enabled: !!id,
   })
 
-  const { data: healthData } = useQuery({
+  const { data: healthData, isLoading: isHealthLoading } = useQuery({
     queryKey: ['customer', id, 'health'],
     queryFn: () => analytics.customerHealth(id),
     enabled: !!id,
@@ -102,7 +102,7 @@ export default function CustomerDetail() {
   })
 
   const customer = data?.customer
-  useCustomerDetailTour(!isLoading)
+  useCustomerDetailTour(!isLoading && !isHealthLoading)
 
   const handleEditOpen = () => {
     if (customer) {
