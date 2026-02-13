@@ -263,49 +263,51 @@ export default function CallLogs() {
                 <p className="text-sm text-slate-500 mt-1">Try adjusting your search or filters</p>
               </div>
             ) : (
-              <div className="divide-y divide-slate-100">
+              <div>
+                {/* Column Headers */}
+                <div className="flex items-center gap-3 px-3 py-1.5 border-b border-slate-100">
+                  <span className="w-20 text-xs text-slate-400 font-medium uppercase tracking-wider">Time</span>
+                  <span className="flex-1 text-xs text-slate-400 font-medium uppercase tracking-wider">Caller</span>
+                  <span className="w-16 text-right text-xs text-slate-400 font-medium uppercase tracking-wider">Outcome</span>
+                </div>
+                {/* Rows */}
+                <div className="divide-y divide-slate-100">
                 {filteredCalls.map((call) => (
                   <button
                     key={call.id}
                     onClick={() => setSelectedCallId(call.id)}
                     className={cn(
-                      "w-full p-3 text-left hover:bg-slate-50 rounded-lg transition-colors group",
+                      "w-full flex items-center gap-3 py-2.5 px-3 text-left hover:bg-slate-50 rounded-lg transition-colors group",
                       selectedCallId === call.id && "bg-teal-dark/5 border-l-2 border-l-teal-dark"
                     )}
                   >
-                    <div className="flex items-start gap-3">
-                      {/* Outcome indicator */}
-                      <div className="w-8 h-8 rounded-lg bg-teal-dark/10 flex items-center justify-center shrink-0">
-                        {call.direction === 'outbound' ? (
-                          <PhoneOutgoing className="h-4 w-4 text-teal" />
-                        ) : (
-                          <PhoneIncoming className="h-4 w-4 text-teal" />
-                        )}
-                      </div>
-                      
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between gap-2">
-                          <p className="text-sm font-medium text-slate-800 group-hover:text-blue-700 truncate">
-                            {call.customer
-                              ? `${call.customer.first_name} ${call.customer.last_name}`
-                              : <PhoneNumber phone={call.phone_number} email={call.customer?.email} />
-                            }
-                          </p>
-                          <span className="text-xs text-slate-500 capitalize">{call.outcome || 'Unknown'}</span>
-                        </div>
-                        <div className="flex items-center gap-2 mt-0.5">
-                          <span className="text-xs text-slate-500">
-                            {call.started_at ? format(new Date(call.started_at), 'MMM d, h:mm a') : '-'}
-                          </span>
-                          <span className="text-xs text-slate-400">•</span>
-                          <span className="text-xs text-slate-500">
-                            {formatDuration(call.duration_seconds)}
-                          </span>
-                        </div>
-                      </div>
+                    <div className="w-20">
+                      <span className="text-xs font-semibold text-slate-700 whitespace-nowrap">
+                        {call.started_at ? format(new Date(call.started_at), 'h:mm a') : '-'}
+                      </span>
+                      <p className="text-[10px] text-slate-400">
+                        {call.started_at ? format(new Date(call.started_at), 'MMM d') : ''}
+                      </p>
+                    </div>
+                    <span className="flex-1 min-w-0 text-sm font-medium text-slate-900 truncate group-hover:text-blue-700">
+                      {call.customer
+                        ? `${call.customer.first_name} ${call.customer.last_name}`
+                        : <PhoneNumber phone={call.phone_number} email={call.customer?.email} />
+                      }
+                    </span>
+                    <div className="w-16 flex justify-end">
+                      <span className={cn(
+                        "text-xs px-2 py-0.5 rounded-full font-semibold capitalize",
+                        call.outcome === 'booked' || call.outcome === 'completed'
+                          ? 'text-teal bg-teal-dark/10'
+                          : 'text-slate-500 bg-slate-100'
+                      )}>
+                        {call.outcome || '—'}
+                      </span>
                     </div>
                   </button>
                 ))}
+                </div>
               </div>
             )}
           </ScrollArea>
