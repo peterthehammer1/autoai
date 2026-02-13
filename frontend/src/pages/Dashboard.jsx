@@ -203,7 +203,7 @@ export default function Dashboard() {
     if (!callTrends?.sentiment_trend?.length) return null
     
     return (
-      <Card className="shadow-card flex-1 flex flex-col">
+      <Card className="shadow-card">
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -223,8 +223,8 @@ export default function Dashboard() {
             </Button>
           </div>
         </CardHeader>
-        <CardContent className="flex-1 flex flex-col">
-          <div className="flex-1 min-h-[13rem]">
+        <CardContent>
+          <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={callTrends.sentiment_trend}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
@@ -519,7 +519,7 @@ export default function Dashboard() {
           </Card>
 
           {/* Sentiment Chart */}
-          <div className="flex-1 flex flex-col min-h-0">
+          <div>
             {sentimentChartContent}
           </div>
         </div>
