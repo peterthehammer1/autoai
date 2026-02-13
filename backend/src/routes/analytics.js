@@ -1271,6 +1271,114 @@ router.get('/recall-alerts', async (req, res, next) => {
 });
 
 /**
+ * GET /api/analytics/missed-revenue
+ * Estimated missed revenue from non-booked calls, overdue services, and cancellations
+ */
+router.get('/missed-revenue', async (req, res, next) => {
+  try {
+    const cached = getCached('missed-revenue', 15 * 60 * 1000);
+    if (cached) return res.json(cached);
+
+    const today = nowEST();
+    const thirtyDaysAgo = format(subDays(today, 30), 'yyyy-MM-dd');
+
+    // 1. Non-booked calls: calls in last 30 days with outcome != 'booked'
+    const [
+      nonBookedCallsRes,
+      avgTicketRes,
+      cancelledApptsRes,
+      completedServicesRes
+    ] = await Promise.all([
+      supabase.from('call_logs')
+        .select('id', { count: 'exact', head: true })
+        .gte('started_at', `${thirtyDaysAgo}T00:00:00`)
+        .neq('outcome', 'booked'),
+      // Average ticket for estimating value
+      supabase.from('appointments')
+        .select('quoted_total')
+        .gte('scheduled_date', thirtyDaysAgo)
+        .not('status', 'in', '("cancelled","no_show")')
+        .not('quoted_total', 'is', null)
+        .limit(200),
+      // 3. Cancelled + no_show appointments in last 30 days
+      supabase.from('appointments')
+        .select('quoted_total')
+        .gte('scheduled_date', thirtyDaysAgo)
+        .in('status', ['cancelled', 'no_show']),
+      // 2. Overdue services: completed services with days_interval
+      supabase.from('appointment_services')
+        .select(`
+          service_id,
+          service:services (id, days_interval, price_min),
+          appointment:appointments!inner (
+            scheduled_date,
+            status,
+            customer_id
+          )
+        `)
+        .eq('appointment.status', 'completed')
+        .not('service.days_interval', 'is', null)
+    ]);
+
+    // Calculate average ticket value
+    const ticketData = avgTicketRes.data || [];
+    const avgTicket = ticketData.length > 0
+      ? Math.round(ticketData.reduce((sum, a) => sum + (a.quoted_total || 0), 0) / ticketData.length)
+      : 15000; // default ~$150 in cents
+
+    // Non-booked calls value
+    const nonBookedCount = nonBookedCallsRes.count || 0;
+    const nonBookedValue = nonBookedCount * avgTicket;
+
+    // Overdue services — group by customer+service, find latest
+    const customerServiceMap = new Map();
+    for (const row of completedServicesRes.data || []) {
+      if (!row.service?.days_interval) continue;
+      const key = `${row.appointment.customer_id}:${row.service_id}`;
+      const existing = customerServiceMap.get(key);
+      if (!existing || row.appointment.scheduled_date > existing.lastDate) {
+        customerServiceMap.set(key, {
+          lastDate: row.appointment.scheduled_date,
+          daysInterval: row.service.days_interval,
+          price: row.service.price_min || 0
+        });
+      }
+    }
+
+    let overdueCount = 0;
+    let overdueValue = 0;
+    for (const entry of customerServiceMap.values()) {
+      const lastDate = new Date(entry.lastDate + 'T12:00:00');
+      const daysSince = Math.floor((today.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
+      if (daysSince >= entry.daysInterval) {
+        overdueCount++;
+        overdueValue += entry.price;
+      }
+    }
+
+    // Cancellations value
+    const cancelledAppts = cancelledApptsRes.data || [];
+    const cancellationCount = cancelledAppts.length;
+    const cancellationValue = cancelledAppts.reduce((sum, a) => sum + (a.quoted_total || 0), 0);
+
+    const total = nonBookedValue + overdueValue + cancellationValue;
+
+    const result = {
+      total,
+      non_booked_calls: { count: nonBookedCount, value: nonBookedValue },
+      overdue_services: { count: overdueCount, value: overdueValue },
+      cancellations: { count: cancellationCount, value: cancellationValue }
+    };
+
+    setCache('missed-revenue', result);
+    res.json(result);
+
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
  * GET /api/analytics/comprehensive
  * All-in-one analytics endpoint for dashboard
  */

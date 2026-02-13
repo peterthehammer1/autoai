@@ -1,8 +1,9 @@
 import { Router } from 'express';
 import { supabase } from '../config/database.js';
 import { nowEST, daysFromNowEST } from '../utils/timezone.js';
-import { sendReminderSMS } from '../services/sms.js';
+import { sendReminderSMS, sendServiceReminderSMS } from '../services/sms.js';
 import { logger } from '../utils/logger.js';
+import { format, subDays } from 'date-fns';
 
 const router = Router();
 
@@ -248,6 +249,143 @@ router.get('/send-reminders', async (req, res) => {
 
   } catch (err) {
     logger.error('Cron send-reminders failed', { error: err });
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * GET /api/cron/service-reminders
+ * Called by Vercel Cron weekly (Mondays 10am EST) to send proactive service reminders
+ * to customers with overdue maintenance services.
+ * Requires CRON_SECRET in Authorization header.
+ */
+router.get('/service-reminders', async (req, res) => {
+  if (!verifyCronAuth(req, res)) return;
+
+  try {
+    const today = nowEST();
+    const todayStr = formatDate(today);
+    const thirtyDaysAgo = format(subDays(today, 30), 'yyyy-MM-dd');
+
+    // Find customers with services past their interval since last completion.
+    // We query appointment_services joined with appointments that are completed,
+    // along with the service definition for days_interval.
+    const { data: completedServices, error: svcError } = await supabase
+      .from('appointment_services')
+      .select(`
+        service_name,
+        service_id,
+        service:services (id, name, days_interval),
+        appointment:appointments!inner (
+          id,
+          scheduled_date,
+          status,
+          customer_id,
+          customer:customers (id, first_name, last_name, phone, marketing_opt_in),
+          vehicle:vehicles (year, make, model)
+        )
+      `)
+      .eq('appointment.status', 'completed')
+      .not('service.days_interval', 'is', null);
+
+    if (svcError) throw svcError;
+
+    // Group by customer+service and find the latest completion date
+    const customerServiceMap = new Map(); // key: `${customerId}:${serviceId}`
+    for (const row of completedServices || []) {
+      const customer = row.appointment?.customer;
+      if (!customer?.phone || !customer.marketing_opt_in) continue;
+
+      const serviceInterval = row.service?.days_interval;
+      if (!serviceInterval) continue;
+
+      const key = `${customer.id}:${row.service_id}`;
+      const existing = customerServiceMap.get(key);
+      if (!existing || row.appointment.scheduled_date > existing.lastDate) {
+        customerServiceMap.set(key, {
+          customerId: customer.id,
+          customerPhone: customer.phone,
+          customerName: `${customer.first_name || ''} ${customer.last_name || ''}`.trim(),
+          serviceName: row.service.name || row.service_name,
+          serviceId: row.service_id,
+          daysInterval: serviceInterval,
+          lastDate: row.appointment.scheduled_date,
+          vehicleDescription: row.appointment.vehicle
+            ? `${row.appointment.vehicle.year} ${row.appointment.vehicle.make} ${row.appointment.vehicle.model}`
+            : null
+        });
+      }
+    }
+
+    // Filter to only overdue services
+    const overdueEntries = [];
+    for (const entry of customerServiceMap.values()) {
+      const lastDate = new Date(entry.lastDate + 'T12:00:00');
+      const daysSince = Math.floor((today.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
+      if (daysSince >= entry.daysInterval) {
+        overdueEntries.push(entry);
+      }
+    }
+
+    // Dedup: skip if customer received a service-reminder SMS in last 30 days
+    const customerIds = [...new Set(overdueEntries.map(e => e.customerId))];
+    let recentlyReminded = new Set();
+
+    if (customerIds.length > 0) {
+      const { data: recentSms } = await supabase
+        .from('sms_logs')
+        .select('customer_id')
+        .eq('message_type', 'service_reminder')
+        .in('customer_id', customerIds)
+        .gte('created_at', `${thirtyDaysAgo}T00:00:00`);
+
+      recentlyReminded = new Set((recentSms || []).map(s => s.customer_id));
+    }
+
+    let sent = 0;
+    let skipped = 0;
+    let failed = 0;
+
+    for (const entry of overdueEntries) {
+      if (recentlyReminded.has(entry.customerId)) {
+        skipped++;
+        continue;
+      }
+
+      try {
+        const result = await sendServiceReminderSMS({
+          customerPhone: entry.customerPhone,
+          customerName: entry.customerName,
+          serviceName: entry.serviceName,
+          vehicleDescription: entry.vehicleDescription,
+          lastDate: entry.lastDate,
+          customerId: entry.customerId
+        });
+
+        if (result.success) {
+          sent++;
+          // Mark this customer so we don't double-send within same batch
+          recentlyReminded.add(entry.customerId);
+        } else {
+          failed++;
+        }
+      } catch (smsErr) {
+        failed++;
+        logger.error('Service reminder SMS failed', { customerId: entry.customerId, error: smsErr.message });
+      }
+    }
+
+    res.json({
+      success: true,
+      date: todayStr,
+      overdue_found: overdueEntries.length,
+      sent,
+      skipped,
+      failed
+    });
+
+  } catch (err) {
+    logger.error('Cron service-reminders failed', { error: err });
     res.status(500).json({ error: err.message });
   }
 });

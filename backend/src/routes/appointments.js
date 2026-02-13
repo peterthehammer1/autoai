@@ -4,6 +4,7 @@ import { format, parseISO } from 'date-fns';
 import { assignTechnician, getRequiredSkillLevel, getBestBayType } from './retell-functions.js';
 import { isValidDate, isValidTime, isValidPhone, isValidUUID, isValidUUIDArray, isWeekday, isWithinBusinessHours, isFutureDate, isWithinBookingWindow, clampPagination, validationError } from '../middleware/validate.js';
 import { nowEST, todayEST } from '../utils/timezone.js';
+import { sendConfirmationSMS, sendCancellationSMS, sendStatusUpdateSMS, sendCompletedSMS } from '../services/sms.js';
 
 const router = Router();
 
@@ -604,13 +605,48 @@ router.patch('/:id', async (req, res, next) => {
       .eq('id', id)
       .select(`
         *,
-        customer:customers (first_name, last_name, phone),
+        customer:customers (id, first_name, last_name, phone),
         vehicle:vehicles (year, make, model),
-        bay:service_bays (name)
+        bay:service_bays (name),
+        appointment_services (service_name)
       `)
       .single();
 
     if (error) throw error;
+
+    // Send status SMS (fire-and-forget — failures don't block response)
+    if (updates.status && appointment.customer?.phone) {
+      const customerName = `${appointment.customer.first_name || ''} ${appointment.customer.last_name || ''}`.trim();
+      const vehicleDesc = appointment.vehicle
+        ? `${appointment.vehicle.year} ${appointment.vehicle.make} ${appointment.vehicle.model}`
+        : null;
+      const services = appointment.appointment_services?.map(s => s.service_name).join(', ') || 'Service';
+
+      const smsParams = {
+        customerPhone: appointment.customer.phone,
+        customerName,
+        appointmentDate: appointment.scheduled_date,
+        appointmentTime: appointment.scheduled_time,
+        vehicleDescription: vehicleDesc,
+        services,
+        customerId: appointment.customer.id,
+        appointmentId: appointment.id
+      };
+
+      try {
+        if (updates.status === 'confirmed') {
+          await sendConfirmationSMS(smsParams);
+        } else if (updates.status === 'in_progress') {
+          await sendStatusUpdateSMS({ ...smsParams, status: 'in_progress' });
+        } else if (updates.status === 'completed') {
+          await sendCompletedSMS(smsParams);
+        } else if (updates.status === 'cancelled') {
+          await sendCancellationSMS(smsParams);
+        }
+      } catch (smsErr) {
+        console.error('[Appointments] SMS send failed (non-blocking):', smsErr.message);
+      }
+    }
 
     res.json({ appointment });
 
@@ -651,11 +687,30 @@ router.post('/:id/confirm', async (req, res, next) => {
 
     const message = `Hi ${appointment.customer.first_name}! Your appointment at Premier Auto Service is confirmed for ${dayName}, ${monthDay} at ${time}. Services: ${services}. Reply STOP to opt out.`;
 
-    // TODO: Send via Twilio
-    // For now, just mark as sent
+    // Send confirmation SMS
+    const vehicleDesc = appointment.vehicle
+      ? `${appointment.vehicle.year} ${appointment.vehicle.make} ${appointment.vehicle.model}`
+      : null;
+
+    let smsResult = { success: false };
+    try {
+      smsResult = await sendConfirmationSMS({
+        customerPhone: appointment.customer.phone,
+        customerName: appointment.customer.first_name,
+        appointmentDate: appointment.scheduled_date,
+        appointmentTime: appointment.scheduled_time,
+        services,
+        vehicleDescription: vehicleDesc,
+        customerId: appointment.customer.id || undefined,
+        appointmentId: appointment.id
+      });
+    } catch (smsErr) {
+      console.error('[Confirm] SMS send failed:', smsErr.message);
+    }
+
     await supabase
       .from('appointments')
-      .update({ 
+      .update({
         confirmation_sent_at: new Date().toISOString(),
         status: 'confirmed'
       })
@@ -663,7 +718,7 @@ router.post('/:id/confirm', async (req, res, next) => {
 
     res.json({
       success: true,
-      message: 'Confirmation sent',
+      message: smsResult.success ? 'Confirmation sent' : 'Confirmation saved (SMS delivery pending)',
       confirmation_text: message
     });
 

@@ -168,6 +168,8 @@ export const analytics = {
   },
 
   recallAlerts: () => fetchAPI('/analytics/recall-alerts'),
+
+  missedRevenue: () => fetchAPI('/analytics/missed-revenue'),
 }
 
 // Call Logs

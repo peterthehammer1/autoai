@@ -238,6 +238,112 @@ If you'd like to rebook, reply RESCHEDULE or call us at (647) 371-1990.
   });
 }
 
+/**
+ * Send status update SMS (in_progress or cancelled)
+ */
+export async function sendStatusUpdateSMS({
+  customerPhone,
+  customerName,
+  appointmentDate,
+  appointmentTime,
+  status,
+  vehicleDescription,
+  customerId,
+  appointmentId
+}) {
+  const firstName = customerName?.split(' ')[0] || 'there';
+  const date = typeof appointmentDate === 'string' ? parseISO(appointmentDate) : appointmentDate;
+  const formattedDate = format(date, 'EEEE, MMMM do');
+  const formattedTime = formatTime12Hour(appointmentTime);
+  const vehicleLine = vehicleDescription ? ` on your ${vehicleDescription}` : '';
+
+  let message;
+  if (status === 'in_progress') {
+    message = `Hi ${firstName},
+
+Work has started${vehicleLine}! Our technician is on it.
+
+We'll let you know as soon as it's ready for pickup.
+
+- Amber, Premier Auto Service`;
+  } else {
+    // Generic status update fallback
+    const statusLabel = status.replace(/_/g, ' ');
+    message = `Hi ${firstName},
+
+Quick update — your appointment on ${formattedDate} at ${formattedTime} is now: ${statusLabel}.
+
+Questions? Call us at (647) 371-1990.
+
+- Amber, Premier Auto Service`;
+  }
+
+  return sendSMS(customerPhone, message, {
+    messageType: 'status_update',
+    customerId,
+    appointmentId
+  });
+}
+
+/**
+ * Send completed SMS with pickup prompt
+ */
+export async function sendCompletedSMS({
+  customerPhone,
+  customerName,
+  vehicleDescription,
+  customerId,
+  appointmentId
+}) {
+  const firstName = customerName?.split(' ')[0] || 'there';
+  const vehicleLine = vehicleDescription ? `Your ${vehicleDescription} is` : 'Your vehicle is';
+
+  const message = `Hi ${firstName},
+
+Great news — ${vehicleLine} all done and ready for pickup!
+
+We're open until 5:00 PM today. See you soon!
+
+- Amber, Premier Auto Service`;
+
+  return sendSMS(customerPhone, message, {
+    messageType: 'completed',
+    customerId,
+    appointmentId
+  });
+}
+
+/**
+ * Send proactive service reminder SMS
+ */
+export async function sendServiceReminderSMS({
+  customerPhone,
+  customerName,
+  serviceName,
+  vehicleDescription,
+  lastDate,
+  customerId
+}) {
+  const firstName = customerName?.split(' ')[0] || 'there';
+  const vehicleLine = vehicleDescription ? ` for your ${vehicleDescription}` : '';
+  const lastDateLine = lastDate
+    ? ` Your last ${serviceName.toLowerCase()} was on ${format(typeof lastDate === 'string' ? parseISO(lastDate) : lastDate, 'MMMM do')}.`
+    : '';
+
+  const message = `Hi ${firstName},
+
+Friendly reminder — it looks like your ${serviceName.toLowerCase()}${vehicleLine} may be due.${lastDateLine}
+
+Want to book an appointment? Reply YES or call us at (647) 371-1990.
+
+- Amber, Premier Auto Service`;
+
+  return sendSMS(customerPhone, message, {
+    messageType: 'service_reminder',
+    customerId
+  });
+}
+
 export { logSMS, formatTime12Hour };
 
 export default {
@@ -245,6 +351,9 @@ export default {
   sendConfirmationSMS,
   sendReminderSMS,
   sendCancellationSMS,
+  sendStatusUpdateSMS,
+  sendCompletedSMS,
+  sendServiceReminderSMS,
   logSMS,
   formatTime12Hour
 };
