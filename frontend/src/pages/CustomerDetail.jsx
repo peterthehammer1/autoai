@@ -40,6 +40,7 @@ import {
   cn,
 } from '@/lib/utils'
 import PhoneNumber, { Email } from '@/components/PhoneNumber'
+import CarImage from '@/components/CarImage'
 import { useCustomerDetailTour } from '@/hooks/use-customer-detail-tour'
 
 export default function CustomerDetail() {
@@ -344,7 +345,7 @@ export default function CustomerDetail() {
                     className="flex items-center justify-between border border-slate-200 p-3"
                   >
                     <div className="flex items-center gap-3">
-                      <Car className="h-6 w-6 text-slate-400" />
+                      <CarImage make={vehicle.make} model={vehicle.model} year={vehicle.year} size="sm" />
                       <div>
                         <p className="font-medium text-slate-900">
                           {vehicle.year} {vehicle.make} {vehicle.model}
