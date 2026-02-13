@@ -22,8 +22,8 @@ Amber answers your shop's phone around the clock — booking appointments, answe
 ### Smart Scheduling
 Real-time bay availability, automatic technician assignment based on skill level, and atomic booking that prevents double-booking. Manages your entire shop calendar.
 
-### Two-Way SMS
-Customers can reply to SMS confirmations and reminders to manage appointments by texting with Amber. Automatic confirmations and 24-hour reminders included.
+### Two-Way SMS & Live Status Updates
+Customers get real-time status texts when work starts on their vehicle and can reply to manage appointments by texting with Amber. Automatic confirmations and 24-hour reminders included. Proactive service reminders automatically reach out to customers when their vehicle is due for maintenance.
 
 ### Call Intelligence
 Every call is transcribed, summarized, and scored for sentiment. Searchable transcripts, recordings, and intent detection across all conversations.
@@ -38,7 +38,7 @@ RFM-based health scores track recency, frequency, and spend. Identify at-risk cu
 Complete customer profiles with multiple vehicles, service history, call and SMS logs, appointment timeline, and lifetime value tracking.
 
 ### Analytics & Insights
-Real-time dashboards for conversion rates, revenue, sentiment trends, bay utilization, peak call hours, and AI-generated business insights.
+Real-time dashboards for conversion rates, revenue, sentiment trends, bay utilization, and peak call hours. Missed revenue tracking shows exactly what you're leaving on the table from non-booked calls, overdue services, and cancellations.
 
 ### Enterprise Security
 API key authentication, CORS protection, input validation, PII scrubbing in logs, rate limiting, and parameterized queries throughout.
@@ -72,7 +72,7 @@ She seamlessly offers to take a message or transfer the call to your team. You g
 Pricing is based on your call volume and the features you need. There are no long-term contracts and you can cancel anytime.
 
 **Can I try it before committing?**
-Absolutely. We offer a free demo where you can hear Amber handle real calls for your shop. Call (647) 371-1990 to experience it yourself, or request a personalized demo.
+Absolutely. Call (647) 371-1990 to hear Amber handle a real call for your shop, or request a personalized demo and we'll set up a walkthrough.
 
 ## Testimonials
 

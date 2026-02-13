@@ -54,8 +54,8 @@ const features = [
   },
   {
     icon: Smartphone,
-    title: 'Two-Way SMS',
-    description: 'Customers can reply to SMS confirmations and reminders to manage appointments by texting with Amber.',
+    title: 'Two-Way SMS & Live Updates',
+    description: 'Customers get real-time status texts when work starts on their vehicle and can reply to manage appointments. Proactive reminders reach out when maintenance is due.',
     color: 'from-emerald-500 to-teal-500',
     bgColor: 'bg-emerald-50',
     iconColor: 'text-emerald-600',
@@ -87,7 +87,7 @@ const features = [
   {
     icon: BarChart3,
     title: 'Analytics & Insights',
-    description: 'Real-time dashboards for conversion rates, revenue, sentiment trends, bay utilization, peak call hours, and AI-generated business insights.',
+    description: 'Real-time dashboards for conversion rates, revenue, sentiment trends, bay utilization, and peak call hours. Missed revenue tracking shows exactly what you\'re leaving on the table.',
     color: 'from-indigo-500 to-blue-600',
     bgColor: 'bg-indigo-50',
     iconColor: 'text-indigo-600',
@@ -125,6 +125,8 @@ const capabilities = [
   { text: 'Tow request scheduling', icon: Truck },
   { text: 'Call transcripts with sentiment analysis', icon: Brain },
   { text: 'Automated reminders & confirmations', icon: Bell },
+  { text: 'Proactive service reminders when maintenance is due', icon: Wrench },
+  { text: 'Live status texts during service', icon: Smartphone },
   { text: 'Multi-vehicle customer support', icon: Car },
 ]
 
@@ -162,7 +164,7 @@ const faqs = [
   },
   {
     question: 'Can I try it before committing?',
-    answer: 'Absolutely. We offer a free demo where you can hear Amber handle real calls for your shop. Call (647) 371-1990 right now to experience it yourself, or request a personalized demo and we\'ll set up a walkthrough.',
+    answer: 'Absolutely. Call (647) 371-1990 right now to hear Amber handle a real call for your shop, or request a personalized demo and we\'ll set up a walkthrough.',
   },
 ]
 
@@ -602,7 +604,7 @@ export default function Landing() {
                 <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />Customer sentiment trends</li>
                 <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />Peak call hours heatmap</li>
                 <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />Bay utilization metrics</li>
-                <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />AI-generated business insights</li>
+                <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />Missed revenue tracking</li>
               </ul>
             </div>
 
@@ -616,7 +618,7 @@ export default function Landing() {
                 <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />Skill-based technician assignment</li>
                 <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />40+ pre-loaded service catalog</li>
                 <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />Atomic booking (no double-books)</li>
-                <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />Loaner & shuttle request tracking</li>
+                <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />Proactive service reminders</li>
               </ul>
             </div>
 
