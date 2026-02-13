@@ -44,7 +44,6 @@ import {
   Wrench,
 } from 'lucide-react'
 import { cn, formatTime12Hour, getStatusColor, formatCents } from '@/lib/utils'
-import RecallAlerts from '@/components/RecallAlerts'
 
 // Animated number component for impact
 function AnimatedNumber({ value, prefix = '', suffix = '', duration = 1000 }) {
@@ -618,9 +617,6 @@ export default function Dashboard() {
           <Card data-tour="mini-calendar" className="shadow-lg border-0 overflow-hidden">
             <MiniCalendar />
           </Card>
-
-          {/* Recall Alerts */}
-          <RecallAlerts />
 
         </div>
       </div>
