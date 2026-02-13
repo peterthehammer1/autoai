@@ -616,27 +616,6 @@ export default function Dashboard() {
             <MiniCalendar />
           </Card>
           
-          {/* Quick Stats */}
-          <div className="grid grid-cols-2 gap-3">
-            <Card className="shadow-md border-0 bg-gradient-to-br from-slate-700 to-slate-800 text-white">
-              <CardContent className="px-3 py-2.5 flex items-center gap-3">
-                <CheckCircle2 className="h-4 w-4 text-blue-300 shrink-0" />
-                <div>
-                  <p className="text-lg font-bold leading-tight">{overview?.week?.ai_bookings ?? 0}</p>
-                  <p className="text-[11px] text-slate-400">AI Bookings</p>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="shadow-md border-0 bg-gradient-to-br from-slate-700 to-slate-800 text-white">
-              <CardContent className="px-3 py-2.5 flex items-center gap-3">
-                <Users className="h-4 w-4 text-blue-300 shrink-0" />
-                <div>
-                  <p className="text-lg font-bold leading-tight">{overview?.week?.new_customers ?? 0}</p>
-                  <p className="text-[11px] text-slate-400">New Customers</p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
         </div>
       </div>
 
