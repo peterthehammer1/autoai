@@ -89,23 +89,32 @@ export default function Analytics() {
       {/* Circular Gauges Row */}
       <GaugeCards comprehensive={comprehensive} bayStats={bayStats} />
 
-      {/* Main Content Grid */}
+      {/* Charts + Insights Grid */}
       <div className="grid gap-4 lg:grid-cols-3">
-        {/* Left Column - 2/3 width */}
         <div className="lg:col-span-2 space-y-4">
           <RevenueTrend comprehensive={comprehensive} onPointClick={setDrillDown} />
           <CallSentiment callTrends={callTrends} comprehensive={comprehensive} onPointClick={setDrillDown} />
-          <ConversionFunnel comprehensive={comprehensive} />
-          <ComparisonBar comprehensive={comprehensive} />
-          <ChartCards comprehensive={comprehensive} />
         </div>
-
-        {/* Right Column - 1/3 width */}
         <div className="space-y-4">
           <InsightsPanel insightsData={insightsData} loading={insightsLoading} />
-          <ServiceTrends comprehensive={comprehensive} />
-          <SidebarCards comprehensive={comprehensive} />
+          <ConversionFunnel comprehensive={comprehensive} />
         </div>
+      </div>
+
+      {/* Secondary Grid */}
+      <div className="grid gap-4 lg:grid-cols-3">
+        <div className="lg:col-span-2 space-y-4">
+          <ChartCards comprehensive={comprehensive} />
+        </div>
+        <div className="space-y-4">
+          <ComparisonBar comprehensive={comprehensive} />
+          <ServiceTrends comprehensive={comprehensive} />
+        </div>
+      </div>
+
+      {/* Bottom Cards */}
+      <div className="grid gap-4 md:grid-cols-3">
+        <SidebarCards comprehensive={comprehensive} />
       </div>
 
       {/* Call Heatmap */}
