@@ -202,7 +202,7 @@ export default function Dashboard() {
     if (!callTrends?.sentiment_trend?.length) return null
     
     return (
-      <Card className="shadow-card">
+      <Card className="shadow-card flex-1 flex flex-col">
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -222,8 +222,8 @@ export default function Dashboard() {
             </Button>
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="h-52">
+        <CardContent className="flex-1 flex flex-col">
+          <div className="flex-1 min-h-[13rem]">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={callTrends.sentiment_trend}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
@@ -396,9 +396,9 @@ export default function Dashboard() {
       </div>
 
       {/* Main Content Grid */}
-      <div className="grid gap-5 lg:grid-cols-3">
+      <div className="grid gap-5 lg:grid-cols-3 lg:items-stretch">
         {/* Left Column - 2/3 width */}
-        <div className="lg:col-span-2 space-y-5">
+        <div className="lg:col-span-2 flex flex-col gap-5">
           {/* Today's Schedule Card - Enhanced */}
           <Card data-tour="todays-schedule" className="shadow-lg border-0 overflow-hidden">
             <CardHeader className="pb-3 bg-gradient-to-r from-slate-50 to-white border-b">
@@ -518,11 +518,13 @@ export default function Dashboard() {
           </Card>
 
           {/* Sentiment Chart */}
-          {sentimentChartContent}
+          <div className="flex-1 flex flex-col min-h-0">
+            {sentimentChartContent}
+          </div>
         </div>
 
         {/* Right Column - 1/3 width */}
-        <div className="space-y-5">
+        <div className="flex flex-col gap-5">
           {/* AI Performance Card - Enhanced */}
           <Card data-tour="ai-agent" className="shadow-lg border-0 overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
             <CardHeader className="pb-3">
