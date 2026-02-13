@@ -32,9 +32,15 @@ class ErrorBoundary extends Component {
             <h1 className="text-lg font-semibold text-slate-800 mb-2">
               Something went wrong
             </h1>
-            <p className="text-sm text-slate-500 mb-6">
+            <p className="text-sm text-slate-500 mb-2">
               We encountered an unexpected error. Please try refreshing the page.
             </p>
+            {this.state.error && (
+              <pre className="text-xs text-left text-red-600 bg-red-50 border border-red-200 rounded p-3 mb-4 max-h-32 overflow-auto whitespace-pre-wrap">
+                {this.state.error.message}
+                {this.state.error.stack && '\n\n' + this.state.error.stack.split('\n').slice(0, 5).join('\n')}
+              </pre>
+            )}
             <div className="flex gap-3 justify-center">
               <Button
                 variant="outline"
