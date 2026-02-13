@@ -283,37 +283,42 @@ export default function Customers() {
                 <p className="text-sm text-slate-500 mt-1">Try adjusting your search</p>
               </div>
             ) : (
-              <div className="divide-y divide-slate-100">
-                {sortedAndFilteredCustomers.map((customer) => (
-                  <button
-                    key={customer.id}
-                    onClick={() => setSelectedCustomerId(customer.id)}
-                    className={cn(
-                      "w-full px-3 py-2.5 text-left hover:bg-slate-50 rounded-lg transition-colors group flex items-center gap-3",
-                      selectedCustomerId === customer.id && "bg-sidebar/5 border-l-2 border-l-sidebar"
-                    )}
-                  >
-                    <CustomerAvatar 
-                      firstName={customer.first_name}
-                      lastName={customer.last_name}
-                      size="sm"
-                      className="bg-sidebar-lighter text-white"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-slate-800 group-hover:text-blue-700 truncate">
+              <div>
+                {/* Column Headers */}
+                <div className="flex items-center gap-3 px-3 py-1.5 border-b border-slate-100">
+                  <span className="flex-1 text-xs text-slate-400 font-medium uppercase tracking-wider">Name</span>
+                  <span className="w-24 hidden sm:block text-xs text-slate-400 font-medium uppercase tracking-wider">Phone</span>
+                  <span className="w-14 text-right text-xs text-slate-400 font-medium uppercase tracking-wider">Visits</span>
+                </div>
+                {/* Rows */}
+                <div className="divide-y divide-slate-100">
+                  {sortedAndFilteredCustomers.map((customer) => (
+                    <button
+                      key={customer.id}
+                      onClick={() => setSelectedCustomerId(customer.id)}
+                      className={cn(
+                        "w-full flex items-center gap-3 py-2.5 px-3 text-left hover:bg-slate-50 rounded-lg transition-colors group",
+                        selectedCustomerId === customer.id && "bg-sidebar/5 border-l-2 border-l-sidebar"
+                      )}
+                    >
+                      <span className="flex-1 min-w-0 text-sm font-medium text-slate-900 truncate group-hover:text-blue-700">
                         {customer.first_name} {customer.last_name}
-                      </p>
-                      <p className="text-xs text-slate-500 truncate">
-                        {customer.phone ? <PhoneNumber phone={customer.phone} /> : 'No phone'}
-                      </p>
-                    </div>
-                    {customer.total_visits > 0 && (
-                      <span className="text-xs text-teal bg-teal-dark/10 px-1.5 py-0.5 rounded font-medium">
-                        {customer.total_visits}
                       </span>
-                    )}
-                  </button>
-                ))}
+                      <span className="w-24 hidden sm:block text-xs text-slate-500 truncate">
+                        {customer.phone ? <PhoneNumber phone={customer.phone} /> : '—'}
+                      </span>
+                      <div className="w-14 flex justify-end">
+                        {customer.total_visits > 0 ? (
+                          <span className="text-xs text-teal bg-teal-dark/10 px-2 py-0.5 rounded-full font-semibold">
+                            {customer.total_visits}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-slate-300">—</span>
+                        )}
+                      </div>
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
           </ScrollArea>
