@@ -276,16 +276,18 @@ export default function Appointments() {
           {upcomingLoading ? (
             <div className="space-y-3">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="bg-white border border-slate-200 p-4">
-                  <div className="h-20 animate-pulse bg-slate-100" />
+                <div key={i} className="bg-white shadow-lg border-0 rounded-lg p-4">
+                  <div className="h-20 animate-pulse bg-slate-100 rounded-lg" />
                 </div>
               ))}
             </div>
           ) : !upcomingData?.appointments?.length ? (
-            <div className="bg-white border border-slate-200 p-12 text-center">
-              <Calendar className="h-8 w-8 text-slate-300 mx-auto mb-3" />
-              <h3 className="text-sm font-medium text-slate-700 mb-1">No Upcoming Appointments</h3>
-              <p className="text-xs text-slate-500">There are no scheduled appointments.</p>
+            <div className="bg-white shadow-lg border-0 rounded-lg p-12 text-center">
+              <div className="rounded-2xl bg-gradient-to-br from-slate-100 to-slate-50 p-5 mb-4 shadow-inner mx-auto w-fit">
+                <Calendar className="h-10 w-10 text-slate-300" />
+              </div>
+              <h3 className="font-semibold text-slate-700 text-base mb-1">No Upcoming Appointments</h3>
+              <p className="text-sm text-slate-500">There are no scheduled appointments.</p>
             </div>
           ) : (
             Object.entries(upcomingData.by_date || {}).map(([date, apts]) => (
@@ -310,14 +312,14 @@ export default function Appointments() {
                   </div>
                 </div>
 
-                <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
+                <div className="bg-white shadow-lg border-0 rounded-lg overflow-hidden">
                   <div className="divide-y divide-slate-100">
                     {apts.map((apt, index) => (
                       <Link
                         key={apt.id}
                         to={`/appointments/${apt.id}`}
                         className={cn(
-                          "block p-3 hover:bg-slate-100 transition-colors",
+                          "block p-3 hover:bg-slate-50 rounded-lg transition-colors group",
                           index % 2 === 1 && "bg-slate-50/50"
                         )}
                       >
@@ -332,7 +334,7 @@ export default function Appointments() {
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-start justify-between gap-2 mb-1">
-                              <span className="text-sm font-medium text-slate-800">
+                              <span className="text-sm font-medium text-slate-800 group-hover:text-blue-700">
                                 {apt.customer?.first_name} {apt.customer?.last_name}
                               </span>
                               <span className="text-xs px-2 py-0.5 bg-slate-100 text-slate-600 rounded capitalize shrink-0">
@@ -366,7 +368,7 @@ export default function Appointments() {
 
         {/* Calendar View Tab */}
         <TabsContent value="calendar" className="mt-4">
-          <div data-tour="appts-calendar" className="bg-white border border-slate-200 rounded-lg overflow-hidden">
+          <div data-tour="appts-calendar" className="bg-white shadow-lg border-0 rounded-lg overflow-hidden">
             {/* Calendar Header: Navigation + View Toggle */}
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-4 sm:px-5 py-3 border-b border-slate-200">
               <div className="flex items-center gap-2">
@@ -664,7 +666,7 @@ export default function Appointments() {
         {/* By Date Tab */}
         <TabsContent value="by-date" className="mt-4 space-y-4">
           {/* Date Navigation */}
-          <div className="bg-white border border-slate-200 p-3">
+          <div className="bg-white shadow-lg border-0 rounded-lg p-3">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
               <div className="flex items-center gap-2">
                 <Button
@@ -737,20 +739,22 @@ export default function Appointments() {
           </div>
 
           {/* Appointments Table */}
-          <div className="bg-white border border-slate-200">
+          <div className="bg-white shadow-lg border-0 rounded-lg overflow-hidden">
             {dateLoading ? (
               <div className="p-6">
                 <div className="space-y-3">
                   {[1, 2, 3].map((i) => (
-                    <div key={i} className="h-16 animate-pulse bg-slate-100" />
+                    <div key={i} className="h-16 animate-pulse bg-slate-100 rounded-lg" />
                   ))}
                 </div>
               </div>
             ) : !dateData?.appointments?.length ? (
               <div className="p-12 text-center">
-                <Calendar className="h-8 w-8 text-slate-300 mx-auto mb-3" />
-                <h3 className="text-sm font-medium text-slate-700 mb-1">No Appointments</h3>
-                <p className="text-xs text-slate-500">No appointments scheduled for this date.</p>
+                <div className="rounded-2xl bg-gradient-to-br from-slate-100 to-slate-50 p-5 mb-4 shadow-inner mx-auto w-fit">
+                  <Calendar className="h-10 w-10 text-slate-300" />
+                </div>
+                <h3 className="font-semibold text-slate-700 text-base mb-1">No Appointments</h3>
+                <p className="text-sm text-slate-500">No appointments scheduled for this date.</p>
               </div>
             ) : (
               <>
@@ -761,7 +765,7 @@ export default function Appointments() {
                       key={apt.id}
                       to={`/appointments/${apt.id}`}
                       className={cn(
-                        "block p-3 hover:bg-slate-100",
+                        "block p-3 hover:bg-slate-50 rounded-lg group",
                         index % 2 === 1 && "bg-slate-50/50"
                       )}
                     >
@@ -776,7 +780,7 @@ export default function Appointments() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-2">
-                            <p className="text-sm font-medium text-slate-800 truncate">
+                            <p className="text-sm font-medium text-slate-800 group-hover:text-blue-700 truncate">
                               {apt.customer?.first_name} {apt.customer?.last_name}
                             </p>
                             <span className="text-xs px-1.5 py-0.5 bg-slate-100 text-slate-600 rounded capitalize shrink-0">
@@ -811,13 +815,13 @@ export default function Appointments() {
                   </TableHeader>
                   <TableBody>
                     {dateData.appointments.map((apt, index) => (
-                      <TableRow key={apt.id} className={cn("hover:bg-slate-100", index % 2 === 1 && "bg-slate-50/50")}>
+                      <TableRow key={apt.id} className={cn("hover:bg-slate-50 group", index % 2 === 1 && "bg-slate-50/50")}>
                         <TableCell className="font-mono text-sm text-slate-700">
                           {formatTime12Hour(apt.scheduled_time)}
                         </TableCell>
                         <TableCell>
                           <div>
-                            <p className="text-sm font-medium text-slate-800">
+                            <p className="text-sm font-medium text-slate-800 group-hover:text-blue-700">
                               {apt.customer?.first_name} {apt.customer?.last_name}
                             </p>
                             <p className="text-xs text-slate-500">

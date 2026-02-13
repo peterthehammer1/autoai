@@ -249,12 +249,12 @@ export default function Customers() {
       <div className="flex-1 flex flex-col lg:flex-row gap-4 min-h-0">
         {/* Left Panel - Customer List */}
         <div className={cn(
-          "flex flex-col bg-white border border-slate-200 overflow-hidden",
+          "flex flex-col bg-white shadow-lg border-0 rounded-lg overflow-hidden",
           "w-full lg:w-72 xl:w-80",
           selectedCustomerId ? "hidden lg:flex" : "flex"
         )}>
           {/* Search Header */}
-          <div data-tour="customers-search" className="p-3 border-b border-slate-200">
+          <div data-tour="customers-search" className="p-3 border-b border-slate-100">
             <div className="relative">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <Input
@@ -269,14 +269,18 @@ export default function Customers() {
           {/* Customer List */}
           <ScrollArea data-tour="customers-list" className="flex-1">
             {isLoading ? (
-              <div className="p-8 text-center">
-                <div className="animate-spin h-5 w-5 border-2 border-slate-400 border-t-transparent rounded-full mx-auto mb-2" />
-                <p className="text-sm text-slate-500">Loading...</p>
+              <div className="space-y-2 p-3">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <div key={i} className="h-14 animate-pulse bg-slate-100 rounded-lg" />
+                ))}
               </div>
             ) : sortedAndFilteredCustomers.length === 0 ? (
               <div className="p-8 text-center">
-                <User className="h-8 w-8 text-slate-300 mx-auto mb-2" />
-                <p className="text-sm text-slate-500">No customers found</p>
+                <div className="rounded-2xl bg-gradient-to-br from-slate-100 to-slate-50 p-5 mb-4 shadow-inner mx-auto w-fit">
+                  <User className="h-10 w-10 text-slate-300" />
+                </div>
+                <p className="font-semibold text-slate-700 text-base">No customers found</p>
+                <p className="text-sm text-slate-500 mt-1">Try adjusting your search</p>
               </div>
             ) : (
               <div className="divide-y divide-slate-100">
@@ -285,7 +289,7 @@ export default function Customers() {
                     key={customer.id}
                     onClick={() => setSelectedCustomerId(customer.id)}
                     className={cn(
-                      "w-full px-3 py-2.5 text-left hover:bg-slate-50 transition-colors flex items-center gap-3",
+                      "w-full px-3 py-2.5 text-left hover:bg-slate-50 rounded-lg transition-colors group flex items-center gap-3",
                       selectedCustomerId === customer.id && "bg-sidebar/5 border-l-2 border-l-sidebar"
                     )}
                   >
@@ -296,7 +300,7 @@ export default function Customers() {
                       className="bg-sidebar-lighter text-white"
                     />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-slate-800 truncate">
+                      <p className="text-sm font-medium text-slate-800 group-hover:text-blue-700 truncate">
                         {customer.first_name} {customer.last_name}
                       </p>
                       <p className="text-xs text-slate-500 truncate">
@@ -313,7 +317,7 @@ export default function Customers() {
               </div>
             )}
           </ScrollArea>
-          <div className="px-3 py-2 border-t border-slate-200 bg-slate-50">
+          <div className="px-3 py-2 border-t border-slate-100 bg-slate-50">
             <p className="text-xs text-slate-500">{sortedAndFilteredCustomers.length} results</p>
           </div>
         </div>
@@ -324,21 +328,25 @@ export default function Customers() {
           !selectedCustomerId ? "hidden lg:flex" : "flex"
         )}>
           {!selectedCustomerId ? (
-            <div className="flex-1 flex items-center justify-center bg-white border border-slate-200">
+            <div className="flex-1 flex items-center justify-center bg-white shadow-lg border-0 rounded-lg">
               <div className="text-center">
-                <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <User className="h-8 w-8 text-slate-400" />
+                <div className="rounded-2xl bg-gradient-to-br from-slate-100 to-slate-50 p-5 mb-4 shadow-inner mx-auto w-fit">
+                  <User className="h-10 w-10 text-slate-300" />
                 </div>
-                <h3 className="text-base font-medium text-slate-700 mb-1">Select a Customer</h3>
+                <h3 className="font-semibold text-slate-700 text-base mb-1">Select a Customer</h3>
                 <p className="text-sm text-slate-500">Choose from the list to view details</p>
               </div>
             </div>
           ) : isLoadingCustomer ? (
-            <div className="flex-1 flex items-center justify-center bg-white border border-slate-200">
-              <div className="animate-spin h-6 w-6 border-2 border-slate-400 border-t-transparent rounded-full" />
+            <div className="flex-1 flex items-center justify-center bg-white shadow-lg border-0 rounded-lg">
+              <div className="space-y-2 p-3 w-full">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <div key={i} className="h-14 animate-pulse bg-slate-100 rounded-lg" />
+                ))}
+              </div>
             </div>
           ) : selectedCustomer ? (
-            <div className="flex-1 flex flex-col bg-white border border-slate-200 overflow-hidden">
+            <div className="flex-1 flex flex-col bg-white shadow-lg border-0 rounded-lg overflow-hidden">
               {/* Customer Header */}
               <div className="bg-slate-50 p-4 sm:p-5 border-b border-slate-200">
                 <div className="flex items-start justify-between gap-3">

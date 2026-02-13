@@ -213,12 +213,12 @@ export default function CallLogs() {
       <div className="flex-1 flex flex-col lg:flex-row gap-4 min-h-0">
         {/* Left Panel - Call List */}
         <div className={cn(
-          "flex flex-col bg-white border border-slate-200 overflow-hidden",
+          "flex flex-col bg-white shadow-lg border-0 rounded-lg overflow-hidden",
           "w-full lg:w-80",
           selectedCallId ? "hidden lg:flex" : "flex"
         )}>
           {/* Search & Filter Header */}
-          <div className="p-3 border-b border-slate-200 space-y-2">
+          <div className="p-3 border-b border-slate-100 space-y-2">
             <div className="relative">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <Input
@@ -247,23 +247,27 @@ export default function CallLogs() {
           {/* Call List */}
           <ScrollArea className="flex-1">
             {isLoading ? (
-              <div className="p-8 text-center">
-                <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full mx-auto mb-2" />
-                <p className="text-sm text-slate-500">Loading calls...</p>
+              <div className="space-y-2 p-3">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <div key={i} className="h-14 animate-pulse bg-slate-100 rounded-lg" />
+                ))}
               </div>
             ) : filteredCalls.length === 0 ? (
               <div className="p-8 text-center">
-                <Phone className="h-8 w-8 text-slate-300 mx-auto mb-2" />
-                <p className="text-sm text-slate-500">No calls found</p>
+                <div className="rounded-2xl bg-gradient-to-br from-slate-100 to-slate-50 p-5 mb-4 shadow-inner mx-auto w-fit">
+                  <Phone className="h-10 w-10 text-slate-300" />
+                </div>
+                <p className="font-semibold text-slate-700 text-base">No calls found</p>
+                <p className="text-sm text-slate-500 mt-1">Try adjusting your search or filters</p>
               </div>
             ) : (
-              <div className="divide-y divide-slate-200">
+              <div className="divide-y divide-slate-100">
                 {filteredCalls.map((call) => (
                   <button
                     key={call.id}
                     onClick={() => setSelectedCallId(call.id)}
                     className={cn(
-                      "w-full p-3 text-left hover:bg-slate-50 transition-colors",
+                      "w-full p-3 text-left hover:bg-slate-50 rounded-lg transition-colors group",
                       selectedCallId === call.id && "bg-teal-dark/5 border-l-2 border-l-teal-dark"
                     )}
                   >
@@ -279,8 +283,8 @@ export default function CallLogs() {
                       
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-2">
-                          <p className="text-sm font-medium text-slate-800 truncate">
-                            {call.customer 
+                          <p className="text-sm font-medium text-slate-800 group-hover:text-blue-700 truncate">
+                            {call.customer
                               ? `${call.customer.first_name} ${call.customer.last_name}`
                               : <PhoneNumber phone={call.phone_number} email={call.customer?.email} />
                             }
@@ -311,15 +315,17 @@ export default function CallLogs() {
           !selectedCallId ? "hidden lg:flex" : "flex"
         )}>
           {!selectedCallId ? (
-            <div className="flex-1 flex items-center justify-center bg-white border border-slate-200">
+            <div className="flex-1 flex items-center justify-center bg-white shadow-lg border-0 rounded-lg">
               <div className="text-center">
-                <Phone className="h-8 w-8 text-slate-300 mx-auto mb-3" />
-                <h3 className="text-sm font-medium text-slate-700 mb-1">Select a Call</h3>
-                <p className="text-xs text-slate-500">Choose a call from the list to view details</p>
+                <div className="rounded-2xl bg-gradient-to-br from-slate-100 to-slate-50 p-5 mb-4 shadow-inner mx-auto w-fit">
+                  <Phone className="h-10 w-10 text-slate-300" />
+                </div>
+                <h3 className="font-semibold text-slate-700 text-base mb-1">Select a Call</h3>
+                <p className="text-sm text-slate-500">Choose a call from the list to view details</p>
               </div>
             </div>
           ) : selectedCall ? (
-            <div className="flex-1 flex flex-col bg-white border border-slate-200 overflow-hidden">
+            <div className="flex-1 flex flex-col bg-white shadow-lg border-0 rounded-lg overflow-hidden">
               {/* Call Header */}
               <div className="bg-slate-50 px-4 py-3 border-b border-slate-200">
                 <div className="flex items-start justify-between gap-3">

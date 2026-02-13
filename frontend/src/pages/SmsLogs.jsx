@@ -153,12 +153,12 @@ export default function SmsLogs() {
       <div className="flex-1 flex flex-col lg:flex-row gap-4 min-h-0">
         {/* Left Panel - SMS List */}
         <div className={cn(
-          "flex flex-col bg-white border border-slate-200 overflow-hidden",
+          "flex flex-col bg-white shadow-lg border-0 rounded-lg overflow-hidden",
           "w-full lg:w-80",
           selectedSmsId ? "hidden lg:flex" : "flex"
         )}>
           {/* Search & Filter Header */}
-          <div className="p-3 border-b border-slate-200 space-y-2">
+          <div className="p-3 border-b border-slate-100 space-y-2">
             <div className="relative">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <Input
@@ -187,17 +187,21 @@ export default function SmsLogs() {
           {/* SMS List */}
           <ScrollArea className="flex-1">
             {logsLoading ? (
-              <div className="p-8 text-center">
-                <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full mx-auto mb-2" />
-                <p className="text-sm text-slate-500">Loading messages...</p>
+              <div className="space-y-2 p-3">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <div key={i} className="h-14 animate-pulse bg-slate-100 rounded-lg" />
+                ))}
               </div>
             ) : filteredLogs.length === 0 ? (
               <div className="p-8 text-center">
-                <MessageSquare className="h-8 w-8 text-slate-300 mx-auto mb-2" />
-                <p className="text-sm text-slate-500">No messages found</p>
+                <div className="rounded-2xl bg-gradient-to-br from-slate-100 to-slate-50 p-5 mb-4 shadow-inner mx-auto w-fit">
+                  <MessageSquare className="h-10 w-10 text-slate-300" />
+                </div>
+                <p className="font-semibold text-slate-700 text-base">No messages found</p>
+                <p className="text-sm text-slate-500 mt-1">Try adjusting your search or filters</p>
               </div>
             ) : (
-              <div className="divide-y divide-slate-200">
+              <div className="divide-y divide-slate-100">
                 {filteredLogs.map((sms) => {
                   const typeConfig = getTypeConfig(sms.message_type)
                   return (
@@ -205,7 +209,7 @@ export default function SmsLogs() {
                       key={sms.id}
                       onClick={() => setSelectedSmsId(sms.id)}
                       className={cn(
-                        "w-full p-3 text-left hover:bg-slate-50 transition-colors",
+                        "w-full p-3 text-left hover:bg-slate-50 rounded-lg transition-colors group",
                         selectedSmsId === sms.id && "bg-teal-dark/5 border-l-2 border-l-teal-dark"
                       )}
                     >
@@ -217,8 +221,8 @@ export default function SmsLogs() {
                         
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between gap-2">
-                            <p className="text-sm font-medium text-slate-800 truncate">
-                              {sms.customer 
+                            <p className="text-sm font-medium text-slate-800 group-hover:text-blue-700 truncate">
+                              {sms.customer
                                 ? `${sms.customer.first_name} ${sms.customer.last_name}`
                                 : <PhoneNumber phone={sms.to_phone} email={sms.customer?.email} />
                               }
@@ -248,15 +252,17 @@ export default function SmsLogs() {
           !selectedSmsId ? "hidden lg:flex" : "flex"
         )}>
           {!selectedSmsId ? (
-            <div className="flex-1 flex items-center justify-center bg-white border border-slate-200">
+            <div className="flex-1 flex items-center justify-center bg-white shadow-lg border-0 rounded-lg">
               <div className="text-center">
-                <MessageSquare className="h-8 w-8 text-slate-300 mx-auto mb-3" />
-                <h3 className="text-sm font-medium text-slate-700 mb-1">Select a Message</h3>
-                <p className="text-xs text-slate-500">Choose a message from the list to view details</p>
+                <div className="rounded-2xl bg-gradient-to-br from-slate-100 to-slate-50 p-5 mb-4 shadow-inner mx-auto w-fit">
+                  <MessageSquare className="h-10 w-10 text-slate-300" />
+                </div>
+                <h3 className="font-semibold text-slate-700 text-base mb-1">Select a Message</h3>
+                <p className="text-sm text-slate-500">Choose a message from the list to view details</p>
               </div>
             </div>
           ) : selectedSms ? (
-            <div className="flex-1 flex flex-col bg-white border border-slate-200 overflow-hidden">
+            <div className="flex-1 flex flex-col bg-white shadow-lg border-0 rounded-lg overflow-hidden">
               {/* SMS Header */}
               <div className="bg-slate-50 px-4 py-3 border-b border-slate-200">
                 <div className="flex items-start justify-between gap-3">
