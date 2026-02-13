@@ -9,15 +9,15 @@ import { BarChart3, Clock, Activity } from 'lucide-react'
 
 // Analytics sub-components
 import StatCards from '@/components/analytics/StatCards'
-import GaugeCards from '@/components/analytics/GaugeCards'
 import RevenueTrend from '@/components/analytics/RevenueTrend'
 import CallSentiment from '@/components/analytics/CallSentiment'
-import ChartCards from '@/components/analytics/ChartCards'
 import InsightsPanel from '@/components/analytics/InsightsPanel'
-import SidebarCards from '@/components/analytics/SidebarCards'
+import ServiceAnalysis from '@/components/analytics/ServiceAnalysis'
+import RevenueBreakdown from '@/components/analytics/RevenueBreakdown'
 import ConversionFunnel from '@/components/analytics/ConversionFunnel'
+import TopCustomers from '@/components/analytics/TopCustomers'
+import CustomerHealth from '@/components/analytics/CustomerHealth'
 import ComparisonBar from '@/components/analytics/ComparisonBar'
-import ServiceTrends from '@/components/analytics/ServiceTrends'
 import ExportButton from '@/components/analytics/ExportButton'
 import DateRangePicker from '@/components/analytics/DateRangePicker'
 import DrillDownDialog from '@/components/analytics/DrillDownDialog'
@@ -60,8 +60,8 @@ export default function Analytics() {
   })
 
   return (
-    <div className="space-y-4">
-      {/* Page Header - Dark Theme */}
+    <div className="space-y-6">
+      {/* Section 0: Page Header */}
       <div className="bg-gradient-to-r from-slate-800 to-slate-900 -mx-4 sm:-mx-6 px-4 sm:px-6 py-4 mb-2">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-3">
@@ -83,58 +83,61 @@ export default function Analytics() {
         </div>
       </div>
 
-      {/* Hero Stats Row */}
+      {/* Section 1: KPI Strip */}
       <StatCards comprehensive={comprehensive} loading={compLoading} />
 
-      {/* Circular Gauges Row */}
-      <GaugeCards comprehensive={comprehensive} bayStats={bayStats} />
-
-      {/* Charts + Insights Grid */}
-      <div className="grid gap-4 lg:grid-cols-3">
-        <div className="lg:col-span-2 space-y-4">
-          <RevenueTrend comprehensive={comprehensive} onPointClick={setDrillDown} />
-          <CallSentiment callTrends={callTrends} comprehensive={comprehensive} onPointClick={setDrillDown} />
-        </div>
-        <div className="space-y-4">
-          <InsightsPanel insightsData={insightsData} loading={insightsLoading} />
-          <ConversionFunnel comprehensive={comprehensive} />
-        </div>
+      {/* Section 2: Charts Row */}
+      <div className="grid gap-4 lg:grid-cols-2">
+        <RevenueTrend comprehensive={comprehensive} onPointClick={setDrillDown} />
+        <CallSentiment callTrends={callTrends} onPointClick={setDrillDown} />
       </div>
 
-      {/* Secondary Grid */}
-      <div className="grid gap-4 lg:grid-cols-3 lg:items-stretch">
-        <div className="lg:col-span-2 flex flex-col gap-4">
-          <ChartCards comprehensive={comprehensive} />
-        </div>
-        <div className="flex flex-col gap-4">
-          <ComparisonBar comprehensive={comprehensive} />
-          <ServiceTrends comprehensive={comprehensive} />
-        </div>
+      {/* Section 3: AI Insights */}
+      <InsightsPanel insightsData={insightsData} loading={insightsLoading} />
+
+      {/* Section 4: Service & Bay Analysis */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <ServiceAnalysis comprehensive={comprehensive} />
+        <RevenueBreakdown comprehensive={comprehensive} />
+        <ConversionFunnel comprehensive={comprehensive} />
       </div>
 
-      {/* Bottom Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <SidebarCards comprehensive={comprehensive} />
+      {/* Section 5: Customer Intelligence */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <TopCustomers comprehensive={comprehensive} />
+        <CustomerHealth comprehensive={comprehensive} />
+        <ComparisonBar comprehensive={comprehensive} />
       </div>
 
-      {/* Call Heatmap */}
-      {callTrends?.hourly_heatmap && (
-        <Card>
-          <CardHeader className="pb-2 sm:pb-4">
-            <div className="flex items-center gap-2">
-              <div className="p-2 rounded-lg bg-blue-100">
-                <Clock className="h-4 w-4 text-blue-600" />
-              </div>
-              <div>
-                <CardTitle className="text-base">Call Volume Heatmap</CardTitle>
-                <CardDescription className="text-xs sm:text-sm">
-                  <span className="hidden sm:inline">When calls come in by day and hour &bull; </span>
-                  Peak: {callTrends.peak_hour_label}
-                </CardDescription>
-              </div>
+      {/* Section 6: Call Heatmap */}
+      <Card className="transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
+        <CardHeader className="pb-2 sm:pb-4">
+          <div className="flex items-center gap-2">
+            <div className="p-2 rounded-lg bg-blue-100">
+              <Clock className="h-4 w-4 text-blue-600" />
             </div>
-          </CardHeader>
-          <CardContent>
+            <div>
+              <CardTitle className="text-base">Call Volume Heatmap</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">
+                <span className="hidden sm:inline">When calls come in by day and hour</span>
+                {callTrends?.peak_hour_label && (
+                  <span>
+                    <span className="hidden sm:inline"> &bull; </span>
+                    Peak: {callTrends.peak_hour_label}
+                  </span>
+                )}
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {!callTrends?.hourly_heatmap ? (
+            <div className="space-y-2">
+              {[1, 2, 3, 4, 5, 6, 7].map(i => (
+                <div key={i} className="h-8 bg-slate-100 animate-pulse rounded" />
+              ))}
+            </div>
+          ) : (
             <div className="overflow-x-auto">
               <div className="min-w-[600px]">
                 {/* Hour labels */}
@@ -190,12 +193,12 @@ export default function Analytics() {
                 </div>
               </div>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          )}
+        </CardContent>
+      </Card>
 
-      {/* Bay Utilization */}
-      <Card>
+      {/* Section 7: Bay Utilization */}
+      <Card className="transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
         <CardHeader>
           <div className="flex items-center gap-2">
             <div className="p-2 rounded-lg bg-violet-100">

@@ -32,16 +32,16 @@ const metrics = [
     label: 'Conversion',
     color: 'bg-amber-500',
     getCurrent: (c) => c?.calls?.conversion_rate || 0,
-    getChange: () => 0, // no previous conversion rate directly available
+    getChange: () => 0,
     format: (v) => `${v}%`,
   },
 ]
 
 export default function ComparisonBar({ comprehensive }) {
-  if (!comprehensive) return null
+  const loading = !comprehensive
 
   return (
-    <Card className="bg-white/80 backdrop-blur-sm border-white/20 transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
+    <Card className="transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
       <CardHeader className="pb-2">
         <CardTitle className="text-base">Period Comparison</CardTitle>
         <CardDescription>Current vs previous period</CardDescription>
@@ -49,9 +49,30 @@ export default function ComparisonBar({ comprehensive }) {
       <CardContent>
         <div className="space-y-4">
           {metrics.map(({ key, label, color, getCurrent, getChange, format: fmt }) => {
+            if (loading) {
+              return (
+                <div key={key}>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-xs font-medium text-slate-600">{label}</span>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] text-slate-500 w-12">Current</span>
+                      <div className="flex-1 h-4 bg-slate-100 animate-pulse rounded-full" />
+                      <div className="w-16 h-4 bg-slate-100 animate-pulse rounded" />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] text-slate-500 w-12">Previous</span>
+                      <div className="flex-1 h-4 bg-slate-100 animate-pulse rounded-full" />
+                      <div className="w-16 h-4 bg-slate-100 animate-pulse rounded" />
+                    </div>
+                  </div>
+                </div>
+              )
+            }
+
             const current = getCurrent(comprehensive)
             const change = getChange(comprehensive)
-            // Derive previous from change percentage: current = prev * (1 + change/100)
             const previous = change !== 0 ? Math.round(current / (1 + change / 100)) : current
             const maxVal = Math.max(current, previous, 1)
             const isUp = change > 0

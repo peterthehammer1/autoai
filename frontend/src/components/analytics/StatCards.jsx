@@ -5,8 +5,9 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   PhoneCall,
-  Target,
+  CalendarCheck,
   DollarSign,
+  Receipt,
   Smile,
   UserPlus,
 } from 'lucide-react'
@@ -19,13 +20,12 @@ function useAnimatedNumber(target, duration = 800) {
     if (target == null) return
     const num = typeof target === 'number' ? target : parseFloat(String(target).replace(/[^0-9.-]/g, '')) || 0
     const start = performance.now()
-    const from = 0
 
     function tick(now) {
       const elapsed = now - start
       const progress = Math.min(elapsed / duration, 1)
-      const eased = 1 - Math.pow(1 - progress, 3) // ease-out cubic
-      setDisplay(Math.round(from + (num - from) * eased))
+      const eased = 1 - Math.pow(1 - progress, 3)
+      setDisplay(Math.round(num * eased))
       if (progress < 1) raf.current = requestAnimationFrame(tick)
     }
 
@@ -43,20 +43,20 @@ function StatCard({ title, value, change, changeLabel, icon: Icon, iconColor, ic
 
   return (
     <Card className="relative overflow-hidden transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
-      <CardContent className="p-4 sm:p-5">
+      <CardContent className="p-3 sm:p-4">
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-medium text-slate-500 mb-1 truncate">{title}</p>
+            <p className="text-[11px] font-medium text-slate-500 mb-1 truncate">{title}</p>
             {loading ? (
-              <div className="h-7 w-20 bg-slate-100 animate-pulse rounded" />
+              <div className="h-6 w-16 bg-slate-100 animate-pulse rounded" />
             ) : (
-              <p className="text-xl sm:text-2xl font-bold text-slate-900 truncate">
+              <p className="text-lg sm:text-xl font-bold text-slate-900 truncate">
                 {prefix}{animateValue && typeof value === 'number' ? animatedNum.toLocaleString() : (typeof value === 'number' ? value.toLocaleString() : value)}{suffix}
               </p>
             )}
             {change !== undefined && change !== null && (
               <div className={cn(
-                "flex items-center gap-1 mt-1.5 text-xs font-medium",
+                "flex items-center gap-0.5 mt-1 text-[10px] font-medium",
                 isPositive ? "text-emerald-600" : isNegative ? "text-red-600" : "text-slate-500"
               )}>
                 {isPositive ? <ArrowUpRight className="h-3 w-3 shrink-0" /> :
@@ -67,8 +67,8 @@ function StatCard({ title, value, change, changeLabel, icon: Icon, iconColor, ic
             )}
           </div>
           {Icon && (
-            <div className={cn("p-2 rounded-lg shrink-0", iconBg || "bg-slate-100")}>
-              <Icon className={cn("h-4 w-4 sm:h-5 sm:w-5", iconColor || "text-slate-600")} />
+            <div className={cn("p-1.5 rounded-lg shrink-0", iconBg || "bg-slate-100")}>
+              <Icon className={cn("h-4 w-4", iconColor || "text-slate-600")} />
             </div>
           )}
         </div>
@@ -77,23 +77,9 @@ function StatCard({ title, value, change, changeLabel, icon: Icon, iconColor, ic
   )
 }
 
-function MiniStat({ label, value, icon: Icon, color }) {
-  return (
-    <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-slate-200">
-      <div className={cn("p-2 rounded-lg", color || "bg-slate-100")}>
-        <Icon className="h-4 w-4 text-white" />
-      </div>
-      <div>
-        <p className="text-lg font-bold text-slate-900">{value}</p>
-        <p className="text-xs text-slate-500">{label}</p>
-      </div>
-    </div>
-  )
-}
-
 export default function StatCards({ comprehensive, loading }) {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
       <StatCard
         title="Total Calls"
         value={comprehensive?.calls?.total || 0}
@@ -106,10 +92,9 @@ export default function StatCards({ comprehensive, loading }) {
         animateValue
       />
       <StatCard
-        title="Conversion"
-        value={comprehensive?.calls?.conversion_rate || 0}
-        suffix="%"
-        icon={Target}
+        title="Booked"
+        value={comprehensive?.calls?.booked || 0}
+        icon={CalendarCheck}
         iconColor="text-emerald-600"
         iconBg="bg-emerald-100"
         loading={loading}
@@ -123,6 +108,14 @@ export default function StatCards({ comprehensive, loading }) {
         icon={DollarSign}
         iconColor="text-slate-600"
         iconBg="bg-slate-100"
+        loading={loading}
+      />
+      <StatCard
+        title="Avg Ticket"
+        value={formatCents(comprehensive?.revenue?.avg_ticket || 0)}
+        icon={Receipt}
+        iconColor="text-amber-600"
+        iconBg="bg-amber-100"
         loading={loading}
       />
       <StatCard
@@ -149,5 +142,3 @@ export default function StatCards({ comprehensive, loading }) {
     </div>
   )
 }
-
-export { StatCard, MiniStat }

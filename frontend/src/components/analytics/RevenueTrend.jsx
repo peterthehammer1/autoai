@@ -3,7 +3,6 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { formatCents } from '@/lib/utils'
 import { DollarSign } from 'lucide-react'
 
 export default function RevenueTrend({ comprehensive, onPointClick }) {
@@ -24,26 +23,18 @@ export default function RevenueTrend({ comprehensive, onPointClick }) {
   return (
     <Card className="transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
       <CardHeader className="pb-2">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <div className="p-2 rounded-lg bg-slate-100">
-              <DollarSign className="h-4 w-4 text-slate-600" />
-            </div>
-            <div>
-              <CardTitle className="text-base">Revenue Trend</CardTitle>
-              <CardDescription className="hidden sm:block">Daily revenue over time (click for details)</CardDescription>
-            </div>
+        <div className="flex items-center gap-2">
+          <div className="p-2 rounded-lg bg-slate-100">
+            <DollarSign className="h-4 w-4 text-slate-600" />
           </div>
-          <div className="text-left sm:text-right">
-            <p className="text-xl sm:text-2xl font-bold text-slate-900">
-              {formatCents(comprehensive?.revenue?.period_total || 0)}
-            </p>
-            <p className="text-xs text-slate-500">Period Total</p>
+          <div>
+            <CardTitle className="text-base">Revenue Trend</CardTitle>
+            <CardDescription className="hidden sm:block">Daily revenue over time (click for details)</CardDescription>
           </div>
         </div>
       </CardHeader>
       <CardContent>
-        <div className="h-52">
+        <div className="h-56">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={data} onClick={handleClick}>
               <defs>
