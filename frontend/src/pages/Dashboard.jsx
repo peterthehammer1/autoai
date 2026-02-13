@@ -312,7 +312,7 @@ export default function Dashboard() {
           {/* Day headers */}
           <div className="grid grid-cols-7 mb-2">
             {['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map((day, i) => (
-              <div key={i} className="text-center text-[10px] font-semibold text-slate-400 py-1 uppercase tracking-wide" aria-label={day}>
+              <div key={i} className="text-center text-xs font-semibold text-slate-400 py-1 uppercase tracking-wide" aria-label={day}>
                 {day.charAt(0)}
               </div>
             ))}
@@ -355,7 +355,7 @@ export default function Dashboard() {
           </div>
         </CardContent>
         <div className="px-4 py-2.5 border-t border-slate-100 bg-slate-50/50">
-          <p className="text-[10px] text-slate-500 text-center">Click a date to view appointments</p>
+          <p className="text-xs text-slate-500 text-center">Click a date to view appointments</p>
         </div>
       </>
     )
@@ -371,7 +371,7 @@ export default function Dashboard() {
   return (
     <div className="flex flex-col gap-4">
       {/* Page Header */}
-      <div data-tour="dashboard-header" className="bg-gradient-to-r from-slate-800 to-slate-900 -mx-4 sm:-mx-6 px-4 sm:px-6 py-4">
+      <div data-tour="dashboard-header" className="bg-gradient-to-r from-slate-800 to-slate-900 -mx-4 sm:-mx-6 px-4 pl-14 sm:px-6 lg:pl-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <GreetingIcon className={cn("h-5 w-5", greeting.color)} aria-hidden="true" />
@@ -425,7 +425,7 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent className="p-0">
               {/* Status Pills */}
-              <div className="flex items-center gap-2 px-5 py-3 bg-slate-50/50 border-b overflow-x-auto">
+              <div className="flex items-center gap-2 px-5 py-3 bg-slate-50/50 border-b overflow-x-auto scrollbar-hide">
                 {[
                   { label: 'Completed', color: 'bg-blue-700', count: todayData?.by_status?.completed?.length || 0 },
                   { label: 'In Progress', color: 'bg-blue-500', count: todayData?.by_status?.in_progress?.length || 0 },
@@ -453,11 +453,11 @@ export default function Dashboard() {
                   <div>
                     {/* Column Headers */}
                     <div className="flex items-center gap-3 px-3 py-1.5">
-                      <span className="w-20 text-[11px] text-slate-400 font-medium uppercase tracking-wider">Time</span>
-                      <span className="flex-1 text-[11px] text-slate-400 font-medium uppercase tracking-wider">Customer</span>
-                      <span className="w-36 hidden sm:block text-[11px] text-slate-400 font-medium uppercase tracking-wider">Vehicle</span>
-                      <span className="w-32 hidden md:block text-[11px] text-slate-400 font-medium uppercase tracking-wider">Service</span>
-                      <span className="w-24 text-right text-[11px] text-slate-400 font-medium uppercase tracking-wider">Status</span>
+                      <span className="w-20 text-xs text-slate-400 font-medium uppercase tracking-wider">Time</span>
+                      <span className="flex-1 text-xs text-slate-400 font-medium uppercase tracking-wider">Customer</span>
+                      <span className="w-36 hidden sm:block text-xs text-slate-400 font-medium uppercase tracking-wider">Vehicle</span>
+                      <span className="w-32 hidden md:block text-xs text-slate-400 font-medium uppercase tracking-wider">Service</span>
+                      <span className="w-24 text-right text-xs text-slate-400 font-medium uppercase tracking-wider">Status</span>
                     </div>
                     {/* Rows */}
                     <div className="divide-y divide-slate-100">

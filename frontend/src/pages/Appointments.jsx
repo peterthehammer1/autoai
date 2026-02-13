@@ -107,8 +107,10 @@ export default function Appointments() {
   const [activeTab, setActiveTab] = useState('calendar')
   const [isNewModalOpen, setIsNewModalOpen] = useState(false)
   
-  // Calendar view state
-  const [calendarView, setCalendarView] = useState('week')
+  // Calendar view state — default to day view on mobile
+  const [calendarView, setCalendarView] = useState(
+    typeof window !== 'undefined' && window.innerWidth < 640 ? 'day' : 'week'
+  )
   const [calendarMonth, setCalendarMonth] = useState(new Date())
   const [weekStart, setWeekStart] = useState(startOfWeek(new Date(), { weekStartsOn: 1 }))
   const [calendarDay, setCalendarDay] = useState(format(new Date(), 'yyyy-MM-dd'))
@@ -243,7 +245,7 @@ export default function Appointments() {
   return (
     <div className="space-y-4">
       {/* Page Header - Dark Theme */}
-      <div data-tour="appts-header" className="bg-gradient-to-r from-slate-800 to-slate-900 -mx-4 sm:-mx-6 px-4 sm:px-6 py-4">
+      <div data-tour="appts-header" className="bg-gradient-to-r from-slate-800 to-slate-900 -mx-4 sm:-mx-6 px-4 pl-14 sm:px-6 lg:pl-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Calendar className="h-5 w-5 text-blue-400" />
@@ -259,13 +261,13 @@ export default function Appointments() {
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <TabsList data-tour="appts-tabs" className="w-full sm:w-auto bg-slate-100 p-1">
-            <TabsTrigger value="upcoming" className="flex-1 sm:flex-none data-[state=active]:bg-white data-[state=active]:text-slate-800 text-slate-600">
+            <TabsTrigger value="upcoming" className="flex-1 sm:flex-none py-2.5 data-[state=active]:bg-white data-[state=active]:text-slate-800 text-slate-600">
               Upcoming
             </TabsTrigger>
-            <TabsTrigger value="calendar" className="flex-1 sm:flex-none data-[state=active]:bg-white data-[state=active]:text-slate-800 text-slate-600">
+            <TabsTrigger value="calendar" className="flex-1 sm:flex-none py-2.5 data-[state=active]:bg-white data-[state=active]:text-slate-800 text-slate-600">
               Calendar
             </TabsTrigger>
-            <TabsTrigger value="by-date" className="flex-1 sm:flex-none data-[state=active]:bg-white data-[state=active]:text-slate-800 text-slate-600">
+            <TabsTrigger value="by-date" className="flex-1 sm:flex-none py-2.5 data-[state=active]:bg-white data-[state=active]:text-slate-800 text-slate-600">
               By Date
             </TabsTrigger>
           </TabsList>
@@ -415,7 +417,8 @@ export default function Appointments() {
                     key={view}
                     onClick={() => setCalendarView(view)}
                     className={cn(
-                      'px-3 py-1.5 text-xs font-medium rounded-md transition-colors capitalize',
+                      'px-3 py-2 text-xs font-medium rounded-md transition-colors capitalize',
+                      view === 'week' && 'hidden sm:block',
                       calendarView === view
                         ? 'bg-white text-slate-800 shadow-sm'
                         : 'text-slate-500 hover:text-slate-700'
@@ -583,9 +586,10 @@ export default function Appointments() {
                   {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => (
                     <div
                       key={day}
-                      className="text-center text-xs font-semibold text-slate-500 uppercase tracking-wider py-3 border-b border-slate-200 bg-slate-50"
+                      className="text-center text-xs font-semibold text-slate-500 uppercase tracking-wider py-2 sm:py-3 border-b border-slate-200 bg-slate-50"
                     >
-                      {day}
+                      <span className="hidden sm:inline">{day}</span>
+                      <span className="sm:hidden">{day.charAt(0)}</span>
                     </div>
                   ))}
 
@@ -595,19 +599,20 @@ export default function Appointments() {
                     const dayAppointments = appointmentsByDate[dateKey] || []
                     const isCurrentMonth = isSameMonth(day, calendarMonth)
                     const isCurrentDay = isToday(day)
-                    const maxVisible = 3
+                    const isMobile = typeof window !== 'undefined' && window.innerWidth < 640
+                    const maxVisible = isMobile ? 1 : 3
 
                     return (
                       <div
                         key={dateKey}
                         className={cn(
-                          'min-h-[130px] sm:min-h-[150px] p-1.5 sm:p-2 border-b border-r border-slate-200 text-left flex flex-col',
+                          'min-h-[90px] sm:min-h-[150px] p-1 sm:p-2 border-b border-r border-slate-200 text-left flex flex-col',
                           !isCurrentMonth && 'bg-slate-50/50',
                           isCurrentDay && 'bg-indigo-50/30'
                         )}
                       >
                         <span className={cn(
-                          'text-lg sm:text-xl font-light mb-1',
+                          'text-sm sm:text-xl font-light mb-0.5 sm:mb-1',
                           isCurrentMonth ? 'text-slate-400' : 'text-slate-300',
                           isCurrentDay && 'text-indigo-500 font-normal'
                         )}>
@@ -627,7 +632,7 @@ export default function Appointments() {
                                     color.bg, color.border, color.text
                                   )}
                                 >
-                                  <span className="text-[10px] sm:text-xs font-semibold truncate block">
+                                  <span className="text-xs font-semibold truncate block">
                                     <span className="hidden sm:inline">
                                       {apt.customer?.first_name} {apt.customer?.last_name}
                                     </span>
@@ -635,7 +640,7 @@ export default function Appointments() {
                                       {apt.customer?.first_name}
                                     </span>
                                   </span>
-                                  <span className="text-[9px] sm:text-[10px] opacity-60 truncate block hidden sm:block">
+                                  <span className="text-[10px] sm:text-xs opacity-60 truncate block hidden sm:block">
                                     {formatTime12Hour(apt.scheduled_time)}
                                   </span>
                                 </Link>
@@ -643,7 +648,7 @@ export default function Appointments() {
                             })}
                             {dayAppointments.length > maxVisible && (
                               <button
-                                className="text-[10px] sm:text-xs text-slate-400 hover:text-indigo-600 px-1.5 transition-colors"
+                                className="text-xs text-slate-400 hover:text-indigo-600 px-1.5 py-0.5 transition-colors"
                                 onClick={() => {
                                   setCalendarView('day')
                                   setCalendarDay(dateKey)
@@ -672,12 +677,12 @@ export default function Appointments() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8"
+                  className="h-10 w-10 shrink-0"
                   onClick={() => handleDateChange(-1)}
                 >
-                  <ChevronLeft className="h-4 w-4" />
+                  <ChevronLeft className="h-5 w-5" />
                 </Button>
-                <Button variant="ghost" onClick={handleToday} className="h-8 px-3 text-xs">
+                <Button variant="ghost" onClick={handleToday} className="h-10 px-3 text-sm">
                   Today
                 </Button>
                 <Input
@@ -686,20 +691,20 @@ export default function Appointments() {
                   onChange={(e) =>
                     setSearchParams({ date: e.target.value, status: statusFilter })
                   }
-                  className="w-[140px] h-8 text-sm border-slate-300"
+                  className="flex-1 sm:w-[140px] sm:flex-none h-10 text-sm border-slate-300"
                 />
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8"
+                  className="h-10 w-10 shrink-0"
                   onClick={() => handleDateChange(1)}
                 >
-                  <ChevronRight className="h-4 w-4" />
+                  <ChevronRight className="h-5 w-5" />
                 </Button>
               </div>
 
               <Select value={statusFilter || 'all'} onValueChange={handleStatusChange}>
-                <SelectTrigger className="w-[140px] h-8 text-xs border-slate-300">
+                <SelectTrigger className="w-full sm:w-[140px] h-10 text-sm border-slate-300">
                   <SelectValue placeholder="All Statuses" />
                 </SelectTrigger>
                 <SelectContent>

@@ -62,7 +62,7 @@ export default function Analytics() {
   return (
     <div className="space-y-6">
       {/* Section 0: Page Header */}
-      <div className="bg-gradient-to-r from-slate-800 to-slate-900 -mx-4 sm:-mx-6 px-4 sm:px-6 py-4 mb-2">
+      <div className="bg-gradient-to-r from-slate-800 to-slate-900 -mx-4 sm:-mx-6 px-4 pl-14 sm:px-6 lg:pl-6 py-4 mb-2">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-3">
             <BarChart3 className="h-5 w-5 text-blue-400" />
@@ -138,8 +138,8 @@ export default function Analytics() {
               ))}
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <div className="min-w-[600px]">
+            <div className="overflow-x-auto -mx-2 px-2 pb-2">
+              <div className="min-w-[520px]">
                 {/* Hour labels */}
                 <div className="flex mb-1">
                   <div className="w-12" />

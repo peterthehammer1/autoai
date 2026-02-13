@@ -73,11 +73,11 @@ export default function Layout() {
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 text-slate-400 hover:text-white hover:bg-slate-800"
+              className="h-10 w-10 text-slate-400 hover:text-white hover:bg-slate-800"
               onClick={() => setSidebarOpen(false)}
               aria-label="Close menu"
             >
-              <X className="h-4 w-4" />
+              <X className="h-5 w-5" />
             </Button>
           </div>
           <nav className="flex flex-col gap-0.5 p-3 flex-1" aria-label="Main navigation">
@@ -88,7 +88,7 @@ export default function Layout() {
                 onClick={() => setSidebarOpen(false)}
                 aria-current={isActive(item.href) ? 'page' : undefined}
                 className={cn(
-                  'group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+                  'group flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors',
                   isActive(item.href)
                     ? 'bg-primary text-white'
                     : 'text-slate-300 hover:bg-slate-800 hover:text-white'
@@ -236,7 +236,7 @@ export default function Layout() {
           <Button
             variant="ghost"
             size="icon"
-            className="h-9 w-9 bg-white/90 backdrop-blur shadow-md border border-slate-200"
+            className="h-10 w-10 bg-white/90 backdrop-blur shadow-md border border-slate-200"
             onClick={() => setSidebarOpen(true)}
             aria-label="Open menu"
           >

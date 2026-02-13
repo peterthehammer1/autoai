@@ -233,7 +233,7 @@ export default function Customers() {
   return (
     <div className="h-[calc(100vh-4rem)] flex flex-col">
       {/* Page Header */}
-      <div data-tour="customers-header" className="bg-gradient-to-r from-slate-800 to-slate-900 -mx-4 sm:-mx-6 px-4 sm:px-6 py-4 mb-4">
+      <div data-tour="customers-header" className="bg-gradient-to-r from-slate-800 to-slate-900 -mx-4 sm:-mx-6 px-4 pl-14 sm:px-6 lg:pl-6 py-4 mb-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Users className="h-5 w-5 text-blue-400" />
@@ -409,7 +409,7 @@ export default function Customers() {
                 </div>
 
                 {/* Quick Stats */}
-                <div className="grid grid-cols-4 gap-3 mt-4">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mt-4">
                   <div className="text-center bg-gradient-to-br from-teal-dark to-teal rounded-lg p-2 shadow-sm">
                     <p className="text-lg font-semibold text-white">
                       {healthData?.stats?.total_visits || selectedCustomer.total_visits || 0}
