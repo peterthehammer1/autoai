@@ -77,12 +77,14 @@ export default function SmsLogs() {
     return logsData.logs.find(s => s.id === selectedSmsId)
   }, [selectedSmsId, logsData?.logs])
 
-  // Auto-select first SMS when data loads
+  // Auto-select first SMS only on initial data load
+  const [hasAutoSelected, setHasAutoSelected] = useState(false)
   useEffect(() => {
-    if (filteredLogs.length > 0 && !selectedSmsId) {
+    if (!hasAutoSelected && filteredLogs.length > 0 && !selectedSmsId) {
       setSelectedSmsId(filteredLogs[0].id)
+      setHasAutoSelected(true)
     }
-  }, [filteredLogs, selectedSmsId])
+  }, [filteredLogs, selectedSmsId, hasAutoSelected])
 
   const getStatusIcon = (status) => {
     switch (status) {
