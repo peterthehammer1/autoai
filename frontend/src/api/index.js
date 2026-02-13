@@ -144,17 +144,25 @@ export const analytics = {
   
   customerHealth: (customerId) => fetchAPI(`/analytics/customer-health/${customerId}`),
   
-  callTrends: (period = 'week') => 
-    fetchAPI(`/analytics/call-trends?period=${period}`),
-  
-  revenue: (period = 'month') => 
+  callTrends: (period = 'week', { startDate, endDate } = {}) => {
+    const params = new URLSearchParams({ period });
+    if (startDate) params.set('start', startDate);
+    if (endDate) params.set('end', endDate);
+    return fetchAPI(`/analytics/call-trends?${params}`);
+  },
+
+  revenue: (period = 'month') =>
     fetchAPI(`/analytics/revenue?period=${period}`),
-  
-  customers: (period = 'month') => 
+
+  customers: (period = 'month') =>
     fetchAPI(`/analytics/customers?period=${period}`),
-  
-  comprehensive: (period = 'week') => 
-    fetchAPI(`/analytics/comprehensive?period=${period}`),
+
+  comprehensive: (period = 'week', { startDate, endDate } = {}) => {
+    const params = new URLSearchParams({ period });
+    if (startDate) params.set('start', startDate);
+    if (endDate) params.set('end', endDate);
+    return fetchAPI(`/analytics/comprehensive?${params}`);
+  },
 }
 
 // Call Logs

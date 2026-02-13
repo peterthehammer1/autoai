@@ -5,6 +5,22 @@ import { nowEST, todayEST, weekStartEST, weekEndEST, monthStartEST, monthEndEST,
 
 const router = Router();
 
+const VALID_PERIODS = ['day', 'week', 'month', 'custom'];
+function validatePeriod(period) {
+  return VALID_PERIODS.includes(period);
+}
+
+// In-memory cache
+const cache = new Map();
+function getCached(key, ttlMs) {
+  const entry = cache.get(key);
+  if (entry && Date.now() - entry.ts < ttlMs) return entry.data;
+  return null;
+}
+function setCache(key, data) {
+  cache.set(key, { data, ts: Date.now() });
+}
+
 /**
  * GET /api/analytics/overview
  * Dashboard overview stats
@@ -104,6 +120,9 @@ router.get('/overview', async (req, res, next) => {
 router.get('/appointments', async (req, res, next) => {
   try {
     const { period = 'week' } = req.query;
+    if (!validatePeriod(period)) {
+      return res.status(400).json({ error: 'Invalid period. Must be day, week, or month.' });
+    }
 
     let startDate, endDate;
     const today = todayEST();
@@ -185,6 +204,9 @@ router.get('/appointments', async (req, res, next) => {
 router.get('/calls', async (req, res, next) => {
   try {
     const { period = 'week' } = req.query;
+    if (!validatePeriod(period)) {
+      return res.status(400).json({ error: 'Invalid period. Must be day, week, or month.' });
+    }
 
     const days = period === 'day' ? 1 : period === 'month' ? 30 : 7;
     const startDate = daysAgoEST(days);
@@ -252,6 +274,9 @@ router.get('/calls', async (req, res, next) => {
 router.get('/services', async (req, res, next) => {
   try {
     const { period = 'month' } = req.query;
+    if (!validatePeriod(period)) {
+      return res.status(400).json({ error: 'Invalid period. Must be day, week, or month.' });
+    }
 
     const days = period === 'week' ? 7 : 30;
     const startDate = daysAgoEST(days);
@@ -360,57 +385,101 @@ router.get('/bay-utilization', async (req, res, next) => {
  */
 router.get('/insights', async (req, res, next) => {
   try {
+    const cached = getCached('insights', 5 * 60 * 1000);
+    if (cached) return res.json(cached);
+
     const today = nowEST();
     const todayStr = todayEST();
     const weekStart = weekStartEST();
     const weekEnd = weekEndEST();
     const lastWeekStart = format(subDays(startOfWeek(today), 7), 'yyyy-MM-dd');
     const lastWeekEnd = format(subDays(endOfWeek(today), 7), 'yyyy-MM-dd');
-    
+    const sixtyDaysAgo = format(subDays(today, 60), 'yyyy-MM-dd');
+    const monthStartStr = format(startOfMonth(today), 'yyyy-MM-dd');
+    const tomorrow = format(addDays(today, 1), 'yyyy-MM-dd');
+    const tomorrowDay = format(addDays(today, 1), 'EEEE');
+
+    // Batch all 13 queries in parallel
+    const [
+      thisWeekCallsRes,
+      lastWeekCallsRes,
+      recentCallsRes,
+      thisWeekServicesRes,
+      lastWeekServicesRes,
+      bookedCallsRes,
+      tomorrowApptsRes,
+      newCustomersRes,
+      staleCustomersRes,
+      monthRevenueRes,
+      callDurationsRes,
+      positiveCallsRes,
+      todayApptsRes,
+    ] = await Promise.all([
+      supabase.from('call_logs').select('*', { count: 'exact', head: true })
+        .gte('started_at', `${weekStart}T00:00:00`).lte('started_at', `${weekEnd}T23:59:59`),
+      supabase.from('call_logs').select('*', { count: 'exact', head: true })
+        .gte('started_at', `${lastWeekStart}T00:00:00`).lte('started_at', `${lastWeekEnd}T23:59:59`),
+      supabase.from('call_logs').select('started_at')
+        .gte('started_at', `${lastWeekStart}T00:00:00`).limit(1000),
+      supabase.from('appointment_services')
+        .select('service_name, appointment:appointments!inner(scheduled_date)')
+        .gte('appointment.scheduled_date', weekStart).lte('appointment.scheduled_date', weekEnd).limit(1000),
+      supabase.from('appointment_services')
+        .select('service_name, appointment:appointments!inner(scheduled_date)')
+        .gte('appointment.scheduled_date', lastWeekStart).lte('appointment.scheduled_date', lastWeekEnd).limit(1000),
+      supabase.from('call_logs').select('*', { count: 'exact', head: true })
+        .gte('started_at', `${weekStart}T00:00:00`).lte('started_at', `${weekEnd}T23:59:59`).eq('outcome', 'booked'),
+      supabase.from('appointments').select('*', { count: 'exact', head: true })
+        .eq('scheduled_date', tomorrow).not('status', 'in', '("cancelled","no_show")'),
+      supabase.from('customers').select('*', { count: 'exact', head: true })
+        .gte('created_at', `${weekStart}T00:00:00`),
+      supabase.from('customers').select('id')
+        .lt('updated_at', `${sixtyDaysAgo}T00:00:00`).gt('total_visits', 0).limit(50),
+      supabase.from('appointments').select('quoted_total')
+        .gte('scheduled_date', monthStartStr).not('status', 'in', '("cancelled","no_show")').limit(1000),
+      supabase.from('call_logs').select('duration_seconds')
+        .gte('started_at', `${weekStart}T00:00:00`).not('duration_seconds', 'is', null).limit(1000),
+      supabase.from('call_logs').select('*', { count: 'exact', head: true })
+        .gte('started_at', `${weekStart}T00:00:00`).eq('sentiment', 'positive'),
+      supabase.from('appointments').select('*', { count: 'exact', head: true })
+        .eq('scheduled_date', todayStr).not('status', 'in', '("cancelled","no_show")'),
+    ]);
+
+    const thisWeekCalls = thisWeekCallsRes.count || 0;
+    const lastWeekCalls = lastWeekCallsRes.count || 0;
+    const recentCalls = recentCallsRes.data;
+    const thisWeekServices = thisWeekServicesRes.data;
+    const lastWeekServices = lastWeekServicesRes.data;
+    const bookedCalls = bookedCallsRes.count || 0;
+    const tomorrowAppointments = tomorrowApptsRes.count || 0;
+    const newCustomers = newCustomersRes.count || 0;
+    const staleCustomers = staleCustomersRes.data;
+    const monthRevenue = monthRevenueRes.data;
+    const callDurations = callDurationsRes.data;
+    const positiveCalls = positiveCallsRes.count || 0;
+    const todayAppts = todayApptsRes.count || 0;
+
     const insights = [];
 
-    // 1. Call volume comparison (this week vs last week)
-    const { count: thisWeekCalls } = await supabase
-      .from('call_logs')
-      .select('*', { count: 'exact', head: true })
-      .gte('started_at', `${weekStart}T00:00:00`)
-      .lte('started_at', `${weekEnd}T23:59:59`);
-
-    const { count: lastWeekCalls } = await supabase
-      .from('call_logs')
-      .select('*', { count: 'exact', head: true })
-      .gte('started_at', `${lastWeekStart}T00:00:00`)
-      .lte('started_at', `${lastWeekEnd}T23:59:59`);
-
+    // 1. Call volume comparison
     if (lastWeekCalls > 0) {
       const callChange = Math.round(((thisWeekCalls - lastWeekCalls) / lastWeekCalls) * 100);
       if (callChange > 10) {
         insights.push({
-          type: 'trend_up',
-          category: 'calls',
-          title: 'Call Volume Up',
+          type: 'trend_up', category: 'calls', title: 'Call Volume Up',
           message: `Call volume is up ${callChange}% compared to last week`,
-          value: `+${callChange}%`,
-          priority: 'high'
+          value: `+${callChange}%`, priority: 'high'
         });
       } else if (callChange < -10) {
         insights.push({
-          type: 'trend_down',
-          category: 'calls',
-          title: 'Call Volume Down',
+          type: 'trend_down', category: 'calls', title: 'Call Volume Down',
           message: `Call volume is down ${Math.abs(callChange)}% compared to last week`,
-          value: `${callChange}%`,
-          priority: 'medium'
+          value: `${callChange}%`, priority: 'medium'
         });
       }
     }
 
     // 2. Peak call times
-    const { data: recentCalls } = await supabase
-      .from('call_logs')
-      .select('started_at')
-      .gte('started_at', `${lastWeekStart}T00:00:00`);
-
     if (recentCalls?.length > 5) {
       const byHour = {};
       const byDay = {};
@@ -421,17 +490,13 @@ router.get('/insights', async (req, res, next) => {
         byHour[hour] = (byHour[hour] || 0) + 1;
         byDay[day] = (byDay[day] || 0) + 1;
       }
-      
       const peakHour = Object.entries(byHour).sort((a, b) => b[1] - a[1])[0];
       const peakDay = Object.entries(byDay).sort((a, b) => b[1] - a[1])[0];
-      
       if (peakHour && peakDay) {
         const hourNum = parseInt(peakHour[0]);
         const hourStr = hourNum === 0 ? '12 AM' : hourNum < 12 ? `${hourNum} AM` : hourNum === 12 ? '12 PM' : `${hourNum - 12} PM`;
         insights.push({
-          type: 'info',
-          category: 'patterns',
-          title: 'Busiest Times',
+          type: 'info', category: 'patterns', title: 'Busiest Times',
           message: `${peakDay[0]}s at ${hourStr} are your busiest — plan staffing accordingly`,
           priority: 'medium'
         });
@@ -439,221 +504,114 @@ router.get('/insights', async (req, res, next) => {
     }
 
     // 3. Service trends
-    const { data: thisWeekServices } = await supabase
-      .from('appointment_services')
-      .select('service_name, appointment:appointments!inner(scheduled_date)')
-      .gte('appointment.scheduled_date', weekStart)
-      .lte('appointment.scheduled_date', weekEnd);
-
-    const { data: lastWeekServices } = await supabase
-      .from('appointment_services')
-      .select('service_name, appointment:appointments!inner(scheduled_date)')
-      .gte('appointment.scheduled_date', lastWeekStart)
-      .lte('appointment.scheduled_date', lastWeekEnd);
-
     if (thisWeekServices?.length > 0 && lastWeekServices?.length > 0) {
       const thisWeekCounts = {};
       const lastWeekCounts = {};
-      
-      for (const s of thisWeekServices) {
-        thisWeekCounts[s.service_name] = (thisWeekCounts[s.service_name] || 0) + 1;
-      }
-      for (const s of lastWeekServices) {
-        lastWeekCounts[s.service_name] = (lastWeekCounts[s.service_name] || 0) + 1;
-      }
-
-      // Find trending service
+      for (const s of thisWeekServices) thisWeekCounts[s.service_name] = (thisWeekCounts[s.service_name] || 0) + 1;
+      for (const s of lastWeekServices) lastWeekCounts[s.service_name] = (lastWeekCounts[s.service_name] || 0) + 1;
       let biggestIncrease = { service: null, change: 0 };
       for (const [service, count] of Object.entries(thisWeekCounts)) {
         const lastCount = lastWeekCounts[service] || 0;
         if (lastCount > 0) {
           const change = ((count - lastCount) / lastCount) * 100;
-          if (change > biggestIncrease.change && count >= 2) {
-            biggestIncrease = { service, change: Math.round(change) };
-          }
+          if (change > biggestIncrease.change && count >= 2) biggestIncrease = { service, change: Math.round(change) };
         }
       }
-
       if (biggestIncrease.service && biggestIncrease.change > 20) {
         insights.push({
-          type: 'trend_up',
-          category: 'services',
-          title: 'Trending Service',
+          type: 'trend_up', category: 'services', title: 'Trending Service',
           message: `${biggestIncrease.service} bookings up ${biggestIncrease.change}% this week`,
-          value: `+${biggestIncrease.change}%`,
-          priority: 'medium'
+          value: `+${biggestIncrease.change}%`, priority: 'medium'
         });
       }
     }
 
-    // 4. Conversion rate insight
-    const { count: bookedCalls } = await supabase
-      .from('call_logs')
-      .select('*', { count: 'exact', head: true })
-      .gte('started_at', `${weekStart}T00:00:00`)
-      .lte('started_at', `${weekEnd}T23:59:59`)
-      .eq('outcome', 'booked');
-
+    // 4. Conversion rate
     const conversionRate = thisWeekCalls > 0 ? Math.round((bookedCalls / thisWeekCalls) * 100) : 0;
-    
     if (conversionRate >= 60) {
       insights.push({
-        type: 'success',
-        category: 'performance',
-        title: 'High Conversion',
+        type: 'success', category: 'performance', title: 'High Conversion',
         message: `AI booking rate at ${conversionRate}% — excellent performance`,
-        value: `${conversionRate}%`,
-        priority: 'low'
+        value: `${conversionRate}%`, priority: 'low'
       });
     } else if (conversionRate < 30 && thisWeekCalls > 5) {
       insights.push({
-        type: 'warning',
-        category: 'performance',
-        title: 'Low Conversion',
+        type: 'warning', category: 'performance', title: 'Low Conversion',
         message: `Booking rate at ${conversionRate}% — review call transcripts for improvement opportunities`,
-        value: `${conversionRate}%`,
-        priority: 'high'
+        value: `${conversionRate}%`, priority: 'high'
       });
     }
 
     // 5. Tomorrow's forecast
-    const tomorrow = format(addDays(today, 1), 'yyyy-MM-dd');
-    const tomorrowDay = format(addDays(today, 1), 'EEEE');
-    
-    const { count: tomorrowAppointments } = await supabase
-      .from('appointments')
-      .select('*', { count: 'exact', head: true })
-      .eq('scheduled_date', tomorrow)
-      .not('status', 'in', '("cancelled","no_show")');
-
     if (tomorrowAppointments > 0) {
       insights.push({
-        type: 'info',
-        category: 'forecast',
-        title: 'Tomorrow\'s Schedule',
+        type: 'info', category: 'forecast', title: 'Tomorrow\'s Schedule',
         message: `${tomorrowAppointments} appointment${tomorrowAppointments > 1 ? 's' : ''} booked for ${tomorrowDay}`,
-        value: tomorrowAppointments.toString(),
-        priority: 'low'
+        value: tomorrowAppointments.toString(), priority: 'low'
       });
     }
 
     // 6. New customers
-    const { count: newCustomers } = await supabase
-      .from('customers')
-      .select('*', { count: 'exact', head: true })
-      .gte('created_at', `${weekStart}T00:00:00`);
-
     if (newCustomers > 0) {
       insights.push({
-        type: 'success',
-        category: 'growth',
-        title: 'New Customers',
+        type: 'success', category: 'growth', title: 'New Customers',
         message: `${newCustomers} new customer${newCustomers > 1 ? 's' : ''} acquired this week`,
-        value: newCustomers.toString(),
-        priority: 'medium'
+        value: newCustomers.toString(), priority: 'medium'
       });
     }
 
-    // 7. Follow-up opportunities (customers who visited but haven't returned in 60+ days)
-    const sixtyDaysAgo = format(subDays(today, 60), 'yyyy-MM-dd');
-    const { data: staleCustomers } = await supabase
-      .from('customers')
-      .select('id')
-      .lt('updated_at', `${sixtyDaysAgo}T00:00:00`)
-      .gt('total_visits', 0)
-      .limit(50);
-
+    // 7. Follow-up opportunities
     if (staleCustomers?.length > 5) {
       insights.push({
-        type: 'action',
-        category: 'retention',
-        title: 'Follow-up Opportunity',
+        type: 'action', category: 'retention', title: 'Follow-up Opportunity',
         message: `${staleCustomers.length} customers haven't visited in 60+ days — consider a re-engagement campaign`,
-        value: staleCustomers.length.toString(),
-        priority: 'medium'
+        value: staleCustomers.length.toString(), priority: 'medium'
       });
     }
 
-    // 8. Monthly revenue tracking
-    const monthStart = format(startOfMonth(today), 'yyyy-MM-dd');
-    const { data: monthRevenue } = await supabase
-      .from('appointments')
-      .select('quoted_total')
-      .gte('scheduled_date', monthStart)
-      .not('status', 'in', '("cancelled","no_show")');
-
+    // 8. Monthly revenue
     const totalRevenue = monthRevenue?.reduce((sum, apt) => sum + (apt.quoted_total || 0), 0) || 0;
     if (totalRevenue > 0) {
-      const formattedRevenue = totalRevenue >= 100000 
-        ? `$${(totalRevenue / 100000).toFixed(0)}K` 
+      const formattedRevenue = totalRevenue >= 100000
+        ? `$${(totalRevenue / 100000).toFixed(0)}K`
         : `$${(totalRevenue / 100).toFixed(0)}`;
       insights.push({
-        type: 'success',
-        category: 'revenue',
-        title: 'Monthly Revenue',
+        type: 'success', category: 'revenue', title: 'Monthly Revenue',
         message: `${formattedRevenue} in booked services this month`,
-        value: formattedRevenue,
-        priority: 'low'
+        value: formattedRevenue, priority: 'low'
       });
     }
 
     // 9. Average call duration
-    const { data: callDurations } = await supabase
-      .from('call_logs')
-      .select('duration_seconds')
-      .gte('started_at', `${weekStart}T00:00:00`)
-      .not('duration_seconds', 'is', null);
-
     if (callDurations?.length > 5) {
       const avgDuration = Math.round(callDurations.reduce((sum, c) => sum + c.duration_seconds, 0) / callDurations.length);
       const minutes = Math.floor(avgDuration / 60);
       const seconds = avgDuration % 60;
       insights.push({
-        type: 'info',
-        category: 'efficiency',
-        title: 'Avg Call Time',
+        type: 'info', category: 'efficiency', title: 'Avg Call Time',
         message: `Average call duration is ${minutes}m ${seconds}s — AI handles calls efficiently`,
-        value: `${minutes}:${seconds.toString().padStart(2, '0')}`,
-        priority: 'low'
+        value: `${minutes}:${seconds.toString().padStart(2, '0')}`, priority: 'low'
       });
     }
 
     // 10. Positive sentiment rate
-    const { count: positiveCalls } = await supabase
-      .from('call_logs')
-      .select('*', { count: 'exact', head: true })
-      .gte('started_at', `${weekStart}T00:00:00`)
-      .eq('sentiment', 'positive');
-
     if (thisWeekCalls > 5) {
       const sentimentRate = Math.round((positiveCalls / thisWeekCalls) * 100);
       if (sentimentRate >= 70) {
         insights.push({
-          type: 'success',
-          category: 'satisfaction',
-          title: 'Customer Satisfaction',
+          type: 'success', category: 'satisfaction', title: 'Customer Satisfaction',
           message: `${sentimentRate}% of calls have positive sentiment — customers love the service`,
-          value: `${sentimentRate}%`,
-          priority: 'low'
+          value: `${sentimentRate}%`, priority: 'low'
         });
       }
     }
 
     // 11. Today's workload
-    const { count: todayAppts } = await supabase
-      .from('appointments')
-      .select('*', { count: 'exact', head: true })
-      .eq('scheduled_date', todayStr)
-      .not('status', 'in', '("cancelled","no_show")');
-
     if (todayAppts > 0) {
       insights.push({
-        type: 'info',
-        category: 'today',
-        title: 'Today\'s Workload',
+        type: 'info', category: 'today', title: 'Today\'s Workload',
         message: `${todayAppts} appointment${todayAppts > 1 ? 's' : ''} scheduled for today — stay on track`,
-        value: todayAppts.toString(),
-        priority: 'medium'
+        value: todayAppts.toString(), priority: 'medium'
       });
     }
 
@@ -661,10 +619,12 @@ router.get('/insights', async (req, res, next) => {
     const priorityOrder = { high: 0, medium: 1, low: 2 };
     insights.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
 
-    res.json({
+    const result = {
       generated_at: new Date().toISOString(),
-      insights: insights.slice(0, 6) // Return top 6 insights
-    });
+      insights: insights.slice(0, 6)
+    };
+    setCache('insights', result);
+    res.json(result);
 
   } catch (error) {
     next(error);
@@ -848,16 +808,31 @@ router.get('/customer-health/:id', async (req, res, next) => {
  */
 router.get('/call-trends', async (req, res, next) => {
   try {
-    const { period = 'week' } = req.query;
-    const days = period === 'day' ? 1 : period === 'month' ? 30 : 7;
-    const startDate = daysAgoEST(days);
+    const { period = 'week', start, end } = req.query;
+    if (!validatePeriod(period)) {
+      return res.status(400).json({ error: 'Invalid period. Must be day, week, month, or custom.' });
+    }
+    if (period === 'custom') {
+      if (!start || !end) return res.status(400).json({ error: 'Custom period requires start and end dates.' });
+      const s = new Date(start), e = new Date(end);
+      if (isNaN(s) || isNaN(e)) return res.status(400).json({ error: 'Invalid date format. Use YYYY-MM-DD.' });
+      if (differenceInDays(e, s) > 365) return res.status(400).json({ error: 'Date range must be 365 days or less.' });
+    }
+    let startDate;
+    if (period === 'custom') {
+      startDate = start;
+    } else {
+      const days = period === 'day' ? 1 : period === 'month' ? 30 : 7;
+      startDate = daysAgoEST(days);
+    }
 
     // Get all calls for the period
-    const { data: calls } = await supabase
+    let callsQuery = supabase
       .from('call_logs')
       .select('started_at, duration_seconds, outcome, sentiment')
-      .gte('started_at', `${startDate}T00:00:00`)
-      .order('started_at', { ascending: true });
+      .gte('started_at', `${startDate}T00:00:00`);
+    if (period === 'custom' && end) callsQuery = callsQuery.lte('started_at', `${end}T23:59:59`);
+    const { data: calls } = await callsQuery.order('started_at', { ascending: true });
 
     // Hourly heatmap data (24 hours x 7 days)
     const hourlyHeatmap = Array(7).fill(null).map(() => Array(24).fill(0));
@@ -947,6 +922,9 @@ router.get('/call-trends', async (req, res, next) => {
 router.get('/revenue', async (req, res, next) => {
   try {
     const { period = 'month' } = req.query;
+    if (!validatePeriod(period)) {
+      return res.status(400).json({ error: 'Invalid period. Must be day, week, or month.' });
+    }
     const today = nowEST();
     const days = period === 'week' ? 7 : period === 'day' ? 1 : 30;
     const startDate = daysAgoEST(days);
@@ -1070,6 +1048,9 @@ router.get('/revenue', async (req, res, next) => {
 router.get('/customers', async (req, res, next) => {
   try {
     const { period = 'month' } = req.query;
+    if (!validatePeriod(period)) {
+      return res.status(400).json({ error: 'Invalid period. Must be day, week, or month.' });
+    }
     const today = nowEST();
     const days = period === 'week' ? 7 : period === 'day' ? 1 : 30;
     const startDate = daysAgoEST(days);
@@ -1231,14 +1212,70 @@ router.get('/customers', async (req, res, next) => {
  */
 router.get('/comprehensive', async (req, res, next) => {
   try {
-    const { period = 'week' } = req.query;
+    const { period = 'week', start, end } = req.query;
+    if (!validatePeriod(period)) {
+      return res.status(400).json({ error: 'Invalid period. Must be day, week, month, or custom.' });
+    }
+    if (period === 'custom') {
+      if (!start || !end) return res.status(400).json({ error: 'Custom period requires start and end dates.' });
+      const s = new Date(start), e = new Date(end);
+      if (isNaN(s) || isNaN(e)) return res.status(400).json({ error: 'Invalid date format. Use YYYY-MM-DD.' });
+      if (differenceInDays(e, s) > 365) return res.status(400).json({ error: 'Date range must be 365 days or less.' });
+    }
+
+    const cacheKey = `comprehensive:${period}:${start || ''}:${end || ''}`;
+    const cached = getCached(cacheKey, 2 * 60 * 1000);
+    if (cached) return res.json(cached);
+
     const today = nowEST();
     const todayStr = todayEST();
-    const days = period === 'week' ? 7 : period === 'day' ? 1 : 30;
-    const startDate = daysAgoEST(days);
-    const prevStartDate = format(subDays(today, days * 2), 'yyyy-MM-dd');
-    const prevEndDate = format(subDays(today, days + 1), 'yyyy-MM-dd');
+
+    let startDate, days;
+    if (period === 'custom') {
+      startDate = start;
+      days = differenceInDays(new Date(end), new Date(start));
+    } else {
+      days = period === 'week' ? 7 : period === 'day' ? 1 : 30;
+      startDate = daysAgoEST(days);
+    }
+    const prevStartDate = period === 'custom'
+      ? format(subDays(new Date(start), days), 'yyyy-MM-dd')
+      : format(subDays(today, days * 2), 'yyyy-MM-dd');
+    const prevEndDate = period === 'custom'
+      ? format(subDays(new Date(start), 1), 'yyyy-MM-dd')
+      : format(subDays(today, days + 1), 'yyyy-MM-dd');
     const monthStart = monthStartEST();
+
+    const ninetyDaysAgo = format(subDays(today, 90), 'yyyy-MM-dd');
+    const sixtyDaysAgo = format(subDays(today, 60), 'yyyy-MM-dd');
+
+    const endFilter = period === 'custom' ? end : null;
+
+    // Build current-period queries with optional end-date filter
+    let callsQ = supabase.from('call_logs').select('id, outcome, sentiment, duration_seconds').gte('started_at', `${startDate}T00:00:00`);
+    if (endFilter) callsQ = callsQ.lte('started_at', `${endFilter}T23:59:59`);
+
+    let bookedQ = supabase.from('call_logs').select('id', { count: 'exact', head: true }).gte('started_at', `${startDate}T00:00:00`).eq('outcome', 'booked');
+    if (endFilter) bookedQ = bookedQ.lte('started_at', `${endFilter}T23:59:59`);
+
+    let apptsQ = supabase.from('appointments').select('scheduled_date, quoted_total, final_total, status').gte('scheduled_date', startDate).not('status', 'in', '("cancelled","no_show")');
+    if (endFilter) apptsQ = apptsQ.lte('scheduled_date', endFilter);
+
+    let newCustQ = supabase.from('customers').select('id', { count: 'exact', head: true }).gte('created_at', `${startDate}T00:00:00`);
+    if (endFilter) newCustQ = newCustQ.lte('created_at', `${endFilter}T23:59:59`);
+
+    let sentimentQ = supabase.from('call_logs').select('id', { count: 'exact', head: true }).gte('started_at', `${startDate}T00:00:00`).eq('sentiment', 'positive');
+    if (endFilter) sentimentQ = sentimentQ.lte('started_at', `${endFilter}T23:59:59`);
+
+    let svcRevQ = supabase.from('appointment_services').select(`
+          service_name, quoted_price, final_price,
+          service:services ( category:service_categories (name) ),
+          appointment:appointments!inner (scheduled_date, status)
+        `).gte('appointment.scheduled_date', startDate).not('appointment.status', 'in', '("cancelled","no_show")');
+    if (endFilter) svcRevQ = svcRevQ.lte('appointment.scheduled_date', endFilter);
+
+    let periodApptsQ = supabase.from('appointments').select('customer_id, customer:customers(total_visits)').gte('scheduled_date', startDate).not('status', 'in', '("cancelled","no_show")');
+    if (endFilter) periodApptsQ = periodApptsQ.lte('scheduled_date', endFilter);
 
     // Parallel queries for performance
     const [
@@ -1251,67 +1288,34 @@ router.get('/comprehensive', async (req, res, next) => {
       prevNewCustomersResult,
       sentimentResult,
       monthRevenueResult,
-      todayApptsResult
+      todayApptsResult,
+      serviceRevenueResult,
+      topCustomersResult,
+      allCustomersHealthResult,
+      periodAppointmentsResult
     ] = await Promise.all([
-      // Current period calls
-      supabase
-        .from('call_logs')
-        .select('id, outcome, sentiment, duration_seconds')
-        .gte('started_at', `${startDate}T00:00:00`),
-      // Previous period calls
-      supabase
-        .from('call_logs')
-        .select('id', { count: 'exact', head: true })
-        .gte('started_at', `${prevStartDate}T00:00:00`)
-        .lte('started_at', `${prevEndDate}T23:59:59`),
-      // Booked calls current period
-      supabase
-        .from('call_logs')
-        .select('id', { count: 'exact', head: true })
-        .gte('started_at', `${startDate}T00:00:00`)
-        .eq('outcome', 'booked'),
-      // Current period appointments
-      supabase
-        .from('appointments')
-        .select('quoted_total, final_total, status')
-        .gte('scheduled_date', startDate)
+      callsQ,
+      supabase.from('call_logs').select('id', { count: 'exact', head: true })
+        .gte('started_at', `${prevStartDate}T00:00:00`).lte('started_at', `${prevEndDate}T23:59:59`),
+      bookedQ,
+      apptsQ,
+      supabase.from('appointments').select('quoted_total, final_total')
+        .gte('scheduled_date', prevStartDate).lte('scheduled_date', prevEndDate)
         .not('status', 'in', '("cancelled","no_show")'),
-      // Previous period appointments
-      supabase
-        .from('appointments')
-        .select('quoted_total, final_total')
-        .gte('scheduled_date', prevStartDate)
-        .lte('scheduled_date', prevEndDate)
-        .not('status', 'in', '("cancelled","no_show")'),
-      // New customers current period
-      supabase
-        .from('customers')
-        .select('id', { count: 'exact', head: true })
-        .gte('created_at', `${startDate}T00:00:00`),
-      // New customers previous period
-      supabase
-        .from('customers')
-        .select('id', { count: 'exact', head: true })
-        .gte('created_at', `${prevStartDate}T00:00:00`)
-        .lte('created_at', `${prevEndDate}T23:59:59`),
-      // Positive sentiment calls
-      supabase
-        .from('call_logs')
-        .select('id', { count: 'exact', head: true })
-        .gte('started_at', `${startDate}T00:00:00`)
-        .eq('sentiment', 'positive'),
-      // Month revenue
-      supabase
-        .from('appointments')
-        .select('quoted_total, final_total')
-        .gte('scheduled_date', monthStart)
-        .not('status', 'in', '("cancelled","no_show")'),
-      // Today's appointments
-      supabase
-        .from('appointments')
-        .select('id', { count: 'exact', head: true })
-        .eq('scheduled_date', todayStr)
-        .not('status', 'in', '("cancelled","no_show")')
+      newCustQ,
+      supabase.from('customers').select('id', { count: 'exact', head: true })
+        .gte('created_at', `${prevStartDate}T00:00:00`).lte('created_at', `${prevEndDate}T23:59:59`),
+      sentimentQ,
+      supabase.from('appointments').select('quoted_total, final_total')
+        .gte('scheduled_date', monthStart).not('status', 'in', '("cancelled","no_show")'),
+      supabase.from('appointments').select('id', { count: 'exact', head: true })
+        .eq('scheduled_date', todayStr).not('status', 'in', '("cancelled","no_show")'),
+      svcRevQ,
+      supabase.from('customers').select('id, first_name, last_name, total_visits, total_spent, last_visit_date')
+        .order('total_spent', { ascending: false }).limit(10),
+      supabase.from('customers').select('total_visits, total_spent, last_visit_date, created_at')
+        .gt('total_visits', 0),
+      periodApptsQ
     ]);
 
     const calls = callsResult.data || [];
@@ -1348,14 +1352,109 @@ router.get('/comprehensive', async (req, res, next) => {
 
     const avgTicket = currentAppts.length > 0 ? Math.round(currentRevenue / currentAppts.length) : 0;
 
+    // Revenue trend (daily breakdown)
+    const revenueByDay = {};
+    for (const apt of currentAppts) {
+      const date = apt.scheduled_date;
+      if (!revenueByDay[date]) {
+        revenueByDay[date] = { revenue: 0, appointments: 0 };
+      }
+      revenueByDay[date].revenue += apt.final_total || apt.quoted_total || 0;
+      revenueByDay[date].appointments++;
+    }
+    const revenueTrend = Object.entries(revenueByDay)
+      .map(([date, data]) => ({ date, ...data }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+
+    // Revenue by category
+    const serviceRevData = serviceRevenueResult.data || [];
+    const byCategory = {};
+    const byService = {};
+    for (const svc of serviceRevData) {
+      const categoryName = svc.service?.category?.name || 'Other';
+      byCategory[categoryName] = (byCategory[categoryName] || 0) + (svc.final_price || svc.quoted_price || 0);
+
+      if (!byService[svc.service_name]) {
+        byService[svc.service_name] = { count: 0, revenue: 0 };
+      }
+      byService[svc.service_name].count++;
+      byService[svc.service_name].revenue += svc.final_price || svc.quoted_price || 0;
+    }
+    const categoryBreakdown = Object.entries(byCategory)
+      .map(([name, revenue]) => ({ name, revenue }))
+      .sort((a, b) => b.revenue - a.revenue);
+
+    // Top services by count
+    const topServices = Object.entries(byService)
+      .map(([name, data]) => ({ name, ...data }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10);
+
     // Customer metrics
     const newCustomers = newCustomersResult.count || 0;
     const prevNewCustomers = prevNewCustomersResult.count || 0;
-    const customerChange = prevNewCustomers > 0 
-      ? Math.round(((newCustomers - prevNewCustomers) / prevNewCustomers) * 100) 
+    const customerChange = prevNewCustomers > 0
+      ? Math.round(((newCustomers - prevNewCustomers) / prevNewCustomers) * 100)
       : 0;
 
-    res.json({
+    // Top customers
+    const topCustomers = (topCustomersResult.data || []).map(c => ({
+      id: c.id,
+      name: `${c.first_name || ''} ${c.last_name || ''}`.trim() || 'Unknown',
+      visits: c.total_visits || 0,
+      total_spent: c.total_spent || 0,
+      last_visit: c.last_visit_date
+    }));
+
+    // Health distribution
+    const healthDistribution = { excellent: 0, good: 0, fair: 0, new: 0, at_risk: 0 };
+    for (const c of allCustomersHealthResult.data || []) {
+      const daysSinceVisit = c.last_visit_date
+        ? differenceInDays(today, new Date(c.last_visit_date))
+        : 999;
+      const customerAge = differenceInDays(today, new Date(c.created_at));
+      const visitsPerYear = customerAge > 0 ? (c.total_visits / (customerAge / 365)) : 0;
+      const isNewCustomer = customerAge < 60 && (c.total_visits || 0) <= 1;
+
+      let score = 0;
+      if (daysSinceVisit <= 30) score += 30;
+      else if (daysSinceVisit <= 60) score += 20;
+      else if (daysSinceVisit <= 90) score += 10;
+
+      if (visitsPerYear >= 4) score += 30;
+      else if (visitsPerYear >= 2) score += 20;
+      else if (visitsPerYear >= 1) score += 10;
+
+      if ((c.total_spent || 0) >= 2000) score += 20;
+      else if ((c.total_spent || 0) >= 1000) score += 15;
+      else if ((c.total_spent || 0) >= 500) score += 10;
+
+      if (score >= 60) healthDistribution.excellent++;
+      else if (score >= 40) healthDistribution.good++;
+      else if (score >= 20) healthDistribution.fair++;
+      else if (isNewCustomer) healthDistribution.new++;
+      else healthDistribution.at_risk++;
+    }
+
+    // Returning rate
+    let returningCount = 0;
+    let newCount = 0;
+    const seenCustomers = new Set();
+    for (const apt of periodAppointmentsResult.data || []) {
+      if (!seenCustomers.has(apt.customer_id)) {
+        seenCustomers.add(apt.customer_id);
+        if ((apt.customer?.total_visits || 0) > 1) {
+          returningCount++;
+        } else {
+          newCount++;
+        }
+      }
+    }
+    const returningRate = (returningCount + newCount) > 0
+      ? Math.round((returningCount / (returningCount + newCount)) * 100)
+      : 0;
+
+    const result = {
       period,
       generated_at: new Date().toISOString(),
       calls: {
@@ -1374,14 +1473,22 @@ router.get('/comprehensive', async (req, res, next) => {
         avg_ticket: avgTicket,
         appointments: currentAppts.length
       },
+      revenue_trend: revenueTrend,
+      by_category: categoryBreakdown,
+      top_services: topServices,
       customers: {
         new: newCustomers,
         change: customerChange
       },
+      top_customers: topCustomers,
+      health_distribution: healthDistribution,
+      returning_rate: returningRate,
       today: {
         appointments: todayApptsResult.count || 0
       }
-    });
+    };
+    setCache(cacheKey, result);
+    res.json(result);
 
   } catch (error) {
     next(error);
