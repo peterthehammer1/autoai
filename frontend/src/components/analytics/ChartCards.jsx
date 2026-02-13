@@ -91,7 +91,7 @@ export default function ChartCards({ comprehensive }) {
       </div>
 
       {/* Booking Sources + Performance row */}
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-2 flex-1">
         {/* Booking Sources */}
         <Card className="transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
           <CardHeader className="pb-2">
