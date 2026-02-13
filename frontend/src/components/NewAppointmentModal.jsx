@@ -578,6 +578,12 @@ export default function NewAppointmentModal({ open, onOpenChange, onSuccess }) {
                 {isNewVehicle && (
                   <Card className="mt-4">
                     <CardContent className="p-4 space-y-4">
+                      {/* Live car image preview */}
+                      {newVehicleForm.make && newVehicleForm.model && (
+                        <div className="flex justify-center">
+                          <CarImage make={newVehicleForm.make} model={newVehicleForm.model} year={newVehicleForm.year} size="lg" />
+                        </div>
+                      )}
                       <div className="grid grid-cols-3 gap-4">
                         <div>
                           <label className="text-sm font-medium mb-1 block">

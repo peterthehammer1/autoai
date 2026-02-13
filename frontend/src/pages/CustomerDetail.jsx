@@ -503,6 +503,12 @@ export default function CustomerDetail() {
           </DialogHeader>
           <form onSubmit={handleAddVehicleSubmit}>
             <div className="space-y-4 py-4">
+              {/* Live car image preview */}
+              {vehicleForm.make && vehicleForm.model && (
+                <div className="flex justify-center">
+                  <CarImage make={vehicleForm.make} model={vehicleForm.model} year={vehicleForm.year} size="lg" />
+                </div>
+              )}
               <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="year">Year</Label>
