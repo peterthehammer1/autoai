@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { supabase, normalizePhone } from '../config/database.js';
 import { format, parseISO } from 'date-fns';
 import { assignTechnician, getRequiredSkillLevel, getBestBayType } from './retell-functions.js';
-import { isValidDate, isValidTime, isValidPhone, isValidUUID, isValidUUIDArray, isWeekday, isWithinBusinessHours, isFutureDate, isWithinBookingWindow, clampPagination, validationError } from '../middleware/validate.js';
+import { isValidDate, isValidTime, isValidPhone, isValidUUID, isValidUUIDArray, isWeekday, isWithinBusinessHours, endsBeforeClose, isFutureDate, isWithinBookingWindow, clampPagination, validationError } from '../middleware/validate.js';
 import { nowEST, todayEST } from '../utils/timezone.js';
 import { sendConfirmationSMS, sendCancellationSMS, sendStatusUpdateSMS, sendCompletedSMS } from '../services/sms.js';
 
@@ -158,6 +158,11 @@ router.post('/', async (req, res, next) => {
 
     const totalDuration = services.reduce((sum, s) => sum + s.duration_minutes, 0);
     const quotedTotal = services.reduce((sum, s) => sum + (s.price_min || 0), 0);
+
+    // Ensure appointment finishes before close (4 PM)
+    if (!endsBeforeClose(appointment_time, totalDuration)) {
+      return validationError(res, 'Appointment would end after our 4:00 PM close. Please choose an earlier time.');
+    }
 
     // 4. Find available bay if not specified (using most specialized bay type)
     let assignedBayId = bay_id;

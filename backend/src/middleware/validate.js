@@ -44,6 +44,12 @@ export function isWithinBusinessHours(timeStr) {
   return mins >= 7 * 60 && mins < 16 * 60; // 07:00 - 15:59
 }
 
+export function endsBeforeClose(timeStr, durationMinutes) {
+  const [h, m] = timeStr.split(':').map(Number);
+  const endMins = h * 60 + m + durationMinutes;
+  return endMins <= 16 * 60; // must finish by 4:00 PM
+}
+
 export function isValidEmail(str) {
   return typeof str === 'string' && EMAIL_RE.test(str);
 }

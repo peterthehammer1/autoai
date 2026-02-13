@@ -876,16 +876,22 @@ router.post('/check_availability', async (req, res, next) => {
         const slotTime = baySlots[i].start_time;
         const [slotHour, slotMinute] = slotTime.split(':').map(Number);
         
+        const slotMinutes = slotHour * 60 + slotMinute;
+
         // Skip slots that have already passed today
         if (slotDate === todayStr) {
           // Add 30 min buffer - don't offer slots less than 30 mins from now
-          const slotMinutes = slotHour * 60 + slotMinute;
           const currentMinutes = currentHour * 60 + currentMinute + 30; // 30 min buffer
           if (slotMinutes <= currentMinutes) {
             continue; // Skip this slot, it's in the past
           }
         }
-        
+
+        // Skip if appointment would end after 4 PM close
+        if (slotMinutes + totalDuration > 16 * 60) {
+          continue;
+        }
+
         let consecutive = true;
         for (let j = 1; j < slotsNeeded; j++) {
           const expected = addMinutesToTime(baySlots[i + j - 1].start_time, 30);
@@ -1221,6 +1227,18 @@ router.post('/book_appointment', async (req, res, next) => {
         success: false,
         booked: false,
         message: 'We close at 4 PM, so we can\'t book appointments at or after 4. Our last appointments start at 3:30. Would you like an earlier time?'
+      });
+    }
+    const aptEndMinutes = aptStartMinutes + totalDuration;
+    if (aptEndMinutes > 16 * 60) {
+      const latestStartMins = 16 * 60 - totalDuration;
+      const latestH = Math.floor(latestStartMins / 60);
+      const latestM = latestStartMins % 60;
+      const latestFormatted = `${latestH > 12 ? latestH - 12 : latestH}:${String(latestM).padStart(2, '0')} ${latestH >= 12 ? 'PM' : 'AM'}`;
+      return res.json({
+        success: false,
+        booked: false,
+        message: `That service takes about ${totalDuration} minutes, which would run past our 4 PM close. The latest we could start it is ${latestFormatted}. Would you like that time instead?`
       });
     }
 
@@ -1665,10 +1683,23 @@ router.post('/modify_appointment', async (req, res, next) => {
         });
       }
       const [newH, newM] = new_time.split(':').map(Number);
-      if (newH * 60 + newM >= 16 * 60) {
+      const newStartMins = newH * 60 + newM;
+      if (newStartMins >= 16 * 60) {
         return res.json({
           success: false,
           message: 'We close at 4 PM, so we can\'t reschedule to that time. Our last appointments start at 3:30. Would you like an earlier time?'
+        });
+      }
+      // Check if appointment would end past close
+      const apptDuration = appointment.estimated_duration_minutes || 60;
+      if (newStartMins + apptDuration > 16 * 60) {
+        const latestMins = 16 * 60 - apptDuration;
+        const lH = Math.floor(latestMins / 60);
+        const lM = latestMins % 60;
+        const latestStr = `${lH > 12 ? lH - 12 : lH}:${String(lM).padStart(2, '0')} ${lH >= 12 ? 'PM' : 'AM'}`;
+        return res.json({
+          success: false,
+          message: `Your service takes about ${apptDuration} minutes, which would run past our 4 PM close. The latest start time is ${latestStr}. Would that work?`
         });
       }
 
