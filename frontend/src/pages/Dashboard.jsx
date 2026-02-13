@@ -441,62 +441,62 @@ export default function Dashboard() {
               </div>
               
               {/* Appointments List */}
-              <div className="p-4">
+              <div className="px-3 py-2">
                 {todayLoading ? (
-                  <div className="space-y-3">
-                    {[1, 2, 3].map((i) => (
-                      <div key={i} className="h-20 animate-pulse bg-slate-100 rounded-xl" />
+                  <div className="space-y-1">
+                    {[1, 2, 3, 4].map((i) => (
+                      <div key={i} className="h-9 animate-pulse bg-slate-100 rounded-lg" />
                     ))}
                   </div>
                 ) : todayData?.appointments?.length > 0 ? (
-                  <div className="space-y-2">
-                    {todayData.appointments.slice(0, 5).map((apt, index) => (
-                      <Link
-                        key={apt.id}
-                        to={`/appointments/${apt.id}`}
-                        className="flex items-center gap-4 rounded-xl p-4 transition-all hover:bg-slate-50 hover:shadow-md group border border-transparent hover:border-slate-200"
-                      >
-                        <div className="relative">
-                          <div className="flex h-14 w-16 flex-col items-center justify-center rounded-xl bg-gradient-to-br from-slate-100 to-slate-50 group-hover:from-blue-50 group-hover:to-white group-hover:shadow-lg transition-all border border-slate-200 group-hover:border-blue-200">
-                            <span className="text-lg font-bold text-slate-900 group-hover:text-blue-700">
-                              {formatTime12Hour(apt.scheduled_time).split(':')[0]}:{formatTime12Hour(apt.scheduled_time).split(':')[1]?.split(' ')[0]}
-                            </span>
-                            <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">
-                              {formatTime12Hour(apt.scheduled_time).includes('PM') ? 'PM' : 'AM'}
+                  <div>
+                    {/* Column Headers */}
+                    <div className="flex items-center gap-3 px-3 py-1.5">
+                      <span className="w-16 text-[11px] text-slate-400 font-medium uppercase tracking-wider">Time</span>
+                      <span className="flex-1 text-[11px] text-slate-400 font-medium uppercase tracking-wider">Customer</span>
+                      <span className="w-36 hidden sm:block text-[11px] text-slate-400 font-medium uppercase tracking-wider">Vehicle</span>
+                      <span className="w-32 hidden md:block text-[11px] text-slate-400 font-medium uppercase tracking-wider">Service</span>
+                      <span className="w-24 text-right text-[11px] text-slate-400 font-medium uppercase tracking-wider">Status</span>
+                    </div>
+                    {/* Rows */}
+                    <div className="divide-y divide-slate-100">
+                      {todayData.appointments.slice(0, 8).map((apt, index) => (
+                        <Link
+                          key={apt.id}
+                          to={`/appointments/${apt.id}`}
+                          className="flex items-center gap-3 py-2.5 px-3 transition-colors hover:bg-slate-50 rounded-lg group"
+                        >
+                          <div className="w-16 flex items-center gap-1.5">
+                            {index === 0 && (
+                              <div className="h-2 w-2 rounded-full bg-emerald-500 shrink-0 animate-pulse" />
+                            )}
+                            <span className={cn("text-xs font-semibold text-slate-700", index !== 0 && "ml-3.5")}>
+                              {formatTime12Hour(apt.scheduled_time)}
                             </span>
                           </div>
-                          {index === 0 && (
-                            <div className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-emerald-500 border-2 border-white shadow animate-pulse" />
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-slate-900 truncate group-hover:text-blue-700">
+                          <span className="flex-1 min-w-0 text-sm font-medium text-slate-900 truncate group-hover:text-blue-700">
                             {apt.customer?.first_name} {apt.customer?.last_name}
-                          </p>
-                          {apt.vehicle && (
-                            <div className="flex items-center gap-2 text-sm text-slate-500 mt-0.5">
-                              <Car className="h-3.5 w-3.5" />
-                              <span className="truncate">{apt.vehicle.year} {apt.vehicle.make} {apt.vehicle.model}</span>
-                            </div>
-                          )}
-                          {apt.services?.[0] && (
-                            <div className="flex items-center gap-2 text-xs text-slate-400 mt-1">
-                              <Wrench className="h-3 w-3" />
-                              <span className="truncate">{apt.services[0].name}</span>
-                            </div>
-                          )}
-                        </div>
-                        <Badge
-                          className={cn(
-                            'shrink-0 text-xs font-semibold px-3 py-1 rounded-full',
-                            getStatusColor(apt.display_status || apt.status)
-                          )}
-                          aria-label={`Status: ${(apt.display_status || apt.status).replace('_', ' ')}`}
-                        >
-                          {(apt.display_status || apt.status).replace('_', ' ')}
-                        </Badge>
-                      </Link>
-                    ))}
+                          </span>
+                          <span className="w-36 hidden sm:block text-xs text-slate-500 truncate">
+                            {apt.vehicle ? `${apt.vehicle.year} ${apt.vehicle.make} ${apt.vehicle.model}` : '—'}
+                          </span>
+                          <span className="w-32 hidden md:block text-xs text-slate-400 truncate">
+                            {apt.services?.[0]?.name || '—'}
+                          </span>
+                          <div className="w-24 flex justify-end">
+                            <Badge
+                              className={cn(
+                                'shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full',
+                                getStatusColor(apt.display_status || apt.status)
+                              )}
+                              aria-label={`Status: ${(apt.display_status || apt.status).replace('_', ' ')}`}
+                            >
+                              {(apt.display_status || apt.status).replace('_', ' ')}
+                            </Badge>
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
                   </div>
                 ) : (
                   <div className="flex flex-col items-center justify-center py-16 text-center">
