@@ -452,7 +452,7 @@ export default function Dashboard() {
                   <div>
                     {/* Column Headers */}
                     <div className="flex items-center gap-3 px-3 py-1.5">
-                      <span className="w-16 text-[11px] text-slate-400 font-medium uppercase tracking-wider">Time</span>
+                      <span className="w-20 text-[11px] text-slate-400 font-medium uppercase tracking-wider">Time</span>
                       <span className="flex-1 text-[11px] text-slate-400 font-medium uppercase tracking-wider">Customer</span>
                       <span className="w-36 hidden sm:block text-[11px] text-slate-400 font-medium uppercase tracking-wider">Vehicle</span>
                       <span className="w-32 hidden md:block text-[11px] text-slate-400 font-medium uppercase tracking-wider">Service</span>
@@ -466,11 +466,11 @@ export default function Dashboard() {
                           to={`/appointments/${apt.id}`}
                           className="flex items-center gap-3 py-2.5 px-3 transition-colors hover:bg-slate-50 rounded-lg group"
                         >
-                          <div className="w-16 flex items-center gap-1.5">
+                          <div className="w-20 flex items-center gap-1.5">
                             {index === 0 && (
                               <div className="h-2 w-2 rounded-full bg-emerald-500 shrink-0 animate-pulse" />
                             )}
-                            <span className={cn("text-xs font-semibold text-slate-700", index !== 0 && "ml-3.5")}>
+                            <span className={cn("text-xs font-semibold text-slate-700 whitespace-nowrap", index !== 0 && "ml-3.5")}>
                               {formatTime12Hour(apt.scheduled_time)}
                             </span>
                           </div>

@@ -59,8 +59,8 @@ export function getStatusColor(status) {
     checked_in: 'bg-yellow-100 text-yellow-800',
     in_progress: 'bg-amber-100 text-amber-800',
     checking_out: 'bg-purple-100 text-purple-800',
-    completed: 'bg-emerald-100 text-emerald-800',
-    cancelled: 'bg-red-100 text-red-800',
+    completed: 'bg-slate-100 text-slate-500',
+    cancelled: 'bg-slate-100 text-slate-400 line-through',
     no_show: 'bg-orange-100 text-orange-800',
   }
   return colors[status] || 'bg-gray-100 text-gray-800'
