@@ -467,7 +467,7 @@ export default function Dashboard() {
                     </div>
                     {/* Rows */}
                     <div className="divide-y divide-slate-100">
-                      {todayData.appointments.slice(0, 10).map((apt, index) => (
+                      {todayData.appointments.slice(0, 15).map((apt, index) => (
                         <Link
                           key={apt.id}
                           to={`/appointments/${apt.id}`}
