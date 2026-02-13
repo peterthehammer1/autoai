@@ -144,7 +144,7 @@ export default function CustomerDetail() {
   if (!customer) {
     return (
       <div className="py-12 text-center">
-        <p className="text-slate-500">Customer not found</p>
+        <p className="text-muted-foreground">Customer not found</p>
         <Button variant="link" asChild>
           <Link to="/customers">Back to Customers</Link>
         </Button>
@@ -178,7 +178,7 @@ export default function CustomerDetail() {
 
       {/* Customer Info Card */}
       <div className="grid gap-4 md:grid-cols-3">
-        <div className="bg-white border border-slate-200 md:col-span-1">
+        <div className="bg-white shadow-lg border-0 rounded-lg overflow-hidden md:col-span-1">
           <div className="px-4 py-3 border-b border-slate-200 bg-slate-50">
             <h3 className="text-sm font-medium text-slate-700">Contact Info</h3>
           </div>
@@ -191,7 +191,7 @@ export default function CustomerDetail() {
                 <p className="text-sm font-medium text-slate-800">
                   {customer.first_name} {customer.last_name}
                 </p>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-muted-foreground">
                   {customer.total_visits || 0} visits
                 </p>
               </div>
@@ -213,7 +213,7 @@ export default function CustomerDetail() {
 
         {/* Customer Health Score Card */}
         {healthData && (
-          <div data-tour="custdetail-health" className="bg-white border border-slate-200 md:col-span-2">
+          <div data-tour="custdetail-health" className="bg-white shadow-lg border-0 rounded-lg overflow-hidden md:col-span-2">
             <div className="px-4 py-3 border-b border-slate-200 bg-slate-50">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-medium text-slate-700 flex items-center gap-2">
@@ -294,11 +294,11 @@ export default function CustomerDetail() {
               <div className="grid grid-cols-3 gap-4 pt-3 border-t border-slate-100">
                 <div className="text-center">
                   <p className="text-lg font-bold text-slate-900">{healthData.stats.total_visits}</p>
-                  <p className="text-xs text-slate-500">Total Visits</p>
+                  <p className="text-xs text-muted-foreground">Total Visits</p>
                 </div>
                 <div className="text-center">
                   <p className="text-lg font-bold text-slate-900">{formatCents(healthData.stats.total_spend)}</p>
-                  <p className="text-xs text-slate-500">Total Spend</p>
+                  <p className="text-xs text-muted-foreground">Total Spend</p>
                 </div>
                 <div className="text-center">
                   <p className="text-lg font-bold text-slate-900">
@@ -306,14 +306,14 @@ export default function CustomerDetail() {
                       ? formatDistanceToNow(new Date(healthData.stats.last_visit), { addSuffix: true })
                       : 'Never'}
                   </p>
-                  <p className="text-xs text-slate-500">Last Visit</p>
+                  <p className="text-xs text-muted-foreground">Last Visit</p>
                 </div>
               </div>
 
               {/* Recommendations */}
               {healthData.recommendations?.length > 0 && (
                 <div className="pt-3 border-t border-slate-100 space-y-2">
-                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">AI Recommendations</p>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">AI Recommendations</p>
                   {healthData.recommendations.map((rec, idx) => (
                     <div key={idx} className="flex items-start gap-2 text-sm">
                       {rec.type === 'action' && <AlertCircle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />}
@@ -329,7 +329,7 @@ export default function CustomerDetail() {
         )}
 
         {/* Vehicles */}
-        <div data-tour="custdetail-vehicles" className="bg-white border border-slate-200 md:col-span-3">
+        <div data-tour="custdetail-vehicles" className="bg-white shadow-lg border-0 rounded-lg overflow-hidden md:col-span-3">
           <div className="px-4 py-3 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
             <h3 className="text-sm font-medium text-slate-700">Vehicles</h3>
             <Button size="sm" onClick={() => setIsAddVehicleOpen(true)} className="text-xs h-7">
@@ -343,7 +343,7 @@ export default function CustomerDetail() {
                 {customer.vehicles.map((vehicle) => (
                   <div
                     key={vehicle.id}
-                    className="border border-slate-200 overflow-hidden"
+                    className="border border-slate-100 rounded-lg overflow-hidden"
                   >
                     <div className="flex items-center justify-between p-3">
                       <div className="flex items-center gap-3">
@@ -352,7 +352,7 @@ export default function CustomerDetail() {
                           <p className="font-medium text-slate-900">
                             {vehicle.year} {vehicle.make} {vehicle.model}
                           </p>
-                          <p className="text-sm text-slate-500">
+                          <p className="text-sm text-muted-foreground">
                             {vehicle.color && `${vehicle.color} • `}
                             {vehicle.mileage
                               ? `${vehicle.mileage.toLocaleString()} km`
@@ -365,7 +365,7 @@ export default function CustomerDetail() {
                           <span className="text-xs px-2 py-0.5 bg-slate-100 text-slate-600 rounded">Primary</span>
                         )}
                         {vehicle.license_plate && (
-                          <p className="text-xs text-slate-500 mt-1">
+                          <p className="text-xs text-muted-foreground mt-1">
                             {vehicle.license_plate}
                           </p>
                         )}
@@ -380,7 +380,7 @@ export default function CustomerDetail() {
                 ))}
               </div>
             ) : (
-              <p className="py-6 text-center text-xs text-slate-500">
+              <p className="py-6 text-center text-xs text-muted-foreground">
                 No vehicles on file
               </p>
             )}
@@ -389,7 +389,7 @@ export default function CustomerDetail() {
       </div>
 
       {/* Appointments History */}
-      <div data-tour="custdetail-appointments" className="bg-white border border-slate-200">
+      <div data-tour="custdetail-appointments" className="bg-white shadow-lg border-0 rounded-lg overflow-hidden">
         <div className="px-4 py-3 border-b border-slate-200 bg-slate-50">
           <h3 className="text-sm font-medium text-slate-700">Appointment History</h3>
         </div>
@@ -400,14 +400,14 @@ export default function CustomerDetail() {
                 <Link
                   key={apt.id}
                   to={`/appointments/${apt.id}`}
-                  className="flex items-center justify-between border border-slate-200 p-3 transition-colors hover:bg-slate-50"
+                  className="flex items-center justify-between border border-slate-100 rounded-lg p-3 transition-colors hover:bg-slate-50"
                 >
                   <div className="flex items-center gap-3">
                     <div className="text-center w-10">
                       <p className="text-sm font-semibold text-slate-800">
                         {format(new Date(apt.scheduled_date), 'd')}
                       </p>
-                      <p className="text-[10px] text-slate-500">
+                      <p className="text-[10px] text-muted-foreground">
                         {format(new Date(apt.scheduled_date), 'MMM')}
                       </p>
                     </div>
@@ -417,21 +417,21 @@ export default function CustomerDetail() {
                           ?.map((s) => s.service_name)
                           .join(', ') || 'Service'}
                       </p>
-                      <p className="text-xs text-slate-500">
+                      <p className="text-xs text-muted-foreground">
                         {formatTime12Hour(apt.scheduled_time)}
                         {apt.vehicle &&
                           ` • ${apt.vehicle.year} ${apt.vehicle.make} ${apt.vehicle.model}`}
                       </p>
                     </div>
                   </div>
-                  <span className="text-xs px-2 py-0.5 bg-slate-100 text-slate-600 rounded capitalize">
+                  <span className={cn("text-xs px-2 py-0.5 rounded capitalize", getStatusColor(apt.status))}>
                     {apt.status.replace('_', ' ')}
                   </span>
                 </Link>
               ))}
             </div>
           ) : (
-            <p className="py-6 text-center text-xs text-slate-500">
+            <p className="py-6 text-center text-xs text-muted-foreground">
               No appointment history
             </p>
           )}

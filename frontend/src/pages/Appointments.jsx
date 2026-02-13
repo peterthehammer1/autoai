@@ -71,7 +71,7 @@ const postItColors = [
   { bg: 'bg-emerald-100', border: 'border-l-emerald-400', text: 'text-emerald-800' },
   { bg: 'bg-sky-100', border: 'border-l-sky-400', text: 'text-sky-800' },
   { bg: 'bg-amber-100', border: 'border-l-amber-400', text: 'text-amber-800' },
-  { bg: 'bg-teal-100', border: 'border-l-teal-400', text: 'text-teal-800' },
+  { bg: 'bg-cyan-100', border: 'border-l-cyan-400', text: 'text-cyan-800' },
   { bg: 'bg-rose-100', border: 'border-l-rose-400', text: 'text-rose-800' },
 ]
 
@@ -297,7 +297,7 @@ export default function Appointments() {
                 <div className="flex items-center gap-3">
                   <div className={cn(
                     "flex h-10 w-10 flex-col items-center justify-center rounded-lg",
-                    isToday(parseISO(date)) ? "bg-gradient-to-br from-teal-dark to-teal text-white" : "bg-slate-100 text-slate-600"
+                    isToday(parseISO(date)) ? "bg-gradient-to-br from-blue-600 to-blue-700 text-white" : "bg-slate-100 text-slate-600"
                   )}>
                     <span className="text-[10px] font-medium uppercase">
                       {format(parseISO(date), 'MMM')}
@@ -339,7 +339,7 @@ export default function Appointments() {
                               <span className="text-sm font-medium text-slate-800 group-hover:text-blue-700">
                                 {apt.customer?.first_name} {apt.customer?.last_name}
                               </span>
-                              <span className="text-xs px-2 py-0.5 bg-slate-100 text-slate-600 rounded capitalize shrink-0">
+                              <span className={cn("text-xs px-2 py-0.5 rounded capitalize shrink-0", getStatusColor(apt.display_status || apt.status))}>
                                 {(apt.display_status || apt.status).replace('_', ' ')}
                               </span>
                             </div>
@@ -724,7 +724,7 @@ export default function Appointments() {
           <div className="flex items-center gap-3">
             <div className={cn(
               "flex h-10 w-10 flex-col items-center justify-center rounded-lg",
-              isToday(new Date(dateFilter)) ? "bg-gradient-to-br from-teal-dark to-teal text-white" : "bg-slate-100 text-slate-600"
+              isToday(new Date(dateFilter)) ? "bg-gradient-to-br from-blue-600 to-blue-700 text-white" : "bg-slate-100 text-slate-600"
             )}>
               <span className="text-[10px] font-medium uppercase">
                 {format(new Date(dateFilter), 'MMM')}
@@ -788,7 +788,7 @@ export default function Appointments() {
                             <p className="text-sm font-medium text-slate-800 group-hover:text-blue-700 truncate">
                               {apt.customer?.first_name} {apt.customer?.last_name}
                             </p>
-                            <span className="text-xs px-1.5 py-0.5 bg-slate-100 text-slate-600 rounded capitalize shrink-0">
+                            <span className={cn("text-xs px-1.5 py-0.5 rounded capitalize shrink-0", getStatusColor(apt.display_status || apt.status))}>
                               {(apt.display_status || apt.status).replace('_', ' ')}
                             </span>
                           </div>
@@ -864,7 +864,7 @@ export default function Appointments() {
                           </span>
                         </TableCell>
                         <TableCell>
-                          <span className="text-xs px-2 py-0.5 bg-slate-100 text-slate-600 rounded capitalize">
+                          <span className={cn("text-xs px-2 py-0.5 rounded capitalize", getStatusColor(apt.display_status || apt.status))}>
                             {(apt.display_status || apt.status).replace('_', ' ')}
                           </span>
                         </TableCell>

@@ -124,7 +124,7 @@ export default function AppointmentDetail() {
 
       {/* Quick Actions */}
       {availableActions.length > 0 && (
-        <div data-tour="apt-quick-actions" className="bg-white border border-slate-200 rounded-lg p-3">
+        <div data-tour="apt-quick-actions" className="bg-white shadow-lg border-0 rounded-lg p-3">
           <div className="flex flex-wrap gap-2">
             {availableActions.includes('confirmed') && (
               <Button
@@ -193,7 +193,7 @@ export default function AppointmentDetail() {
       {/* Details Grid */}
       <div className="grid gap-4 md:grid-cols-2">
         {/* Customer Info */}
-        <div data-tour="apt-customer-info" className="bg-white border border-slate-200 rounded-lg overflow-hidden">
+        <div data-tour="apt-customer-info" className="bg-white shadow-lg border-0 rounded-lg overflow-hidden">
           <div className="px-4 py-3 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-blue-50/30">
             <h3 className="text-sm font-medium text-slate-700 flex items-center gap-2">
               <User className="h-4 w-4 text-blue-400" />
@@ -223,7 +223,7 @@ export default function AppointmentDetail() {
         </div>
 
         {/* Vehicle Info */}
-        <div data-tour="apt-vehicle-info" className="bg-white border border-slate-200 rounded-lg overflow-hidden">
+        <div data-tour="apt-vehicle-info" className="bg-white shadow-lg border-0 rounded-lg overflow-hidden">
           <div className="px-4 py-3 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-blue-50/30">
             <h3 className="text-sm font-medium text-slate-700 flex items-center gap-2">
               <Car className="h-4 w-4 text-blue-400" />
@@ -246,12 +246,12 @@ export default function AppointmentDetail() {
                       {apt.vehicle.year} {apt.vehicle.make} {apt.vehicle.model}
                     </p>
                     {apt.vehicle.color && (
-                      <p className="text-xs text-slate-500">
+                      <p className="text-xs text-muted-foreground">
                         {apt.vehicle.color}
                       </p>
                     )}
                     {apt.vehicle.license_plate && (
-                      <p className="text-xs text-slate-500">
+                      <p className="text-xs text-muted-foreground">
                         Plate: {apt.vehicle.license_plate}
                       </p>
                     )}
@@ -264,13 +264,13 @@ export default function AppointmentDetail() {
                 />
               </>
             ) : (
-              <p className="text-xs text-slate-500">No vehicle on file</p>
+              <p className="text-xs text-muted-foreground">No vehicle on file</p>
             )}
           </div>
         </div>
 
         {/* Appointment Details */}
-        <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
+        <div className="bg-white shadow-lg border-0 rounded-lg overflow-hidden">
           <div className="px-4 py-3 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-blue-50/30">
             <h3 className="text-sm font-medium text-slate-700 flex items-center gap-2">
               <Calendar className="h-4 w-4 text-blue-400" />
@@ -280,34 +280,34 @@ export default function AppointmentDetail() {
           <div className="p-4 space-y-3">
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div>
-                <p className="text-xs text-slate-500">Date</p>
+                <p className="text-xs text-muted-foreground">Date</p>
                 <p className="text-sm text-slate-800">
                   {format(new Date(apt.scheduled_date), 'MMM d, yyyy')}
                 </p>
               </div>
               <div>
-                <p className="text-xs text-slate-500">Time</p>
+                <p className="text-xs text-muted-foreground">Time</p>
                 <p className="text-sm text-slate-800">
                   {formatTime12Hour(apt.scheduled_time)}
                 </p>
               </div>
               <div>
-                <p className="text-xs text-slate-500">Duration</p>
+                <p className="text-xs text-muted-foreground">Duration</p>
                 <p className="text-sm text-slate-800">
                   {formatDuration(apt.estimated_duration_minutes)}
                 </p>
               </div>
               <div>
-                <p className="text-xs text-slate-500">Bay</p>
+                <p className="text-xs text-muted-foreground">Bay</p>
                 <p className="text-sm text-slate-800">{apt.bay?.name || '-'}</p>
               </div>
               <div>
-                <p className="text-xs text-slate-500">Technician</p>
+                <p className="text-xs text-muted-foreground">Technician</p>
                 <p className="text-sm text-slate-800">
                   {apt.technician ? `${apt.technician.first_name} ${apt.technician.last_name}` : '-'}
                 </p>
                 {apt.technician?.skill_level && (
-                  <p className="text-xs text-slate-500 capitalize">{apt.technician.skill_level}</p>
+                  <p className="text-xs text-muted-foreground capitalize">{apt.technician.skill_level}</p>
                 )}
               </div>
             </div>
@@ -326,7 +326,7 @@ export default function AppointmentDetail() {
             )}
             {apt.customer_notes && (
               <div className="pt-2 border-t border-slate-100">
-                <p className="text-xs text-slate-500 mb-1">Customer Notes</p>
+                <p className="text-xs text-muted-foreground mb-1">Customer Notes</p>
                 <p className="text-sm text-slate-700">{apt.customer_notes}</p>
               </div>
             )}
@@ -334,7 +334,7 @@ export default function AppointmentDetail() {
         </div>
 
         {/* Services */}
-        <div data-tour="apt-services" className="bg-white border border-slate-200 rounded-lg overflow-hidden">
+        <div data-tour="apt-services" className="bg-white shadow-lg border-0 rounded-lg overflow-hidden">
           <div className="px-4 py-3 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-blue-50/30">
             <h3 className="text-sm font-medium text-slate-700 flex items-center gap-2">
               <Wrench className="h-4 w-4 text-blue-400" />
@@ -350,7 +350,7 @@ export default function AppointmentDetail() {
                 >
                   <div>
                     <p className="text-sm text-slate-800">{svc.service_name}</p>
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-muted-foreground">
                       {formatDuration(svc.duration_minutes)}
                     </p>
                   </div>
@@ -369,8 +369,8 @@ export default function AppointmentDetail() {
       </div>
 
       {/* Metadata */}
-      <div className="bg-white border border-slate-200 rounded-lg p-3">
-        <div className="flex flex-wrap gap-4 text-xs text-slate-500">
+      <div className="bg-white shadow-lg border-0 rounded-lg p-3">
+        <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
           <div>
             <span>Created: </span>
             {format(new Date(apt.created_at), 'MMM d, yyyy h:mm a')}

@@ -43,7 +43,7 @@ import {
   Car,
   Wrench,
 } from 'lucide-react'
-import { cn, formatTime12Hour, getStatusColor, formatCents } from '@/lib/utils'
+import { cn, formatTime12Hour, getStatusColor, getStatusDotColor, formatCents } from '@/lib/utils'
 
 // Animated number component for impact
 function AnimatedNumber({ value, prefix = '', suffix = '', duration = 1000 }) {
@@ -345,7 +345,7 @@ export default function Dashboard() {
                   {count > 0 && (
                     <span className={cn(
                       'absolute bottom-1 w-1 h-1 rounded-full',
-                      isCurrentDay ? 'bg-white' : 'bg-teal-500'
+                      isCurrentDay ? 'bg-white' : 'bg-blue-500'
                     )} />
                   )}
                 </Link>
@@ -426,14 +426,14 @@ export default function Dashboard() {
               {/* Status Pills */}
               <div className="flex items-center gap-2 px-5 py-3 bg-slate-50/50 border-b overflow-x-auto scrollbar-hide">
                 {[
-                  { label: 'Completed', color: 'bg-blue-700', count: todayData?.by_status?.completed?.length || 0 },
-                  { label: 'In Progress', color: 'bg-blue-500', count: todayData?.by_status?.in_progress?.length || 0 },
-                  { label: 'Checked In', color: 'bg-blue-400', count: todayData?.by_status?.checked_in?.length || 0 },
-                  { label: 'Confirmed', color: 'bg-slate-600', count: todayData?.by_status?.confirmed?.length || 0 },
-                  { label: 'Scheduled', color: 'bg-slate-400', count: todayData?.by_status?.scheduled?.length || 0 },
+                  { label: 'Completed', status: 'completed', count: todayData?.by_status?.completed?.length || 0 },
+                  { label: 'In Progress', status: 'in_progress', count: todayData?.by_status?.in_progress?.length || 0 },
+                  { label: 'Checked In', status: 'checked_in', count: todayData?.by_status?.checked_in?.length || 0 },
+                  { label: 'Confirmed', status: 'confirmed', count: todayData?.by_status?.confirmed?.length || 0 },
+                  { label: 'Scheduled', status: 'scheduled', count: todayData?.by_status?.scheduled?.length || 0 },
                 ].map((item) => (
                   <div key={item.label} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border shadow-sm whitespace-nowrap">
-                    <div className={cn('h-2 w-2 rounded-full', item.color)} />
+                    <div className={cn('h-2 w-2 rounded-full', getStatusDotColor(item.status))} />
                     <span className="text-xs font-medium text-slate-600">{item.count}</span>
                     <span className="text-xs text-slate-400">{item.label}</span>
                   </div>

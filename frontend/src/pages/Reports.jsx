@@ -253,10 +253,10 @@ export default function Reports() {
       </div>
 
       {/* Date Range Selector */}
-      <div className="bg-white border border-slate-200 p-4">
+      <div className="bg-white shadow-lg border-0 rounded-lg p-4">
         <div className="flex flex-col sm:flex-row sm:items-end gap-4">
           <div className="flex-1 max-w-xs">
-            <label className="text-xs font-medium text-slate-600 mb-1.5 block">Date Range</label>
+            <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Date Range</label>
             <Select value={dateRange} onValueChange={setDateRange}>
               <SelectTrigger className="h-9 text-sm border-slate-300">
                 <SelectValue />
@@ -273,7 +273,7 @@ export default function Reports() {
           {dateRange === 'custom' && (
             <>
               <div>
-                <label className="text-xs font-medium text-slate-600 mb-1.5 block">Start Date</label>
+                <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Start Date</label>
                 <Input
                   type="date"
                   value={customStartDate}
@@ -282,7 +282,7 @@ export default function Reports() {
                 />
               </div>
               <div>
-                <label className="text-xs font-medium text-slate-600 mb-1.5 block">End Date</label>
+                <label className="text-xs font-medium text-muted-foreground mb-1.5 block">End Date</label>
                 <Input
                   type="date"
                   value={customEndDate}
@@ -305,15 +305,15 @@ export default function Reports() {
           return (
             <div
               key={report.id}
-              className="bg-white border border-slate-200 p-4 flex flex-col"
+              className="bg-white shadow-lg border-0 rounded-lg p-4 flex flex-col"
             >
               <div className="flex items-start gap-3 mb-3">
-                <div className="w-10 h-10 bg-slate-100 flex items-center justify-center shrink-0">
+                <div className="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center shrink-0">
                   <Icon className="h-5 w-5 text-slate-500" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="text-sm font-medium text-slate-800">{report.name}</h3>
-                  <p className="text-xs text-slate-500 mt-0.5">{report.description}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{report.description}</p>
                 </div>
               </div>
               
@@ -349,7 +349,7 @@ export default function Reports() {
       </div>
 
       {/* Info Note */}
-      <div className="bg-slate-50 border border-slate-200 p-3 text-xs text-slate-600">
+      <div className="bg-slate-50 border-0 rounded-lg p-3 text-xs text-slate-600">
         <p>
           <strong>Note:</strong> Customer List export includes all customers regardless of date range. 
           All other reports are filtered to the selected date range.

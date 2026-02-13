@@ -63,9 +63,9 @@ export default function Layout() {
         
         {/* Mobile sidebar */}
         <div className={cn(
-          'fixed inset-y-0 left-0 w-72 max-w-[85vw] shadow-xl transition-transform duration-300 ease-out',
+          'fixed inset-y-0 left-0 w-72 max-w-[85vw] shadow-xl transition-transform duration-300 ease-out bg-sidebar',
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        )} style={{ backgroundColor: '#082438' }}>
+        )}>
           <div className="flex h-20 items-center justify-between px-2 overflow-hidden">
             <div className="h-20 w-48 overflow-hidden flex items-center justify-center">
               <img src="/logo-dark.png" alt="Premier Auto Service" className="w-48 scale-100 sm:scale-[1.4]" />
@@ -140,7 +140,7 @@ export default function Layout() {
 
       {/* Desktop sidebar */}
       <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col">
-        <div className="flex flex-col flex-grow" style={{ backgroundColor: '#082438' }}>
+        <div className="flex flex-col flex-grow bg-sidebar">
           {/* Logo - scaled to show full logo while minimizing extra background */}
           <div className="h-20 overflow-hidden flex items-center justify-center">
             <img src="/logo-dark.png" alt="Premier Auto Service" className="w-56 scale-100 lg:scale-[1.4]" />
