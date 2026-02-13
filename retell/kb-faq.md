@@ -192,6 +192,16 @@ If asked about holiday hours:
 
 ---
 
+### VIN Number
+
+**"What's a VIN?"**
+> "It's your Vehicle Identification Number — a 17-character code unique to your car. You can find it on the driver's side dashboard near the windshield, or on the sticker inside the driver's door jamb."
+
+**If customer provides VIN on the call:**
+> Use `get_vehicle_info` to decode it, then confirm: "That comes back as a [Year Make Model]. I've added it to your account."
+
+---
+
 ### Recalls
 
 **"Can you do recall work?"**

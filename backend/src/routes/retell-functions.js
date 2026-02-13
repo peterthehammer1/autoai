@@ -923,10 +923,11 @@ router.post('/check_availability', async (req, res, next) => {
       if (uniqueSlots.length >= 2) break; // Only return 2 options at a time
     }
 
+    // Check if the requested date was a weekend (even if we found weekday slots)
+    const requestedDay = preferred_date ? new Date(preferred_date + 'T12:00:00').getDay() : null;
+    const isWeekendRequest = requestedDay === 0 || requestedDay === 6;
+
     if (uniqueSlots.length === 0) {
-      // Weekend requested? We're closed Sat/Sun.
-      const requestedDay = preferred_date ? new Date(preferred_date + 'T12:00:00').getDay() : null;
-      const isWeekendRequest = requestedDay === 0 || requestedDay === 6;
       const daysFromNow = preferred_date ? Math.ceil((startDate - today) / (1000 * 60 * 60 * 24)) : 0;
       let message;
 
@@ -981,10 +982,14 @@ router.post('/check_availability', async (req, res, next) => {
     res.json({
       success: true,
       available: true,
+      requested_date_closed: isWeekendRequest || false,
+      closed_reason: isWeekendRequest ? 'weekend' : null,
       slots: formattedSlots,
       services: services.map(s => s.name),
       total_duration_minutes: totalDuration,
-      message
+      message: isWeekendRequest
+        ? `We're closed on weekends. Our service department is open Monday through Friday. The closest I have is ${slotDescriptions[0]}${slotDescriptions.length > 1 ? `, or ${slotDescriptions[1]}` : ''}. Would either of those work?`
+        : message
     });
 
   } catch (error) {
