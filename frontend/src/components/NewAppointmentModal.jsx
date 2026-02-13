@@ -16,6 +16,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { useToast } from '@/hooks/use-toast'
 import { appointments, customers, services, availability } from '@/api'
+import CarImage from '@/components/CarImage'
 import {
   cn,
   formatPhone,
@@ -521,9 +522,7 @@ export default function NewAppointmentModal({ open, onOpenChange, onSuccess }) {
                     >
                       <CardContent className="p-4 flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
-                            <Car className="h-5 w-5" />
-                          </div>
+                          <CarImage make={vehicle.make} model={vehicle.model} year={vehicle.year} size="sm" />
                           <div>
                             <p className="font-medium">
                               {vehicle.year} {vehicle.make} {vehicle.model}
