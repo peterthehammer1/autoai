@@ -1207,6 +1207,70 @@ router.get('/customers', async (req, res, next) => {
 });
 
 /**
+ * GET /api/analytics/recall-alerts
+ * Vehicles with open recalls — cached 30 min
+ */
+router.get('/recall-alerts', async (req, res, next) => {
+  try {
+    const cached = getCached('recall-alerts', 30 * 60 * 1000);
+    if (cached) return res.json(cached);
+
+    // Get vehicles with VINs, joined to customers
+    const { data: vehicles, error } = await supabase
+      .from('vehicles')
+      .select('id, vin, year, make, model, mileage, customer_id, customers (id, first_name, last_name)')
+      .neq('vin', null)
+      .limit(20);
+
+    if (error) throw error;
+
+    // Filter to valid 17-char VINs
+    const validVehicles = (vehicles || []).filter(v => v.vin && v.vin.length === 17);
+
+    if (validVehicles.length === 0) {
+      const result = { alerts: [] };
+      setCache('recall-alerts', result);
+      return res.json(result);
+    }
+
+    const { getRecalls } = await import('../services/vehicle-databases.js');
+
+    // Check recalls in parallel with 5s timeout per call
+    const timeout = (ms) => new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), ms));
+    const recallResults = await Promise.allSettled(
+      validVehicles.map(v =>
+        Promise.race([getRecalls(v.vin), timeout(5000)])
+          .then(result => ({ vehicle: v, result }))
+          .catch(() => ({ vehicle: v, result: null }))
+      )
+    );
+
+    const alerts = [];
+    for (const entry of recallResults) {
+      const { vehicle: v, result } = entry.status === 'fulfilled' ? entry.value : { vehicle: null, result: null };
+      if (!result?.success || !result.has_open_recalls) continue;
+      alerts.push({
+        customer_id: v.customer_id,
+        customer_name: v.customers ? `${v.customers.first_name || ''} ${v.customers.last_name || ''}`.trim() : 'Unknown',
+        vehicle_id: v.id,
+        vehicle: `${v.year} ${v.make} ${v.model}`,
+        recall_count: result.recall_count,
+        recalls: result.recalls.slice(0, 3).map(r => ({
+          component: r.component,
+          summary: r.summary
+        }))
+      });
+    }
+
+    const result = { alerts };
+    setCache('recall-alerts', result);
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
  * GET /api/analytics/comprehensive
  * All-in-one analytics endpoint for dashboard
  */

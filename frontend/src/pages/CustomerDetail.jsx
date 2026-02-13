@@ -41,6 +41,7 @@ import {
 } from '@/lib/utils'
 import PhoneNumber, { Email } from '@/components/PhoneNumber'
 import CarImage from '@/components/CarImage'
+import VehicleIntelligence from '@/components/VehicleIntelligence'
 import { useCustomerDetailTour } from '@/hooks/use-customer-detail-tour'
 
 export default function CustomerDetail() {
@@ -342,32 +343,39 @@ export default function CustomerDetail() {
                 {customer.vehicles.map((vehicle) => (
                   <div
                     key={vehicle.id}
-                    className="flex items-center justify-between border border-slate-200 p-3"
+                    className="border border-slate-200 overflow-hidden"
                   >
-                    <div className="flex items-center gap-3">
-                      <CarImage make={vehicle.make} model={vehicle.model} year={vehicle.year} size="sm" />
-                      <div>
-                        <p className="font-medium text-slate-900">
-                          {vehicle.year} {vehicle.make} {vehicle.model}
-                        </p>
-                        <p className="text-sm text-slate-500">
-                          {vehicle.color && `${vehicle.color} • `}
-                          {vehicle.mileage
-                            ? `${vehicle.mileage.toLocaleString()} km`
-                            : 'Mileage unknown'}
-                        </p>
+                    <div className="flex items-center justify-between p-3">
+                      <div className="flex items-center gap-3">
+                        <CarImage make={vehicle.make} model={vehicle.model} year={vehicle.year} size="sm" />
+                        <div>
+                          <p className="font-medium text-slate-900">
+                            {vehicle.year} {vehicle.make} {vehicle.model}
+                          </p>
+                          <p className="text-sm text-slate-500">
+                            {vehicle.color && `${vehicle.color} • `}
+                            {vehicle.mileage
+                              ? `${vehicle.mileage.toLocaleString()} km`
+                              : 'Mileage unknown'}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        {vehicle.is_primary && (
+                          <span className="text-xs px-2 py-0.5 bg-slate-100 text-slate-600 rounded">Primary</span>
+                        )}
+                        {vehicle.license_plate && (
+                          <p className="text-xs text-slate-500 mt-1">
+                            {vehicle.license_plate}
+                          </p>
+                        )}
                       </div>
                     </div>
-                    <div className="text-right">
-                      {vehicle.is_primary && (
-                        <span className="text-xs px-2 py-0.5 bg-slate-100 text-slate-600 rounded">Primary</span>
-                      )}
-                      {vehicle.license_plate && (
-                        <p className="text-xs text-slate-500 mt-1">
-                          {vehicle.license_plate}
-                        </p>
-                      )}
-                    </div>
+                    <VehicleIntelligence
+                      customerId={id}
+                      vehicleId={vehicle.id}
+                      vin={vehicle.vin}
+                    />
                   </div>
                 ))}
               </div>

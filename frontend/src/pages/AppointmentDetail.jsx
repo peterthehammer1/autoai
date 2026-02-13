@@ -31,6 +31,7 @@ import {
 import { useToast } from '@/hooks/use-toast'
 import PhoneNumber, { Email } from '@/components/PhoneNumber'
 import CarImage from '@/components/CarImage'
+import VehicleIntelligence from '@/components/VehicleIntelligence'
 import { useAppointmentTour } from '@/hooks/use-appointment-tour'
 
 export default function AppointmentDetail() {
@@ -233,9 +234,9 @@ export default function AppointmentDetail() {
             {apt.vehicle ? (
               <>
                 <div className="flex items-start gap-3">
-                  <CarImage 
-                    make={apt.vehicle.make} 
-                    model={apt.vehicle.model} 
+                  <CarImage
+                    make={apt.vehicle.make}
+                    model={apt.vehicle.model}
                     year={apt.vehicle.year}
                     size="md"
                     className="shrink-0"
@@ -256,6 +257,11 @@ export default function AppointmentDetail() {
                     )}
                   </div>
                 </div>
+                <VehicleIntelligence
+                  customerId={apt.customer?.id}
+                  vehicleId={apt.vehicle.id}
+                  vin={apt.vehicle.vin}
+                />
               </>
             ) : (
               <p className="text-xs text-slate-500">No vehicle on file</p>

@@ -15,7 +15,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { useToast } from '@/hooks/use-toast'
-import { appointments, customers, services, availability } from '@/api'
+import { appointments, customers as customersApi, services, availability } from '@/api'
 import CarImage from '@/components/CarImage'
 import {
   cn,
@@ -40,6 +40,7 @@ import {
   Mail,
   X,
   AlertCircle,
+  Info,
 } from 'lucide-react'
 
 const STEPS = [
@@ -165,13 +166,21 @@ export default function NewAppointmentModal({ open, onOpenChange, onSuccess }) {
     onOpenChange(false)
   }
 
+  // Vehicle intelligence for service suggestions
+  const { data: vehicleIntelData } = useQuery({
+    queryKey: ['vehicle-intelligence', customer?.id, selectedVehicle?.id],
+    queryFn: () => customersApi.getVehicleIntelligence(customer.id, selectedVehicle.id),
+    enabled: currentStep === 2 && !!customer?.id && !!selectedVehicle?.id && !!selectedVehicle?.vin,
+    staleTime: 10 * 60 * 1000,
+  })
+
   // Customer lookup
   const handlePhoneSearch = async () => {
     if (!phoneSearch.trim()) return
 
     setIsSearching(true)
     try {
-      const result = await customers.lookup(phoneSearch)
+      const result = await customersApi.lookup(phoneSearch)
       if (result.found) {
         setCustomer(result.customer)
         setIsNewCustomer(false)
@@ -683,6 +692,35 @@ export default function NewAppointmentModal({ open, onOpenChange, onSuccess }) {
                   </Button>
                 )}
               </div>
+
+              {/* Mileage-Based Recommendations */}
+              {vehicleIntelData?.success && vehicleIntelData.maintenance && (
+                (() => {
+                  const overdue = vehicleIntelData.maintenance.recently_due || []
+                  const upcoming = vehicleIntelData.maintenance.upcoming_services || []
+                  if (overdue.length === 0 && upcoming.length === 0) return null
+                  return (
+                    <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm">
+                      <div className="flex items-center gap-2 text-blue-800 font-medium mb-1.5">
+                        <Info className="h-4 w-4" />
+                        Recommended Based on Mileage
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {overdue.slice(0, 2).map((item, i) => (
+                          <Badge key={`o-${i}`} className="text-xs bg-red-100 text-red-700 hover:bg-red-100">
+                            Overdue: {item.services.slice(0, 2).join(', ')}
+                          </Badge>
+                        ))}
+                        {upcoming.slice(0, 2).map((item, i) => (
+                          <Badge key={`u-${i}`} className="text-xs bg-blue-100 text-blue-700 hover:bg-blue-100">
+                            Due soon: {item.services.slice(0, 2).join(', ')}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )
+                })()
+              )}
 
               {/* Categories */}
               {categoriesData?.categories && !serviceSearch && (

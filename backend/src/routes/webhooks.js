@@ -132,7 +132,9 @@ router.post('/voice/inbound', async (req, res) => {
           year,
           make,
           model,
-          license_plate
+          license_plate,
+          vin,
+          mileage
         )
       `)
       .eq('phone_normalized', normalizedPhone)
@@ -162,6 +164,10 @@ router.post('/voice/inbound', async (req, res) => {
             customer_id: '',
             vehicle_info: '',
             vehicle_id: '',
+            vehicle_vin: '',
+            vehicle_mileage: '',
+            vehicle_recalls: '',
+            maintenance_suggestions: '',
             ...dateInfo
           }
         }
@@ -173,10 +179,53 @@ router.post('/voice/inbound', async (req, res) => {
     // Build vehicle info string
     let vehicleInfo = '';
     let vehicleId = '';
+    let vehicleVin = '';
+    let vehicleMileage = '';
     if (customer.vehicles && customer.vehicles.length > 0) {
       const v = customer.vehicles[0]; // Primary vehicle
       vehicleInfo = `${v.year} ${v.make} ${v.model}`;
       vehicleId = v.id;
+      vehicleVin = v.vin || '';
+      vehicleMileage = v.mileage ? String(v.mileage) : '';
+    }
+
+    // Proactive vehicle intelligence — non-blocking with 3s timeout
+    let vehicleRecalls = '';
+    let maintenanceSuggestions = '';
+    if (vehicleVin && vehicleVin.length === 17) {
+      try {
+        const { getRecalls, getNextService } = await import('../services/vehicle-databases.js');
+        const timeout = (ms) => new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), ms));
+        const calls = [getRecalls(vehicleVin)];
+        if (vehicleMileage) calls.push(getNextService(vehicleVin, parseInt(vehicleMileage)));
+
+        const results = await Promise.race([
+          Promise.all(calls),
+          timeout(3000)
+        ]).catch(() => []);
+
+        const [recallResult, serviceResult] = results;
+
+        if (recallResult?.success && recallResult.has_open_recalls) {
+          const names = recallResult.recalls.slice(0, 3).map(r => r.component).join(', ');
+          vehicleRecalls = `${recallResult.recall_count} open recall${recallResult.recall_count > 1 ? 's' : ''}: ${names}`;
+        }
+
+        if (serviceResult?.success) {
+          const parts = [];
+          if (serviceResult.recently_due?.length > 0) {
+            const overdue = serviceResult.recently_due[0];
+            parts.push(`Overdue: ${overdue.services.slice(0, 2).join(', ')} (${overdue.miles_overdue.toLocaleString()} mi overdue)`);
+          }
+          if (serviceResult.upcoming_services?.length > 0) {
+            const next = serviceResult.upcoming_services[0];
+            parts.push(`Due soon: ${next.services.slice(0, 2).join(', ')} (in ${next.miles_until.toLocaleString()} mi)`);
+          }
+          maintenanceSuggestions = parts.join('; ');
+        }
+      } catch (e) {
+        console.log('Vehicle intelligence timeout/error (non-blocking):', e.message);
+      }
     }
     
     // Check if customer record is COMPLETE (has name AND vehicle)
@@ -209,6 +258,10 @@ router.post('/voice/inbound', async (req, res) => {
             total_visits: String(customer.total_visits || 0),
             vehicle_info: vehicleInfo,
             vehicle_id: vehicleId,
+            vehicle_vin: vehicleVin,
+            vehicle_mileage: vehicleMileage,
+            vehicle_recalls: vehicleRecalls,
+            maintenance_suggestions: maintenanceSuggestions,
             ...dateInfo
           }
         }
@@ -317,6 +370,10 @@ router.post('/voice/inbound', async (req, res) => {
           total_visits: String(customer.total_visits || 0),
           vehicle_info: vehicleInfo,
           vehicle_id: vehicleId,
+          vehicle_vin: vehicleVin,
+          vehicle_mileage: vehicleMileage,
+          vehicle_recalls: vehicleRecalls,
+          maintenance_suggestions: maintenanceSuggestions,
           // NEW: Upcoming appointments (e.g., "Oil Change on Friday, February 6 at 7:30 AM")
           upcoming_appointments: upcomingApptsSummary,
           // NEW: Service history (e.g., "Oil Change 25 days ago; Tire Rotation 90 days ago")

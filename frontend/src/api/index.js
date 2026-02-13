@@ -89,6 +89,9 @@ export const customers = {
     method: 'POST',
     body: JSON.stringify(data),
   }),
+
+  getVehicleIntelligence: (customerId, vehicleId) =>
+    fetchAPI(`/customers/${customerId}/vehicles/${vehicleId}/intelligence`),
 }
 
 // Services
@@ -163,6 +166,8 @@ export const analytics = {
     if (endDate) params.set('end', endDate);
     return fetchAPI(`/analytics/comprehensive?${params}`);
   },
+
+  recallAlerts: () => fetchAPI('/analytics/recall-alerts'),
 }
 
 // Call Logs

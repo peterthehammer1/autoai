@@ -96,6 +96,7 @@ router.get('/lookup', async (req, res, next) => {
           color,
           mileage,
           license_plate,
+          vin,
           is_primary
         )
       `)
@@ -502,6 +503,40 @@ router.post('/:id/vehicles', async (req, res, next) => {
 
     res.status(201).json({ vehicle });
 
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * GET /api/customers/:id/vehicles/:vehicleId/intelligence
+ * Get vehicle intelligence (specs, recalls, maintenance) from VIN
+ */
+router.get('/:id/vehicles/:vehicleId/intelligence', async (req, res, next) => {
+  try {
+    const { id, vehicleId } = req.params;
+    if (!isValidUUID(id)) return validationError(res, 'Invalid customer ID');
+    if (!isValidUUID(vehicleId)) return validationError(res, 'Invalid vehicle ID');
+
+    const { data: vehicle, error } = await supabase
+      .from('vehicles')
+      .select('id, vin, mileage, year, make, model')
+      .eq('id', vehicleId)
+      .eq('customer_id', id)
+      .single();
+
+    if (error || !vehicle) {
+      return res.status(404).json({ error: { message: 'Vehicle not found' } });
+    }
+
+    if (!vehicle.vin || vehicle.vin.length !== 17) {
+      return res.json({ success: false, error: 'No VIN on file' });
+    }
+
+    const vehicleDB = await import('../services/vehicle-databases.js');
+    const result = await vehicleDB.getVehicleIntelligence(vehicle.vin, vehicle.mileage || null);
+
+    res.json(result);
   } catch (error) {
     next(error);
   }
