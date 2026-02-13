@@ -79,10 +79,10 @@ export default function DrillDownDialog({ drillDown, onClose }) {
           <DialogDescription>{dateLabel}</DialogDescription>
         </DialogHeader>
         {drillDown?.type === 'revenue' ? (
-          <RevenueDetail data={drillDown.data} />
-        ) : (
+          <RevenueDetail data={drillDown?.data} />
+        ) : drillDown ? (
           <SentimentDetail data={drillDown.data} />
-        )}
+        ) : null}
       </DialogContent>
     </Dialog>
   )
