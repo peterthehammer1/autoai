@@ -156,7 +156,7 @@ export default function SmsLogs() {
         {/* Left Panel - SMS List */}
         <div className={cn(
           "flex flex-col bg-white shadow-lg border-0 rounded-lg overflow-hidden",
-          "w-full lg:w-80",
+          "w-full lg:w-96",
           selectedSmsId ? "hidden lg:flex" : "flex"
         )}>
           {/* Search & Filter Header */}
@@ -205,10 +205,10 @@ export default function SmsLogs() {
             ) : (
               <div>
                 {/* Column Headers */}
-                <div className="flex items-center gap-3 px-3 py-1.5 border-b border-slate-100">
-                  <span className="w-20 text-xs text-slate-400 font-medium uppercase tracking-wider">Time</span>
+                <div className="flex items-center gap-2 px-3 py-1.5 border-b border-slate-100">
+                  <span className="w-16 text-xs text-slate-400 font-medium uppercase tracking-wider">Time</span>
                   <span className="flex-1 text-xs text-slate-400 font-medium uppercase tracking-wider">Recipient</span>
-                  <span className="w-20 text-right text-xs text-slate-400 font-medium uppercase tracking-wider">Type</span>
+                  <span className="w-24 text-right text-xs text-slate-400 font-medium uppercase tracking-wider">Type</span>
                 </div>
                 {/* Rows */}
                 <div className="divide-y divide-slate-100">
@@ -219,11 +219,11 @@ export default function SmsLogs() {
                         key={sms.id}
                         onClick={() => setSelectedSmsId(sms.id)}
                         className={cn(
-                          "w-full flex items-center gap-3 py-2.5 px-3 text-left hover:bg-slate-50 rounded-lg transition-colors group",
+                          "w-full flex items-center gap-2 py-2.5 px-3 text-left hover:bg-slate-50 rounded-lg transition-colors group",
                           selectedSmsId === sms.id && "bg-teal-dark/5 border-l-2 border-l-teal-dark"
                         )}
                       >
-                        <div className="w-20">
+                        <div className="w-16 shrink-0">
                           <span className="text-xs font-semibold text-slate-700 whitespace-nowrap">
                             {sms.created_at ? format(new Date(sms.created_at), 'h:mm a') : '-'}
                           </span>
@@ -237,7 +237,7 @@ export default function SmsLogs() {
                             : <PhoneNumber phone={sms.to_phone} email={sms.customer?.email} />
                           }
                         </span>
-                        <div className="w-20 flex justify-end">
+                        <div className="w-24 shrink-0 flex justify-end">
                           <span className={cn(
                             "text-xs px-2 py-0.5 rounded-full font-semibold capitalize",
                             typeConfig.label === 'Confirmation' || typeConfig.label === 'Reminder'

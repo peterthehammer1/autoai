@@ -216,7 +216,7 @@ export default function CallLogs() {
         {/* Left Panel - Call List */}
         <div className={cn(
           "flex flex-col bg-white shadow-lg border-0 rounded-lg overflow-hidden",
-          "w-full lg:w-80",
+          "w-full lg:w-96",
           selectedCallId ? "hidden lg:flex" : "flex"
         )}>
           {/* Search & Filter Header */}
@@ -265,10 +265,10 @@ export default function CallLogs() {
             ) : (
               <div>
                 {/* Column Headers */}
-                <div className="flex items-center gap-3 px-3 py-1.5 border-b border-slate-100">
-                  <span className="w-20 text-xs text-slate-400 font-medium uppercase tracking-wider">Time</span>
+                <div className="flex items-center gap-2 px-3 py-1.5 border-b border-slate-100">
+                  <span className="w-16 text-xs text-slate-400 font-medium uppercase tracking-wider">Time</span>
                   <span className="flex-1 text-xs text-slate-400 font-medium uppercase tracking-wider">Caller</span>
-                  <span className="w-16 text-right text-xs text-slate-400 font-medium uppercase tracking-wider">Outcome</span>
+                  <span className="w-20 text-right text-xs text-slate-400 font-medium uppercase tracking-wider">Outcome</span>
                 </div>
                 {/* Rows */}
                 <div className="divide-y divide-slate-100">
@@ -277,11 +277,11 @@ export default function CallLogs() {
                     key={call.id}
                     onClick={() => setSelectedCallId(call.id)}
                     className={cn(
-                      "w-full flex items-center gap-3 py-2.5 px-3 text-left hover:bg-slate-50 rounded-lg transition-colors group",
+                      "w-full flex items-center gap-2 py-2.5 px-3 text-left hover:bg-slate-50 rounded-lg transition-colors group",
                       selectedCallId === call.id && "bg-teal-dark/5 border-l-2 border-l-teal-dark"
                     )}
                   >
-                    <div className="w-20">
+                    <div className="w-16 shrink-0">
                       <span className="text-xs font-semibold text-slate-700 whitespace-nowrap">
                         {call.started_at ? format(new Date(call.started_at), 'h:mm a') : '-'}
                       </span>
@@ -295,7 +295,7 @@ export default function CallLogs() {
                         : <PhoneNumber phone={call.phone_number} email={call.customer?.email} />
                       }
                     </span>
-                    <div className="w-16 flex justify-end">
+                    <div className="w-20 shrink-0 flex justify-end">
                       <span className={cn(
                         "text-xs px-2 py-0.5 rounded-full font-semibold capitalize",
                         call.outcome === 'booked' || call.outcome === 'completed'
