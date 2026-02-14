@@ -814,7 +814,7 @@ export default function Appointments() {
                       <TableHead className="text-xs font-medium text-slate-600">Services</TableHead>
                       <TableHead className="text-xs font-medium text-slate-600">Technician</TableHead>
                       <TableHead className="w-24 text-xs font-medium text-slate-600">Duration</TableHead>
-                      <TableHead className="w-28 text-xs font-medium text-slate-600">Status</TableHead>
+                      <TableHead className="w-28 text-xs font-medium text-slate-600 text-right">Status</TableHead>
                       <TableHead className="w-20"></TableHead>
                     </TableRow>
                   </TableHeader>
@@ -863,7 +863,7 @@ export default function Appointments() {
                             {formatDuration(apt.estimated_duration_minutes)}
                           </span>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="text-right">
                           <span className={cn("text-xs px-2 py-0.5 rounded capitalize", getStatusColor(apt.display_status || apt.status))}>
                             {(apt.display_status || apt.status).replace('_', ' ')}
                           </span>

@@ -506,6 +506,7 @@ export default function Dashboard() {
                         <span className="w-36 text-xs text-slate-400 font-medium uppercase tracking-wider">Vehicle</span>
                         <span className="w-32 hidden md:block text-xs text-slate-400 font-medium uppercase tracking-wider">Service</span>
                         <span className="w-24 text-right text-xs text-slate-400 font-medium uppercase tracking-wider">Status</span>
+                        <span className="w-7 shrink-0" />
                       </div>
                       {/* Rows */}
                       <div className="divide-y divide-slate-100">
@@ -551,35 +552,37 @@ export default function Dashboard() {
                                   </Badge>
                                 </div>
                               </Link>
-                              {hasActions && (
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <button className="p-1 rounded-md opacity-0 group-hover:opacity-100 hover:bg-slate-200 transition-all shrink-0" aria-label="Actions">
-                                      <MoreVertical className="h-4 w-4 text-slate-500" />
-                                    </button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end">
-                                    <DropdownMenuLabel>Update Status</DropdownMenuLabel>
-                                    {transitions.map((t) => (
-                                      <DropdownMenuItem
-                                        key={t.status}
-                                        onClick={() => statusMutation.mutate({ id: apt.id, status: t.status })}
-                                      >
-                                        {t.label}
-                                      </DropdownMenuItem>
-                                    ))}
-                                    {canReschedule && (
-                                      <>
-                                        <DropdownMenuSeparator />
-                                        <DropdownMenuItem onClick={() => setRescheduleAppointment(apt)}>
-                                          <CalendarClock className="h-4 w-4 mr-2 text-slate-500" />
-                                          Reschedule
+                              <div className="w-7 shrink-0 flex justify-center">
+                                {hasActions && (
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <button className="p-1 rounded-md opacity-0 group-hover:opacity-100 hover:bg-slate-200 transition-all" aria-label="Actions">
+                                        <MoreVertical className="h-4 w-4 text-slate-500" />
+                                      </button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                      <DropdownMenuLabel>Update Status</DropdownMenuLabel>
+                                      {transitions.map((t) => (
+                                        <DropdownMenuItem
+                                          key={t.status}
+                                          onClick={() => statusMutation.mutate({ id: apt.id, status: t.status })}
+                                        >
+                                          {t.label}
                                         </DropdownMenuItem>
-                                      </>
-                                    )}
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
-                              )}
+                                      ))}
+                                      {canReschedule && (
+                                        <>
+                                          <DropdownMenuSeparator />
+                                          <DropdownMenuItem onClick={() => setRescheduleAppointment(apt)}>
+                                            <CalendarClock className="h-4 w-4 mr-2 text-slate-500" />
+                                            Reschedule
+                                          </DropdownMenuItem>
+                                        </>
+                                      )}
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
+                                )}
+                              </div>
                             </div>
                           )
                         })}
