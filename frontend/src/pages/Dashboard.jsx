@@ -538,7 +538,7 @@ export default function Dashboard() {
                                   {apt.vehicle ? `${apt.vehicle.year} ${apt.vehicle.make} ${apt.vehicle.model}` : '—'}
                                 </span>
                                 <span className="w-32 hidden md:block text-xs text-slate-400 truncate">
-                                  {apt.services?.[0]?.name || '—'}
+                                  {apt.appointment_services?.[0]?.service_name || '—'}
                                 </span>
                                 <div className="w-24 flex justify-end">
                                   <Badge
@@ -654,8 +654,8 @@ export default function Dashboard() {
                                   {apt.vehicle ? `${apt.vehicle.year} ${apt.vehicle.make} ${apt.vehicle.model}` : '—'}
                                 </span>
                               </div>
-                              {apt.services?.[0]?.name && (
-                                <p className="text-xs text-slate-400 mt-0.5 truncate">{apt.services[0].name}</p>
+                              {apt.appointment_services?.[0]?.service_name && (
+                                <p className="text-xs text-slate-400 mt-0.5 truncate">{apt.appointment_services[0].service_name}</p>
                               )}
                             </Link>
                           </div>
