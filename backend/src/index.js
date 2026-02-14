@@ -23,6 +23,7 @@ import cronRoutes from './routes/cron.js';
 import createLeadsRouter from './routes/leads.js';
 import searchRoutes from './routes/search.js';
 import workOrderRoutes from './routes/work-orders.js';
+import reviewRoutes, { clickRouter as reviewClickRouter } from './routes/reviews.js';
 import { supabase } from './config/database.js';
 import { logger } from './utils/logger.js';
 
@@ -140,12 +141,16 @@ app.use('/api/reminders', generalLimiter, requireApiKey, reminderRoutes);
 app.use('/api/sms-logs', generalLimiter, requireApiKey, smsLogRoutes);
 app.use('/api/search', generalLimiter, requireApiKey, searchRoutes);
 app.use('/api/work-orders', generalLimiter, requireApiKey, workOrderRoutes);
+app.use('/api/reviews', generalLimiter, requireApiKey, reviewRoutes);
 app.use('/api/call-center', generalLimiter, requireApiKey, callCenterRoutes);
 
 // External service endpoints — no API key (authenticated by their own mechanisms)
 app.use('/api/webhooks', webhookLimiter, webhookRoutes);
 app.use('/api/voice', webhookLimiter, (await import('./routes/retell-functions.js')).default);
 app.use('/api/cron', cronRoutes);
+
+// Public click tracking (no API key — redirect-based)
+app.use('/api/reviews', generalLimiter, reviewClickRouter);
 
 // Leads — POST is public (landing page form), GET requires API key
 app.use('/api/leads', bookingLimiter, createLeadsRouter(requireApiKey));

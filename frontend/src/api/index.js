@@ -307,6 +307,31 @@ export const workOrders = {
   getPayments: (id) => fetchAPI(`/work-orders/${id}/payments`),
 }
 
+// Reviews
+export const reviews = {
+  list: (params = {}) => {
+    const cleanParams = Object.fromEntries(
+      Object.entries(params).filter(([_, v]) => v != null && v !== '')
+    )
+    const query = new URLSearchParams(cleanParams).toString()
+    return fetchAPI(`/reviews${query ? `?${query}` : ''}`)
+  },
+
+  stats: () => fetchAPI('/reviews/stats'),
+
+  send: (appointmentId) => fetchAPI('/reviews/send', {
+    method: 'POST',
+    body: JSON.stringify({ appointment_id: appointmentId }),
+  }),
+
+  getSettings: () => fetchAPI('/reviews/settings'),
+
+  updateSettings: (data) => fetchAPI('/reviews/settings', {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  }),
+}
+
 // Search
 export const search = {
   query: (q, limit = 10) => fetchAPI(`/search?q=${encodeURIComponent(q)}&limit=${limit}`),
@@ -337,6 +362,7 @@ export default {
   callLogs,
   smsLogs,
   workOrders,
+  reviews,
   search,
   leads,
 }

@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { format } from 'date-fns'
-import { appointments, workOrders } from '@/api'
+import { appointments, workOrders, reviews } from '@/api'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -22,6 +22,7 @@ import {
   XCircle,
   ClipboardList,
   Edit,
+  Star,
 } from 'lucide-react'
 import {
   cn,
@@ -85,6 +86,16 @@ export default function AppointmentDetail() {
       } else {
         toast({ title: 'Error', description: err.message, variant: 'destructive' })
       }
+    },
+  })
+
+  const reviewMutation = useMutation({
+    mutationFn: () => reviews.send(id),
+    onSuccess: () => {
+      toast({ title: 'Review request sent' })
+    },
+    onError: (err) => {
+      toast({ title: 'Could not send review request', description: err.message, variant: 'destructive' })
     },
   })
 
@@ -228,6 +239,32 @@ export default function AppointmentDetail() {
             >
               <ClipboardList className="h-3.5 w-3.5 mr-1" />
               {createWOMutation.isPending ? 'Creating...' : 'Create Work Order'}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Post-completion actions: Review Request */}
+      {['completed', 'invoiced', 'paid'].includes(apt.status) && (
+        <div className="bg-white shadow-lg border-0 rounded-lg p-3">
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => createWOMutation.mutate()}
+              disabled={createWOMutation.isPending}
+            >
+              <ClipboardList className="h-3.5 w-3.5 mr-1" />
+              {createWOMutation.isPending ? 'Creating...' : 'Create Work Order'}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => reviewMutation.mutate()}
+              disabled={reviewMutation.isPending}
+            >
+              <Star className="h-3.5 w-3.5 mr-1" />
+              {reviewMutation.isPending ? 'Sending...' : 'Request Review'}
             </Button>
           </div>
         </div>

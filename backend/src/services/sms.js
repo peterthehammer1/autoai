@@ -344,6 +344,49 @@ Want to book an appointment? Reply YES or call us at (647) 371-1990.
   });
 }
 
+/**
+ * Send review request SMS (Google review or internal feedback)
+ */
+export async function sendReviewRequestSMS({
+  customerPhone,
+  customerName,
+  vehicleDescription,
+  reviewType,
+  trackingUrl,
+  customerId,
+  appointmentId
+}) {
+  const firstName = customerName?.split(' ')[0] || 'there';
+  const vehicleLine = vehicleDescription ? ` on your ${vehicleDescription}` : '';
+
+  let message;
+  if (reviewType === 'internal_feedback') {
+    message = `Hi ${firstName},
+
+Thank you for visiting Premier Auto Service${vehicleLine}. We'd love to hear your feedback so we can improve.
+
+Please take a moment to share your thoughts: ${trackingUrl}
+
+- Amber, Premier Auto Service`;
+  } else {
+    message = `Hi ${firstName},
+
+Thank you for choosing Premier Auto Service${vehicleLine}! We hope you had a great experience.
+
+If you have a moment, we'd really appreciate a Google review: ${trackingUrl}
+
+Your feedback helps us serve you better!
+
+- Amber, Premier Auto Service`;
+  }
+
+  return sendSMS(customerPhone, message, {
+    messageType: 'review_request',
+    customerId,
+    appointmentId
+  });
+}
+
 export { logSMS, formatTime12Hour };
 
 export default {
@@ -354,6 +397,7 @@ export default {
   sendStatusUpdateSMS,
   sendCompletedSMS,
   sendServiceReminderSMS,
+  sendReviewRequestSMS,
   logSMS,
   formatTime12Hour
 };

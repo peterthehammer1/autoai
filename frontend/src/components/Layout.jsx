@@ -23,6 +23,7 @@ import {
   PhoneCall,
   HelpCircle,
   Search,
+  Star,
 } from 'lucide-react'
 
 // Business phone numbers for AI agent
@@ -41,6 +42,7 @@ const navigation = [
   { name: 'Call Logs', href: '/call-logs', icon: Phone },
   { name: 'SMS Messages', href: '/sms-logs', icon: MessageSquare },
   { name: 'Reports', href: '/reports', icon: FileDown },
+  { name: 'Reviews', href: '/reviews', icon: Star },
   // Hidden for now - pages still accessible via direct URL
   // { name: 'Services', href: '/services', icon: Wrench },
   // { name: 'Settings', href: '/settings', icon: Settings },
