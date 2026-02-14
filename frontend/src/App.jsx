@@ -5,19 +5,29 @@ import ErrorBoundary from '@/components/ErrorBoundary'
 import Layout from '@/components/Layout'
 import Landing from '@/pages/Landing'
 
+// Auto-reload on stale chunks after deploy
+function lazyWithRetry(importFn) {
+  return lazy(() =>
+    importFn().catch(() => {
+      window.location.reload()
+      return new Promise(() => {}) // never resolves — page is reloading
+    })
+  )
+}
+
 // Lazy-load dashboard pages — splits the 1MB+ bundle into smaller chunks
-const Dashboard = lazy(() => import('@/pages/Dashboard'))
-const Appointments = lazy(() => import('@/pages/Appointments'))
-const AppointmentDetail = lazy(() => import('@/pages/AppointmentDetail'))
-const Customers = lazy(() => import('@/pages/Customers'))
-const CustomerDetail = lazy(() => import('@/pages/CustomerDetail'))
-const CallLogs = lazy(() => import('@/pages/CallLogs'))
-const SmsLogs = lazy(() => import('@/pages/SmsLogs'))
-const Analytics = lazy(() => import('@/pages/Analytics'))
-const Reports = lazy(() => import('@/pages/Reports'))
-const Services = lazy(() => import('@/pages/Services'))
-const Settings = lazy(() => import('@/pages/Settings'))
-const BayView = lazy(() => import('@/pages/BayView'))
+const Dashboard = lazyWithRetry(() => import('@/pages/Dashboard'))
+const Appointments = lazyWithRetry(() => import('@/pages/Appointments'))
+const AppointmentDetail = lazyWithRetry(() => import('@/pages/AppointmentDetail'))
+const Customers = lazyWithRetry(() => import('@/pages/Customers'))
+const CustomerDetail = lazyWithRetry(() => import('@/pages/CustomerDetail'))
+const CallLogs = lazyWithRetry(() => import('@/pages/CallLogs'))
+const SmsLogs = lazyWithRetry(() => import('@/pages/SmsLogs'))
+const Analytics = lazyWithRetry(() => import('@/pages/Analytics'))
+const Reports = lazyWithRetry(() => import('@/pages/Reports'))
+const Services = lazyWithRetry(() => import('@/pages/Services'))
+const Settings = lazyWithRetry(() => import('@/pages/Settings'))
+const BayView = lazyWithRetry(() => import('@/pages/BayView'))
 
 export function PageLoader() {
   return (
