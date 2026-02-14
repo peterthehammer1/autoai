@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { supabase } from '../config/database.js';
+import { isValidUUID, validationError } from '../middleware/validate.js';
 
 const router = Router();
 
@@ -92,6 +93,119 @@ router.get('/', async (req, res, next) => {
       count: services.length
     });
 
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * POST /api/services
+ * Create a new service
+ */
+router.post('/', async (req, res, next) => {
+  try {
+    const { name, duration_minutes, description, price_min, price_max, price_display, category_id, required_bay_type, is_popular, sort_order } = req.body;
+
+    if (!name || !duration_minutes) {
+      return validationError(res, 'name and duration_minutes are required');
+    }
+
+    if (category_id && !isValidUUID(category_id)) {
+      return validationError(res, 'Invalid category_id');
+    }
+
+    const insert = {
+      name,
+      duration_minutes: parseInt(duration_minutes, 10),
+      ...(description != null && { description }),
+      ...(price_min != null && { price_min: parseInt(price_min, 10) }),
+      ...(price_max != null && { price_max: parseInt(price_max, 10) }),
+      ...(price_display != null && { price_display }),
+      ...(category_id && { category_id }),
+      ...(required_bay_type != null && { required_bay_type }),
+      ...(is_popular != null && { is_popular }),
+      ...(sort_order != null && { sort_order: parseInt(sort_order, 10) }),
+    };
+
+    const { data: service, error } = await supabase
+      .from('services')
+      .insert(insert)
+      .select(`
+        *,
+        category:service_categories (
+          id,
+          name
+        )
+      `)
+      .single();
+
+    if (error) throw error;
+
+    res.status(201).json({ service });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * PATCH /api/services/:id
+ * Update an existing service
+ */
+router.patch('/:id', async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    if (!isValidUUID(id)) {
+      return validationError(res, 'Invalid service ID');
+    }
+
+    const allowed = ['name', 'description', 'duration_minutes', 'price_min', 'price_max', 'price_display', 'category_id', 'required_bay_type', 'is_popular', 'is_active', 'sort_order'];
+    const updates = {};
+    for (const key of allowed) {
+      if (req.body[key] !== undefined) {
+        updates[key] = req.body[key];
+      }
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return validationError(res, 'No valid fields to update');
+    }
+
+    if (updates.category_id && !isValidUUID(updates.category_id)) {
+      return validationError(res, 'Invalid category_id');
+    }
+
+    if (updates.duration_minutes != null) {
+      updates.duration_minutes = parseInt(updates.duration_minutes, 10);
+    }
+    if (updates.price_min != null) {
+      updates.price_min = parseInt(updates.price_min, 10);
+    }
+    if (updates.price_max != null) {
+      updates.price_max = parseInt(updates.price_max, 10);
+    }
+
+    const { data: service, error } = await supabase
+      .from('services')
+      .update(updates)
+      .eq('id', id)
+      .select(`
+        *,
+        category:service_categories (
+          id,
+          name
+        )
+      `)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return res.status(404).json({ error: { message: 'Service not found' } });
+      }
+      throw error;
+    }
+
+    res.json({ service });
   } catch (error) {
     next(error);
   }

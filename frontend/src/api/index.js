@@ -106,8 +106,18 @@ export const services = {
   categories: () => fetchAPI('/services/categories'),
   
   get: (id) => fetchAPI(`/services/${id}`),
-  
+
   search: (term) => fetchAPI(`/services/search/${encodeURIComponent(term)}`),
+
+  create: (data) => fetchAPI('/services', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+
+  update: (id, data) => fetchAPI(`/services/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  }),
 }
 
 // Availability

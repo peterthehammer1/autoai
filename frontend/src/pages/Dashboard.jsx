@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isToday, addMonths, subMonths, getDay } from 'date-fns'
 import { useDashboardTour } from '@/hooks/use-dashboard-tour'
@@ -42,8 +42,38 @@ import {
   Mic,
   Car,
   Wrench,
+  MoreVertical,
+  CalendarClock,
 } from 'lucide-react'
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+} from '@/components/ui/dropdown-menu'
+import RescheduleDialog from '@/components/RescheduleDialog'
 import { cn, formatTime12Hour, getStatusColor, getStatusDotColor, formatCents } from '@/lib/utils'
+
+const STATUS_TRANSITIONS = {
+  scheduled: [
+    { status: 'confirmed', label: 'Confirm' },
+    { status: 'cancelled', label: 'Cancel' },
+  ],
+  confirmed: [
+    { status: 'checked_in', label: 'Check In' },
+    { status: 'cancelled', label: 'Cancel' },
+  ],
+  checked_in: [
+    { status: 'in_progress', label: 'Start Service' },
+  ],
+  in_progress: [
+    { status: 'completed', label: 'Mark Complete' },
+  ],
+}
+
+const RESCHEDULABLE = ['scheduled', 'confirmed', 'checked_in']
 
 // Animated number component for impact
 function AnimatedNumber({ value, prefix = '', suffix = '', duration = 1000 }) {
@@ -96,9 +126,19 @@ const insightConfig = {
 }
 
 export default function Dashboard() {
+  const queryClient = useQueryClient()
   const [calendarMonth, setCalendarMonth] = useState(new Date())
+  const [rescheduleAppointment, setRescheduleAppointment] = useState(null)
   const greeting = getGreeting()
   const GreetingIcon = greeting.icon
+
+  const statusMutation = useMutation({
+    mutationFn: ({ id, status }) => appointments.update(id, { status }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['appointments', 'today'] })
+      queryClient.invalidateQueries({ queryKey: ['appointments', 'month'] })
+    },
+  })
 
   const { data: overview, isLoading: overviewLoading } = useQuery({
     queryKey: ['analytics', 'overview'],
@@ -469,83 +509,155 @@ export default function Dashboard() {
                       </div>
                       {/* Rows */}
                       <div className="divide-y divide-slate-100">
-                        {todayData.appointments.slice(0, 15).map((apt, index) => (
-                          <Link
-                            key={apt.id}
-                            to={`/appointments/${apt.id}`}
-                            className="flex items-center gap-3 py-2.5 px-3 transition-colors hover:bg-slate-50 rounded-lg group"
-                          >
-                            <div className="w-20 flex items-center gap-1.5">
-                              {index === 0 && (
-                                <div className="h-2 w-2 rounded-full bg-emerald-500 shrink-0 animate-pulse" />
-                              )}
-                              <span className={cn("text-xs font-semibold text-slate-700 whitespace-nowrap", index !== 0 && "ml-3.5")}>
-                                {formatTime12Hour(apt.scheduled_time)}
-                              </span>
-                            </div>
-                            <span className="flex-1 min-w-0 text-sm font-medium text-slate-900 truncate group-hover:text-blue-700">
-                              {apt.customer?.first_name} {apt.customer?.last_name}
-                            </span>
-                            <span className="w-36 text-xs text-slate-500 truncate">
-                              {apt.vehicle ? `${apt.vehicle.year} ${apt.vehicle.make} ${apt.vehicle.model}` : '—'}
-                            </span>
-                            <span className="w-32 hidden md:block text-xs text-slate-400 truncate">
-                              {apt.services?.[0]?.name || '—'}
-                            </span>
-                            <div className="w-24 flex justify-end">
-                              <Badge
-                                className={cn(
-                                  'shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full',
-                                  getStatusColor(apt.display_status || apt.status)
-                                )}
-                                aria-label={`Status: ${(apt.display_status || apt.status).replace('_', ' ')}`}
+                        {todayData.appointments.slice(0, 15).map((apt, index) => {
+                          const transitions = STATUS_TRANSITIONS[apt.status] || []
+                          const canReschedule = RESCHEDULABLE.includes(apt.status)
+                          const hasActions = transitions.length > 0 || canReschedule
+                          return (
+                            <div
+                              key={apt.id}
+                              className="flex items-center gap-3 py-2.5 px-3 transition-colors hover:bg-slate-50 rounded-lg group"
+                            >
+                              <Link
+                                to={`/appointments/${apt.id}`}
+                                className="flex items-center gap-3 flex-1 min-w-0"
                               >
-                                {(apt.display_status || apt.status).replace('_', ' ')}
-                              </Badge>
+                                <div className="w-20 flex items-center gap-1.5">
+                                  {index === 0 && (
+                                    <div className="h-2 w-2 rounded-full bg-emerald-500 shrink-0 animate-pulse" />
+                                  )}
+                                  <span className={cn("text-xs font-semibold text-slate-700 whitespace-nowrap", index !== 0 && "ml-3.5")}>
+                                    {formatTime12Hour(apt.scheduled_time)}
+                                  </span>
+                                </div>
+                                <span className="flex-1 min-w-0 text-sm font-medium text-slate-900 truncate group-hover:text-blue-700">
+                                  {apt.customer?.first_name} {apt.customer?.last_name}
+                                </span>
+                                <span className="w-36 text-xs text-slate-500 truncate">
+                                  {apt.vehicle ? `${apt.vehicle.year} ${apt.vehicle.make} ${apt.vehicle.model}` : '—'}
+                                </span>
+                                <span className="w-32 hidden md:block text-xs text-slate-400 truncate">
+                                  {apt.services?.[0]?.name || '—'}
+                                </span>
+                                <div className="w-24 flex justify-end">
+                                  <Badge
+                                    className={cn(
+                                      'shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full',
+                                      getStatusColor(apt.display_status || apt.status)
+                                    )}
+                                    aria-label={`Status: ${(apt.display_status || apt.status).replace('_', ' ')}`}
+                                  >
+                                    {(apt.display_status || apt.status).replace('_', ' ')}
+                                  </Badge>
+                                </div>
+                              </Link>
+                              {hasActions && (
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <button className="p-1 rounded-md opacity-0 group-hover:opacity-100 hover:bg-slate-200 transition-all shrink-0" aria-label="Actions">
+                                      <MoreVertical className="h-4 w-4 text-slate-500" />
+                                    </button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuLabel>Update Status</DropdownMenuLabel>
+                                    {transitions.map((t) => (
+                                      <DropdownMenuItem
+                                        key={t.status}
+                                        onClick={() => statusMutation.mutate({ id: apt.id, status: t.status })}
+                                      >
+                                        {t.label}
+                                      </DropdownMenuItem>
+                                    ))}
+                                    {canReschedule && (
+                                      <>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem onClick={() => setRescheduleAppointment(apt)}>
+                                          <CalendarClock className="h-4 w-4 mr-2 text-slate-500" />
+                                          Reschedule
+                                        </DropdownMenuItem>
+                                      </>
+                                    )}
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              )}
                             </div>
-                          </Link>
-                        ))}
+                          )
+                        })}
                       </div>
                     </div>
 
                     {/* Mobile: Card Layout */}
                     <div className="sm:hidden divide-y divide-slate-100">
-                      {todayData.appointments.slice(0, 15).map((apt, index) => (
-                        <Link
-                          key={apt.id}
-                          to={`/appointments/${apt.id}`}
-                          className="block px-3 py-3 hover:bg-slate-50 transition-colors"
-                        >
-                          <div className="flex items-center justify-between mb-1">
-                            <div className="flex items-center gap-2">
-                              {index === 0 && (
-                                <div className="h-2 w-2 rounded-full bg-emerald-500 shrink-0 animate-pulse" />
-                              )}
-                              <span className="text-sm font-semibold text-slate-900">
-                                {apt.customer?.first_name} {apt.customer?.last_name}
-                              </span>
+                      {todayData.appointments.slice(0, 15).map((apt, index) => {
+                        const transitions = STATUS_TRANSITIONS[apt.status] || []
+                        const canReschedule = RESCHEDULABLE.includes(apt.status)
+                        const hasActions = transitions.length > 0 || canReschedule
+                        return (
+                          <div key={apt.id} className="px-3 py-3 hover:bg-slate-50 transition-colors">
+                            <div className="flex items-center justify-between mb-1">
+                              <Link to={`/appointments/${apt.id}`} className="flex items-center gap-2 min-w-0 flex-1">
+                                {index === 0 && (
+                                  <div className="h-2 w-2 rounded-full bg-emerald-500 shrink-0 animate-pulse" />
+                                )}
+                                <span className="text-sm font-semibold text-slate-900 truncate">
+                                  {apt.customer?.first_name} {apt.customer?.last_name}
+                                </span>
+                              </Link>
+                              <div className="flex items-center gap-1.5 shrink-0">
+                                <Badge
+                                  className={cn(
+                                    'shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full',
+                                    getStatusColor(apt.display_status || apt.status)
+                                  )}
+                                >
+                                  {(apt.display_status || apt.status).replace('_', ' ')}
+                                </Badge>
+                                {hasActions && (
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <button className="p-1 rounded-md hover:bg-slate-200 transition-all" aria-label="Actions">
+                                        <MoreVertical className="h-4 w-4 text-slate-400" />
+                                      </button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                      <DropdownMenuLabel>Update Status</DropdownMenuLabel>
+                                      {transitions.map((t) => (
+                                        <DropdownMenuItem
+                                          key={t.status}
+                                          onClick={() => statusMutation.mutate({ id: apt.id, status: t.status })}
+                                        >
+                                          {t.label}
+                                        </DropdownMenuItem>
+                                      ))}
+                                      {canReschedule && (
+                                        <>
+                                          <DropdownMenuSeparator />
+                                          <DropdownMenuItem onClick={() => setRescheduleAppointment(apt)}>
+                                            <CalendarClock className="h-4 w-4 mr-2 text-slate-500" />
+                                            Reschedule
+                                          </DropdownMenuItem>
+                                        </>
+                                      )}
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
+                                )}
+                              </div>
                             </div>
-                            <Badge
-                              className={cn(
-                                'shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full',
-                                getStatusColor(apt.display_status || apt.status)
+                            <Link to={`/appointments/${apt.id}`} className="block">
+                              <div className="flex items-center gap-3 text-xs text-slate-500">
+                                <span className="font-medium">{formatTime12Hour(apt.scheduled_time)}</span>
+                                <span className="text-slate-300">·</span>
+                                <span className="truncate">
+                                  {apt.vehicle ? `${apt.vehicle.year} ${apt.vehicle.make} ${apt.vehicle.model}` : '—'}
+                                </span>
+                              </div>
+                              {apt.services?.[0]?.name && (
+                                <p className="text-xs text-slate-400 mt-0.5 truncate">{apt.services[0].name}</p>
                               )}
-                            >
-                              {(apt.display_status || apt.status).replace('_', ' ')}
-                            </Badge>
+                            </Link>
                           </div>
-                          <div className="flex items-center gap-3 text-xs text-slate-500">
-                            <span className="font-medium">{formatTime12Hour(apt.scheduled_time)}</span>
-                            <span className="text-slate-300">·</span>
-                            <span className="truncate">
-                              {apt.vehicle ? `${apt.vehicle.year} ${apt.vehicle.make} ${apt.vehicle.model}` : '—'}
-                            </span>
-                          </div>
-                          {apt.services?.[0]?.name && (
-                            <p className="text-xs text-slate-400 mt-0.5 truncate">{apt.services[0].name}</p>
-                          )}
-                        </Link>
-                      ))}
+                        )
+                      })}
                     </div>
                   </div>
                 ) : (
@@ -735,6 +847,13 @@ export default function Dashboard() {
 
       {/* AI Insights Panel */}
       <AIInsightsPanel />
+
+      {/* Reschedule Dialog */}
+      <RescheduleDialog
+        appointment={rescheduleAppointment}
+        open={!!rescheduleAppointment}
+        onOpenChange={(open) => { if (!open) setRescheduleAppointment(null) }}
+      />
     </div>
   )
 }
