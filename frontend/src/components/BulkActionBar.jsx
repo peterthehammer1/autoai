@@ -26,7 +26,7 @@ export default function BulkActionBar({ count, onClear, actions = [] }) {
               size="sm"
               variant="outline"
               onClick={action.onClick}
-              className="border-slate-600 text-white hover:bg-slate-800 hover:text-white h-8 text-xs"
+              className="border-slate-600 bg-slate-800 text-white hover:bg-slate-700 hover:text-white h-8 text-xs"
             >
               {action.icon && <action.icon className="h-3.5 w-3.5 mr-1.5" />}
               {action.label}
