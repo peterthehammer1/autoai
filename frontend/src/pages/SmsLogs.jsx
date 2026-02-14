@@ -40,6 +40,8 @@ import { cn } from '@/lib/utils'
 import PhoneNumber from '@/components/PhoneNumber'
 import { Link } from 'react-router-dom'
 import SmsComposeDialog from '@/components/SmsComposeDialog'
+import ConversationList from '@/components/ConversationList'
+import ThreadView from '@/components/ThreadView'
 
 export default function SmsLogs() {
   const [selectedSmsId, setSelectedSmsId] = useState(null)
@@ -49,6 +51,8 @@ export default function SmsLogs() {
   const [dateTo, setDateTo] = useState('')
   const [showFilters, setShowFilters] = useState(false)
   const [isSmsOpen, setIsSmsOpen] = useState(false)
+  const [viewMode, setViewMode] = useState('messages')
+  const [selectedThread, setSelectedThread] = useState(null)
 
   const { data: stats } = useQuery({
     queryKey: ['sms-stats'],
@@ -162,11 +166,66 @@ export default function SmsLogs() {
               <p className="text-xs text-slate-400">Automated messaging system</p>
             </div>
           </div>
+          <div className="flex items-center bg-slate-700/50 rounded-lg p-0.5">
+            <button
+              onClick={() => { setViewMode('messages'); setSelectedThread(null) }}
+              className={cn(
+                'px-3 py-1.5 text-xs font-medium rounded-md transition-colors',
+                viewMode === 'messages'
+                  ? 'bg-white text-slate-900 shadow-sm'
+                  : 'text-slate-300 hover:text-white'
+              )}
+            >
+              Messages
+            </button>
+            <button
+              onClick={() => { setViewMode('threads'); setSelectedSmsId(null) }}
+              className={cn(
+                'px-3 py-1.5 text-xs font-medium rounded-md transition-colors',
+                viewMode === 'threads'
+                  ? 'bg-white text-slate-900 shadow-sm'
+                  : 'text-slate-300 hover:text-white'
+              )}
+            >
+              Conversations
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Main Content - Master/Detail Layout */}
-      <div className="flex-1 flex flex-col lg:flex-row gap-4 min-h-0">
+      {/* Conversations Mode */}
+      {viewMode === 'threads' && (
+        <div className="flex-1 flex flex-col lg:flex-row gap-4 min-h-0">
+          <div className={cn(
+            "flex flex-col bg-white shadow-lg border-0 rounded-lg overflow-hidden",
+            "w-full lg:w-96",
+            selectedThread ? "hidden lg:flex" : "flex"
+          )}>
+            <ConversationList onSelectThread={setSelectedThread} selectedPhone={selectedThread} />
+          </div>
+          <div className={cn(
+            "flex-1 flex flex-col min-h-0",
+            !selectedThread ? "hidden lg:flex" : "flex"
+          )}>
+            {selectedThread ? (
+              <ThreadView phone={selectedThread} onBack={() => setSelectedThread(null)} />
+            ) : (
+              <div className="flex-1 flex items-center justify-center bg-white shadow-lg border-0 rounded-lg">
+                <div className="text-center">
+                  <div className="rounded-2xl bg-gradient-to-br from-slate-100 to-slate-50 p-5 mb-4 shadow-inner mx-auto w-fit">
+                    <MessageCircle className="h-10 w-10 text-slate-300" />
+                  </div>
+                  <h3 className="font-semibold text-slate-700 text-base mb-1">Select a Conversation</h3>
+                  <p className="text-sm text-slate-500">Choose a thread to view message history</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Messages Mode - Master/Detail Layout */}
+      <div className={cn("flex-1 flex flex-col lg:flex-row gap-4 min-h-0", viewMode !== 'messages' && "hidden")}>
         {/* Left Panel - SMS List */}
         <div className={cn(
           "flex flex-col bg-white shadow-lg border-0 rounded-lg overflow-hidden",

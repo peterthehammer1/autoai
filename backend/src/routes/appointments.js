@@ -500,6 +500,69 @@ router.get('/today', async (req, res, next) => {
 });
 
 /**
+ * GET /api/appointments/by-bay
+ * Get appointments grouped by service bay for a given date
+ */
+router.get('/by-bay', async (req, res, next) => {
+  try {
+    const { date } = req.query;
+    const targetDate = date || todayEST();
+
+    // Fetch active bays
+    const { data: bays, error: bayError } = await supabase
+      .from('service_bays')
+      .select('id, name, bay_type, sort_order')
+      .eq('is_active', true)
+      .order('sort_order');
+
+    if (bayError) throw bayError;
+
+    // Fetch appointments for date
+    const { data: appointments, error: aptError } = await supabase
+      .from('appointments')
+      .select(`
+        id, scheduled_date, scheduled_time, estimated_duration_minutes, status, bay_id,
+        customer:customers(id, first_name, last_name, phone),
+        vehicle:vehicles(year, make, model),
+        technician:technicians(id, first_name, last_name),
+        appointment_services(service_name, quoted_price, duration_minutes)
+      `)
+      .eq('scheduled_date', targetDate)
+      .is('deleted_at', null)
+      .not('status', 'in', '("cancelled","no_show")')
+      .order('scheduled_time');
+
+    if (aptError) throw aptError;
+
+    // Group by bay
+    const bayMap = new Map();
+    for (const bay of bays || []) {
+      bayMap.set(bay.id, { ...bay, appointments: [] });
+    }
+
+    const unassigned = [];
+
+    for (const apt of appointments || []) {
+      if (apt.bay_id && bayMap.has(apt.bay_id)) {
+        bayMap.get(apt.bay_id).appointments.push(apt);
+      } else {
+        unassigned.push(apt);
+      }
+    }
+
+    res.json({
+      date: targetDate,
+      bays: Array.from(bayMap.values()),
+      unassigned,
+      business_hours: { open: '07:00', close: '16:00' },
+      total_appointments: (appointments || []).length,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
  * GET /api/appointments/:id
  * Get single appointment by ID
  */

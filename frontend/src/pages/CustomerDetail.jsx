@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { format, formatDistanceToNow } from 'date-fns'
@@ -43,6 +43,7 @@ import PhoneNumber, { Email } from '@/components/PhoneNumber'
 import CarImage from '@/components/CarImage'
 import VehicleIntelligence from '@/components/VehicleIntelligence'
 import { useCustomerDetailTour } from '@/hooks/use-customer-detail-tour'
+import { useBreadcrumbEntity } from '@/components/Breadcrumbs'
 
 export default function CustomerDetail() {
   const { id } = useParams()
@@ -105,6 +106,14 @@ export default function CustomerDetail() {
 
   const customer = data?.customer
   useCustomerDetailTour(!isLoading && !isHealthLoading)
+
+  const { setEntityName } = useBreadcrumbEntity()
+  useEffect(() => {
+    if (customer) {
+      setEntityName(`${customer.first_name || ''} ${customer.last_name || ''}`.trim())
+    }
+    return () => setEntityName(null)
+  }, [customer, setEntityName])
 
   const handleEditOpen = () => {
     if (customer) {

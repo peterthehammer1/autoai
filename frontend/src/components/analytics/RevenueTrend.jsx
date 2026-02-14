@@ -1,11 +1,11 @@
 import { format } from 'date-fns'
 import {
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine,
 } from 'recharts'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { DollarSign } from 'lucide-react'
 
-export default function RevenueTrend({ comprehensive, onPointClick }) {
+export default function RevenueTrend({ comprehensive, onPointClick, revenueTarget }) {
   const data = comprehensive?.revenue_trend?.map(d => ({
     date: format(new Date(d.date), 'MMM d'),
     rawDate: d.date,
@@ -21,7 +21,7 @@ export default function RevenueTrend({ comprehensive, onPointClick }) {
   }
 
   return (
-    <Card className="transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
+    <Card className="transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 h-full flex flex-col">
       <CardHeader className="pb-2">
         <div className="flex items-center gap-2">
           <div className="p-2 rounded-lg bg-slate-100">
@@ -33,7 +33,7 @@ export default function RevenueTrend({ comprehensive, onPointClick }) {
           </div>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex-1">
         <div className="h-56">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={data} onClick={handleClick}>
@@ -50,6 +50,15 @@ export default function RevenueTrend({ comprehensive, onPointClick }) {
                 formatter={(value) => [`$${value.toFixed(2)}`, 'Revenue']}
                 contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0' }}
               />
+              {revenueTarget && (
+                <ReferenceLine
+                  y={revenueTarget / 100}
+                  stroke="#ef4444"
+                  strokeDasharray="6 4"
+                  strokeWidth={1.5}
+                  label={{ value: 'Target', position: 'right', fill: '#ef4444', fontSize: 11 }}
+                />
+              )}
               <Area
                 type="monotone"
                 dataKey="revenue"

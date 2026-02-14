@@ -17,6 +17,7 @@ const Analytics = lazy(() => import('@/pages/Analytics'))
 const Reports = lazy(() => import('@/pages/Reports'))
 const Services = lazy(() => import('@/pages/Services'))
 const Settings = lazy(() => import('@/pages/Settings'))
+const BayView = lazy(() => import('@/pages/BayView'))
 
 export function PageLoader() {
   return (
@@ -47,6 +48,7 @@ function App() {
           <Route path="sms-logs" element={<SmsLogs />} />
           <Route path="analytics" element={<Analytics />} />
           <Route path="reports" element={<Reports />} />
+          <Route path="bay-view" element={<BayView />} />
           <Route path="services" element={<Services />} />
           <Route path="settings" element={<Settings />} />
         </Route>

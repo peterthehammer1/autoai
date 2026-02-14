@@ -47,6 +47,11 @@ export const appointments = {
   confirm: (id) => fetchAPI(`/appointments/${id}/confirm`, {
     method: 'POST',
   }),
+
+  byBay: (date) => {
+    const query = date ? `?date=${date}` : ''
+    return fetchAPI(`/appointments/by-bay${query}`)
+  },
 }
 
 // Customers
@@ -196,6 +201,13 @@ export const analytics = {
   recallAlerts: () => fetchAPI('/analytics/recall-alerts'),
 
   missedRevenue: () => fetchAPI('/analytics/missed-revenue'),
+
+  getTargets: () => fetchAPI('/analytics/targets'),
+
+  updateTargets: (targets) => fetchAPI('/analytics/targets', {
+    method: 'PUT',
+    body: JSON.stringify({ targets }),
+  }),
 }
 
 // Call Logs
@@ -231,10 +243,25 @@ export const smsLogs = {
 
   stats: (period = 'week') => fetchAPI(`/sms-logs/stats?period=${period}`),
 
+  conversations: (params = {}) => {
+    const query = new URLSearchParams(params).toString()
+    return fetchAPI(`/sms-logs/conversations${query ? `?${query}` : ''}`)
+  },
+
+  thread: (phone, params = {}) => {
+    const query = new URLSearchParams(params).toString()
+    return fetchAPI(`/sms-logs/thread/${encodeURIComponent(phone)}${query ? `?${query}` : ''}`)
+  },
+
   send: (data) => fetchAPI('/sms-logs/send', {
     method: 'POST',
     body: JSON.stringify(data),
   }),
+}
+
+// Search
+export const search = {
+  query: (q, limit = 10) => fetchAPI(`/search?q=${encodeURIComponent(q)}&limit=${limit}`),
 }
 
 // Leads (public — no API key)
@@ -261,5 +288,6 @@ export default {
   analytics,
   callLogs,
   smsLogs,
+  search,
   leads,
 }

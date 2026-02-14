@@ -1,8 +1,10 @@
-import { useState, Suspense } from 'react'
-import { Outlet, Link, useLocation } from 'react-router-dom'
+import { useState, useEffect, Suspense } from 'react'
+import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom'
 import { PageLoader } from '@/App'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import Breadcrumbs, { BreadcrumbProvider } from '@/components/Breadcrumbs'
+import CommandPalette from '@/components/CommandPalette'
 import {
   LayoutDashboard,
   Calendar,
@@ -11,6 +13,7 @@ import {
   MessageSquare,
   BarChart3,
   FileDown,
+  Columns,
   Wrench,
   Settings,
   Menu,
@@ -18,6 +21,7 @@ import {
   ChevronRight,
   PhoneCall,
   HelpCircle,
+  Search,
 } from 'lucide-react'
 
 // Business phone numbers for AI agent
@@ -29,6 +33,7 @@ const PHONE_NUMBERS = [
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Appointments', href: '/appointments', icon: Calendar },
+  { name: 'Bay View', href: '/bay-view', icon: Columns },
   { name: 'Customers', href: '/customers', icon: Users },
   { name: 'Call Logs', href: '/call-logs', icon: Phone },
   { name: 'SMS Messages', href: '/sms-logs', icon: MessageSquare },
@@ -41,9 +46,21 @@ const navigation = [
 
 export default function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
   const location = useLocation()
 
-  const isActive = (href) => 
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault()
+        setSearchOpen(true)
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [])
+
+  const isActive = (href) =>
     location.pathname === href || location.pathname.startsWith(href + '/')
 
   return (
@@ -244,15 +261,32 @@ export default function Layout() {
           </Button>
         </div>
 
+        {/* Search trigger */}
+        <div className="hidden lg:flex fixed top-3 right-4 z-40">
+          <button
+            onClick={() => setSearchOpen(true)}
+            className="flex items-center gap-2 px-3 py-1.5 text-xs text-slate-400 bg-white/90 backdrop-blur border border-slate-200 rounded-lg shadow-sm hover:text-slate-600 hover:border-slate-300 transition-colors"
+          >
+            <Search className="h-3.5 w-3.5" />
+            <span>Search</span>
+            <kbd className="ml-1 px-1.5 py-0.5 text-[10px] font-medium bg-slate-100 rounded">⌘K</kbd>
+          </button>
+        </div>
+
         {/* Page content */}
         <main id="main-content" className="px-4 sm:px-6 pb-4 sm:pb-6" role="main">
-          <Suspense fallback={<PageLoader />}>
-            <div className="animate-fade-in">
-              <Outlet />
-            </div>
-          </Suspense>
+          <BreadcrumbProvider>
+            <Breadcrumbs />
+            <Suspense fallback={<PageLoader />}>
+              <div className="animate-fade-in">
+                <Outlet />
+              </div>
+            </Suspense>
+          </BreadcrumbProvider>
         </main>
       </div>
+
+      <CommandPalette open={searchOpen} onOpenChange={setSearchOpen} />
     </div>
   )
 }

@@ -21,6 +21,7 @@ import smsLogRoutes from './routes/sms-logs.js';
 import callCenterRoutes from './routes/call-center.js';
 import cronRoutes from './routes/cron.js';
 import createLeadsRouter from './routes/leads.js';
+import searchRoutes from './routes/search.js';
 import { supabase } from './config/database.js';
 import { logger } from './utils/logger.js';
 
@@ -136,6 +137,7 @@ app.use('/api/analytics', generalLimiter, requireApiKey, analyticsRoutes);
 app.use('/api/call-logs', generalLimiter, requireApiKey, callLogRoutes);
 app.use('/api/reminders', generalLimiter, requireApiKey, reminderRoutes);
 app.use('/api/sms-logs', generalLimiter, requireApiKey, smsLogRoutes);
+app.use('/api/search', generalLimiter, requireApiKey, searchRoutes);
 app.use('/api/call-center', generalLimiter, requireApiKey, callCenterRoutes);
 
 // External service endpoints — no API key (authenticated by their own mechanisms)

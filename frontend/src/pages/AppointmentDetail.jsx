@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { format } from 'date-fns'
@@ -34,6 +35,7 @@ import CarImage from '@/components/CarImage'
 import VehicleIntelligence from '@/components/VehicleIntelligence'
 import InlineNotes from '@/components/InlineNotes'
 import { useAppointmentTour } from '@/hooks/use-appointment-tour'
+import { useBreadcrumbEntity } from '@/components/Breadcrumbs'
 
 export default function AppointmentDetail() {
   const { id } = useParams()
@@ -67,6 +69,16 @@ export default function AppointmentDetail() {
 
   const apt = data?.appointment
   useAppointmentTour(!isLoading && !!apt)
+
+  const { setEntityName } = useBreadcrumbEntity()
+  useEffect(() => {
+    if (apt) {
+      const name = apt.customer ? `${apt.customer.first_name || ''} ${apt.customer.last_name || ''}`.trim() : ''
+      const date = format(new Date(apt.scheduled_date), 'MMM d')
+      setEntityName(name ? `${name} - ${date}` : date)
+    }
+    return () => setEntityName(null)
+  }, [apt, setEntityName])
 
   if (isLoading) {
     return (

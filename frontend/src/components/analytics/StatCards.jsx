@@ -36,10 +36,17 @@ function useAnimatedNumber(target, duration = 800) {
   return display
 }
 
-function StatCard({ title, value, change, changeLabel, icon: Icon, iconColor, iconBg, prefix = '', suffix = '', loading, animateValue }) {
+function StatCard({ title, value, change, changeLabel, icon: Icon, iconColor, iconBg, prefix = '', suffix = '', loading, animateValue, target, rawValue }) {
   const isPositive = change > 0
   const isNegative = change < 0
   const animatedNum = useAnimatedNumber(animateValue ? (typeof value === 'number' ? value : 0) : null)
+
+  // Calculate target progress (use rawValue if provided, else value)
+  let targetPercent = null
+  const numericValue = rawValue ?? (typeof value === 'number' ? value : null)
+  if (target && numericValue !== null && target.target_value > 0) {
+    targetPercent = Math.round((numericValue / target.target_value) * 100)
+  }
 
   return (
     <Card className="relative overflow-hidden transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
@@ -65,6 +72,21 @@ function StatCard({ title, value, change, changeLabel, icon: Icon, iconColor, ic
                 {changeLabel && <span className="text-slate-400 font-normal truncate">{changeLabel}</span>}
               </div>
             )}
+            {targetPercent !== null && (
+              <div className="mt-2">
+                <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                  <div
+                    className={cn(
+                      "h-full rounded-full transition-all",
+                      targetPercent >= 100 ? "bg-emerald-500" :
+                      targetPercent >= 70 ? "bg-amber-500" : "bg-red-500"
+                    )}
+                    style={{ width: `${Math.min(targetPercent, 100)}%` }}
+                  />
+                </div>
+                <p className="text-[10px] text-slate-400 mt-0.5">{targetPercent}% of target</p>
+              </div>
+            )}
           </div>
           {Icon && (
             <div className={cn("p-1.5 rounded-lg shrink-0", iconBg || "bg-slate-100")}>
@@ -77,7 +99,14 @@ function StatCard({ title, value, change, changeLabel, icon: Icon, iconColor, ic
   )
 }
 
-export default function StatCards({ comprehensive, loading }) {
+export default function StatCards({ comprehensive, loading, targets }) {
+  const targetMap = {}
+  if (targets) {
+    for (const t of targets) {
+      targetMap[t.metric_name] = t
+    }
+  }
+
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
       <StatCard
@@ -90,6 +119,7 @@ export default function StatCards({ comprehensive, loading }) {
         iconBg="bg-blue-100"
         loading={loading}
         animateValue
+        target={targetMap.total_calls}
       />
       <StatCard
         title="Booked"
@@ -99,24 +129,29 @@ export default function StatCards({ comprehensive, loading }) {
         iconBg="bg-emerald-100"
         loading={loading}
         animateValue
+        target={targetMap.booked_calls}
       />
       <StatCard
         title="Revenue"
         value={formatCents(comprehensive?.revenue?.period_total || 0)}
+        rawValue={comprehensive?.revenue?.period_total || 0}
         change={comprehensive?.revenue?.change}
         changeLabel="vs last"
         icon={DollarSign}
         iconColor="text-slate-600"
         iconBg="bg-slate-100"
         loading={loading}
+        target={targetMap.revenue}
       />
       <StatCard
         title="Avg Ticket"
         value={formatCents(comprehensive?.revenue?.avg_ticket || 0)}
+        rawValue={comprehensive?.revenue?.avg_ticket || 0}
         icon={Receipt}
         iconColor="text-amber-600"
         iconBg="bg-amber-100"
         loading={loading}
+        target={targetMap.avg_ticket}
       />
       <StatCard
         title="Satisfaction"
@@ -127,6 +162,7 @@ export default function StatCards({ comprehensive, loading }) {
         iconBg="bg-violet-100"
         loading={loading}
         animateValue
+        target={targetMap.satisfaction_rate}
       />
       <StatCard
         title="New Customers"
@@ -138,6 +174,7 @@ export default function StatCards({ comprehensive, loading }) {
         iconBg="bg-cyan-100"
         loading={loading}
         animateValue
+        target={targetMap.new_customers}
       />
     </div>
   )

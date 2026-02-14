@@ -22,6 +22,66 @@ function setCache(key, data) {
 }
 
 /**
+ * GET /api/analytics/targets
+ * Get all analytics targets
+ */
+router.get('/targets', async (req, res, next) => {
+  try {
+    const { data: targets, error } = await supabase
+      .from('analytics_targets')
+      .select('*')
+      .order('created_at');
+
+    if (error) throw error;
+
+    res.json({ targets: targets || [] });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * PUT /api/analytics/targets
+ * Batch upsert analytics targets
+ */
+router.put('/targets', async (req, res, next) => {
+  try {
+    const { targets } = req.body;
+
+    if (!Array.isArray(targets) || targets.length === 0) {
+      return res.status(400).json({ error: { message: 'targets array is required' } });
+    }
+
+    const validMetrics = ['total_calls', 'booked_calls', 'revenue', 'avg_ticket', 'satisfaction_rate', 'new_customers'];
+
+    const rows = targets
+      .filter(t => t.metric_name && validMetrics.includes(t.metric_name))
+      .map(t => ({
+        metric_name: t.metric_name,
+        target_value: parseFloat(t.target_value),
+        period: t.period || 'week',
+        display_format: t.display_format || 'number',
+        updated_at: new Date().toISOString(),
+      }));
+
+    if (rows.length === 0) {
+      return res.status(400).json({ error: { message: 'No valid targets provided' } });
+    }
+
+    const { data, error } = await supabase
+      .from('analytics_targets')
+      .upsert(rows, { onConflict: 'metric_name' })
+      .select();
+
+    if (error) throw error;
+
+    res.json({ targets: data });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
  * GET /api/analytics/overview
  * Dashboard overview stats
  */
