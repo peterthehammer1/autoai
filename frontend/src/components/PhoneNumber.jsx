@@ -71,7 +71,7 @@ export default function PhoneNumber({
   const displayValue = shouldMask ? maskPhone(phone) : formatPhone(phone)
 
   return (
-    <span className={`font-mono text-slate-600 ${className}`}>
+    <span className={`text-slate-600 ${className}`}>
       {displayValue}
     </span>
   )
@@ -85,7 +85,7 @@ export function Email({
   if (!email) return <span className={className}>-</span>
 
   return (
-    <span className={`font-mono text-slate-500 ${className}`}>
+    <span className={`text-slate-500 ${className}`}>
       {maskEmail(email)}
     </span>
   )

@@ -821,7 +821,7 @@ export default function Appointments() {
                   <TableBody>
                     {dateData.appointments.map((apt, index) => (
                       <TableRow key={apt.id} className={cn("hover:bg-slate-50 group", index % 2 === 1 && "bg-slate-50/50")}>
-                        <TableCell className="font-mono text-sm text-slate-700">
+                        <TableCell className="text-sm text-slate-700">
                           {formatTime12Hour(apt.scheduled_time)}
                         </TableCell>
                         <TableCell>
