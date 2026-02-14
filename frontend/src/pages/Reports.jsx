@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { format, subDays, startOfMonth, endOfMonth, subMonths } from 'date-fns'
+import { Link } from 'react-router-dom'
 import { customers, appointments, callLogs, smsLogs, analytics } from '@/api'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -21,6 +22,8 @@ import {
   Loader2,
   CheckCircle,
   Target,
+  Star,
+  ChevronRight,
 } from 'lucide-react'
 import { arrayToCSV, downloadCSV, formatDateForFilename } from '@/lib/csv'
 import { formatTime12Hour, formatCents } from '@/lib/utils'
@@ -367,6 +370,23 @@ export default function Reports() {
           )
         })}
       </div>
+
+      {/* Reviews Link */}
+      <Link
+        to="/reviews"
+        className="bg-white shadow-lg border-0 rounded-lg p-4 flex items-center gap-4 hover:bg-slate-50 transition-colors group"
+      >
+        <div className="w-10 h-10 bg-amber-50 rounded-lg flex items-center justify-center shrink-0">
+          <Star className="h-5 w-5 text-amber-500" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <h3 className="text-sm font-medium text-slate-800">Reviews & Reputation</h3>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Track review requests, click rates, and manage Google review settings
+          </p>
+        </div>
+        <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-slate-500 transition-colors" />
+      </Link>
 
       {/* Info Note */}
       <div className="bg-slate-50 border-0 rounded-lg p-3 text-xs text-slate-600">
