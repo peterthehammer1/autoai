@@ -48,12 +48,15 @@ const CLOSE_HOUR = 16
 const TOTAL_MINUTES = (CLOSE_HOUR - OPEN_HOUR) * 60
 const HOURS = Array.from({ length: CLOSE_HOUR - OPEN_HOUR + 1 }, (_, i) => OPEN_HOUR + i)
 
+const MIN_BLOCK_WIDTH = 7 // minimum % width so short appointments stay readable
+
 function getPositionStyle(apt) {
   const [h, m] = (apt.scheduled_time || '07:00').split(':').map(Number)
   const minutesFromOpen = (h - OPEN_HOUR) * 60 + m
   const duration = apt.estimated_duration_minutes || 60
   const left = Math.max(0, (minutesFromOpen / TOTAL_MINUTES) * 100)
-  const width = Math.min((duration / TOTAL_MINUTES) * 100, 100 - left)
+  const rawWidth = (duration / TOTAL_MINUTES) * 100
+  const width = Math.max(Math.min(rawWidth, 100 - left), MIN_BLOCK_WIDTH)
   return { left: `${left}%`, width: `${width}%` }
 }
 
@@ -171,7 +174,7 @@ export default function BayView() {
 
           {/* Bay rows */}
           {bays.map((bay) => (
-            <div key={bay.id} className="flex border-b border-slate-100 last:border-b-0 min-h-[56px]">
+            <div key={bay.id} className="flex border-b border-slate-100 last:border-b-0 h-16">
               <div className="w-32 lg:w-40 shrink-0 px-3 py-2 bg-slate-50 border-r border-slate-200 flex flex-col justify-center">
                 <span className="text-sm font-medium text-slate-800 truncate">{bay.name}</span>
                 <span className="text-[10px] text-slate-400 capitalize">{bay.bay_type?.replace('_', ' ')}</span>
@@ -195,14 +198,14 @@ export default function BayView() {
                       key={apt.id}
                       onClick={() => setSelectedApt(apt)}
                       className={cn(
-                        'absolute top-1 bottom-1 rounded px-1.5 py-0.5 text-white text-[10px] font-medium truncate shadow-sm cursor-pointer hover:brightness-110 transition-all z-10',
+                        'absolute top-1.5 bottom-1.5 rounded-md px-2 py-1 text-white text-[11px] leading-tight font-medium overflow-hidden shadow-sm cursor-pointer hover:brightness-110 hover:shadow-md transition-all z-10',
                         STATUS_COLORS[apt.status] || 'bg-slate-400'
                       )}
                       style={style}
                       title={`${customerName} - ${serviceName}`}
                     >
-                      <span className="truncate block">{customerName}</span>
-                      <span className="truncate block opacity-80">{serviceName}</span>
+                      <span className="truncate block font-semibold">{customerName}</span>
+                      <span className="truncate block opacity-80 text-[10px]">{serviceName}</span>
                     </button>
                   )
                 })}
@@ -212,7 +215,7 @@ export default function BayView() {
 
           {/* Unassigned row */}
           {unassigned.length > 0 && (
-            <div className="flex border-t-2 border-slate-200 min-h-[56px]">
+            <div className="flex border-t-2 border-slate-200 h-16">
               <div className="w-32 lg:w-40 shrink-0 px-3 py-2 bg-amber-50 border-r border-slate-200 flex flex-col justify-center">
                 <span className="text-sm font-medium text-amber-700">Unassigned</span>
                 <span className="text-[10px] text-amber-500">{unassigned.length} appt{unassigned.length !== 1 ? 's' : ''}</span>
@@ -234,14 +237,14 @@ export default function BayView() {
                       key={apt.id}
                       onClick={() => setSelectedApt(apt)}
                       className={cn(
-                        'absolute top-1 bottom-1 rounded px-1.5 py-0.5 text-white text-[10px] font-medium truncate shadow-sm cursor-pointer hover:brightness-110 transition-all z-10',
+                        'absolute top-1.5 bottom-1.5 rounded-md px-2 py-1 text-white text-[11px] leading-tight font-medium overflow-hidden shadow-sm cursor-pointer hover:brightness-110 hover:shadow-md transition-all z-10',
                         STATUS_COLORS[apt.status] || 'bg-slate-400'
                       )}
                       style={style}
                       title={`${customerName} - ${serviceName}`}
                     >
-                      <span className="truncate block">{customerName}</span>
-                      <span className="truncate block opacity-80">{serviceName}</span>
+                      <span className="truncate block font-semibold">{customerName}</span>
+                      <span className="truncate block opacity-80 text-[10px]">{serviceName}</span>
                     </button>
                   )
                 })}
