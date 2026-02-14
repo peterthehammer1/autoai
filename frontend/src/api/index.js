@@ -28,7 +28,7 @@ export const appointments = {
     return fetchAPI(`/appointments${query ? `?${query}` : ''}`)
   },
   
-  today: () => fetchAPI('/appointments/today'),
+  today: (date) => fetchAPI(`/appointments/today${date ? `?date=${date}` : ''}`),
   
   upcoming: (limit = 50) => fetchAPI(`/appointments/upcoming?limit=${limit}`),
   

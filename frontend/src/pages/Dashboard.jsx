@@ -54,7 +54,7 @@ import {
   DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu'
 import RescheduleDialog from '@/components/RescheduleDialog'
-import { cn, formatTime12Hour, getStatusColor, getStatusDotColor, formatCents } from '@/lib/utils'
+import { cn, formatTime12Hour, getStatusColor, getStatusDotColor, formatCents, getNextBusinessDay, isWeekend } from '@/lib/utils'
 
 const STATUS_TRANSITIONS = {
   scheduled: [
@@ -145,9 +145,17 @@ export default function Dashboard() {
     queryFn: analytics.overview,
   })
 
+  const isWeekendDay = isWeekend()
+  const businessDate = isWeekendDay ? format(getNextBusinessDay(), 'yyyy-MM-dd') : null
+
   const { data: todayData, isLoading: todayLoading } = useQuery({
-    queryKey: ['appointments', 'today'],
-    queryFn: appointments.today,
+    queryKey: ['appointments', 'today', businessDate],
+    queryFn: () => {
+      if (businessDate) {
+        return appointments.today(businessDate)
+      }
+      return appointments.today()
+    },
   })
 
   const { data: insightsData, isLoading: insightsLoading } = useQuery({
@@ -423,7 +431,14 @@ export default function Dashboard() {
             <GreetingIcon className={cn("h-5 w-5", greeting.color)} aria-hidden="true" />
             <div>
               <h1 className="text-lg font-semibold text-white">{greeting.text}</h1>
-              <p className="text-xs text-slate-400">{format(new Date(), 'EEEE, MMMM d, yyyy')}</p>
+              <p className="text-xs text-slate-400">
+                {format(new Date(), 'EEEE, MMMM d, yyyy')}
+                {isWeekendDay && (
+                  <span className="ml-2 text-blue-400">
+                    &middot; Showing {format(getNextBusinessDay(), 'EEEE')}'s schedule
+                  </span>
+                )}
+              </p>
             </div>
           </div>
           <a 
@@ -455,7 +470,9 @@ export default function Dashboard() {
                     <Calendar className="h-5 w-5 text-blue-300" />
                   </div>
                   <div>
-                    <CardTitle className="text-lg">Today's Schedule</CardTitle>
+                    <CardTitle className="text-lg">
+                      {isWeekendDay ? `${format(getNextBusinessDay(), 'EEEE')}'s Schedule` : "Today's Schedule"}
+                    </CardTitle>
                     <CardDescription className="flex items-center gap-2">
                       <span className="font-semibold text-blue-600">{todayData?.summary?.total || 0}</span> appointments scheduled
                     </CardDescription>
@@ -668,8 +685,12 @@ export default function Dashboard() {
                     <div className="rounded-2xl bg-gradient-to-br from-slate-100 to-slate-50 p-5 mb-4 shadow-inner">
                       <Calendar className="h-10 w-10 text-slate-300" />
                     </div>
-                    <p className="font-semibold text-slate-900 text-lg">No appointments today</p>
-                    <p className="text-sm text-slate-500 mt-1">Your schedule is clear for now</p>
+                    <p className="font-semibold text-slate-900 text-lg">
+                      {isWeekendDay ? `No appointments ${format(getNextBusinessDay(), 'EEEE')}` : 'No appointments today'}
+                    </p>
+                    <p className="text-sm text-slate-500 mt-1">
+                      {isWeekendDay ? 'Enjoy your weekend!' : 'Your schedule is clear for now'}
+                    </p>
                     <Button variant="outline" size="sm" asChild className="mt-4">
                       <Link to="/appointments">
                         Browse Schedule

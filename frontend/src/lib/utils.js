@@ -80,6 +80,25 @@ export function getStatusDotColor(status) {
   return colors[status] || 'bg-slate-400'
 }
 
+// Returns today on weekdays, next Monday on weekends
+export function getNextBusinessDay() {
+  const now = new Date()
+  const day = now.getDay() // 0=Sun, 6=Sat
+  if (day === 6) {
+    // Saturday → Monday (+2)
+    now.setDate(now.getDate() + 2)
+  } else if (day === 0) {
+    // Sunday → Monday (+1)
+    now.setDate(now.getDate() + 1)
+  }
+  return now
+}
+
+export function isWeekend() {
+  const day = new Date().getDay()
+  return day === 0 || day === 6
+}
+
 export function getOutcomeColor(outcome) {
   const colors = {
     booked: 'bg-green-100 text-green-800',

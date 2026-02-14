@@ -438,7 +438,7 @@ router.get('/upcoming', async (req, res, next) => {
 router.get('/today', async (req, res, next) => {
   try {
     const now = nowEST();
-    const today = todayEST();
+    const today = req.query.date || todayEST();
 
     const { data: appointments, error } = await supabase
       .from('appointments')

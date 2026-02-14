@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { format, addDays, subDays } from 'date-fns'
+import { getNextBusinessDay } from '@/lib/utils'
 import { Link } from 'react-router-dom'
 import { appointments } from '@/api'
 import { Button } from '@/components/ui/button'
@@ -61,7 +62,7 @@ function getPositionStyle(apt) {
 }
 
 export default function BayView() {
-  const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'))
+  const [selectedDate, setSelectedDate] = useState(format(getNextBusinessDay(), 'yyyy-MM-dd'))
   const [selectedApt, setSelectedApt] = useState(null)
 
   const { data, isLoading } = useQuery({
@@ -76,7 +77,7 @@ export default function BayView() {
     setSelectedDate(format(d, 'yyyy-MM-dd'))
   }
 
-  const goToday = () => setSelectedDate(format(new Date(), 'yyyy-MM-dd'))
+  const goToday = () => setSelectedDate(format(getNextBusinessDay(), 'yyyy-MM-dd'))
 
   const bays = data?.bays || []
   const unassigned = data?.unassigned || []
