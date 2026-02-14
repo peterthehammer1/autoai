@@ -87,7 +87,7 @@ export default function Analytics() {
       <StatCards comprehensive={comprehensive} loading={compLoading} />
 
       {/* Section 2: Charts Row */}
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-2 items-stretch">
         <RevenueTrend comprehensive={comprehensive} onPointClick={setDrillDown} />
         <CallSentiment callTrends={callTrends} onPointClick={setDrillDown} />
       </div>
@@ -96,14 +96,14 @@ export default function Analytics() {
       <InsightsPanel insightsData={insightsData} loading={insightsLoading} />
 
       {/* Section 4: Service & Bay Analysis */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 items-stretch">
         <ServiceAnalysis comprehensive={comprehensive} />
         <RevenueBreakdown comprehensive={comprehensive} />
         <ConversionFunnel comprehensive={comprehensive} />
       </div>
 
       {/* Section 5: Customer Intelligence */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 items-stretch">
         <TopCustomers comprehensive={comprehensive} />
         <CustomerHealth comprehensive={comprehensive} />
         <ComparisonBar comprehensive={comprehensive} />
@@ -138,60 +138,100 @@ export default function Analytics() {
               ))}
             </div>
           ) : (
-            <div className="overflow-x-auto -mx-2 px-2 pb-2">
-              <div className="min-w-[520px]">
-                {/* Hour labels */}
-                <div className="flex mb-1">
-                  <div className="w-12" />
-                  {[6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19].map((hour) => (
-                    <div key={hour} className="flex-1 text-center text-xs text-slate-400">
-                      {hour === 12 ? '12p' : hour > 12 ? `${hour - 12}p` : `${hour}a`}
-                    </div>
-                  ))}
-                </div>
-                {/* Heatmap rows */}
-                {callTrends.day_labels.map((day, dayIdx) => {
-                  const maxValue = Math.max(...callTrends.hourly_heatmap.flat(), 1)
-                  return (
-                    <div key={day} className="flex items-center mb-1">
-                      <div className="w-12 text-xs text-slate-500 font-medium">{day}</div>
-                      {[6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19].map((hour) => {
-                        const value = callTrends.hourly_heatmap[dayIdx]?.[hour] || 0
-                        const intensity = value / maxValue
-                        return (
-                          <div
-                            key={hour}
-                            className="flex-1 aspect-square mx-0.5 rounded-sm flex items-center justify-center text-xs font-medium transition-colors"
-                            style={{
-                              backgroundColor: value === 0
-                                ? '#f1f5f9'
-                                : `rgba(59, 130, 246, ${0.2 + intensity * 0.8})`,
-                              color: intensity > 0.5 ? 'white' : '#64748b'
-                            }}
-                            title={`${day} ${hour}:00 - ${value} calls`}
-                          >
-                            {value > 0 ? value : ''}
+            <div className="pb-2">
+              {(() => {
+                const allHours = [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+                const mobileHours = [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]
+                const formatHour = (h) => h === 12 ? '12p' : h > 12 ? `${h - 12}p` : `${h}a`
+                const maxValue = Math.max(...callTrends.hourly_heatmap.flat(), 1)
+                return (
+                  <>
+                    {/* Desktop Heatmap */}
+                    <div className="hidden sm:block overflow-x-auto -mx-2 px-2">
+                      <div className="min-w-[520px]">
+                        <div className="flex mb-1">
+                          <div className="w-12" />
+                          {allHours.map((hour) => (
+                            <div key={hour} className="flex-1 text-center text-xs text-slate-400">
+                              {formatHour(hour)}
+                            </div>
+                          ))}
+                        </div>
+                        {callTrends.day_labels.map((day, dayIdx) => (
+                          <div key={day} className="flex items-center mb-1">
+                            <div className="w-12 text-xs text-slate-500 font-medium">{day}</div>
+                            {allHours.map((hour) => {
+                              const value = callTrends.hourly_heatmap[dayIdx]?.[hour] || 0
+                              const intensity = value / maxValue
+                              return (
+                                <div
+                                  key={hour}
+                                  className="flex-1 aspect-square mx-0.5 rounded-sm flex items-center justify-center text-xs font-medium transition-colors"
+                                  style={{
+                                    backgroundColor: value === 0 ? '#f1f5f9' : `rgba(59, 130, 246, ${0.2 + intensity * 0.8})`,
+                                    color: intensity > 0.5 ? 'white' : '#64748b'
+                                  }}
+                                  title={`${day} ${hour}:00 - ${value} calls`}
+                                >
+                                  {value > 0 ? value : ''}
+                                </div>
+                              )
+                            })}
                           </div>
-                        )
-                      })}
+                        ))}
+                      </div>
                     </div>
-                  )
-                })}
-                {/* Legend */}
-                <div className="flex items-center justify-end gap-2 mt-4 text-xs text-slate-500">
-                  <span>Less</span>
-                  <div className="flex gap-0.5">
-                    {[0.1, 0.3, 0.5, 0.7, 0.9].map((intensity) => (
-                      <div
-                        key={intensity}
-                        className="w-4 h-4 rounded-sm"
-                        style={{ backgroundColor: `rgba(59, 130, 246, ${intensity})` }}
-                      />
-                    ))}
-                  </div>
-                  <span>More</span>
-                </div>
-              </div>
+
+                    {/* Mobile Heatmap — business hours only */}
+                    <div className="sm:hidden -mx-2 px-2">
+                      <div className="flex mb-1">
+                        <div className="w-10" />
+                        {mobileHours.map((hour) => (
+                          <div key={hour} className="flex-1 text-center text-[10px] text-slate-400">
+                            {formatHour(hour)}
+                          </div>
+                        ))}
+                      </div>
+                      {callTrends.day_labels.map((day, dayIdx) => (
+                        <div key={day} className="flex items-center mb-1">
+                          <div className="w-10 text-[10px] text-slate-500 font-medium">{day.slice(0, 3)}</div>
+                          {mobileHours.map((hour) => {
+                            const value = callTrends.hourly_heatmap[dayIdx]?.[hour] || 0
+                            const intensity = value / maxValue
+                            return (
+                              <div
+                                key={hour}
+                                className="flex-1 aspect-square mx-px rounded-sm flex items-center justify-center text-[10px] font-medium"
+                                style={{
+                                  backgroundColor: value === 0 ? '#f1f5f9' : `rgba(59, 130, 246, ${0.2 + intensity * 0.8})`,
+                                  color: intensity > 0.5 ? 'white' : '#64748b'
+                                }}
+                              >
+                                {value > 0 ? value : ''}
+                              </div>
+                            )
+                          })}
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Legend */}
+                    <div className="flex items-center justify-end gap-2 mt-4 text-xs text-slate-500">
+                      <span>Less</span>
+                      <div className="flex gap-0.5">
+                        {[0.1, 0.3, 0.5, 0.7, 0.9].map((intensity) => (
+                          <div
+                            key={intensity}
+                            className="w-4 h-4 rounded-sm"
+                            style={{ backgroundColor: `rgba(59, 130, 246, ${intensity})` }}
+                          />
+                        ))}
+                      </div>
+                      <span>More</span>
+                    </div>
+                  </>
+                )
+              })()}
             </div>
           )}
         </CardContent>

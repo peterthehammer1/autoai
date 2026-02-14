@@ -220,11 +220,11 @@ export default function Customers() {
     return `${(firstName || '')[0] || ''}${(lastName || '')[0] || ''}`.toUpperCase() || '?'
   }
 
-  // Get avatar color based on name - using sidebar teal shades
+  // Get avatar color based on name
   const getAvatarColor = (name) => {
     const colors = [
-      'bg-sidebar-lighter', 'bg-sidebar-light', 'bg-sidebar-muted', 'bg-sidebar-lighter',
-      'bg-sidebar-light', 'bg-sidebar-muted', 'bg-sidebar-lighter', 'bg-sidebar-light'
+      'bg-blue-600', 'bg-blue-500', 'bg-blue-700', 'bg-blue-600',
+      'bg-blue-500', 'bg-blue-700', 'bg-blue-600', 'bg-blue-500'
     ]
     const index = (name || '').charCodeAt(0) % colors.length
     return colors[index]
@@ -261,7 +261,7 @@ export default function Customers() {
                 placeholder="Search by name or phone..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-8 h-8 text-sm border-slate-300 focus:border-slate-400 focus:ring-slate-400"
+                className="pl-8 h-10 text-sm border-slate-300 focus:border-slate-400 focus:ring-slate-400"
               />
             </div>
           </div>
@@ -284,38 +284,67 @@ export default function Customers() {
               </div>
             ) : (
               <div>
-                {/* Column Headers */}
-                <div className="flex items-center gap-2 px-3 py-1.5 border-b border-slate-100">
-                  <span className="flex-1 text-xs text-slate-400 font-medium uppercase tracking-wider">Name</span>
-                  <span className="w-28 text-xs text-slate-400 font-medium uppercase tracking-wider">Phone</span>
-                  <span className="w-12 text-right text-xs text-slate-400 font-medium uppercase tracking-wider">Visits</span>
+                {/* Desktop: Table Layout */}
+                <div className="hidden sm:block">
+                  <div className="flex items-center gap-2 px-3 py-1.5 border-b border-slate-100">
+                    <span className="flex-1 text-xs text-slate-400 font-medium uppercase tracking-wider">Name</span>
+                    <span className="w-28 text-xs text-slate-400 font-medium uppercase tracking-wider">Phone</span>
+                    <span className="w-12 text-right text-xs text-slate-400 font-medium uppercase tracking-wider">Visits</span>
+                  </div>
+                  <div className="divide-y divide-slate-100">
+                    {sortedAndFilteredCustomers.map((customer) => (
+                      <button
+                        key={customer.id}
+                        onClick={() => setSelectedCustomerId(customer.id)}
+                        className={cn(
+                          "w-full flex items-center gap-2 py-2.5 px-3 text-left hover:bg-slate-50 rounded-lg transition-colors group",
+                          selectedCustomerId === customer.id && "bg-blue-50 border-l-2 border-l-blue-600"
+                        )}
+                      >
+                        <span className="flex-1 min-w-0 text-sm font-medium text-slate-900 truncate group-hover:text-blue-700">
+                          {customer.first_name} {customer.last_name}
+                        </span>
+                        <span className="w-28 shrink-0 text-xs text-slate-500 truncate">
+                          {customer.phone ? <PhoneNumber phone={customer.phone} /> : '—'}
+                        </span>
+                        <div className="w-12 shrink-0 flex justify-end">
+                          {customer.total_visits > 0 ? (
+                            <span className="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full font-semibold">
+                              {customer.total_visits}
+                            </span>
+                          ) : (
+                            <span className="text-xs text-slate-300">—</span>
+                          )}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
                 </div>
-                {/* Rows */}
-                <div className="divide-y divide-slate-100">
+
+                {/* Mobile: Card Layout */}
+                <div className="sm:hidden divide-y divide-slate-100">
                   {sortedAndFilteredCustomers.map((customer) => (
                     <button
                       key={customer.id}
                       onClick={() => setSelectedCustomerId(customer.id)}
                       className={cn(
-                        "w-full flex items-center gap-2 py-2.5 px-3 text-left hover:bg-slate-50 rounded-lg transition-colors group",
-                        selectedCustomerId === customer.id && "bg-sidebar/5 border-l-2 border-l-sidebar"
+                        "w-full text-left px-3 py-3 hover:bg-slate-50 transition-colors",
+                        selectedCustomerId === customer.id && "bg-blue-50 border-l-2 border-l-blue-600"
                       )}
                     >
-                      <span className="flex-1 min-w-0 text-sm font-medium text-slate-900 truncate group-hover:text-blue-700">
-                        {customer.first_name} {customer.last_name}
-                      </span>
-                      <span className="w-28 shrink-0 text-xs text-slate-500 truncate">
-                        {customer.phone ? <PhoneNumber phone={customer.phone} /> : '—'}
-                      </span>
-                      <div className="w-12 shrink-0 flex justify-end">
-                        {customer.total_visits > 0 ? (
-                          <span className="text-xs text-teal bg-teal-dark/10 px-2 py-0.5 rounded-full font-semibold">
-                            {customer.total_visits}
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-slate-900 truncate">
+                          {customer.first_name} {customer.last_name}
+                        </span>
+                        {customer.total_visits > 0 && (
+                          <span className="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full font-semibold shrink-0 ml-2">
+                            {customer.total_visits} visits
                           </span>
-                        ) : (
-                          <span className="text-xs text-slate-300">—</span>
                         )}
                       </div>
+                      <span className="text-xs text-slate-500 mt-0.5 block">
+                        {customer.phone ? <PhoneNumber phone={customer.phone} /> : '—'}
+                      </span>
                     </button>
                   ))}
                 </div>
@@ -360,7 +389,7 @@ export default function Customers() {
                     <Button 
                       variant="ghost" 
                       size="icon" 
-                      className="lg:hidden shrink-0 -ml-2"
+                      className="lg:hidden shrink-0 -ml-2 h-11 w-11"
                       onClick={() => setSelectedCustomerId(null)}
                     >
                       <ChevronLeft className="h-5 w-5" />
@@ -369,7 +398,7 @@ export default function Customers() {
                       firstName={selectedCustomer.first_name}
                       lastName={selectedCustomer.last_name}
                       size="lg"
-                      className="h-11 w-11 sm:h-12 sm:w-12 text-base bg-sidebar-lighter text-white"
+                      className="h-11 w-11 sm:h-12 sm:w-12 text-base bg-blue-600 text-white"
                     />
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
@@ -377,7 +406,7 @@ export default function Customers() {
                           {selectedCustomer.first_name} {selectedCustomer.last_name}
                         </h2>
                         {healthData && (
-                          <span className="text-xs px-2 py-0.5 rounded font-medium bg-sidebar/10 text-sidebar-lighter">
+                          <span className="text-xs px-2 py-0.5 rounded font-medium bg-blue-50 text-blue-600">
                             {healthData.health_status}
                           </span>
                         )}
@@ -415,7 +444,7 @@ export default function Customers() {
 
                 {/* Quick Stats */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mt-4">
-                  <div className="text-center bg-gradient-to-br from-teal-dark to-teal rounded-lg p-2 shadow-sm">
+                  <div className="text-center bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg p-2 shadow-sm">
                     <p className="text-lg font-semibold text-white">
                       {healthData?.stats?.total_visits || selectedCustomer.total_visits || 0}
                     </p>
@@ -427,7 +456,7 @@ export default function Customers() {
                     </p>
                     <p className="text-xs text-white/70">Total Spend</p>
                   </div>
-                  <div className="text-center bg-gradient-to-br from-teal-medium to-teal-light rounded-lg p-2 shadow-sm">
+                  <div className="text-center bg-gradient-to-br from-blue-500 to-blue-400 rounded-lg p-2 shadow-sm">
                     <p className="text-lg font-semibold text-white">
                       {selectedCustomer.vehicles?.length || 0}
                     </p>
@@ -447,34 +476,34 @@ export default function Customers() {
                 <TabsList className="w-full justify-start rounded-none border-b border-slate-200 bg-white p-0 h-auto overflow-x-auto flex-nowrap">
                   <TabsTrigger 
                     value="overview" 
-                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-sidebar data-[state=active]:bg-transparent data-[state=active]:text-sidebar py-2.5 px-4 text-sm text-sidebar-muted whitespace-nowrap font-medium"
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-transparent data-[state=active]:text-blue-600 py-2.5 px-4 text-sm text-slate-500 whitespace-nowrap font-medium"
                   >
                     Overview
                   </TabsTrigger>
                   <TabsTrigger 
                     value="vehicles" 
-                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-sidebar data-[state=active]:bg-transparent data-[state=active]:text-sidebar py-2.5 px-4 text-sm text-sidebar-muted whitespace-nowrap font-medium"
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-transparent data-[state=active]:text-blue-600 py-2.5 px-4 text-sm text-slate-500 whitespace-nowrap font-medium"
                   >
                     <span className="sm:hidden">Vehicles</span>
                     <span className="hidden sm:inline">Vehicles ({selectedCustomer.vehicles?.length || 0})</span>
                   </TabsTrigger>
                   <TabsTrigger 
                     value="appointments" 
-                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-sidebar data-[state=active]:bg-transparent data-[state=active]:text-sidebar py-2.5 px-4 text-sm text-sidebar-muted whitespace-nowrap font-medium"
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-transparent data-[state=active]:text-blue-600 py-2.5 px-4 text-sm text-slate-500 whitespace-nowrap font-medium"
                   >
                     <span className="sm:hidden">Appts</span>
                     <span className="hidden sm:inline">Appointments ({appointmentsData?.appointments?.length || 0})</span>
                   </TabsTrigger>
                   <TabsTrigger 
                     value="interactions" 
-                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-sidebar data-[state=active]:bg-transparent data-[state=active]:text-sidebar py-2.5 px-4 text-sm text-sidebar-muted whitespace-nowrap font-medium"
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-transparent data-[state=active]:text-blue-600 py-2.5 px-4 text-sm text-slate-500 whitespace-nowrap font-medium"
                   >
                     <span className="sm:hidden">Activity</span>
                     <span className="hidden sm:inline">Activity ({interactionsData?.interactions?.length || 0})</span>
                   </TabsTrigger>
                   <TabsTrigger 
                     value="insights" 
-                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-sidebar data-[state=active]:bg-transparent data-[state=active]:text-sidebar py-2.5 px-4 text-sm text-sidebar-muted whitespace-nowrap font-medium"
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-transparent data-[state=active]:text-blue-600 py-2.5 px-4 text-sm text-slate-500 whitespace-nowrap font-medium"
                   >
                     Insights
                   </TabsTrigger>
@@ -496,7 +525,7 @@ export default function Customers() {
                                 <circle cx="40" cy="40" r="32" fill="none" stroke="#e2e8f0" strokeWidth="6" />
                                 <circle
                                   cx="40" cy="40" r="32" fill="none"
-                                  stroke="#0a3a54"
+                                  stroke="#2563eb"
                                   strokeWidth="6" strokeLinecap="round"
                                   strokeDasharray={`${(healthData.health_score / 100) * 201} 201`}
                                 />
@@ -536,8 +565,8 @@ export default function Customers() {
                         <div className="space-y-3">
                           {healthData?.stats?.last_visit && (
                             <div className="flex items-center gap-3">
-                              <div className="h-8 w-8 rounded-full bg-sidebar/10 flex items-center justify-center">
-                                <CalendarCheck className="h-4 w-4 text-sidebar-lighter" />
+                              <div className="h-8 w-8 rounded-full bg-blue-50 flex items-center justify-center">
+                                <CalendarCheck className="h-4 w-4 text-blue-600" />
                               </div>
                               <div>
                                 <p className="text-sm font-medium text-slate-900">Last Visit</p>
@@ -549,8 +578,8 @@ export default function Customers() {
                           )}
                           {appointmentsData?.appointments?.[0] && (
                             <div className="flex items-center gap-3">
-                              <div className="h-8 w-8 rounded-full bg-sidebar/10 flex items-center justify-center">
-                                <Calendar className="h-4 w-4 text-sidebar-lighter" />
+                              <div className="h-8 w-8 rounded-full bg-blue-50 flex items-center justify-center">
+                                <Calendar className="h-4 w-4 text-blue-600" />
                               </div>
                               <div>
                                 <p className="text-sm font-medium text-slate-900">Next Appointment</p>
@@ -562,11 +591,11 @@ export default function Customers() {
                           )}
                           {interactionsData?.interactions?.[0] && (
                             <div className="flex items-center gap-3">
-                              <div className="h-8 w-8 rounded-full bg-sidebar/10 flex items-center justify-center">
+                              <div className="h-8 w-8 rounded-full bg-blue-50 flex items-center justify-center">
                                 {interactionsData.interactions[0].type === 'call' ? (
-                                  <PhoneCall className="h-4 w-4 text-sidebar-lighter" />
+                                  <PhoneCall className="h-4 w-4 text-blue-600" />
                                 ) : (
-                                  <MessageSquare className="h-4 w-4 text-sidebar-lighter" />
+                                  <MessageSquare className="h-4 w-4 text-blue-600" />
                                 )}
                               </div>
                               <div>
@@ -645,7 +674,7 @@ export default function Customers() {
                                     {vehicle.year} {vehicle.make} {vehicle.model}
                                   </p>
                                   {vehicle.is_primary && (
-                                    <Badge className="bg-sidebar/10 text-sidebar-lighter text-xs">Primary</Badge>
+                                    <Badge className="bg-blue-50 text-blue-600 text-xs">Primary</Badge>
                                   )}
                                 </div>
                                 <p className="text-sm text-slate-500 mt-1">
@@ -689,7 +718,7 @@ export default function Customers() {
                           >
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-4">
-                                <div className="text-center bg-gradient-to-br from-teal-dark to-teal rounded-lg px-3 py-2 min-w-[52px]">
+                                <div className="text-center bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg px-3 py-2 min-w-[52px]">
                                   <p className="text-lg font-bold text-white">
                                     {format(new Date(apt.scheduled_date), 'd')}
                                   </p>
@@ -738,16 +767,16 @@ export default function Customers() {
                           >
                             <div className="flex items-start gap-4">
                               {/* Icon */}
-                              <div className="h-10 w-10 rounded-full flex items-center justify-center shrink-0 bg-sidebar/10">
+                              <div className="h-10 w-10 rounded-full flex items-center justify-center shrink-0 bg-blue-50">
                                 {interaction.type === 'call' ? (
-                                  <PhoneCall className="h-5 w-5 text-sidebar-lighter" />
+                                  <PhoneCall className="h-5 w-5 text-blue-600" />
                                 ) : (
                                   interaction.message_type === 'confirmation' ? (
-                                    <CheckCircle2 className="h-5 w-5 text-sidebar-lighter" />
+                                    <CheckCircle2 className="h-5 w-5 text-blue-600" />
                                   ) : interaction.message_type === 'reminder' ? (
-                                    <Bell className="h-5 w-5 text-sidebar-lighter" />
+                                    <Bell className="h-5 w-5 text-blue-600" />
                                   ) : (
-                                    <MessageSquare className="h-5 w-5 text-sidebar-lighter" />
+                                    <MessageSquare className="h-5 w-5 text-blue-600" />
                                   )
                                 )}
                               </div>
@@ -760,23 +789,23 @@ export default function Customers() {
                                       {interaction.type === 'call' ? 'Phone Call' : 'SMS'}
                                     </span>
                                     {interaction.type === 'call' && interaction.outcome && (
-                                      <Badge className="text-xs bg-sidebar/10 text-sidebar-lighter">
+                                      <Badge className="text-xs bg-blue-50 text-blue-600">
                                         {interaction.outcome}
                                       </Badge>
                                     )}
                                     {interaction.type === 'sms' && interaction.message_type && (
-                                      <Badge className="text-xs bg-sidebar/10 text-sidebar-lighter">
+                                      <Badge className="text-xs bg-blue-50 text-blue-600">
                                         {interaction.message_type}
                                       </Badge>
                                     )}
                                     {interaction.type === 'call' && interaction.sentiment && (
-                                      <span className="text-sidebar-muted">
+                                      <span className="text-slate-400">
                                         {interaction.sentiment === 'positive' ? (
-                                          <ThumbsUp className="h-3.5 w-3.5 text-sidebar-lighter" />
+                                          <ThumbsUp className="h-3.5 w-3.5 text-blue-600" />
                                         ) : interaction.sentiment === 'negative' ? (
-                                          <ThumbsDown className="h-3.5 w-3.5 text-sidebar-lighter" />
+                                          <ThumbsDown className="h-3.5 w-3.5 text-blue-600" />
                                         ) : (
-                                          <Minus className="h-3.5 w-3.5 text-sidebar-muted" />
+                                          <Minus className="h-3.5 w-3.5 text-slate-400" />
                                         )}
                                       </span>
                                     )}
@@ -813,7 +842,7 @@ export default function Customers() {
                   {/* AI Insights Tab */}
                   <TabsContent value="insights" className="m-0 p-4 sm:p-6">
                     <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2 text-sm sm:text-base">
-                      <Target className="h-4 w-4 text-sidebar-muted" />
+                      <Target className="h-4 w-4 text-slate-400" />
                       AI-Powered Recommendations
                     </h3>
                     {healthData?.recommendations?.length > 0 ? (
@@ -821,23 +850,23 @@ export default function Customers() {
                         {healthData.recommendations.map((rec, idx) => (
                           <div
                             key={idx}
-                            className="rounded-lg border border-sidebar/20 bg-sidebar/5 p-4 flex items-start gap-3"
+                            className="rounded-lg border border-blue-200 bg-blue-50 p-4 flex items-start gap-3"
                           >
-                            {rec.type === 'action' && <AlertCircle className="h-5 w-5 text-sidebar-lighter shrink-0 mt-0.5" />}
-                            {rec.type === 'service' && <Wrench className="h-5 w-5 text-sidebar-lighter shrink-0 mt-0.5" />}
-                            {rec.type === 'upsell' && <Target className="h-5 w-5 text-sidebar-lighter shrink-0 mt-0.5" />}
+                            {rec.type === 'action' && <AlertCircle className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />}
+                            {rec.type === 'service' && <Wrench className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />}
+                            {rec.type === 'upsell' && <Target className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />}
                             <div>
-                              <p className="font-medium text-sidebar capitalize">{rec.type}</p>
+                              <p className="font-medium text-blue-600 capitalize">{rec.type}</p>
                               <p className="text-sm text-slate-600 mt-1">{rec.message}</p>
                             </div>
                           </div>
                         ))}
                       </div>
                     ) : (
-                      <div className="text-center py-12 bg-sidebar/5 rounded-lg">
-                        <Target className="h-12 w-12 text-sidebar/30 mx-auto mb-3" />
-                        <p className="text-sidebar-muted">No recommendations available yet</p>
-                        <p className="text-xs text-sidebar-muted/70 mt-1">More data needed to generate insights</p>
+                      <div className="text-center py-12 bg-blue-50 rounded-lg">
+                        <Target className="h-12 w-12 text-blue-200 mx-auto mb-3" />
+                        <p className="text-slate-500">No recommendations available yet</p>
+                        <p className="text-xs text-slate-400 mt-1">More data needed to generate insights</p>
                       </div>
                     )}
                   </TabsContent>

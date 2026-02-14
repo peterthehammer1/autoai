@@ -227,12 +227,12 @@ export default function CallLogs() {
                 placeholder="Search calls..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-8 h-8 text-sm border-slate-300"
+                className="pl-8 h-10 text-sm border-slate-300"
               />
             </div>
             <div className="flex items-center gap-2">
               <Select value={outcomeFilter} onValueChange={handleFilterChange}>
-                <SelectTrigger className="flex-1 h-8 text-xs border-slate-300">
+                <SelectTrigger className="flex-1 h-10 text-xs border-slate-300">
                   <SelectValue placeholder="All Outcomes" />
                 </SelectTrigger>
                 <SelectContent>
@@ -332,10 +332,10 @@ export default function CallLogs() {
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-3 min-w-0">
                     {/* Mobile Back Button */}
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="lg:hidden shrink-0 -ml-2"
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="lg:hidden shrink-0 -ml-2 h-11 w-11"
                       onClick={() => setSelectedCallId(null)}
                     >
                       <ChevronLeft className="h-5 w-5" />
@@ -388,7 +388,7 @@ export default function CallLogs() {
                 {/* Quick Stats */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 mt-4 sm:mt-6">
                   <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg p-2 sm:p-3 shadow-sm">
-                    <div className="flex items-center gap-1.5 sm:gap-2 text-white/70 text-[10px] sm:text-xs mb-0.5 sm:mb-1">
+                    <div className="flex items-center gap-1.5 sm:gap-2 text-white/70 text-xs mb-0.5 sm:mb-1">
                       <Clock className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                       Duration
                     </div>
@@ -397,7 +397,7 @@ export default function CallLogs() {
                     </p>
                   </div>
                   <div className="bg-gradient-to-br from-emerald-dark to-emerald rounded-lg p-2 sm:p-3 shadow-sm">
-                    <div className="flex items-center gap-1.5 sm:gap-2 text-white/70 text-[10px] sm:text-xs mb-0.5 sm:mb-1">
+                    <div className="flex items-center gap-1.5 sm:gap-2 text-white/70 text-xs mb-0.5 sm:mb-1">
                       <TrendingUp className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                       Sentiment
                     </div>
@@ -406,7 +406,7 @@ export default function CallLogs() {
                     </p>
                   </div>
                   <div className="bg-gradient-to-br from-blue-500 to-blue-400 rounded-lg p-2 sm:p-3 shadow-sm">
-                    <div className="flex items-center gap-1.5 sm:gap-2 text-white/70 text-[10px] sm:text-xs mb-0.5 sm:mb-1">
+                    <div className="flex items-center gap-1.5 sm:gap-2 text-white/70 text-xs mb-0.5 sm:mb-1">
                       <Sparkles className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                       Intent
                     </div>
@@ -415,7 +415,7 @@ export default function CallLogs() {
                     </p>
                   </div>
                   <div className="bg-gradient-to-br from-slateblue-dark to-slateblue rounded-lg p-2 sm:p-3 shadow-sm">
-                    <div className="flex items-center gap-1.5 sm:gap-2 text-white/70 text-[10px] sm:text-xs mb-0.5 sm:mb-1">
+                    <div className="flex items-center gap-1.5 sm:gap-2 text-white/70 text-xs mb-0.5 sm:mb-1">
                       <PhoneIncoming className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                       Direction
                     </div>

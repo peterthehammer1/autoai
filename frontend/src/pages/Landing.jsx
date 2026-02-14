@@ -382,7 +382,7 @@ export default function Landing() {
                       <div key={i} className="bg-slate-800/50 rounded-lg p-2 sm:p-3 text-center border border-slate-700">
                         <stat.icon className="h-4 w-4 sm:h-5 sm:w-5 text-blue-400 mx-auto mb-1" />
                         <p className="text-sm sm:text-lg font-bold text-white">{stat.value}</p>
-                        <p className="text-[8px] sm:text-[10px] text-slate-400 leading-tight">{stat.label}</p>
+                        <p className="text-[10px] sm:text-xs text-slate-400 leading-tight">{stat.label}</p>
                       </div>
                     ))}
                   </div>
