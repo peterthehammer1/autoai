@@ -6,6 +6,11 @@ import App from './App'
 import { toast } from './hooks/use-toast'
 import './index.css'
 
+// Auto-reload on stale assets after deploy (CSS preload failures)
+window.addEventListener('vite:preloadError', () => {
+  window.location.reload()
+})
+
 const queryClient = new QueryClient({
   queryCache: new QueryCache({
     onError: (error) => {
