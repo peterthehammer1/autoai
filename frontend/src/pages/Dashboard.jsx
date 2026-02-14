@@ -505,7 +505,7 @@ export default function Dashboard() {
                         <span className="flex-1 text-xs text-slate-400 font-medium uppercase tracking-wider">Customer</span>
                         <span className="w-36 text-xs text-slate-400 font-medium uppercase tracking-wider">Vehicle</span>
                         <span className="w-32 hidden md:block text-xs text-slate-400 font-medium uppercase tracking-wider">Service</span>
-                        <span className="w-24 text-right text-xs text-slate-400 font-medium uppercase tracking-wider">Status</span>
+                        <span className="w-28 text-right text-xs text-slate-400 font-medium uppercase tracking-wider">Status</span>
                         <span className="w-7 shrink-0" />
                       </div>
                       {/* Rows */}
@@ -540,7 +540,7 @@ export default function Dashboard() {
                                 <span className="w-32 hidden md:block text-xs text-slate-400 truncate">
                                   {apt.appointment_services?.[0]?.service_name || '—'}
                                 </span>
-                                <div className="w-24 flex justify-end">
+                                <div className="w-28 flex justify-end">
                                   <Badge
                                     className={cn(
                                       'shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full',

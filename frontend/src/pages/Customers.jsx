@@ -342,7 +342,7 @@ export default function Customers() {
                     />
                     <span className="flex-1 text-xs text-slate-400 font-medium uppercase tracking-wider">Name</span>
                     <span className="w-28 text-xs text-slate-400 font-medium uppercase tracking-wider">Phone</span>
-                    <span className="w-12 text-right text-xs text-slate-400 font-medium uppercase tracking-wider">Visits</span>
+                    <span className="w-16 text-right text-xs text-slate-400 font-medium uppercase tracking-wider">Visits</span>
                   </div>
                   <div className="divide-y divide-slate-100">
                     {sortedAndFilteredCustomers.map((customer) => (
@@ -379,7 +379,7 @@ export default function Customers() {
                           <span className="w-28 shrink-0 text-xs text-slate-500 truncate">
                             {customer.phone ? <PhoneNumber phone={customer.phone} /> : '—'}
                           </span>
-                          <div className="w-12 shrink-0 flex justify-end">
+                          <div className="w-16 shrink-0 flex justify-end">
                             {customer.total_visits > 0 ? (
                               <span className="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full font-semibold">
                                 {customer.total_visits}

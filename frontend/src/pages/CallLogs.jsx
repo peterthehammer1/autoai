@@ -236,7 +236,7 @@ export default function CallLogs() {
         {/* Left Panel - Call List */}
         <div className={cn(
           "flex flex-col bg-white shadow-lg border-0 rounded-lg overflow-hidden",
-          "w-full lg:w-96",
+          "w-full lg:w-[440px]",
           selectedCallId ? "hidden lg:flex" : "flex"
         )}>
           {/* Search & Filter Header */}
@@ -344,9 +344,9 @@ export default function CallLogs() {
               <div>
                 {/* Column Headers */}
                 <div className="flex items-center gap-2 px-3 py-1.5 border-b border-slate-100">
-                  <span className="w-28 text-xs text-slate-400 font-medium uppercase tracking-wider">Date / Time</span>
+                  <span className="w-32 text-xs text-slate-400 font-medium uppercase tracking-wider">Date / Time</span>
                   <span className="flex-1 text-xs text-slate-400 font-medium uppercase tracking-wider">Caller</span>
-                  <span className="w-20 text-right text-xs text-slate-400 font-medium uppercase tracking-wider">Outcome</span>
+                  <span className="w-24 text-right text-xs text-slate-400 font-medium uppercase tracking-wider">Outcome</span>
                 </div>
                 {/* Rows */}
                 <div className="divide-y divide-slate-100">
@@ -359,7 +359,7 @@ export default function CallLogs() {
                       selectedCallId === call.id && "bg-blue-50 border-l-2 border-l-blue-600"
                     )}
                   >
-                    <div className="w-28 shrink-0">
+                    <div className="w-32 shrink-0">
                       <span className="text-xs font-medium text-slate-700 whitespace-nowrap">
                         {call.started_at ? format(new Date(call.started_at), 'MMM d, h:mm a') : '-'}
                       </span>
@@ -370,7 +370,7 @@ export default function CallLogs() {
                         : <PhoneNumber phone={call.phone_number} email={call.customer?.email} />
                       }
                     </span>
-                    <div className="w-20 shrink-0 flex justify-end">
+                    <div className="w-24 shrink-0 flex justify-end">
                       <span className={cn(
                         "text-xs px-2 py-0.5 rounded-full font-semibold capitalize",
                         call.outcome === 'booked' || call.outcome === 'completed'
