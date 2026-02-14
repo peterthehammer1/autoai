@@ -230,28 +230,76 @@ export default function Landing() {
           </div>
         </div>
 
-        {mobileMenuOpen && (
-          <div className="md:hidden bg-white border-t border-slate-200 py-4 px-4 space-y-3">
-            <a href="#features" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-slate-600">Features</a>
-            <a href="#how-it-works" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-slate-600">How It Works</a>
-            <a href="#faq" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-slate-600">FAQ</a>
-            <a href="#testimonials" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-slate-600">Testimonials</a>
-            <a href="tel:+16473711990" className="block py-2 text-slate-600 flex items-center gap-2">
-              <Phone className="h-4 w-4" />
-              (647) 371-1990
-            </a>
-            <div className="pt-3 space-y-2">
-              <Button variant="outline" className="w-full" asChild>
-                <Link to="/dashboard">Dashboard</Link>
-              </Button>
-              <Button className="w-full bg-gradient-to-r from-blue-600 to-blue-700" asChild>
+        {/* Mobile Menu Overlay */}
+        <div className={cn(
+          "fixed inset-0 z-50 md:hidden transition-all duration-300",
+          mobileMenuOpen ? "visible" : "invisible"
+        )}>
+          {/* Backdrop */}
+          <div
+            className={cn(
+              "absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity duration-300",
+              mobileMenuOpen ? "opacity-100" : "opacity-0"
+            )}
+            onClick={() => setMobileMenuOpen(false)}
+          />
+          {/* Panel */}
+          <div className={cn(
+            "absolute top-0 right-0 h-full w-72 bg-white shadow-2xl transition-transform duration-300 ease-out flex flex-col",
+            mobileMenuOpen ? "translate-x-0" : "translate-x-full"
+          )}>
+            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+              <span className="text-sm font-semibold text-slate-900 uppercase tracking-wide">Menu</span>
+              <button
+                onClick={() => setMobileMenuOpen(false)}
+                className="p-2 rounded-lg hover:bg-slate-100 transition-colors"
+                aria-label="Close menu"
+              >
+                <X className="h-5 w-5 text-slate-500" />
+              </button>
+            </div>
+            <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+              {[
+                { href: '#features', icon: Sparkles, label: 'Features' },
+                { href: '#how-it-works', icon: Zap, label: 'How It Works' },
+                { href: '#faq', icon: MessageSquare, label: 'FAQ' },
+                { href: '#testimonials', icon: Star, label: 'Testimonials' },
+              ].map(({ href, icon: Icon, label }) => (
+                <a
+                  key={href}
+                  href={href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-3 px-3 py-3 rounded-lg text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors font-medium"
+                >
+                  <Icon className="h-4 w-4 text-slate-400" />
+                  {label}
+                </a>
+              ))}
+              <Link
+                to="/dashboard"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-3 px-3 py-3 rounded-lg text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors font-medium"
+              >
+                <BarChart3 className="h-4 w-4 text-slate-400" />
+                Dashboard
+              </Link>
+            </nav>
+            <div className="px-4 pb-6 space-y-3 border-t border-slate-100 pt-4">
+              <a
+                href="tel:+16473711990"
+                className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-slate-50 text-slate-700 font-medium hover:bg-slate-100 transition-colors"
+              >
+                <Phone className="h-4 w-4" />
+                (647) 371-1990
+              </a>
+              <Button className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 h-11" asChild>
                 <a href="#contact" onClick={() => setMobileMenuOpen(false)}>
                   Join Waitlist
                 </a>
               </Button>
             </div>
           </div>
-        )}
+        </div>
       </nav>
 
       {/* Hero */}
