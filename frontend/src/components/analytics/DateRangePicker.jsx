@@ -40,8 +40,7 @@ export default function DateRangePicker({ period, onPeriodChange, customRange, o
               {rangeLabel}
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="end">
-            <div className="bg-slate-900 rounded-lg p-3 border border-slate-700">
+          <PopoverContent className="w-auto p-0 border-slate-700 bg-slate-900" align="end" sideOffset={8}>
               <DayPicker
                 mode="range"
                 selected={customRange}
@@ -51,10 +50,11 @@ export default function DateRangePicker({ period, onPeriodChange, customRange, o
                 }}
                 numberOfMonths={1}
                 disabled={{ after: new Date() }}
+                style={{ '--rdp-accent-color': '#2563eb', '--rdp-background-color': '#1e293b' }}
                 classNames={{
-                  months: 'flex flex-col',
-                  month: 'space-y-2',
-                  caption: 'flex justify-center relative items-center text-slate-200 text-sm font-medium',
+                  months: 'flex flex-col p-3',
+                  month: 'space-y-3',
+                  caption: 'flex justify-center relative items-center text-slate-200 text-sm font-medium py-1',
                   caption_label: 'text-sm font-medium',
                   nav: 'space-x-1 flex items-center',
                   nav_button: 'h-7 w-7 bg-transparent p-0 text-slate-400 hover:text-white inline-flex items-center justify-center rounded-md',
@@ -62,20 +62,19 @@ export default function DateRangePicker({ period, onPeriodChange, customRange, o
                   nav_button_next: 'absolute right-1',
                   table: 'w-full border-collapse',
                   head_row: 'flex',
-                  head_cell: 'text-slate-500 rounded-md w-8 font-normal text-[0.7rem]',
+                  head_cell: 'text-slate-500 rounded-md w-9 font-normal text-[0.7rem]',
                   row: 'flex w-full mt-1',
-                  cell: 'text-center text-sm p-0 relative',
-                  day: 'h-8 w-8 p-0 font-normal text-slate-300 hover:bg-slate-700 rounded-md inline-flex items-center justify-center',
+                  cell: 'text-center text-sm p-0 relative h-9 w-9',
+                  day: 'h-9 w-9 p-0 font-normal text-slate-300 hover:bg-slate-700 rounded-md inline-flex items-center justify-center cursor-pointer',
                   day_selected: 'bg-blue-600 text-white hover:bg-blue-600',
-                  day_today: 'bg-slate-700 text-white',
-                  day_outside: 'text-slate-600',
-                  day_disabled: 'text-slate-700',
+                  day_today: 'bg-slate-700 text-white font-semibold',
+                  day_outside: 'text-slate-600 opacity-50',
+                  day_disabled: 'text-slate-700 opacity-30 cursor-default',
                   day_range_middle: 'bg-blue-600/20 text-blue-200 rounded-none',
                   day_range_start: 'bg-blue-600 text-white rounded-l-md rounded-r-none',
                   day_range_end: 'bg-blue-600 text-white rounded-r-md rounded-l-none',
                 }}
               />
-            </div>
           </PopoverContent>
         </Popover>
       )}
