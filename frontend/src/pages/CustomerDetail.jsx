@@ -178,7 +178,7 @@ export default function CustomerDetail() {
             </h1>
             <p className="text-xs text-slate-400">Customer Profile</p>
           </div>
-          <Button variant="outline" size="sm" onClick={handleEditOpen} className="text-xs border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white">
+          <Button variant="outline" size="sm" onClick={handleEditOpen} className="text-xs border-slate-600 bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white">
             <Edit className="mr-1.5 h-3.5 w-3.5" />
             Edit
           </Button>

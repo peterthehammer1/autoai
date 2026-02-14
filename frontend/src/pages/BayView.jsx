@@ -97,7 +97,7 @@ export default function BayView() {
             <Button
               variant="outline"
               size="icon"
-              className="h-8 w-8 border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white"
+              className="h-8 w-8 border-slate-600 bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white"
               onClick={() => navigateDate('prev')}
             >
               <ChevronLeft className="h-4 w-4" />
@@ -105,7 +105,7 @@ export default function BayView() {
             <Button
               variant="outline"
               size="sm"
-              className="text-xs border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white"
+              className="text-xs border-slate-600 bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white"
               onClick={goToday}
             >
               Today
@@ -113,7 +113,7 @@ export default function BayView() {
             <Button
               variant="outline"
               size="icon"
-              className="h-8 w-8 border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white"
+              className="h-8 w-8 border-slate-600 bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white"
               onClick={() => navigateDate('next')}
             >
               <ChevronRight className="h-4 w-4" />
