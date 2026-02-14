@@ -264,7 +264,7 @@ export default function Reports() {
             variant="outline"
             size="sm"
             onClick={() => setTargetsOpen(true)}
-            className="text-xs border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white"
+            className="text-xs border-slate-600 bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white"
           >
             <Target className="h-3.5 w-3.5 mr-1.5" />
             Targets
