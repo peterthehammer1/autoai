@@ -195,7 +195,7 @@ export default function Landing() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center">
-              <img src="/logo-light.png" alt="Premier Auto Service" className="h-20 scale-[1.3] origin-left" />
+              <img src="/logo-light.png" alt="Premier Auto Service" className="h-10 sm:h-12 md:h-14 object-contain" />
             </div>
 
             <div className="hidden md:flex items-center gap-8">
@@ -277,15 +277,16 @@ export default function Landing() {
               </p>
 
               <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                <Button size="lg" className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-lg px-8 h-14" asChild>
+                <Button size="lg" className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-base sm:text-lg px-6 sm:px-8 h-12 sm:h-14" asChild>
                   <a href="#contact">
                     Request a Demo
                   </a>
                 </Button>
-                <Button size="lg" variant="outline" className="text-lg px-8 h-14" asChild>
+                <Button size="lg" variant="outline" className="text-base sm:text-lg px-6 sm:px-8 h-12 sm:h-14" asChild>
                   <a href="tel:+16473711990" itemProp="telephone">
-                    <PhoneCall className="h-5 w-5 mr-2" />
-                    Hear Amber Live: (647) 371-1990
+                    <PhoneCall className="h-5 w-5 mr-2 shrink-0" />
+                    <span className="sm:hidden">Call Amber: (647) 371-1990</span>
+                    <span className="hidden sm:inline">Hear Amber Live: (647) 371-1990</span>
                   </a>
                 </Button>
               </div>
@@ -327,18 +328,18 @@ export default function Landing() {
                     </div>
                   </div>
                 </div>
-                <div className="aspect-[4/3] bg-gradient-to-br from-slate-800 to-slate-900 p-6">
-                  <div className="grid grid-cols-4 gap-3 mb-4">
+                <div className="aspect-[4/3] bg-gradient-to-br from-slate-800 to-slate-900 p-3 sm:p-6">
+                  <div className="grid grid-cols-4 gap-2 sm:gap-3 mb-4">
                     {stats.map((stat, i) => (
-                      <div key={i} className="bg-slate-800/50 rounded-lg p-3 text-center border border-slate-700">
-                        <stat.icon className="h-5 w-5 text-blue-400 mx-auto mb-1" />
-                        <p className="text-lg font-bold text-white">{stat.value}</p>
-                        <p className="text-[10px] text-slate-400">{stat.label}</p>
+                      <div key={i} className="bg-slate-800/50 rounded-lg p-2 sm:p-3 text-center border border-slate-700">
+                        <stat.icon className="h-4 w-4 sm:h-5 sm:w-5 text-blue-400 mx-auto mb-1" />
+                        <p className="text-sm sm:text-lg font-bold text-white">{stat.value}</p>
+                        <p className="text-[8px] sm:text-[10px] text-slate-400 leading-tight">{stat.label}</p>
                       </div>
                     ))}
                   </div>
-                  <div className="grid grid-cols-3 gap-3">
-                    <div className="col-span-2 bg-slate-800/50 rounded-lg p-4 border border-slate-700">
+                  <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                    <div className="col-span-2 bg-slate-800/50 rounded-lg p-3 sm:p-4 border border-slate-700">
                       <div className="flex items-center gap-2 mb-3">
                         <Calendar className="h-4 w-4 text-blue-400" />
                         <span className="text-sm font-medium text-white">Today's Schedule</span>
