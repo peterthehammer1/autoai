@@ -28,6 +28,8 @@ const Reports = lazyWithRetry(() => import('@/pages/Reports'))
 const Services = lazyWithRetry(() => import('@/pages/Services'))
 const Settings = lazyWithRetry(() => import('@/pages/Settings'))
 const BayView = lazyWithRetry(() => import('@/pages/BayView'))
+const WorkOrders = lazyWithRetry(() => import('@/pages/WorkOrders'))
+const WorkOrderDetail = lazyWithRetry(() => import('@/pages/WorkOrderDetail'))
 
 export function PageLoader() {
   return (
@@ -59,6 +61,8 @@ function App() {
           <Route path="analytics" element={<Analytics />} />
           <Route path="reports" element={<Reports />} />
           <Route path="bay-view" element={<BayView />} />
+          <Route path="work-orders" element={<WorkOrders />} />
+          <Route path="work-orders/:id" element={<WorkOrderDetail />} />
           <Route path="services" element={<Services />} />
           <Route path="settings" element={<Settings />} />
         </Route>

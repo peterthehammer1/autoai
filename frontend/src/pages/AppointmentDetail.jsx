@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { format } from 'date-fns'
-import { appointments } from '@/api'
+import { appointments, workOrders } from '@/api'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -20,6 +20,7 @@ import {
   DollarSign,
   CheckCircle,
   XCircle,
+  ClipboardList,
   Edit,
 } from 'lucide-react'
 import {
@@ -64,6 +65,26 @@ export default function AppointmentDetail() {
     onSuccess: () => {
       queryClient.invalidateQueries(['appointment', id])
       toast({ title: 'Confirmation sent' })
+    },
+  })
+
+  const createWOMutation = useMutation({
+    mutationFn: () =>
+      workOrders.create({
+        appointment_id: id,
+        customer_id: apt?.customer?.id,
+        vehicle_id: apt?.vehicle?.id,
+      }),
+    onSuccess: (data) => {
+      toast({ title: `Work order ${data.work_order.work_order_display} created` })
+      navigate(`/work-orders/${data.work_order.id}`)
+    },
+    onError: (err) => {
+      if (err.message?.includes('already has work order')) {
+        toast({ title: 'Work order already exists', description: err.message, variant: 'destructive' })
+      } else {
+        toast({ title: 'Error', description: err.message, variant: 'destructive' })
+      }
     },
   })
 
@@ -199,6 +220,15 @@ export default function AppointmentDetail() {
                 Send Confirmation SMS
               </Button>
             )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => createWOMutation.mutate()}
+              disabled={createWOMutation.isPending}
+            >
+              <ClipboardList className="h-3.5 w-3.5 mr-1" />
+              {createWOMutation.isPending ? 'Creating...' : 'Create Work Order'}
+            </Button>
           </div>
         </div>
       )}

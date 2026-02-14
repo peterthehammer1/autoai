@@ -259,6 +259,54 @@ export const smsLogs = {
   }),
 }
 
+// Work Orders
+export const workOrders = {
+  list: (params = {}) => {
+    const cleanParams = Object.fromEntries(
+      Object.entries(params).filter(([_, v]) => v != null && v !== '')
+    )
+    const query = new URLSearchParams(cleanParams).toString()
+    return fetchAPI(`/work-orders${query ? `?${query}` : ''}`)
+  },
+
+  get: (id) => fetchAPI(`/work-orders/${id}`),
+
+  create: (data) => fetchAPI('/work-orders', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+
+  update: (id, data) => fetchAPI(`/work-orders/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  }),
+
+  addItem: (id, data) => fetchAPI(`/work-orders/${id}/items`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+
+  updateItem: (id, itemId, data) => fetchAPI(`/work-orders/${id}/items/${itemId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  }),
+
+  deleteItem: (id, itemId) => fetchAPI(`/work-orders/${id}/items/${itemId}`, {
+    method: 'DELETE',
+  }),
+
+  recalculate: (id) => fetchAPI(`/work-orders/${id}/recalculate`, {
+    method: 'POST',
+  }),
+
+  addPayment: (id, data) => fetchAPI(`/work-orders/${id}/payments`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+
+  getPayments: (id) => fetchAPI(`/work-orders/${id}/payments`),
+}
+
 // Search
 export const search = {
   query: (q, limit = 10) => fetchAPI(`/search?q=${encodeURIComponent(q)}&limit=${limit}`),
@@ -288,6 +336,7 @@ export default {
   analytics,
   callLogs,
   smsLogs,
+  workOrders,
   search,
   leads,
 }

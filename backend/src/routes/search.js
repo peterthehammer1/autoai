@@ -84,13 +84,60 @@ router.get('/', async (req, res, next) => {
       href: `/services/${s.id}`,
     }));
 
-    const total = customers.length + appointmentResults.length + services.length;
+    // Search work orders by WO number or customer
+    let workOrderResults = [];
+    const woNumberMatch = q.match(/^wo[-\s]?(\d+)$/i);
+
+    if (woNumberMatch) {
+      const woNum = parseInt(woNumberMatch[1]) - 1000;
+      if (woNum > 0) {
+        const { data: wos } = await supabase
+          .from('work_orders')
+          .select('id, work_order_number, status, total_cents, customer:customers(first_name, last_name)')
+          .eq('work_order_number', woNum)
+          .neq('status', 'void')
+          .limit(5);
+
+        workOrderResults = (wos || []).map(w => {
+          const name = w.customer ? `${w.customer.first_name || ''} ${w.customer.last_name || ''}`.trim() : '';
+          return {
+            id: w.id,
+            type: 'work_order',
+            title: `WO-${1000 + w.work_order_number}${name ? ` - ${name}` : ''}`,
+            subtitle: `${(w.status || '').replace('_', ' ')} - $${w.total_cents?.toFixed(2) || '0.00'}`,
+            href: `/work-orders/${w.id}`,
+          };
+        });
+      }
+    } else if (customerIds.length > 0) {
+      const { data: wos } = await supabase
+        .from('work_orders')
+        .select('id, work_order_number, status, total_cents, customer:customers(first_name, last_name)')
+        .in('customer_id', customerIds)
+        .neq('status', 'void')
+        .order('created_at', { ascending: false })
+        .limit(maxResults);
+
+      workOrderResults = (wos || []).map(w => {
+        const name = w.customer ? `${w.customer.first_name || ''} ${w.customer.last_name || ''}`.trim() : '';
+        return {
+          id: w.id,
+          type: 'work_order',
+          title: `WO-${1000 + w.work_order_number}${name ? ` - ${name}` : ''}`,
+          subtitle: `${(w.status || '').replace('_', ' ')} - $${w.total_cents?.toFixed(2) || '0.00'}`,
+          href: `/work-orders/${w.id}`,
+        };
+      });
+    }
+
+    const total = customers.length + appointmentResults.length + services.length + workOrderResults.length;
 
     res.json({
       results: {
         customers,
         appointments: appointmentResults,
         services,
+        work_orders: workOrderResults,
       },
       total,
     });

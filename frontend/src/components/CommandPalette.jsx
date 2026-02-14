@@ -5,12 +5,13 @@ import { search } from '@/api'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { cn } from '@/lib/utils'
-import { Search, User, Calendar, Wrench, Loader2 } from 'lucide-react'
+import { Search, User, Calendar, Wrench, ClipboardList, Loader2 } from 'lucide-react'
 
 const TYPE_CONFIG = {
   customers: { label: 'Customers', icon: User },
   appointments: { label: 'Appointments', icon: Calendar },
   services: { label: 'Services', icon: Wrench },
+  work_orders: { label: 'Work Orders', icon: ClipboardList },
 }
 
 export default function CommandPalette({ open, onOpenChange }) {
@@ -47,7 +48,7 @@ export default function CommandPalette({ open, onOpenChange }) {
   const allResults = useMemo(() => {
     if (!data?.results) return []
     const items = []
-    for (const type of ['customers', 'appointments', 'services']) {
+    for (const type of ['customers', 'appointments', 'work_orders', 'services']) {
       const group = data.results[type] || []
       if (group.length > 0) {
         items.push({ type: 'header', label: TYPE_CONFIG[type].label, key: `header-${type}` })
@@ -130,7 +131,8 @@ export default function CommandPalette({ open, onOpenChange }) {
                 }
                 const idx = selectableResults.indexOf(item)
                 const isActive = idx === activeIndex
-                const config = TYPE_CONFIG[item.type + 's'] || TYPE_CONFIG.customers
+                const typeKey = item.type === 'work_order' ? 'work_orders' : item.type + 's'
+                const config = TYPE_CONFIG[typeKey] || TYPE_CONFIG.customers
                 const Icon = config.icon
                 return (
                   <button
