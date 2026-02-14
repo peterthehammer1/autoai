@@ -23,7 +23,7 @@ import DateRangePicker from '@/components/analytics/DateRangePicker'
 import DrillDownDialog from '@/components/analytics/DrillDownDialog'
 
 export default function Analytics() {
-  const [period, setPeriod] = useState('week')
+  const [period, setPeriod] = useState('month')
   const [customRange, setCustomRange] = useState(undefined)
   const [drillDown, setDrillDown] = useState(null)
 
