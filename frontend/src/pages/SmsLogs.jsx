@@ -229,7 +229,7 @@ export default function SmsLogs() {
         {/* Left Panel - SMS List */}
         <div className={cn(
           "flex flex-col bg-white shadow-lg border-0 rounded-lg overflow-hidden",
-          "w-full lg:w-96",
+          "w-full lg:w-[440px]",
           selectedSmsId ? "hidden lg:flex" : "flex"
         )}>
           {/* Search & Filter Header */}
@@ -328,7 +328,7 @@ export default function SmsLogs() {
                 <div className="flex items-center gap-2 px-3 py-1.5 border-b border-slate-100">
                   <span className="w-28 text-xs text-slate-400 font-medium uppercase tracking-wider">Date / Time</span>
                   <span className="flex-1 text-xs text-slate-400 font-medium uppercase tracking-wider">Recipient</span>
-                  <span className="w-24 text-right text-xs text-slate-400 font-medium uppercase tracking-wider">Type</span>
+                  <span className="w-28 text-right text-xs text-slate-400 font-medium uppercase tracking-wider">Type</span>
                 </div>
                 {/* Rows */}
                 <div className="divide-y divide-slate-100">
@@ -354,7 +354,7 @@ export default function SmsLogs() {
                             : <PhoneNumber phone={sms.to_phone} email={sms.customer?.email} />
                           }
                         </span>
-                        <div className="w-24 shrink-0 flex justify-end">
+                        <div className="w-28 shrink-0 flex justify-end">
                           <span className={cn(
                             "text-xs px-2 py-0.5 rounded-full font-semibold capitalize",
                             typeConfig.label === 'Confirmation' || typeConfig.label === 'Reminder'
