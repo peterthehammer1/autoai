@@ -4,9 +4,8 @@ import { format } from 'date-fns'
 import { analytics } from '@/api'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { BarChart3, Clock, Activity, Target } from 'lucide-react'
+import { BarChart3, Clock, Activity } from 'lucide-react'
 
 // Analytics sub-components
 import StatCards from '@/components/analytics/StatCards'
@@ -22,13 +21,11 @@ import ComparisonBar from '@/components/analytics/ComparisonBar'
 import ExportButton from '@/components/analytics/ExportButton'
 import DateRangePicker from '@/components/analytics/DateRangePicker'
 import DrillDownDialog from '@/components/analytics/DrillDownDialog'
-import TargetsSettingsDialog from '@/components/analytics/TargetsSettingsDialog'
 
 export default function Analytics() {
   const [period, setPeriod] = useState('week')
   const [customRange, setCustomRange] = useState(undefined)
   const [drillDown, setDrillDown] = useState(null)
-  const [targetsOpen, setTargetsOpen] = useState(false)
 
   // Build date params for custom range
   const customDates = period === 'custom' && customRange?.from && customRange?.to
@@ -82,15 +79,6 @@ export default function Analytics() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setTargetsOpen(true)}
-              className="text-xs border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white"
-            >
-              <Target className="h-3.5 w-3.5 mr-1.5" />
-              Targets
-            </Button>
             <ExportButton comprehensive={comprehensive} />
             <DateRangePicker
               period={period}
@@ -303,8 +291,6 @@ export default function Analytics() {
       {/* Drill-down dialog */}
       <DrillDownDialog drillDown={drillDown} onClose={() => setDrillDown(null)} />
 
-      {/* Targets settings dialog */}
-      <TargetsSettingsDialog open={targetsOpen} onOpenChange={setTargetsOpen} targets={targets} />
     </div>
   )
 }

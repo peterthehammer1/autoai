@@ -20,9 +20,11 @@ import {
   BarChart3,
   Loader2,
   CheckCircle,
+  Target,
 } from 'lucide-react'
 import { arrayToCSV, downloadCSV, formatDateForFilename } from '@/lib/csv'
 import { formatTime12Hour, formatCents } from '@/lib/utils'
+import TargetsSettingsDialog from '@/components/analytics/TargetsSettingsDialog'
 
 export default function Reports() {
   const [dateRange, setDateRange] = useState('month')
@@ -30,6 +32,13 @@ export default function Reports() {
   const [customEndDate, setCustomEndDate] = useState('')
   const [downloadingReport, setDownloadingReport] = useState(null)
   const [downloadedReports, setDownloadedReports] = useState([])
+  const [targetsOpen, setTargetsOpen] = useState(false)
+
+  const { data: targetsData } = useQuery({
+    queryKey: ['analytics', 'targets'],
+    queryFn: analytics.getTargets,
+  })
+  const targets = targetsData?.targets || []
 
   // Get date range based on selection
   const getDateRange = () => {
@@ -243,12 +252,23 @@ export default function Reports() {
     <div className="space-y-4">
       {/* Page Header - Dark Theme */}
       <div className="bg-gradient-to-r from-slate-800 to-slate-900 -mx-4 sm:-mx-6 px-4 pl-14 sm:px-6 lg:pl-6 py-4 mb-2">
-        <div className="flex items-center gap-3">
-          <FileDown className="h-5 w-5 text-blue-400" />
-          <div>
-            <h1 className="text-lg font-semibold text-white">Reports</h1>
-            <p className="text-xs text-slate-400">Download data exports and reports</p>
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div className="flex items-center gap-3">
+            <FileDown className="h-5 w-5 text-blue-400" />
+            <div>
+              <h1 className="text-lg font-semibold text-white">Reports</h1>
+              <p className="text-xs text-slate-400">Download data exports and reports</p>
+            </div>
           </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setTargetsOpen(true)}
+            className="text-xs border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white"
+          >
+            <Target className="h-3.5 w-3.5 mr-1.5" />
+            Targets
+          </Button>
         </div>
       </div>
 
@@ -351,10 +371,12 @@ export default function Reports() {
       {/* Info Note */}
       <div className="bg-slate-50 border-0 rounded-lg p-3 text-xs text-slate-600">
         <p>
-          <strong>Note:</strong> Customer List export includes all customers regardless of date range. 
+          <strong>Note:</strong> Customer List export includes all customers regardless of date range.
           All other reports are filtered to the selected date range.
         </p>
       </div>
+
+      <TargetsSettingsDialog open={targetsOpen} onOpenChange={setTargetsOpen} targets={targets} />
     </div>
   )
 }
