@@ -98,6 +98,14 @@ export default function Layout() {
             </Button>
           </div>
           <nav className="flex flex-col gap-0.5 p-3 flex-1" aria-label="Main navigation">
+            {/* Mobile search trigger */}
+            <button
+              onClick={() => { setSidebarOpen(false); setSearchOpen(true) }}
+              className="flex items-center gap-3 rounded-lg px-3 py-2.5 mb-2 text-sm text-slate-500 bg-slate-800/60 border border-slate-700/50 hover:bg-slate-800 hover:text-slate-300 transition-colors"
+            >
+              <Search className="h-4 w-4" />
+              <span className="flex-1 text-left">Search...</span>
+            </button>
             {navigation.map((item) => (
               <Link
                 key={item.name}
@@ -165,6 +173,15 @@ export default function Layout() {
           
           {/* Navigation */}
           <nav data-tour="sidebar-nav" className="flex flex-col gap-0.5 p-3 flex-1" aria-label="Main navigation">
+            {/* Search trigger */}
+            <button
+              onClick={() => setSearchOpen(true)}
+              className="flex items-center gap-3 rounded-lg px-3 py-2 mb-2 text-sm text-slate-500 bg-slate-800/60 border border-slate-700/50 hover:bg-slate-800 hover:text-slate-300 hover:border-slate-600 transition-colors"
+            >
+              <Search className="h-4 w-4" />
+              <span className="flex-1 text-left">Search...</span>
+              <kbd className="px-1.5 py-0.5 text-[10px] font-medium text-slate-500 bg-slate-800 border border-slate-700 rounded">⌘K</kbd>
+            </button>
             <p className="px-3 py-2 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
               Main
             </p>
@@ -262,18 +279,7 @@ export default function Layout() {
         </div>
 
         {/* Page content */}
-        <main id="main-content" className="relative px-4 sm:px-6 pb-4 sm:pb-6" role="main">
-          {/* Search trigger */}
-          <div className="hidden lg:flex absolute top-4 right-4 z-40">
-            <button
-              onClick={() => setSearchOpen(true)}
-              className="flex items-center gap-2 px-3 py-1.5 text-xs text-slate-400 bg-white/90 backdrop-blur border border-slate-200 rounded-lg shadow-sm hover:text-slate-600 hover:border-slate-300 transition-colors"
-            >
-              <Search className="h-3.5 w-3.5" />
-              <span>Search</span>
-              <kbd className="ml-1 px-1.5 py-0.5 text-[10px] font-medium bg-slate-100 rounded">⌘K</kbd>
-            </button>
-          </div>
+        <main id="main-content" className="px-4 sm:px-6 pb-4 sm:pb-6" role="main">
           <BreadcrumbProvider>
             <Breadcrumbs />
             <Suspense fallback={<PageLoader />}>
