@@ -59,6 +59,7 @@ import {
   formatTime12Hour,
   formatDuration,
   getStatusColor,
+  getNextBusinessDay,
 } from '@/lib/utils'
 import NewAppointmentModal from '@/components/NewAppointmentModal'
 import PhoneNumber from '@/components/PhoneNumber'
@@ -111,11 +112,12 @@ export default function Appointments() {
   const [calendarView, setCalendarView] = useState(
     typeof window !== 'undefined' && window.innerWidth < 640 ? 'day' : 'week'
   )
-  const [calendarMonth, setCalendarMonth] = useState(new Date())
-  const [weekStart, setWeekStart] = useState(startOfWeek(new Date(), { weekStartsOn: 1 }))
-  const [calendarDay, setCalendarDay] = useState(format(new Date(), 'yyyy-MM-dd'))
-  
-  const dateFilter = searchParams.get('date') || format(new Date(), 'yyyy-MM-dd')
+  const businessDay = getNextBusinessDay()
+  const [calendarMonth, setCalendarMonth] = useState(businessDay)
+  const [weekStart, setWeekStart] = useState(startOfWeek(businessDay, { weekStartsOn: 1 }))
+  const [calendarDay, setCalendarDay] = useState(format(businessDay, 'yyyy-MM-dd'))
+
+  const dateFilter = searchParams.get('date') || format(businessDay, 'yyyy-MM-dd')
   const statusFilter = searchParams.get('status') || ''
 
   // Fetch upcoming appointments
@@ -187,7 +189,7 @@ export default function Appointments() {
   }
 
   const handleToday = () => {
-    setSearchParams({ date: format(new Date(), 'yyyy-MM-dd'), status: statusFilter })
+    setSearchParams({ date: format(getNextBusinessDay(), 'yyyy-MM-dd'), status: statusFilter })
   }
 
   const formatDateLabel = (dateStr) => {
@@ -201,9 +203,10 @@ export default function Appointments() {
   const navigateWeek = (dir) => setWeekStart(addDays(weekStart, dir * 7))
   const navigateDay = (dir) => setCalendarDay(format(addDays(parseISO(calendarDay), dir), 'yyyy-MM-dd'))
   const goToToday = () => {
-    setWeekStart(startOfWeek(new Date(), { weekStartsOn: 1 }))
-    setCalendarDay(format(new Date(), 'yyyy-MM-dd'))
-    setCalendarMonth(new Date())
+    const bd = getNextBusinessDay()
+    setWeekStart(startOfWeek(bd, { weekStartsOn: 1 }))
+    setCalendarDay(format(bd, 'yyyy-MM-dd'))
+    setCalendarMonth(bd)
   }
 
   // Renders a single post-it appointment card (used in week + day views)
