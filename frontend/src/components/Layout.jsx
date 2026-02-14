@@ -32,12 +32,12 @@ const PHONE_NUMBERS = [
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+  { name: 'Analytics', href: '/analytics', icon: BarChart3 },
   { name: 'Appointments', href: '/appointments', icon: Calendar },
   { name: 'Bay View', href: '/bay-view', icon: Columns },
   { name: 'Customers', href: '/customers', icon: Users },
   { name: 'Call Logs', href: '/call-logs', icon: Phone },
   { name: 'SMS Messages', href: '/sms-logs', icon: MessageSquare },
-  { name: 'Analytics', href: '/analytics', icon: BarChart3 },
   { name: 'Reports', href: '/reports', icon: FileDown },
   // Hidden for now - pages still accessible via direct URL
   // { name: 'Services', href: '/services', icon: Wrench },
@@ -261,20 +261,19 @@ export default function Layout() {
           </Button>
         </div>
 
-        {/* Search trigger */}
-        <div className="hidden lg:flex fixed top-3 right-4 z-40">
-          <button
-            onClick={() => setSearchOpen(true)}
-            className="flex items-center gap-2 px-3 py-1.5 text-xs text-slate-400 bg-white/90 backdrop-blur border border-slate-200 rounded-lg shadow-sm hover:text-slate-600 hover:border-slate-300 transition-colors"
-          >
-            <Search className="h-3.5 w-3.5" />
-            <span>Search</span>
-            <kbd className="ml-1 px-1.5 py-0.5 text-[10px] font-medium bg-slate-100 rounded">⌘K</kbd>
-          </button>
-        </div>
-
         {/* Page content */}
-        <main id="main-content" className="px-4 sm:px-6 pb-4 sm:pb-6" role="main">
+        <main id="main-content" className="relative px-4 sm:px-6 pb-4 sm:pb-6" role="main">
+          {/* Search trigger */}
+          <div className="hidden lg:flex absolute top-4 right-4 z-40">
+            <button
+              onClick={() => setSearchOpen(true)}
+              className="flex items-center gap-2 px-3 py-1.5 text-xs text-slate-400 bg-white/90 backdrop-blur border border-slate-200 rounded-lg shadow-sm hover:text-slate-600 hover:border-slate-300 transition-colors"
+            >
+              <Search className="h-3.5 w-3.5" />
+              <span>Search</span>
+              <kbd className="ml-1 px-1.5 py-0.5 text-[10px] font-medium bg-slate-100 rounded">⌘K</kbd>
+            </button>
+          </div>
           <BreadcrumbProvider>
             <Breadcrumbs />
             <Suspense fallback={<PageLoader />}>
