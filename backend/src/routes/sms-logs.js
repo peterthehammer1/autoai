@@ -1,7 +1,8 @@
 import { Router } from 'express';
 import { supabase } from '../config/database.js';
 import { nowEST } from '../utils/timezone.js';
-import { clampPagination } from '../middleware/validate.js';
+import { isValidPhone, isValidUUID, clampPagination, validationError } from '../middleware/validate.js';
+import { sendSMS } from '../services/sms.js';
 
 const router = Router();
 
@@ -68,6 +69,46 @@ router.get('/', async (req, res, next) => {
       }
     });
 
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * POST /api/sms-logs/send
+ * Send a custom SMS message
+ */
+router.post('/send', async (req, res, next) => {
+  try {
+    const { to, body, customer_id, appointment_id } = req.body;
+
+    if (!to || !isValidPhone(to)) {
+      return validationError(res, 'Valid phone number is required');
+    }
+    if (!body || typeof body !== 'string' || body.trim().length === 0) {
+      return validationError(res, 'Message body is required');
+    }
+    if (body.length > 1600) {
+      return validationError(res, 'Message body must be 1600 characters or less');
+    }
+    if (customer_id && !isValidUUID(customer_id)) {
+      return validationError(res, 'Invalid customer ID');
+    }
+    if (appointment_id && !isValidUUID(appointment_id)) {
+      return validationError(res, 'Invalid appointment ID');
+    }
+
+    const result = await sendSMS(to, body.trim(), {
+      messageType: 'custom',
+      customerId: customer_id || null,
+      appointmentId: appointment_id || null,
+    });
+
+    if (!result.success) {
+      return res.status(502).json({ error: { message: result.error || 'Failed to send SMS' } });
+    }
+
+    res.status(201).json({ success: true, messageId: result.messageId });
   } catch (error) {
     next(error);
   }

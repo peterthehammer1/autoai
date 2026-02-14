@@ -32,6 +32,7 @@ import { useToast } from '@/hooks/use-toast'
 import PhoneNumber, { Email } from '@/components/PhoneNumber'
 import CarImage from '@/components/CarImage'
 import VehicleIntelligence from '@/components/VehicleIntelligence'
+import InlineNotes from '@/components/InlineNotes'
 import { useAppointmentTour } from '@/hooks/use-appointment-tour'
 
 export default function AppointmentDetail() {
@@ -330,6 +331,32 @@ export default function AppointmentDetail() {
                 <p className="text-sm text-slate-700">{apt.customer_notes}</p>
               </div>
             )}
+          </div>
+        </div>
+
+        {/* Notes */}
+        <div className="bg-white shadow-lg border-0 rounded-lg overflow-hidden">
+          <div className="px-4 py-3 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-blue-50/30">
+            <h3 className="text-sm font-medium text-slate-700 flex items-center gap-2">
+              <Edit className="h-4 w-4 text-blue-400" />
+              Notes
+            </h3>
+          </div>
+          <div className="p-4 space-y-4">
+            <InlineNotes
+              value={apt.customer_notes}
+              onSave={(val) => updateMutation.mutate({ customer_notes: val })}
+              isPending={updateMutation.isPending}
+              label="Customer Notes"
+              placeholder="Add customer-facing notes..."
+            />
+            <InlineNotes
+              value={apt.internal_notes}
+              onSave={(val) => updateMutation.mutate({ internal_notes: val })}
+              isPending={updateMutation.isPending}
+              label="Internal Notes"
+              placeholder="Add internal notes..."
+            />
           </div>
         </div>
 

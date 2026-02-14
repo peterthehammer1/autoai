@@ -92,6 +92,22 @@ export const customers = {
 
   getVehicleIntelligence: (customerId, vehicleId) =>
     fetchAPI(`/customers/${customerId}/vehicles/${vehicleId}/intelligence`),
+
+  listTags: () => fetchAPI('/customers/tags'),
+
+  createTag: (data) => fetchAPI('/customers/tags', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+
+  addTag: (customerId, tagId) => fetchAPI(`/customers/${customerId}/tags`, {
+    method: 'POST',
+    body: JSON.stringify({ tag_id: tagId }),
+  }),
+
+  removeTag: (customerId, tagId) => fetchAPI(`/customers/${customerId}/tags/${tagId}`, {
+    method: 'DELETE',
+  }),
 }
 
 // Services
@@ -185,13 +201,21 @@ export const analytics = {
 // Call Logs
 export const callLogs = {
   list: (params = {}) => {
-    const query = new URLSearchParams(params).toString()
+    const cleanParams = Object.fromEntries(
+      Object.entries(params).filter(([_, v]) => v != null && v !== '')
+    )
+    const query = new URLSearchParams(cleanParams).toString()
     return fetchAPI(`/call-logs${query ? `?${query}` : ''}`)
   },
-  
+
   get: (id) => fetchAPI(`/call-logs/${id}`),
-  
+
   stats: (period = 'week') => fetchAPI(`/call-logs/stats/summary?period=${period}`),
+
+  update: (id, data) => fetchAPI(`/call-logs/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  }),
 }
 
 // SMS Logs
@@ -204,8 +228,13 @@ export const smsLogs = {
     const query = new URLSearchParams(cleanParams).toString()
     return fetchAPI(`/sms-logs${query ? `?${query}` : ''}`)
   },
-  
+
   stats: (period = 'week') => fetchAPI(`/sms-logs/stats?period=${period}`),
+
+  send: (data) => fetchAPI('/sms-logs/send', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
 }
 
 // Leads (public — no API key)

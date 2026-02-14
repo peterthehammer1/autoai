@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { format, formatDistanceToNow } from 'date-fns'
 import { callLogs } from '@/api'
 import { Badge } from '@/components/ui/badge'
@@ -39,8 +39,11 @@ import {
   Minus,
   Volume2,
   ChevronLeft,
+  Filter,
+  StickyNote,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import InlineNotes from '@/components/InlineNotes'
 import PhoneNumber from '@/components/PhoneNumber'
 import { Link } from 'react-router-dom'
 
@@ -48,18 +51,33 @@ export default function CallLogs() {
   const [selectedCallId, setSelectedCallId] = useState(null)
   const [outcomeFilter, setOutcomeFilter] = useState('all')
   const [searchTerm, setSearchTerm] = useState('')
-  
+  const [dateFrom, setDateFrom] = useState('')
+  const [dateTo, setDateTo] = useState('')
+  const [sentimentFilter, setSentimentFilter] = useState('all')
+  const [showFilters, setShowFilters] = useState(false)
+  const queryClient = useQueryClient()
+
   const { data: stats } = useQuery({
     queryKey: ['call-logs', 'stats'],
     queryFn: () => callLogs.stats('week'),
   })
 
   const { data: callData, isLoading } = useQuery({
-    queryKey: ['call-logs', 'list', outcomeFilter],
-    queryFn: () => callLogs.list({ 
+    queryKey: ['call-logs', 'list', outcomeFilter, dateFrom, dateTo, sentimentFilter],
+    queryFn: () => callLogs.list({
       limit: 200,
-      ...(outcomeFilter !== 'all' && { outcome: outcomeFilter })
+      ...(outcomeFilter !== 'all' && { outcome: outcomeFilter }),
+      ...(sentimentFilter !== 'all' && { sentiment: sentimentFilter }),
+      ...(dateFrom && { date_from: dateFrom }),
+      ...(dateTo && { date_to: dateTo }),
     }),
+  })
+
+  const notesMutation = useMutation({
+    mutationFn: ({ id, notes }) => callLogs.update(id, { notes }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['call-logs'] })
+    },
   })
 
   // Filter calls by search term and exclude abandoned for demo
@@ -192,9 +210,11 @@ export default function CallLogs() {
     setSelectedCallId(null)
   }
 
-  const conversionRate = stats?.summary?.total_calls 
-    ? Math.round((stats.summary.by_outcome?.booked || 0) / stats.summary.total_calls * 100) 
+  const conversionRate = stats?.summary?.total_calls
+    ? Math.round((stats.summary.by_outcome?.booked || 0) / stats.summary.total_calls * 100)
     : 0
+
+  const activeFilterCount = [dateFrom, dateTo, sentimentFilter !== 'all' && sentimentFilter].filter(Boolean).length
 
   return (
     <div className="h-[calc(100vh-4rem)] flex flex-col">
@@ -243,7 +263,65 @@ export default function CallLogs() {
                   <SelectItem value="transferred">Transferred</SelectItem>
                 </SelectContent>
               </Select>
+              <Button
+                variant={showFilters ? "secondary" : "outline"}
+                size="sm"
+                className="h-10 px-2.5 shrink-0 relative"
+                onClick={() => setShowFilters(!showFilters)}
+              >
+                <Filter className="h-4 w-4" />
+                {activeFilterCount > 0 && (
+                  <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-blue-600 text-white text-[10px] flex items-center justify-center">
+                    {activeFilterCount}
+                  </span>
+                )}
+              </Button>
             </div>
+            {showFilters && (
+              <div className="space-y-2 pt-1">
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-[10px] text-slate-400 uppercase tracking-wider">From</label>
+                    <Input
+                      type="date"
+                      value={dateFrom}
+                      onChange={(e) => setDateFrom(e.target.value)}
+                      className="h-8 text-xs border-slate-300"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-slate-400 uppercase tracking-wider">To</label>
+                    <Input
+                      type="date"
+                      value={dateTo}
+                      onChange={(e) => setDateTo(e.target.value)}
+                      className="h-8 text-xs border-slate-300"
+                    />
+                  </div>
+                </div>
+                <Select value={sentimentFilter} onValueChange={setSentimentFilter}>
+                  <SelectTrigger className="h-8 text-xs border-slate-300">
+                    <SelectValue placeholder="All Sentiments" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Sentiments</SelectItem>
+                    <SelectItem value="positive">Positive</SelectItem>
+                    <SelectItem value="neutral">Neutral</SelectItem>
+                    <SelectItem value="negative">Negative</SelectItem>
+                  </SelectContent>
+                </Select>
+                {activeFilterCount > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 text-xs text-slate-500 px-2"
+                    onClick={() => { setDateFrom(''); setDateTo(''); setSentimentFilter('all') }}
+                  >
+                    Clear filters
+                  </Button>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Call List */}
@@ -444,14 +522,21 @@ export default function CallLogs() {
                     <span className="hidden sm:inline">Transcript</span>
                   </TabsTrigger>
                   {selectedCall.recording_url && (
-                    <TabsTrigger 
-                      value="recording" 
+                    <TabsTrigger
+                      value="recording"
                       className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-transparent data-[state=active]:text-blue-600 py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm text-slate-500"
                     >
                       <Volume2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-1.5" />
                       <span className="hidden sm:inline">Recording</span>
                     </TabsTrigger>
                   )}
+                  <TabsTrigger
+                    value="notes"
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-transparent data-[state=active]:text-blue-600 py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm text-slate-500"
+                  >
+                    <StickyNote className="h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-1.5" />
+                    <span className="hidden sm:inline">Notes</span>
+                  </TabsTrigger>
                 </TabsList>
 
                 <ScrollArea className="flex-1">
@@ -587,9 +672,9 @@ export default function CallLogs() {
                             </p>
                           </div>
                         </div>
-                        <audio 
-                          controls 
-                          className="w-full" 
+                        <audio
+                          controls
+                          className="w-full"
                           src={selectedCall.recording_url}
                         >
                           Your browser does not support audio playback.
@@ -597,6 +682,17 @@ export default function CallLogs() {
                       </div>
                     </TabsContent>
                   )}
+
+                  {/* Notes Tab */}
+                  <TabsContent value="notes" className="m-0 p-4 sm:p-6">
+                    <InlineNotes
+                      value={selectedCall.notes}
+                      onSave={(val) => notesMutation.mutate({ id: selectedCall.id, notes: val })}
+                      isPending={notesMutation.isPending}
+                      label="Call Notes"
+                      placeholder="Add notes about this call..."
+                    />
+                  </TabsContent>
                 </ScrollArea>
               </Tabs>
             </div>

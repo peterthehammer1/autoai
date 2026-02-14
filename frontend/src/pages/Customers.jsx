@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { format, formatDistanceToNow } from 'date-fns'
 import { customers, analytics } from '@/api'
@@ -16,10 +16,10 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog'
-import { 
-  Search, 
-  User, 
-  ChevronRight, 
+import {
+  Search,
+  User,
+  ChevronRight,
   ChevronLeft,
   Users,
   Car,
@@ -50,6 +50,9 @@ import {
   ThumbsUp,
   ThumbsDown,
   Minus,
+  Send,
+  Download,
+  Tag,
 } from 'lucide-react'
 import { cn, formatTime12Hour, getStatusColor, formatCents, formatPhone } from '@/lib/utils'
 import PhoneNumber, { Email } from '@/components/PhoneNumber'
@@ -57,6 +60,14 @@ import CarImage from '@/components/CarImage'
 import CustomerAvatar from '@/components/CustomerAvatar'
 import { Link } from 'react-router-dom'
 import { useCustomersTour } from '@/hooks/use-customers-tour'
+import InlineNotes from '@/components/InlineNotes'
+import TagBadge from '@/components/TagBadge'
+import TagSelector from '@/components/TagSelector'
+import SmsComposeDialog from '@/components/SmsComposeDialog'
+import BulkActionBar from '@/components/BulkActionBar'
+import BulkSmsDialog from '@/components/BulkSmsDialog'
+import { useSelection } from '@/hooks/use-selection'
+import { arrayToCSV, downloadCSV, formatDateForFilename } from '@/lib/csv'
 
 const ITEMS_PER_PAGE = 50
 
@@ -66,7 +77,10 @@ export default function Customers() {
   const [selectedCustomerId, setSelectedCustomerId] = useState(null)
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [isAddVehicleOpen, setIsAddVehicleOpen] = useState(false)
+  const [isSmsOpen, setIsSmsOpen] = useState(false)
+  const [isBulkSmsOpen, setIsBulkSmsOpen] = useState(false)
   const [editForm, setEditForm] = useState({})
+  const selection = useSelection()
   const [vehicleForm, setVehicleForm] = useState({
     year: '',
     make: '',
@@ -136,6 +150,33 @@ export default function Customers() {
       })
     },
   })
+
+  const removeTagMutation = useMutation({
+    mutationFn: ({ customerId, tagId }) => customers.removeTag(customerId, tagId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['customer', selectedCustomerId] })
+      queryClient.invalidateQueries({ queryKey: ['customers'] })
+    },
+  })
+
+  // Build bulk customer list from selection
+  const selectedCustomers = useMemo(() => {
+    if (selection.count === 0 || !data?.customers) return []
+    return data.customers.filter(c => selection.isSelected(c.id))
+  }, [selection.count, selection.selected, data?.customers])
+
+  const handleExportCSV = useCallback(() => {
+    if (selectedCustomers.length === 0) return
+    const columns = [
+      { key: 'first_name', label: 'First Name' },
+      { key: 'last_name', label: 'Last Name' },
+      { key: 'phone', label: 'Phone' },
+      { key: 'email', label: 'Email' },
+      { key: 'total_visits', label: 'Total Visits' },
+    ]
+    const csv = arrayToCSV(selectedCustomers, columns)
+    downloadCSV(csv, `customers-${formatDateForFilename()}`)
+  }, [selectedCustomers])
 
   // Sort alphabetically by last name and filter by search
   const sortedAndFilteredCustomers = useMemo(() => {
@@ -287,36 +328,68 @@ export default function Customers() {
                 {/* Desktop: Table Layout */}
                 <div className="hidden sm:block">
                   <div className="flex items-center gap-2 px-3 py-1.5 border-b border-slate-100">
+                    <input
+                      type="checkbox"
+                      className="h-3.5 w-3.5 rounded border-slate-300 shrink-0"
+                      checked={selection.count > 0 && selection.count === sortedAndFilteredCustomers.length}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          selection.selectAll(sortedAndFilteredCustomers.map(c => c.id))
+                        } else {
+                          selection.clearAll()
+                        }
+                      }}
+                    />
                     <span className="flex-1 text-xs text-slate-400 font-medium uppercase tracking-wider">Name</span>
                     <span className="w-28 text-xs text-slate-400 font-medium uppercase tracking-wider">Phone</span>
                     <span className="w-12 text-right text-xs text-slate-400 font-medium uppercase tracking-wider">Visits</span>
                   </div>
                   <div className="divide-y divide-slate-100">
                     {sortedAndFilteredCustomers.map((customer) => (
-                      <button
+                      <div
                         key={customer.id}
-                        onClick={() => setSelectedCustomerId(customer.id)}
                         className={cn(
                           "w-full flex items-center gap-2 py-2.5 px-3 text-left hover:bg-slate-50 rounded-lg transition-colors group",
                           selectedCustomerId === customer.id && "bg-blue-50 border-l-2 border-l-blue-600"
                         )}
                       >
-                        <span className="flex-1 min-w-0 text-sm font-medium text-slate-900 truncate group-hover:text-blue-700">
-                          {customer.first_name} {customer.last_name}
-                        </span>
-                        <span className="w-28 shrink-0 text-xs text-slate-500 truncate">
-                          {customer.phone ? <PhoneNumber phone={customer.phone} /> : '—'}
-                        </span>
-                        <div className="w-12 shrink-0 flex justify-end">
-                          {customer.total_visits > 0 ? (
-                            <span className="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full font-semibold">
-                              {customer.total_visits}
-                            </span>
-                          ) : (
-                            <span className="text-xs text-slate-300">—</span>
-                          )}
-                        </div>
-                      </button>
+                        <input
+                          type="checkbox"
+                          className="h-3.5 w-3.5 rounded border-slate-300 shrink-0"
+                          checked={selection.isSelected(customer.id)}
+                          onChange={() => selection.toggle(customer.id)}
+                        />
+                        <button
+                          className="flex-1 min-w-0 flex items-center gap-2"
+                          onClick={() => setSelectedCustomerId(customer.id)}
+                        >
+                          <span className="flex-1 min-w-0 text-sm font-medium text-slate-900 truncate group-hover:text-blue-700 text-left">
+                            {customer.first_name} {customer.last_name}
+                            {customer.tags?.length > 0 && (
+                              <span className="inline-flex items-center gap-1 ml-2">
+                                {customer.tags.slice(0, 2).map(tag => (
+                                  <TagBadge key={tag.id} tag={tag} size="sm" />
+                                ))}
+                                {customer.tags.length > 2 && (
+                                  <span className="text-[10px] text-slate-400">+{customer.tags.length - 2}</span>
+                                )}
+                              </span>
+                            )}
+                          </span>
+                          <span className="w-28 shrink-0 text-xs text-slate-500 truncate">
+                            {customer.phone ? <PhoneNumber phone={customer.phone} /> : '—'}
+                          </span>
+                          <div className="w-12 shrink-0 flex justify-end">
+                            {customer.total_visits > 0 ? (
+                              <span className="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full font-semibold">
+                                {customer.total_visits}
+                              </span>
+                            ) : (
+                              <span className="text-xs text-slate-300">—</span>
+                            )}
+                          </div>
+                        </button>
+                      </div>
                     ))}
                   </div>
                 </div>
@@ -324,28 +397,38 @@ export default function Customers() {
                 {/* Mobile: Card Layout */}
                 <div className="sm:hidden divide-y divide-slate-100">
                   {sortedAndFilteredCustomers.map((customer) => (
-                    <button
+                    <div
                       key={customer.id}
-                      onClick={() => setSelectedCustomerId(customer.id)}
                       className={cn(
-                        "w-full text-left px-3 py-3 hover:bg-slate-50 transition-colors",
+                        "flex items-center gap-2 px-3 py-3 hover:bg-slate-50 transition-colors",
                         selectedCustomerId === customer.id && "bg-blue-50 border-l-2 border-l-blue-600"
                       )}
                     >
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-slate-900 truncate">
-                          {customer.first_name} {customer.last_name}
-                        </span>
-                        {customer.total_visits > 0 && (
-                          <span className="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full font-semibold shrink-0 ml-2">
-                            {customer.total_visits} visits
+                      <input
+                        type="checkbox"
+                        className="h-3.5 w-3.5 rounded border-slate-300 shrink-0"
+                        checked={selection.isSelected(customer.id)}
+                        onChange={() => selection.toggle(customer.id)}
+                      />
+                      <button
+                        className="flex-1 min-w-0 text-left"
+                        onClick={() => setSelectedCustomerId(customer.id)}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-slate-900 truncate">
+                            {customer.first_name} {customer.last_name}
                           </span>
-                        )}
-                      </div>
-                      <span className="text-xs text-slate-500 mt-0.5 block">
-                        {customer.phone ? <PhoneNumber phone={customer.phone} /> : '—'}
-                      </span>
-                    </button>
+                          {customer.total_visits > 0 && (
+                            <span className="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full font-semibold shrink-0 ml-2">
+                              {customer.total_visits} visits
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-xs text-slate-500 mt-0.5 block">
+                          {customer.phone ? <PhoneNumber phone={customer.phone} /> : '—'}
+                        </span>
+                      </button>
+                    </div>
                   ))}
                 </div>
               </div>
@@ -426,9 +509,30 @@ export default function Customers() {
                       <p className="text-xs text-slate-400 mt-1 hidden sm:block">
                         Customer since {format(new Date(selectedCustomer.created_at), 'MMMM yyyy')}
                       </p>
+                      {/* Tags */}
+                      {(selectedCustomer.tags?.length > 0 || true) && (
+                        <div className="flex items-center gap-1 mt-1.5 flex-wrap">
+                          {selectedCustomer.tags?.map(tag => (
+                            <TagBadge
+                              key={tag.id}
+                              tag={tag}
+                              size="md"
+                              onRemove={(tagId) => removeTagMutation.mutate({ customerId: selectedCustomer.id, tagId })}
+                            />
+                          ))}
+                          <TagSelector customerId={selectedCustomer.id} assignedTags={selectedCustomer.tags || []} />
+                        </div>
+                      )}
                     </div>
                   </div>
                   <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+                    <Button variant="outline" size="sm" onClick={() => setIsSmsOpen(true)} className="hidden sm:flex">
+                      <Send className="h-4 w-4 mr-1" />
+                      SMS
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => setIsSmsOpen(true)} className="sm:hidden">
+                      <Send className="h-4 w-4" />
+                    </Button>
                     <Button variant="outline" size="sm" onClick={handleEditOpen} className="hidden sm:flex">
                       <Edit className="h-4 w-4 mr-1" />
                       Edit
@@ -619,7 +723,7 @@ export default function Customers() {
                             Primary Vehicle
                           </h3>
                           <div className="flex items-center gap-3 sm:gap-4">
-                            <CarImage 
+                            <CarImage
                               make={selectedCustomer.vehicles[0].make}
                               model={selectedCustomer.vehicles[0].model}
                               year={selectedCustomer.vehicles[0].year}
@@ -632,7 +736,7 @@ export default function Customers() {
                               </p>
                               <p className="text-sm text-slate-500">
                                 {selectedCustomer.vehicles[0].color && `${selectedCustomer.vehicles[0].color} • `}
-                                {selectedCustomer.vehicles[0].mileage 
+                                {selectedCustomer.vehicles[0].mileage
                                   ? `${selectedCustomer.vehicles[0].mileage.toLocaleString()} km`
                                   : 'Mileage not recorded'}
                                 {selectedCustomer.vehicles[0].license_plate && ` • ${selectedCustomer.vehicles[0].license_plate}`}
@@ -641,6 +745,17 @@ export default function Customers() {
                           </div>
                         </div>
                       )}
+
+                      {/* Notes */}
+                      <div className="sm:col-span-2 border border-slate-200 rounded-lg p-4">
+                        <InlineNotes
+                          value={selectedCustomer.notes}
+                          onSave={(val) => updateMutation.mutate({ notes: val })}
+                          isPending={updateMutation.isPending}
+                          label="Notes"
+                          placeholder="Add notes about this customer..."
+                        />
+                      </div>
                     </div>
                   </TabsContent>
 
@@ -933,6 +1048,32 @@ export default function Customers() {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* SMS Compose Dialog */}
+      <SmsComposeDialog
+        open={isSmsOpen}
+        onOpenChange={setIsSmsOpen}
+        recipientPhone={selectedCustomer?.phone}
+        recipientName={selectedCustomer ? `${selectedCustomer.first_name} ${selectedCustomer.last_name}` : undefined}
+        customerId={selectedCustomer?.id}
+      />
+
+      {/* Bulk SMS Dialog */}
+      <BulkSmsDialog
+        open={isBulkSmsOpen}
+        onOpenChange={setIsBulkSmsOpen}
+        customers={selectedCustomers}
+      />
+
+      {/* Bulk Action Bar */}
+      <BulkActionBar
+        count={selection.count}
+        onClear={selection.clearAll}
+        actions={[
+          { label: 'Send SMS', icon: Send, onClick: () => setIsBulkSmsOpen(true) },
+          { label: 'Export CSV', icon: Download, onClick: handleExportCSV },
+        ]}
+      />
 
       {/* Add Vehicle Dialog */}
       <Dialog open={isAddVehicleOpen} onOpenChange={setIsAddVehicleOpen}>

@@ -33,15 +33,22 @@ import {
   ArrowDownLeft,
   ArrowUpFromLine,
   ChevronLeft,
+  Filter,
+  Reply,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import PhoneNumber from '@/components/PhoneNumber'
 import { Link } from 'react-router-dom'
+import SmsComposeDialog from '@/components/SmsComposeDialog'
 
 export default function SmsLogs() {
   const [selectedSmsId, setSelectedSmsId] = useState(null)
   const [typeFilter, setTypeFilter] = useState('all')
   const [searchTerm, setSearchTerm] = useState('')
+  const [dateFrom, setDateFrom] = useState('')
+  const [dateTo, setDateTo] = useState('')
+  const [showFilters, setShowFilters] = useState(false)
+  const [isSmsOpen, setIsSmsOpen] = useState(false)
 
   const { data: stats } = useQuery({
     queryKey: ['sms-stats'],
@@ -49,8 +56,13 @@ export default function SmsLogs() {
   })
 
   const { data: logsData, isLoading: logsLoading } = useQuery({
-    queryKey: ['sms-logs', typeFilter],
-    queryFn: () => smsLogs.list({ limit: 200, message_type: typeFilter !== 'all' ? typeFilter : undefined }),
+    queryKey: ['sms-logs', typeFilter, dateFrom, dateTo],
+    queryFn: () => smsLogs.list({
+      limit: 200,
+      message_type: typeFilter !== 'all' ? typeFilter : undefined,
+      ...(dateFrom && { date_from: dateFrom }),
+      ...(dateTo && { date_to: dateTo }),
+    }),
   })
 
   // Filter logs by search term and exclude failed status for demo
@@ -136,6 +148,8 @@ export default function SmsLogs() {
 
   const successRate = stats?.total ? Math.round(((stats.by_status?.sent || 0) + (stats.by_status?.delivered || 0)) / stats.total * 100) : 0
 
+  const activeFilterCount = [dateFrom, dateTo].filter(Boolean).length
+
   return (
     <div className="h-[calc(100vh-4rem)] flex flex-col">
       {/* Page Header */}
@@ -183,7 +197,54 @@ export default function SmsLogs() {
                   <SelectItem value="reply">Replies</SelectItem>
                 </SelectContent>
               </Select>
+              <Button
+                variant={showFilters ? "secondary" : "outline"}
+                size="sm"
+                className="h-10 px-2.5 shrink-0 relative"
+                onClick={() => setShowFilters(!showFilters)}
+              >
+                <Filter className="h-4 w-4" />
+                {activeFilterCount > 0 && (
+                  <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-blue-600 text-white text-[10px] flex items-center justify-center">
+                    {activeFilterCount}
+                  </span>
+                )}
+              </Button>
             </div>
+            {showFilters && (
+              <div className="space-y-2 pt-1">
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-[10px] text-slate-400 uppercase tracking-wider">From</label>
+                    <Input
+                      type="date"
+                      value={dateFrom}
+                      onChange={(e) => setDateFrom(e.target.value)}
+                      className="h-8 text-xs border-slate-300"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-slate-400 uppercase tracking-wider">To</label>
+                    <Input
+                      type="date"
+                      value={dateTo}
+                      onChange={(e) => setDateTo(e.target.value)}
+                      className="h-8 text-xs border-slate-300"
+                    />
+                  </div>
+                </div>
+                {activeFilterCount > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 text-xs text-slate-500 px-2"
+                    onClick={() => { setDateFrom(''); setDateTo('') }}
+                  >
+                    Clear filters
+                  </Button>
+                )}
+              </div>
+            )}
           </div>
 
           {/* SMS List */}
@@ -322,6 +383,13 @@ export default function SmsLogs() {
                         </Link>
                       </Button>
                     )}
+                    <Button variant="outline" size="sm" onClick={() => setIsSmsOpen(true)} className="hidden sm:flex">
+                      <Reply className="h-4 w-4 mr-1" />
+                      Reply
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => setIsSmsOpen(true)} className="sm:hidden">
+                      <Reply className="h-4 w-4" />
+                    </Button>
                     <Button variant="ghost" size="icon" onClick={() => setSelectedSmsId(null)} className="hidden lg:flex">
                       <X className="h-4 w-4" />
                     </Button>
@@ -452,6 +520,13 @@ export default function SmsLogs() {
           ) : null}
         </div>
       </div>
+      <SmsComposeDialog
+        open={isSmsOpen}
+        onOpenChange={setIsSmsOpen}
+        recipientPhone={selectedSms?.to_phone}
+        recipientName={selectedSms?.customer ? `${selectedSms.customer.first_name} ${selectedSms.customer.last_name}` : undefined}
+        customerId={selectedSms?.customer?.id}
+      />
     </div>
   )
 }

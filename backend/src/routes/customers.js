@@ -24,7 +24,8 @@ router.get('/', async (req, res, next) => {
         email,
         total_visits,
         created_at,
-        vehicles (id)
+        vehicles (id),
+        customer_tags (tag:tags(id, name, color))
       `, { count: 'exact' })
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
@@ -42,7 +43,9 @@ router.get('/', async (req, res, next) => {
       customers: customers.map(c => ({
         ...c,
         vehicle_count: c.vehicles?.length || 0,
-        vehicles: undefined
+        vehicles: undefined,
+        tags: c.customer_tags?.map(ct => ct.tag).filter(Boolean) || [],
+        customer_tags: undefined
       })),
       pagination: {
         total: count,
@@ -135,6 +138,57 @@ router.get('/lookup', async (req, res, next) => {
 });
 
 /**
+ * GET /api/customers/tags
+ * List all tags
+ */
+router.get('/tags', async (req, res, next) => {
+  try {
+    const { data: tags, error } = await supabase
+      .from('tags')
+      .select('*')
+      .order('name');
+
+    if (error) throw error;
+    res.json({ tags });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * POST /api/customers/tags
+ * Create a new tag
+ */
+router.post('/tags', async (req, res, next) => {
+  try {
+    const { name, color } = req.body;
+    if (!name || typeof name !== 'string' || name.trim().length === 0) {
+      return validationError(res, 'Tag name is required');
+    }
+    if (name.length > 50) {
+      return validationError(res, 'Tag name must be 50 characters or less');
+    }
+
+    const { data: tag, error } = await supabase
+      .from('tags')
+      .insert({ name: name.trim(), color: color || 'blue' })
+      .select()
+      .single();
+
+    if (error) {
+      if (error.code === '23505') {
+        return res.status(409).json({ error: { message: 'Tag already exists' } });
+      }
+      throw error;
+    }
+
+    res.status(201).json({ tag });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
  * POST /api/customers
  * Create a new customer
  */
@@ -203,7 +257,8 @@ router.get('/:id', async (req, res, next) => {
             service_name,
             quoted_price
           )
-        )
+        ),
+        customer_tags (tag:tags(*))
       `)
       .eq('id', id)
       .single();
@@ -214,6 +269,10 @@ router.get('/:id', async (req, res, next) => {
       }
       throw error;
     }
+
+    // Transform customer_tags to flat tags array
+    customer.tags = customer.customer_tags?.map(ct => ct.tag).filter(Boolean) || [];
+    delete customer.customer_tags;
 
     res.json({ customer });
 
@@ -267,6 +326,60 @@ router.patch('/:id', async (req, res, next) => {
 
     res.json({ customer });
 
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * POST /api/customers/:id/tags
+ * Assign a tag to a customer
+ */
+router.post('/:id/tags', async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    if (!isValidUUID(id)) return validationError(res, 'Invalid customer ID');
+
+    const { tag_id } = req.body;
+    if (!tag_id || !isValidUUID(tag_id)) {
+      return validationError(res, 'Valid tag_id is required');
+    }
+
+    const { error } = await supabase
+      .from('customer_tags')
+      .insert({ customer_id: id, tag_id });
+
+    if (error) {
+      if (error.code === '23505') {
+        return res.status(409).json({ error: { message: 'Tag already assigned' } });
+      }
+      throw error;
+    }
+
+    res.status(201).json({ success: true });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * DELETE /api/customers/:id/tags/:tagId
+ * Remove a tag from a customer
+ */
+router.delete('/:id/tags/:tagId', async (req, res, next) => {
+  try {
+    const { id, tagId } = req.params;
+    if (!isValidUUID(id)) return validationError(res, 'Invalid customer ID');
+    if (!isValidUUID(tagId)) return validationError(res, 'Invalid tag ID');
+
+    const { error } = await supabase
+      .from('customer_tags')
+      .delete()
+      .eq('customer_id', id)
+      .eq('tag_id', tagId);
+
+    if (error) throw error;
+    res.json({ success: true });
   } catch (error) {
     next(error);
   }

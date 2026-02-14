@@ -15,7 +15,10 @@ router.get('/', async (req, res, next) => {
       outcome,
       date_from,
       date_to,
-      customer_id
+      customer_id,
+      sentiment,
+      min_duration,
+      max_duration
     } = req.query;
     const { limit, offset } = clampPagination(req.query.limit, req.query.offset);
 
@@ -52,6 +55,15 @@ router.get('/', async (req, res, next) => {
     }
     if (customer_id) {
       query = query.eq('customer_id', customer_id);
+    }
+    if (sentiment) {
+      query = query.eq('sentiment', sentiment);
+    }
+    if (min_duration) {
+      query = query.gte('duration_seconds', parseInt(min_duration));
+    }
+    if (max_duration) {
+      query = query.lte('duration_seconds', parseInt(max_duration));
     }
 
     const { data: calls, error, count } = await query;
@@ -205,6 +217,43 @@ router.get('/stats/summary', async (req, res, next) => {
       period
     });
 
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * PATCH /api/call-logs/:id
+ * Update a call log (e.g. notes)
+ */
+router.patch('/:id', async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    if (!isValidUUID(id)) return validationError(res, 'Invalid call log ID');
+
+    const { notes } = req.body;
+    const updates = {};
+    if (notes !== undefined) updates.notes = notes;
+
+    if (Object.keys(updates).length === 0) {
+      return validationError(res, 'No valid fields to update');
+    }
+
+    const { data: call, error } = await supabase
+      .from('call_logs')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return res.status(404).json({ error: { message: 'Call log not found' } });
+      }
+      throw error;
+    }
+
+    res.json(call);
   } catch (error) {
     next(error);
   }
