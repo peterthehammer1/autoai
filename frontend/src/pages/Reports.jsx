@@ -26,7 +26,7 @@ import {
   ChevronRight,
 } from 'lucide-react'
 import { arrayToCSV, downloadCSV, formatDateForFilename } from '@/lib/csv'
-import { formatTime12Hour, formatCents } from '@/lib/utils'
+import { formatTime12Hour, formatCents, parseDateLocal } from '@/lib/utils'
 import TargetsSettingsDialog from '@/components/analytics/TargetsSettingsDialog'
 
 export default function Reports() {
@@ -56,8 +56,8 @@ export default function Reports() {
         return { start: startOfMonth(lastMonth), end: endOfMonth(lastMonth) }
       case 'custom':
         return { 
-          start: customStartDate ? new Date(customStartDate) : subDays(today, 30),
-          end: customEndDate ? new Date(customEndDate) : today
+          start: customStartDate ? parseDateLocal(customStartDate) : subDays(today, 30),
+          end: customEndDate ? parseDateLocal(customEndDate) : today
         }
       default:
         return { start: subDays(today, 30), end: today }

@@ -13,7 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { cn, formatTime12Hour, formatCents } from '@/lib/utils'
+import { cn, formatTime12Hour, formatCents, parseDateLocal } from '@/lib/utils'
 import { useToast } from '@/hooks/use-toast'
 import {
   Columns,
@@ -118,8 +118,7 @@ export default function BayView() {
   const { toast } = useToast()
   const now = useCurrentTime()
 
-  const [sy, sm, sd] = selectedDate.split('-').map(Number)
-  const isViewingToday = isTodayFn(new Date(sy, sm - 1, sd))
+  const isViewingToday = isTodayFn(parseDateLocal(selectedDate))
   const timePercent = isViewingToday ? getCurrentTimePercent(now) : null
 
   const { data, isLoading } = useQuery({
@@ -139,9 +138,7 @@ export default function BayView() {
   })
 
   const navigateDate = (dir) => {
-    const [y, m, d] = selectedDate.split('-').map(Number)
-    const local = new Date(y, m - 1, d) // parse as local midnight, not UTC
-    const next = dir === 'prev' ? subDays(local, 1) : addDays(local, 1)
+    const next = dir === 'prev' ? subDays(parseDateLocal(selectedDate), 1) : addDays(parseDateLocal(selectedDate), 1)
     setSelectedDate(format(next, 'yyyy-MM-dd'))
   }
 
@@ -247,7 +244,7 @@ export default function BayView() {
             <div>
               <h1 className="text-lg font-semibold text-white">Shop Floor</h1>
               <p className="text-xs text-slate-400">
-                {format(new Date(selectedDate + 'T00:00:00'), 'EEEE, MMMM d, yyyy')}
+                {format(parseDateLocal(selectedDate), 'EEEE, MMMM d, yyyy')}
                 {isViewingToday && (
                   <span className="ml-2 inline-flex items-center gap-1 text-emerald-400">
                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
@@ -386,7 +383,7 @@ export default function BayView() {
           </div>
           <p className="text-base font-semibold text-slate-700">No appointments scheduled</p>
           <p className="text-sm text-slate-500 mt-1">
-            {format(new Date(selectedDate + 'T00:00:00'), 'EEEE, MMMM d')} has a clear schedule
+            {format(parseDateLocal(selectedDate), 'EEEE, MMMM d')} has a clear schedule
           </p>
         </div>
       ) : (

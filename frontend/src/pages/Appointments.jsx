@@ -60,6 +60,7 @@ import {
   formatDuration,
   getStatusColor,
   getNextBusinessDay,
+  parseDateLocal,
 } from '@/lib/utils'
 import NewAppointmentModal from '@/components/NewAppointmentModal'
 import PhoneNumber from '@/components/PhoneNumber'
@@ -180,8 +181,7 @@ export default function Appointments() {
   })
 
   const handleDateChange = (days) => {
-    const [y, m, d] = dateFilter.split('-').map(Number)
-    const newDate = addDays(new Date(y, m - 1, d), days)
+    const newDate = addDays(parseDateLocal(dateFilter), days)
     setSearchParams({ date: format(newDate, 'yyyy-MM-dd'), status: statusFilter })
   }
 
@@ -194,8 +194,7 @@ export default function Appointments() {
   }
 
   const formatDateLabel = (dateStr) => {
-    const [y, m, d] = dateStr.split('-').map(Number)
-    const date = new Date(y, m - 1, d)
+    const date = parseDateLocal(dateStr)
     if (isToday(date)) return 'Today'
     if (isTomorrow(date)) return 'Tomorrow'
     return format(date, 'EEEE, MMMM d')
@@ -204,8 +203,7 @@ export default function Appointments() {
   // Navigation helpers
   const navigateWeek = (dir) => setWeekStart(addDays(weekStart, dir * 7))
   const navigateDay = (dir) => {
-    const [y, m, d] = calendarDay.split('-').map(Number)
-    setCalendarDay(format(addDays(new Date(y, m - 1, d), dir), 'yyyy-MM-dd'))
+    setCalendarDay(format(addDays(parseDateLocal(calendarDay), dir), 'yyyy-MM-dd'))
   }
   const goToToday = () => {
     const bd = getNextBusinessDay()
@@ -732,18 +730,18 @@ export default function Appointments() {
           <div className="flex items-center gap-3">
             <div className={cn(
               "flex h-10 w-10 flex-col items-center justify-center rounded-lg",
-              isToday(new Date(dateFilter)) ? "bg-gradient-to-br from-blue-600 to-blue-700 text-white" : "bg-slate-100 text-slate-600"
+              isToday(parseDateLocal(dateFilter)) ? "bg-gradient-to-br from-blue-600 to-blue-700 text-white" : "bg-slate-100 text-slate-600"
             )}>
               <span className="text-[10px] font-medium uppercase">
-                {format(new Date(dateFilter), 'MMM')}
+                {format(parseDateLocal(dateFilter), 'MMM')}
               </span>
               <span className="text-sm font-semibold leading-none">
-                {format(new Date(dateFilter), 'd')}
+                {format(parseDateLocal(dateFilter), 'd')}
               </span>
             </div>
             <div>
               <h3 className="text-sm font-medium text-slate-800">
-                {format(new Date(dateFilter), 'EEEE, MMMM d, yyyy')}
+                {format(parseDateLocal(dateFilter), 'EEEE, MMMM d, yyyy')}
               </h3>
               <p className="text-xs text-slate-500">
                 {dateData?.appointments?.length || 0} appointments
