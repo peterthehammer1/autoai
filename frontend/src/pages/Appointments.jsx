@@ -180,7 +180,8 @@ export default function Appointments() {
   })
 
   const handleDateChange = (days) => {
-    const newDate = addDays(new Date(dateFilter), days)
+    const [y, m, d] = dateFilter.split('-').map(Number)
+    const newDate = addDays(new Date(y, m - 1, d), days)
     setSearchParams({ date: format(newDate, 'yyyy-MM-dd'), status: statusFilter })
   }
 
@@ -193,7 +194,8 @@ export default function Appointments() {
   }
 
   const formatDateLabel = (dateStr) => {
-    const date = parseISO(dateStr)
+    const [y, m, d] = dateStr.split('-').map(Number)
+    const date = new Date(y, m - 1, d)
     if (isToday(date)) return 'Today'
     if (isTomorrow(date)) return 'Tomorrow'
     return format(date, 'EEEE, MMMM d')
@@ -201,7 +203,10 @@ export default function Appointments() {
 
   // Navigation helpers
   const navigateWeek = (dir) => setWeekStart(addDays(weekStart, dir * 7))
-  const navigateDay = (dir) => setCalendarDay(format(addDays(parseISO(calendarDay), dir), 'yyyy-MM-dd'))
+  const navigateDay = (dir) => {
+    const [y, m, d] = calendarDay.split('-').map(Number)
+    setCalendarDay(format(addDays(new Date(y, m - 1, d), dir), 'yyyy-MM-dd'))
+  }
   const goToToday = () => {
     const bd = getNextBusinessDay()
     setWeekStart(startOfWeek(bd, { weekStartsOn: 1 }))
