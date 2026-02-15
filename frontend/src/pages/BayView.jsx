@@ -118,7 +118,8 @@ export default function BayView() {
   const { toast } = useToast()
   const now = useCurrentTime()
 
-  const isViewingToday = isTodayFn(new Date(selectedDate + 'T00:00:00'))
+  const [sy, sm, sd] = selectedDate.split('-').map(Number)
+  const isViewingToday = isTodayFn(new Date(sy, sm - 1, sd))
   const timePercent = isViewingToday ? getCurrentTimePercent(now) : null
 
   const { data, isLoading } = useQuery({
@@ -138,10 +139,10 @@ export default function BayView() {
   })
 
   const navigateDate = (dir) => {
-    const d = dir === 'prev'
-      ? subDays(new Date(selectedDate), 1)
-      : addDays(new Date(selectedDate), 1)
-    setSelectedDate(format(d, 'yyyy-MM-dd'))
+    const [y, m, d] = selectedDate.split('-').map(Number)
+    const local = new Date(y, m - 1, d) // parse as local midnight, not UTC
+    const next = dir === 'prev' ? subDays(local, 1) : addDays(local, 1)
+    setSelectedDate(format(next, 'yyyy-MM-dd'))
   }
 
   const goToday = () => setSelectedDate(format(getNextBusinessDay(), 'yyyy-MM-dd'))
