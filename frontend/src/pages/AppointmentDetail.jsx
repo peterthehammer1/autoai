@@ -30,6 +30,7 @@ import {
   formatDuration,
   formatCents,
   getStatusColor,
+  parseDateLocal,
 } from '@/lib/utils'
 import { useToast } from '@/hooks/use-toast'
 import PhoneNumber, { Email } from '@/components/PhoneNumber'
@@ -53,7 +54,7 @@ export default function AppointmentDetail() {
   const updateMutation = useMutation({
     mutationFn: (updates) => appointments.update(id, updates),
     onSuccess: () => {
-      queryClient.invalidateQueries(['appointment', id])
+      queryClient.invalidateQueries({ queryKey: ['appointment', id] })
       toast({ title: 'Appointment updated' })
     },
     onError: (err) => {
@@ -64,7 +65,7 @@ export default function AppointmentDetail() {
   const confirmMutation = useMutation({
     mutationFn: () => appointments.confirm(id),
     onSuccess: () => {
-      queryClient.invalidateQueries(['appointment', id])
+      queryClient.invalidateQueries({ queryKey: ['appointment', id] })
       toast({ title: 'Confirmation sent' })
     },
   })
@@ -106,7 +107,7 @@ export default function AppointmentDetail() {
   useEffect(() => {
     if (apt) {
       const name = apt.customer ? `${apt.customer.first_name || ''} ${apt.customer.last_name || ''}`.trim() : ''
-      const date = format(new Date(apt.scheduled_date), 'MMM d')
+      const date = format(parseDateLocal(apt.scheduled_date), 'MMM d')
       setEntityName(name ? `${name} - ${date}` : date)
     }
     return () => setEntityName(null)
@@ -157,7 +158,7 @@ export default function AppointmentDetail() {
               Appointment Details
             </h1>
             <p className="text-xs text-slate-400">
-              {format(new Date(apt.scheduled_date), 'EEEE, MMMM d, yyyy')} at{' '}
+              {format(parseDateLocal(apt.scheduled_date), 'EEEE, MMMM d, yyyy')} at{' '}
               {formatTime12Hour(apt.scheduled_time)}
             </p>
           </div>
@@ -362,7 +363,7 @@ export default function AppointmentDetail() {
               <div>
                 <p className="text-xs text-muted-foreground">Date</p>
                 <p className="text-sm text-slate-800">
-                  {format(new Date(apt.scheduled_date), 'MMM d, yyyy')}
+                  {format(parseDateLocal(apt.scheduled_date), 'MMM d, yyyy')}
                 </p>
               </div>
               <div>

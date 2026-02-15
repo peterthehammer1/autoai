@@ -23,7 +23,7 @@ import {
   Check,
   Edit,
 } from 'lucide-react'
-import { cn, formatCents, formatTime12Hour } from '@/lib/utils'
+import { cn, formatCents, formatTime12Hour, parseDateLocal } from '@/lib/utils'
 import { useToast } from '@/hooks/use-toast'
 import { useBreadcrumbEntity } from '@/components/Breadcrumbs'
 import PhoneNumber from '@/components/PhoneNumber'
@@ -99,7 +99,7 @@ function AddItemForm({ workOrderId, onClose }) {
   const addMutation = useMutation({
     mutationFn: (data) => workOrders.addItem(workOrderId, data),
     onSuccess: () => {
-      queryClient.invalidateQueries(['work-order', workOrderId])
+      queryClient.invalidateQueries({ queryKey: ['work-order', workOrderId] })
       toast({ title: 'Item added' })
       onClose()
     },
@@ -247,7 +247,7 @@ function RecordPaymentForm({ workOrderId, balanceDue, onClose }) {
   const paymentMutation = useMutation({
     mutationFn: (data) => workOrders.addPayment(workOrderId, data),
     onSuccess: () => {
-      queryClient.invalidateQueries(['work-order', workOrderId])
+      queryClient.invalidateQueries({ queryKey: ['work-order', workOrderId] })
       toast({ title: 'Payment recorded' })
       onClose()
     },
@@ -356,8 +356,8 @@ export default function WorkOrderDetail() {
   const updateMutation = useMutation({
     mutationFn: (updates) => workOrders.update(id, updates),
     onSuccess: () => {
-      queryClient.invalidateQueries(['work-order', id])
-      queryClient.invalidateQueries(['work-orders'])
+      queryClient.invalidateQueries({ queryKey: ['work-order', id] })
+      queryClient.invalidateQueries({ queryKey: ['work-orders'] })
       toast({ title: 'Work order updated' })
     },
     onError: (err) => {
@@ -368,7 +368,7 @@ export default function WorkOrderDetail() {
   const deleteItemMutation = useMutation({
     mutationFn: (itemId) => workOrders.deleteItem(id, itemId),
     onSuccess: () => {
-      queryClient.invalidateQueries(['work-order', id])
+      queryClient.invalidateQueries({ queryKey: ['work-order', id] })
       toast({ title: 'Item removed' })
     },
   })
@@ -427,7 +427,7 @@ export default function WorkOrderDetail() {
                 <>
                   {' '}
                   &middot; Apt:{' '}
-                  {format(new Date(wo.appointment.scheduled_date), 'MMM d')} at{' '}
+                  {format(parseDateLocal(wo.appointment.scheduled_date), 'MMM d')} at{' '}
                   {formatTime12Hour(wo.appointment.scheduled_time)}
                 </>
               )}

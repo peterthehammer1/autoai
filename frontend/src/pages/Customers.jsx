@@ -54,7 +54,7 @@ import {
   Download,
   Tag,
 } from 'lucide-react'
-import { cn, formatTime12Hour, getStatusColor, formatCents, formatPhone } from '@/lib/utils'
+import { cn, formatTime12Hour, getStatusColor, formatCents, formatPhone, parseDateLocal } from '@/lib/utils'
 import PhoneNumber, { Email } from '@/components/PhoneNumber'
 import CarImage from '@/components/CarImage'
 import CustomerAvatar from '@/components/CustomerAvatar'
@@ -128,8 +128,8 @@ export default function Customers() {
   const updateMutation = useMutation({
     mutationFn: (data) => customers.update(selectedCustomerId, data),
     onSuccess: () => {
-      queryClient.invalidateQueries(['customer', selectedCustomerId])
-      queryClient.invalidateQueries(['customers', 'list'])
+      queryClient.invalidateQueries({ queryKey: ['customer', selectedCustomerId] })
+      queryClient.invalidateQueries({ queryKey: ['customers', 'list'] })
       setIsEditOpen(false)
     },
   })
@@ -137,7 +137,7 @@ export default function Customers() {
   const addVehicleMutation = useMutation({
     mutationFn: (data) => customers.addVehicle(selectedCustomerId, data),
     onSuccess: () => {
-      queryClient.invalidateQueries(['customer', selectedCustomerId])
+      queryClient.invalidateQueries({ queryKey: ['customer', selectedCustomerId] })
       setIsAddVehicleOpen(false)
       setVehicleForm({
         year: '',
@@ -688,7 +688,7 @@ export default function Customers() {
                               <div>
                                 <p className="text-sm font-medium text-slate-900">Next Appointment</p>
                                 <p className="text-xs text-slate-500">
-                                  {format(new Date(appointmentsData.appointments[0].scheduled_date), 'MMM d, yyyy')}
+                                  {format(parseDateLocal(appointmentsData.appointments[0].scheduled_date), 'MMM d, yyyy')}
                                 </p>
                               </div>
                             </div>
@@ -835,10 +835,10 @@ export default function Customers() {
                               <div className="flex items-center gap-4">
                                 <div className="text-center bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg px-3 py-2 min-w-[52px]">
                                   <p className="text-lg font-bold text-white">
-                                    {format(new Date(apt.scheduled_date), 'd')}
+                                    {format(parseDateLocal(apt.scheduled_date), 'd')}
                                   </p>
                                   <p className="text-xs text-white/70 uppercase">
-                                    {format(new Date(apt.scheduled_date), 'MMM')}
+                                    {format(parseDateLocal(apt.scheduled_date), 'MMM')}
                                   </p>
                                 </div>
                                 <div>

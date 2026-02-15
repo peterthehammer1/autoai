@@ -47,7 +47,7 @@ export default function TargetsSettingsDialog({ open, onOpenChange, targets }) {
   const mutation = useMutation({
     mutationFn: (data) => analytics.updateTargets(data),
     onSuccess: () => {
-      queryClient.invalidateQueries(['analytics', 'targets'])
+      queryClient.invalidateQueries({ queryKey: ['analytics', 'targets'] })
       onOpenChange(false)
     },
   })

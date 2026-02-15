@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Loader2, Calendar, Clock } from 'lucide-react'
-import { cn, formatTime12Hour } from '@/lib/utils'
+import { cn, formatTime12Hour, parseDateLocal } from '@/lib/utils'
 
 export default function RescheduleDialog({ appointment, open, onOpenChange }) {
   const queryClient = useQueryClient()
@@ -67,7 +67,7 @@ export default function RescheduleDialog({ appointment, open, onOpenChange }) {
           {appointment && (
             <div className="text-sm text-slate-500 bg-slate-50 rounded-lg p-3">
               Currently: <span className="font-medium text-slate-700">
-                {appointment.scheduled_date && format(new Date(appointment.scheduled_date + 'T12:00:00'), 'MMM d, yyyy')}
+                {appointment.scheduled_date && format(parseDateLocal(appointment.scheduled_date), 'MMM d, yyyy')}
                 {appointment.scheduled_time && ` at ${formatTime12Hour(appointment.scheduled_time)}`}
               </span>
             </div>

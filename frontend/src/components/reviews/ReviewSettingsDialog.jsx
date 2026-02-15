@@ -39,7 +39,7 @@ export default function ReviewSettingsDialog({ open, onOpenChange }) {
   const mutation = useMutation({
     mutationFn: (data) => reviews.updateSettings(data),
     onSuccess: () => {
-      queryClient.invalidateQueries(['reviews', 'settings'])
+      queryClient.invalidateQueries({ queryKey: ['reviews', 'settings'] })
       onOpenChange(false)
     },
   })

@@ -245,7 +245,7 @@ export default function Appointments() {
   const calendarNavLabel = calendarView === 'week'
     ? `${format(weekStart, 'MMM d')} — ${format(addDays(weekStart, 6), 'MMM d, yyyy')}`
     : calendarView === 'day'
-    ? format(parseISO(calendarDay), 'EEEE, MMMM d, yyyy')
+    ? format(parseDateLocal(calendarDay), 'EEEE, MMMM d, yyyy')
     : format(calendarMonth, 'MMMM yyyy')
 
   return (
@@ -524,16 +524,16 @@ export default function Appointments() {
                     <div />
                     <div className={cn(
                       'text-center py-3 border-l border-slate-200',
-                      isToday(parseISO(calendarDay)) && 'bg-indigo-50/50'
+                      isToday(parseDateLocal(calendarDay)) && 'bg-indigo-50/50'
                     )}>
                       <p className="text-xs font-medium text-slate-500 uppercase">
-                        {format(parseISO(calendarDay), 'EEEE')}
+                        {format(parseDateLocal(calendarDay), 'EEEE')}
                       </p>
                       <p className={cn(
                         'text-xl font-semibold mt-0.5',
-                        isToday(parseISO(calendarDay)) ? 'text-indigo-600' : 'text-slate-800'
+                        isToday(parseDateLocal(calendarDay)) ? 'text-indigo-600' : 'text-slate-800'
                       )}>
-                        {format(parseISO(calendarDay), 'MMMM d')}
+                        {format(parseDateLocal(calendarDay), 'MMMM d')}
                       </p>
                     </div>
                   </div>
@@ -555,7 +555,7 @@ export default function Appointments() {
                     <div
                       className={cn(
                         'relative border-l border-slate-200',
-                        isToday(parseISO(calendarDay)) && 'bg-indigo-50/20'
+                        isToday(parseDateLocal(calendarDay)) && 'bg-indigo-50/20'
                       )}
                       style={{ height: hours.length * HOUR_HEIGHT }}
                     >
@@ -721,6 +721,7 @@ export default function Appointments() {
                   <SelectItem value="in_progress">In Progress</SelectItem>
                   <SelectItem value="completed">Completed</SelectItem>
                   <SelectItem value="cancelled">Cancelled</SelectItem>
+                  <SelectItem value="no_show">No Show</SelectItem>
                 </SelectContent>
               </Select>
             </div>

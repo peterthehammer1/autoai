@@ -4,7 +4,7 @@ import { format } from 'date-fns'
 import { reviews } from '@/api'
 import { Button } from '@/components/ui/button'
 import { Star, Settings, Send, MousePointerClick, CheckCircle2 } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { cn, parseDateLocal } from '@/lib/utils'
 import ReviewSettingsDialog from '@/components/reviews/ReviewSettingsDialog'
 
 const STATUS_TABS = [
@@ -195,7 +195,7 @@ export default function Reviews() {
                     <td className="px-4 py-3 hidden sm:table-cell">
                       <span className="text-xs text-slate-500">
                         {rr.appointment?.scheduled_date
-                          ? format(new Date(rr.appointment.scheduled_date + 'T12:00:00'), 'MMM d, yyyy')
+                          ? format(parseDateLocal(rr.appointment.scheduled_date), 'MMM d, yyyy')
                           : '-'}
                       </span>
                     </td>

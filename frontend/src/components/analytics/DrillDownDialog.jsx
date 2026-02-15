@@ -1,7 +1,7 @@
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from '@/components/ui/dialog'
-import { formatCents } from '@/lib/utils'
+import { formatCents, parseDateLocal } from '@/lib/utils'
 import { format } from 'date-fns'
 
 function RevenueDetail({ data }) {
@@ -66,7 +66,7 @@ function SentimentDetail({ data }) {
 export default function DrillDownDialog({ drillDown, onClose }) {
   const isOpen = !!drillDown
   const dateLabel = drillDown?.date
-    ? format(new Date(drillDown.date), 'EEEE, MMM d, yyyy')
+    ? format(parseDateLocal(drillDown.date), 'EEEE, MMM d, yyyy')
     : ''
 
   return (

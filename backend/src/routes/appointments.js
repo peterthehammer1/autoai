@@ -603,7 +603,7 @@ router.get('/:id', async (req, res, next) => {
  * PATCH /api/appointments/:id
  * Update appointment (status, reschedule, etc.)
  */
-const VALID_STATUSES = ['scheduled', 'confirmed', 'checked_in', 'in_progress', 'checking_out', 'completed', 'cancelled', 'no_show', 'invoiced', 'paid'];
+const VALID_STATUSES = ['scheduled', 'confirmed', 'checked_in', 'in_progress', 'completed', 'cancelled', 'no_show'];
 
 router.patch('/:id', async (req, res, next) => {
   try {

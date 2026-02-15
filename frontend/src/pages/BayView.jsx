@@ -40,7 +40,6 @@ const STATUS_CONFIG = {
   confirmed:    { label: 'Confirmed',    color: 'bg-emerald-500', border: 'border-l-emerald-500', bg: 'bg-emerald-50', text: 'text-emerald-700' },
   checked_in:   { label: 'Checked In',   color: 'bg-cyan-500',    border: 'border-l-cyan-500',    bg: 'bg-cyan-50',    text: 'text-cyan-700' },
   in_progress:  { label: 'In Progress',  color: 'bg-amber-500',   border: 'border-l-amber-500',   bg: 'bg-amber-50',   text: 'text-amber-700' },
-  checking_out: { label: 'Checking Out', color: 'bg-orange-500',  border: 'border-l-orange-500',  bg: 'bg-orange-50',  text: 'text-orange-700' },
   completed:    { label: 'Completed',    color: 'bg-slate-400',   border: 'border-l-slate-400',   bg: 'bg-slate-50',   text: 'text-slate-600' },
 }
 
@@ -153,7 +152,7 @@ export default function BayView() {
   const stats = useMemo(() => {
     const allApts = [...allBays.flatMap(b => b.appointments), ...unassigned]
     const baysInUse = allBays.filter(b => b.appointments.length > 0).length
-    const inProgress = allApts.filter(a => a.status === 'in_progress' || a.status === 'checking_out').length
+    const inProgress = allApts.filter(a => a.status === 'in_progress').length
     const completed = allApts.filter(a => a.status === 'completed').length
     return {
       total: data?.total_appointments || allApts.length,

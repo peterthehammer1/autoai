@@ -1,4 +1,5 @@
 import { format } from 'date-fns'
+import { parseDateLocal } from '@/lib/utils'
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts'
@@ -7,7 +8,7 @@ import { PhoneCall } from 'lucide-react'
 
 export default function CallSentiment({ callTrends, onPointClick }) {
   const data = callTrends?.sentiment_trend?.map(d => ({
-    date: format(new Date(d.date), 'MMM d'),
+    date: format(parseDateLocal(d.date), 'MMM d'),
     rawDate: d.date,
     positive: d.positive,
     neutral: d.neutral,
@@ -22,7 +23,7 @@ export default function CallSentiment({ callTrends, onPointClick }) {
   }
 
   return (
-    <Card className="transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
+    <Card className="transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 h-full flex flex-col">
       <CardHeader className="pb-2">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <div className="flex items-center gap-2">
@@ -53,7 +54,7 @@ export default function CallSentiment({ callTrends, onPointClick }) {
           </div>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex-1">
         <div className="h-56">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={data} onClick={handleClick}>

@@ -38,6 +38,7 @@ import {
   getStatusColor,
   formatCents,
   cn,
+  parseDateLocal,
 } from '@/lib/utils'
 import PhoneNumber, { Email } from '@/components/PhoneNumber'
 import CarImage from '@/components/CarImage'
@@ -82,7 +83,7 @@ export default function CustomerDetail() {
   const updateMutation = useMutation({
     mutationFn: (data) => customers.update(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries(['customer', id])
+      queryClient.invalidateQueries({ queryKey: ['customer', id] })
       setIsEditOpen(false)
     },
   })
@@ -90,7 +91,7 @@ export default function CustomerDetail() {
   const addVehicleMutation = useMutation({
     mutationFn: (data) => customers.addVehicle(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries(['customer', id])
+      queryClient.invalidateQueries({ queryKey: ['customer', id] })
       setIsAddVehicleOpen(false)
       setVehicleForm({
         year: '',
@@ -414,10 +415,10 @@ export default function CustomerDetail() {
                   <div className="flex items-center gap-3">
                     <div className="text-center w-10">
                       <p className="text-sm font-semibold text-slate-800">
-                        {format(new Date(apt.scheduled_date), 'd')}
+                        {format(parseDateLocal(apt.scheduled_date), 'd')}
                       </p>
                       <p className="text-[10px] text-muted-foreground">
-                        {format(new Date(apt.scheduled_date), 'MMM')}
+                        {format(parseDateLocal(apt.scheduled_date), 'MMM')}
                       </p>
                     </div>
                     <div>

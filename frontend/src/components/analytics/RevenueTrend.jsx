@@ -1,4 +1,5 @@
 import { format } from 'date-fns'
+import { parseDateLocal } from '@/lib/utils'
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine,
 } from 'recharts'
@@ -7,7 +8,7 @@ import { DollarSign } from 'lucide-react'
 
 export default function RevenueTrend({ comprehensive, onPointClick, revenueTarget }) {
   const data = comprehensive?.revenue_trend?.map(d => ({
-    date: format(new Date(d.date), 'MMM d'),
+    date: format(parseDateLocal(d.date), 'MMM d'),
     rawDate: d.date,
     revenue: d.revenue / 100,
     appointments: d.appointments,
