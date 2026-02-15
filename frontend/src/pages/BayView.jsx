@@ -63,7 +63,7 @@ const BAY_TYPE_ICONS = {
 
 // ── Timeline constants ──────────────────────────────────────────────────
 const OPEN_HOUR = 7
-const CLOSE_HOUR = 16
+const CLOSE_HOUR = 17 // Display until 5 PM so appointments ending after 4 PM aren't clipped
 const TOTAL_MINUTES = (CLOSE_HOUR - OPEN_HOUR) * 60
 const HOURS = Array.from({ length: CLOSE_HOUR - OPEN_HOUR + 1 }, (_, i) => OPEN_HOUR + i)
 const MIN_BLOCK_WIDTH = 7
@@ -146,23 +146,25 @@ export default function BayView() {
 
   const goToday = () => setSelectedDate(format(getNextBusinessDay(), 'yyyy-MM-dd'))
 
-  const bays = data?.bays || []
+  const allBays = data?.bays || []
   const unassigned = data?.unassigned || []
+  // Only show bays that have appointments to reduce clutter
+  const activeBays = allBays.filter(b => b.appointments.length > 0)
 
   // ── Compute stats ───────────────────────────────────────────────────
   const stats = useMemo(() => {
-    const allApts = [...bays.flatMap(b => b.appointments), ...unassigned]
-    const baysInUse = bays.filter(b => b.appointments.length > 0).length
+    const allApts = [...allBays.flatMap(b => b.appointments), ...unassigned]
+    const baysInUse = allBays.filter(b => b.appointments.length > 0).length
     const inProgress = allApts.filter(a => a.status === 'in_progress' || a.status === 'checking_out').length
     const completed = allApts.filter(a => a.status === 'completed').length
     return {
       total: data?.total_appointments || allApts.length,
       baysInUse,
-      totalBays: bays.length,
+      totalBays: allBays.length,
       inProgress,
       completed,
     }
-  }, [data, bays, unassigned])
+  }, [data, allBays, unassigned])
 
   // ── Render helpers ──────────────────────────────────────────────────
   const renderAppointmentBlock = (apt) => {
@@ -376,7 +378,7 @@ export default function BayView() {
             <div key={i} className="h-20 bg-slate-100 animate-pulse rounded-lg" />
           ))}
         </div>
-      ) : bays.length === 0 && unassigned.length === 0 ? (
+      ) : activeBays.length === 0 && unassigned.length === 0 ? (
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 py-16 text-center">
           <div className="mx-auto h-16 w-16 rounded-full bg-slate-100 flex items-center justify-center mb-4">
             <Wrench className="h-8 w-8 text-slate-300" />
@@ -406,7 +408,7 @@ export default function BayView() {
           </div>
 
           {/* Bay rows */}
-          {bays.map((bay, rowIdx) => {
+          {activeBays.map((bay, rowIdx) => {
             const BayIcon = BAY_TYPE_ICONS[bay.bay_type] || Wrench
             const aptCount = bay.appointments.length
             const firstTech = bay.appointments[0]?.technician

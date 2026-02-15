@@ -521,7 +521,7 @@ router.get('/by-bay', async (req, res, next) => {
     const { data: appointments, error: aptError } = await supabase
       .from('appointments')
       .select(`
-        id, scheduled_date, scheduled_time, estimated_duration_minutes, status, bay_id,
+        id, scheduled_date, scheduled_time, estimated_duration_minutes, status, bay_id, internal_notes,
         customer:customers(id, first_name, last_name, phone),
         vehicle:vehicles(year, make, model),
         technician:technicians(id, first_name, last_name),
