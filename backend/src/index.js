@@ -25,6 +25,7 @@ import createLeadsRouter from './routes/leads.js';
 import searchRoutes from './routes/search.js';
 import workOrderRoutes from './routes/work-orders.js';
 import reviewRoutes, { clickRouter as reviewClickRouter } from './routes/reviews.js';
+import portalRouter, { generateToken as portalGenerateToken } from './routes/portal.js';
 import { supabase } from './config/database.js';
 import { logger } from './utils/logger.js';
 
@@ -54,6 +55,14 @@ const webhookLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: { message: 'Rate limit exceeded' } }
+});
+
+const portalLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000,
+  max: 30,                  // customer portal browsing
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: { message: 'Too many requests, please try again later' } }
 });
 
 // Middleware
@@ -155,6 +164,12 @@ app.use('/api/cron', cronRoutes);
 
 // Public click tracking (no API key — redirect-based)
 app.use('/api/reviews', generalLimiter, reviewClickRouter);
+
+// Public customer portal (no API key — token-validated)
+app.use('/api/portal', portalLimiter, portalRouter);
+
+// Protected portal admin (API key required)
+app.post('/api/portal-admin/generate-token', generalLimiter, requireApiKey, portalGenerateToken);
 
 // Leads — POST is public (landing page form), GET requires API key
 app.use('/api/leads', bookingLimiter, createLeadsRouter(requireApiKey));

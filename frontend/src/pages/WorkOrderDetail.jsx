@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { format } from 'date-fns'
-import { workOrders, services as servicesApi } from '@/api'
+import { workOrders, services as servicesApi, portal } from '@/api'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -22,6 +22,7 @@ import {
   X,
   Check,
   Edit,
+  Send,
 } from 'lucide-react'
 import { cn, formatCents, formatTime12Hour, parseDateLocal } from '@/lib/utils'
 import { useToast } from '@/hooks/use-toast'
@@ -326,6 +327,49 @@ function RecordPaymentForm({ workOrderId, balanceDue, onClose }) {
   )
 }
 
+function SendPortalLinkButton({ customerId, toast }) {
+  const [sending, setSending] = useState(false)
+  const [sent, setSent] = useState(false)
+
+  const handleSend = async () => {
+    setSending(true)
+    try {
+      await portal.generateToken(customerId, true)
+      setSent(true)
+      toast({ title: 'Portal link sent via SMS' })
+      setTimeout(() => setSent(false), 3000)
+    } catch (err) {
+      toast({ title: 'Failed to send portal link', variant: 'destructive' })
+    } finally {
+      setSending(false)
+    }
+  }
+
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={handleSend}
+      disabled={sending || sent}
+      className="text-teal-600 hover:text-teal-700 hover:bg-teal-50"
+    >
+      {sent ? (
+        <>
+          <Check className="h-3.5 w-3.5 mr-1" />
+          Sent
+        </>
+      ) : sending ? (
+        'Sending...'
+      ) : (
+        <>
+          <Send className="h-3.5 w-3.5 mr-1" />
+          Send Portal Link
+        </>
+      )}
+    </Button>
+  )
+}
+
 export default function WorkOrderDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -459,6 +503,9 @@ export default function WorkOrderDetail() {
                 {STATUS_LABELS[status] || status}
               </Button>
             ))}
+            {wo.customer?.id && ['sent_to_customer', 'approved', 'in_progress', 'completed', 'invoiced'].includes(wo.status) && (
+              <SendPortalLinkButton customerId={wo.customer.id} toast={toast} />
+            )}
             {wo.status !== 'void' && (
               <Button
                 variant="outline"

@@ -387,6 +387,59 @@ Your feedback helps us serve you better!
   });
 }
 
+/**
+ * Send portal link SMS (estimate ready, vehicle completed, or general)
+ */
+export async function sendPortalLinkSMS({
+  customerPhone,
+  customerName,
+  portalUrl,
+  messageContext = 'general',
+  vehicleDescription,
+  customerId,
+  appointmentId,
+}) {
+  const firstName = customerName?.split(' ')[0] || 'there';
+  const vehicleLine = vehicleDescription ? ` for your ${vehicleDescription}` : '';
+
+  let message;
+  if (messageContext === 'estimate') {
+    message = `Hi ${firstName},
+
+Your estimate${vehicleLine} is ready for review. You can view the details and approve online:
+
+${portalUrl}
+
+Questions? Call us at (647) 371-1990.
+
+- Amber, Premier Auto Service`;
+  } else if (messageContext === 'completed') {
+    message = `Hi ${firstName},
+
+Great news — your vehicle is ready! View your service details and history:
+
+${portalUrl}
+
+We're open until 5:00 PM today.
+
+- Amber, Premier Auto Service`;
+  } else {
+    message = `Hi ${firstName},
+
+View your service details and vehicle history online:
+
+${portalUrl}
+
+- Amber, Premier Auto Service`;
+  }
+
+  return sendSMS(customerPhone, message, {
+    messageType: 'portal_link',
+    customerId,
+    appointmentId,
+  });
+}
+
 export { logSMS, formatTime12Hour };
 
 export default {
@@ -398,6 +451,7 @@ export default {
   sendCompletedSMS,
   sendServiceReminderSMS,
   sendReviewRequestSMS,
+  sendPortalLinkSMS,
   logSMS,
   formatTime12Hour
 };

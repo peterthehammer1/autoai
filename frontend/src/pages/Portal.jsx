@@ -1,0 +1,762 @@
+import { useState, useEffect, useCallback } from 'react'
+import { useParams } from 'react-router-dom'
+import { format } from 'date-fns'
+import { Button } from '@/components/ui/button'
+import { cn, formatCents, formatTime12Hour, parseDateLocal, getStatusColor } from '@/lib/utils'
+import {
+  Car,
+  Calendar,
+  ClipboardList,
+  Clock,
+  CheckCircle2,
+  Circle,
+  Phone,
+  FileText,
+  ChevronRight,
+  AlertCircle,
+  Loader2,
+  Check,
+  X,
+} from 'lucide-react'
+
+const API_BASE = import.meta.env.VITE_API_URL || '/api'
+
+async function portalFetch(token, path = '') {
+  const res = await fetch(`${API_BASE}/portal/${token}${path}`)
+  if (!res.ok) {
+    if (res.status === 401) throw new Error('EXPIRED')
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.error?.message || `Error: ${res.status}`)
+  }
+  return res.json()
+}
+
+async function portalPost(token, path, body) {
+  const res = await fetch(`${API_BASE}/portal/${token}${path}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.error?.message || `Error: ${res.status}`)
+  }
+  return res.json()
+}
+
+// ── Status helpers ──
+
+const APPOINTMENT_STEPS = [
+  { key: 'scheduled', label: 'Scheduled' },
+  { key: 'confirmed', label: 'Confirmed' },
+  { key: 'checked_in', label: 'Checked In' },
+  { key: 'in_progress', label: 'In Progress' },
+  { key: 'completed', label: 'Complete' },
+]
+
+function getStepIndex(status) {
+  const idx = APPOINTMENT_STEPS.findIndex(s => s.key === status)
+  return idx >= 0 ? idx : 0
+}
+
+function getWOStatusLabel(status) {
+  const labels = {
+    estimated: 'Estimate Ready',
+    sent_to_customer: 'Estimate Ready',
+    approved: 'Approved',
+    in_progress: 'In Progress',
+    completed: 'Completed',
+    invoiced: 'Invoiced',
+    paid: 'Paid',
+  }
+  return labels[status] || status?.replace(/_/g, ' ')
+}
+
+function getWOStatusColor(status) {
+  const colors = {
+    estimated: 'bg-blue-100 text-blue-700',
+    sent_to_customer: 'bg-blue-100 text-blue-700',
+    approved: 'bg-emerald-100 text-emerald-700',
+    in_progress: 'bg-amber-100 text-amber-700',
+    completed: 'bg-slate-200 text-slate-700',
+    invoiced: 'bg-purple-100 text-purple-700',
+    paid: 'bg-green-100 text-green-700',
+  }
+  return colors[status] || 'bg-slate-100 text-slate-600'
+}
+
+// ── Main Portal Component ──
+
+export default function Portal() {
+  const { token } = useParams()
+  const [state, setState] = useState('loading') // loading | valid | expired | error
+  const [customer, setCustomer] = useState(null)
+  const [tab, setTab] = useState('status')
+  const [errorMsg, setErrorMsg] = useState('')
+
+  useEffect(() => {
+    portalFetch(token)
+      .then(data => {
+        setCustomer(data.customer)
+        setState('valid')
+      })
+      .catch(err => {
+        if (err.message === 'EXPIRED') setState('expired')
+        else {
+          setState('error')
+          setErrorMsg(err.message)
+        }
+      })
+  }, [token])
+
+  if (state === 'loading') {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600" />
+      </div>
+    )
+  }
+
+  if (state === 'expired' || state === 'error') {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+        <div className="max-w-sm w-full text-center space-y-4">
+          <div className="mx-auto w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+            <AlertCircle className="h-6 w-6 text-red-600" />
+          </div>
+          <h1 className="text-lg font-semibold text-slate-900">
+            {state === 'expired' ? 'Link Expired' : 'Something went wrong'}
+          </h1>
+          <p className="text-sm text-slate-500">
+            {state === 'expired'
+              ? 'This portal link has expired. Please contact us for a new one.'
+              : errorMsg || 'We couldn\'t load your portal. Please try again later.'}
+          </p>
+          <a
+            href="tel:+16473711990"
+            className="inline-flex items-center gap-2 text-teal-600 font-medium text-sm hover:underline"
+          >
+            <Phone className="h-4 w-4" />
+            (647) 371-1990
+          </a>
+        </div>
+      </div>
+    )
+  }
+
+  const tabs = [
+    { key: 'status', label: 'Status', icon: Clock },
+    { key: 'estimate', label: 'Estimate', icon: FileText },
+    { key: 'history', label: 'History', icon: Calendar },
+    { key: 'vehicles', label: 'Vehicles', icon: Car },
+  ]
+
+  return (
+    <div className="min-h-screen bg-slate-50">
+      {/* Header */}
+      <header className="bg-white border-b border-slate-200 sticky top-0 z-10">
+        <div className="max-w-lg mx-auto px-4 py-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-base font-bold text-slate-900">Premier Auto Service</h1>
+              <p className="text-xs text-slate-500">
+                Hi {customer?.first_name || 'there'}
+              </p>
+            </div>
+            <div className="h-8 w-8 rounded-full bg-teal-600 flex items-center justify-center">
+              <span className="text-white text-xs font-bold">
+                {(customer?.first_name?.[0] || 'P').toUpperCase()}
+              </span>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Tab Navigation */}
+      <nav className="bg-white border-b border-slate-200 sticky top-[57px] z-10">
+        <div className="max-w-lg mx-auto px-4 flex gap-1 overflow-x-auto scrollbar-hide">
+          {tabs.map(t => {
+            const Icon = t.icon
+            return (
+              <button
+                key={t.key}
+                onClick={() => setTab(t.key)}
+                className={cn(
+                  'flex items-center gap-1.5 px-3 py-2.5 text-xs font-medium whitespace-nowrap border-b-2 transition-colors',
+                  tab === t.key
+                    ? 'border-teal-600 text-teal-700'
+                    : 'border-transparent text-slate-500 hover:text-slate-700'
+                )}
+              >
+                <Icon className="h-3.5 w-3.5" />
+                {t.label}
+              </button>
+            )
+          })}
+        </div>
+      </nav>
+
+      {/* Content */}
+      <main className="max-w-lg mx-auto px-4 py-4 space-y-4">
+        {tab === 'status' && <StatusTab token={token} />}
+        {tab === 'estimate' && <EstimateTab token={token} customer={customer} />}
+        {tab === 'history' && <HistoryTab token={token} />}
+        {tab === 'vehicles' && <VehiclesTab vehicles={customer?.vehicles || []} />}
+      </main>
+
+      {/* Footer */}
+      <footer className="max-w-lg mx-auto px-4 py-6 text-center">
+        <a
+          href="tel:+16473711990"
+          className="inline-flex items-center gap-1.5 text-teal-600 text-xs font-medium hover:underline"
+        >
+          <Phone className="h-3 w-3" />
+          (647) 371-1990
+        </a>
+        <p className="text-[10px] text-slate-400 mt-1">Premier Auto Service</p>
+      </footer>
+    </div>
+  )
+}
+
+// ── Status Tab ──
+
+function StatusTab({ token }) {
+  const [appointments, setAppointments] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    portalFetch(token, '/appointments')
+      .then(data => setAppointments(data.appointments))
+      .catch(() => setAppointments([]))
+      .finally(() => setLoading(false))
+  }, [token])
+
+  if (loading) return <LoadingCard />
+
+  // Find the most recent active (non-completed, non-cancelled) appointment
+  const active = appointments?.find(a =>
+    !['completed', 'cancelled', 'no_show'].includes(a.status)
+  )
+
+  if (!active) {
+    return (
+      <EmptyState
+        icon={Clock}
+        title="No active appointments"
+        message="You don't have any upcoming appointments right now."
+      />
+    )
+  }
+
+  const stepIndex = getStepIndex(active.status)
+  const vehicle = active.vehicle
+  const vehicleLabel = vehicle ? `${vehicle.year} ${vehicle.make} ${vehicle.model}` : null
+  const services = active.appointment_services?.map(s => s.service_name) || []
+
+  return (
+    <div className="space-y-4">
+      {/* Appointment Card */}
+      <div className="bg-white rounded-xl border border-slate-200 p-4 space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-semibold text-slate-900">
+              {format(parseDateLocal(active.scheduled_date), 'EEEE, MMMM do')}
+            </p>
+            <p className="text-xs text-slate-500">
+              {formatTime12Hour(active.scheduled_time)}
+            </p>
+          </div>
+          <span className={cn('px-2 py-0.5 rounded-full text-xs font-medium', getStatusColor(active.status))}>
+            {active.status.replace(/_/g, ' ')}
+          </span>
+        </div>
+
+        {vehicleLabel && (
+          <div className="flex items-center gap-2 text-xs text-slate-600">
+            <Car className="h-3.5 w-3.5 text-slate-400" />
+            {vehicleLabel}
+          </div>
+        )}
+
+        {services.length > 0 && (
+          <div className="flex items-start gap-2 text-xs text-slate-600">
+            <ClipboardList className="h-3.5 w-3.5 text-slate-400 mt-0.5" />
+            <div>{services.join(', ')}</div>
+          </div>
+        )}
+      </div>
+
+      {/* Timeline */}
+      <div className="bg-white rounded-xl border border-slate-200 p-4">
+        <h3 className="text-xs font-medium uppercase tracking-wider text-slate-400 mb-4">Progress</h3>
+        <div className="space-y-0">
+          {APPOINTMENT_STEPS.map((step, i) => {
+            const isComplete = i < stepIndex
+            const isCurrent = i === stepIndex
+            const isFuture = i > stepIndex
+            return (
+              <div key={step.key} className="flex items-start gap-3">
+                <div className="flex flex-col items-center">
+                  {isComplete ? (
+                    <CheckCircle2 className="h-5 w-5 text-teal-600" />
+                  ) : isCurrent ? (
+                    <div className="h-5 w-5 rounded-full border-2 border-teal-600 bg-teal-50 flex items-center justify-center">
+                      <div className="h-2 w-2 rounded-full bg-teal-600" />
+                    </div>
+                  ) : (
+                    <Circle className="h-5 w-5 text-slate-300" />
+                  )}
+                  {i < APPOINTMENT_STEPS.length - 1 && (
+                    <div className={cn(
+                      'w-0.5 h-6',
+                      isComplete ? 'bg-teal-600' : 'bg-slate-200'
+                    )} />
+                  )}
+                </div>
+                <p className={cn(
+                  'text-sm pt-0.5',
+                  isCurrent ? 'font-semibold text-teal-700' : isComplete ? 'text-slate-600' : 'text-slate-400'
+                )}>
+                  {step.label}
+                </p>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Estimate Tab ──
+
+function EstimateTab({ token, customer }) {
+  const [workOrders, setWorkOrders] = useState(null)
+  const [selectedWO, setSelectedWO] = useState(null)
+  const [woDetail, setWODetail] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [detailLoading, setDetailLoading] = useState(false)
+  const [approving, setApproving] = useState(false)
+  const [approved, setApproved] = useState(false)
+  const [itemStatuses, setItemStatuses] = useState({})
+
+  useEffect(() => {
+    portalFetch(token, '/work-orders')
+      .then(data => {
+        const pending = (data.work_orders || []).filter(wo =>
+          ['estimated', 'sent_to_customer'].includes(wo.status)
+        )
+        setWorkOrders(pending)
+        // Auto-select the first pending WO
+        if (pending.length === 1) {
+          loadWODetail(pending[0].id)
+        }
+      })
+      .catch(() => setWorkOrders([]))
+      .finally(() => setLoading(false))
+  }, [token])
+
+  const loadWODetail = useCallback(async (woId) => {
+    setDetailLoading(true)
+    setSelectedWO(woId)
+    setApproved(false)
+    try {
+      const data = await portalFetch(token, `/work-orders/${woId}`)
+      setWODetail(data.work_order)
+      // Initialize item statuses
+      const statuses = {}
+      for (const item of data.work_order.work_order_items || []) {
+        statuses[item.id] = item.status === 'declined' ? 'declined' : 'approved'
+      }
+      setItemStatuses(statuses)
+    } catch {
+      setWODetail(null)
+    } finally {
+      setDetailLoading(false)
+    }
+  }, [token])
+
+  const handleApprove = async () => {
+    if (!woDetail) return
+    setApproving(true)
+    try {
+      const allApproved = Object.values(itemStatuses).every(s => s === 'approved')
+      const body = allApproved
+        ? { approve_all: true }
+        : { items: Object.entries(itemStatuses).map(([id, status]) => ({ id, status })) }
+
+      const result = await portalPost(token, `/work-orders/${woDetail.id}/approve`, body)
+      setWODetail(result.work_order)
+      setApproved(true)
+    } catch (err) {
+      alert(err.message || 'Failed to approve estimate')
+    } finally {
+      setApproving(false)
+    }
+  }
+
+  const toggleItem = (itemId) => {
+    setItemStatuses(prev => ({
+      ...prev,
+      [itemId]: prev[itemId] === 'approved' ? 'declined' : 'approved',
+    }))
+  }
+
+  if (loading) return <LoadingCard />
+
+  if (!workOrders?.length) {
+    return (
+      <EmptyState
+        icon={FileText}
+        title="No pending estimates"
+        message="You don't have any estimates waiting for approval."
+      />
+    )
+  }
+
+  // WO list (if multiple)
+  if (!selectedWO) {
+    return (
+      <div className="space-y-3">
+        <p className="text-xs text-slate-500">You have {workOrders.length} estimate{workOrders.length > 1 ? 's' : ''} to review:</p>
+        {workOrders.map(wo => (
+          <button
+            key={wo.id}
+            onClick={() => loadWODetail(wo.id)}
+            className="w-full bg-white rounded-xl border border-slate-200 p-4 text-left hover:border-teal-300 transition-colors"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold text-slate-900">{wo.work_order_display}</p>
+                <p className="text-xs text-slate-500">
+                  {wo.vehicle ? `${wo.vehicle.year} ${wo.vehicle.make} ${wo.vehicle.model}` : 'Vehicle'}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-slate-900">{formatCents(wo.total_cents)}</span>
+                <ChevronRight className="h-4 w-4 text-slate-400" />
+              </div>
+            </div>
+          </button>
+        ))}
+      </div>
+    )
+  }
+
+  if (detailLoading) return <LoadingCard />
+  if (!woDetail) {
+    return <EmptyState icon={AlertCircle} title="Error" message="Could not load estimate details." />
+  }
+
+  // Approved confirmation
+  if (approved) {
+    return (
+      <div className="bg-white rounded-xl border border-emerald-200 p-6 text-center space-y-3">
+        <div className="mx-auto w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center">
+          <CheckCircle2 className="h-6 w-6 text-emerald-600" />
+        </div>
+        <h3 className="text-base font-semibold text-slate-900">Estimate Approved</h3>
+        <p className="text-sm text-slate-500">Thank you! We'll get started on your vehicle right away.</p>
+        {workOrders.length > 1 && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => { setSelectedWO(null); setWODetail(null); setApproved(false) }}
+          >
+            View other estimates
+          </Button>
+        )}
+      </div>
+    )
+  }
+
+  const items = woDetail.work_order_items || []
+  const approvedCount = Object.values(itemStatuses).filter(s => s === 'approved').length
+
+  return (
+    <div className="space-y-4">
+      {/* WO header */}
+      <div className="bg-white rounded-xl border border-slate-200 p-4">
+        <div className="flex items-center justify-between mb-2">
+          <div>
+            <p className="text-sm font-semibold text-slate-900">{woDetail.work_order_display}</p>
+            <span className={cn('px-2 py-0.5 rounded-full text-xs font-medium', getWOStatusColor(woDetail.status))}>
+              {getWOStatusLabel(woDetail.status)}
+            </span>
+          </div>
+          {workOrders.length > 1 && (
+            <button
+              onClick={() => { setSelectedWO(null); setWODetail(null) }}
+              className="text-xs text-teal-600 hover:underline"
+            >
+              Back
+            </button>
+          )}
+        </div>
+        {woDetail.notes && (
+          <p className="text-xs text-slate-500 mt-2">{woDetail.notes}</p>
+        )}
+      </div>
+
+      {/* Line items */}
+      <div className="bg-white rounded-xl border border-slate-200 divide-y divide-slate-100">
+        <div className="px-4 py-3">
+          <h3 className="text-xs font-medium uppercase tracking-wider text-slate-400">Services & Parts</h3>
+        </div>
+        {items.map(item => {
+          const itemStatus = itemStatuses[item.id] || 'approved'
+          const isDeclined = itemStatus === 'declined'
+          return (
+            <div key={item.id} className={cn('px-4 py-3 flex items-center gap-3', isDeclined && 'opacity-50')}>
+              <button
+                onClick={() => toggleItem(item.id)}
+                className={cn(
+                  'flex-shrink-0 w-5 h-5 rounded border flex items-center justify-center transition-colors',
+                  isDeclined
+                    ? 'border-slate-300 bg-white'
+                    : 'border-teal-600 bg-teal-600'
+                )}
+              >
+                {!isDeclined && <Check className="h-3 w-3 text-white" />}
+              </button>
+              <div className="flex-1 min-w-0">
+                <p className={cn('text-sm text-slate-900', isDeclined && 'line-through')}>
+                  {item.description}
+                </p>
+                <p className="text-xs text-slate-400">
+                  {item.item_type} {item.quantity > 1 ? `x${item.quantity}` : ''}
+                </p>
+              </div>
+              <p className={cn('text-sm font-medium text-slate-900 whitespace-nowrap', isDeclined && 'line-through')}>
+                {formatCents(item.total_cents)}
+              </p>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Totals */}
+      <div className="bg-white rounded-xl border border-slate-200 p-4 space-y-2">
+        <div className="flex justify-between text-xs text-slate-500">
+          <span>Subtotal</span>
+          <span>{formatCents(woDetail.subtotal_cents)}</span>
+        </div>
+        {woDetail.discount_cents > 0 && (
+          <div className="flex justify-between text-xs text-emerald-600">
+            <span>Discount</span>
+            <span>-{formatCents(woDetail.discount_cents)}</span>
+          </div>
+        )}
+        <div className="flex justify-between text-xs text-slate-500">
+          <span>Tax</span>
+          <span>{formatCents(woDetail.tax_cents)}</span>
+        </div>
+        <div className="flex justify-between text-sm font-semibold text-slate-900 pt-2 border-t border-slate-200">
+          <span>Total</span>
+          <span>{formatCents(woDetail.total_cents)}</span>
+        </div>
+      </div>
+
+      {/* Approve button */}
+      {['estimated', 'sent_to_customer'].includes(woDetail.status) && (
+        <Button
+          onClick={handleApprove}
+          disabled={approving || approvedCount === 0}
+          className="w-full bg-teal-600 hover:bg-teal-700 text-white"
+        >
+          {approving ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              Approving...
+            </>
+          ) : (
+            <>
+              <Check className="h-4 w-4 mr-2" />
+              Approve {approvedCount === items.length ? 'All' : `${approvedCount} of ${items.length}`} Items
+            </>
+          )}
+        </Button>
+      )}
+
+      {/* Payment stub */}
+      {woDetail.balance_due_cents > 0 && woDetail.status !== 'estimated' && woDetail.status !== 'sent_to_customer' && (
+        <div className="bg-slate-50 rounded-xl border border-dashed border-slate-300 p-4 text-center">
+          <p className="text-xs text-slate-400">Online payment coming soon</p>
+          <p className="text-sm font-semibold text-slate-600 mt-1">
+            Balance due: {formatCents(woDetail.balance_due_cents)}
+          </p>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── History Tab ──
+
+function HistoryTab({ token }) {
+  const [appointments, setAppointments] = useState(null)
+  const [workOrders, setWorkOrders] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    Promise.all([
+      portalFetch(token, '/appointments'),
+      portalFetch(token, '/work-orders'),
+    ])
+      .then(([aptData, woData]) => {
+        setAppointments(aptData.appointments || [])
+        setWorkOrders(woData.work_orders || [])
+      })
+      .catch(() => {
+        setAppointments([])
+        setWorkOrders([])
+      })
+      .finally(() => setLoading(false))
+  }, [token])
+
+  if (loading) return <LoadingCard />
+
+  const completedAppts = appointments?.filter(a =>
+    ['completed', 'cancelled', 'no_show'].includes(a.status)
+  ) || []
+
+  const completedWOs = workOrders?.filter(wo =>
+    ['completed', 'invoiced', 'paid'].includes(wo.status)
+  ) || []
+
+  if (completedAppts.length === 0 && completedWOs.length === 0) {
+    return (
+      <EmptyState
+        icon={Calendar}
+        title="No service history"
+        message="Your past appointments and work orders will appear here."
+      />
+    )
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Past appointments */}
+      {completedAppts.length > 0 && (
+        <div className="space-y-3">
+          <h3 className="text-xs font-medium uppercase tracking-wider text-slate-400">Past Appointments</h3>
+          {completedAppts.map(apt => {
+            const vehicle = apt.vehicle
+            const services = apt.appointment_services?.map(s => s.service_name) || []
+            return (
+              <div key={apt.id} className="bg-white rounded-xl border border-slate-200 p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-sm font-medium text-slate-900">
+                    {format(parseDateLocal(apt.scheduled_date), 'MMM d, yyyy')}
+                  </p>
+                  <span className={cn('px-2 py-0.5 rounded-full text-xs font-medium', getStatusColor(apt.status))}>
+                    {apt.status.replace(/_/g, ' ')}
+                  </span>
+                </div>
+                {vehicle && (
+                  <p className="text-xs text-slate-500">{vehicle.year} {vehicle.make} {vehicle.model}</p>
+                )}
+                {services.length > 0 && (
+                  <p className="text-xs text-slate-400 mt-1">{services.join(', ')}</p>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {/* Completed work orders */}
+      {completedWOs.length > 0 && (
+        <div className="space-y-3">
+          <h3 className="text-xs font-medium uppercase tracking-wider text-slate-400">Work Orders</h3>
+          {completedWOs.map(wo => (
+            <div key={wo.id} className="bg-white rounded-xl border border-slate-200 p-4">
+              <div className="flex items-center justify-between mb-1">
+                <p className="text-sm font-medium text-slate-900">{wo.work_order_display}</p>
+                <span className={cn('px-2 py-0.5 rounded-full text-xs font-medium', getWOStatusColor(wo.status))}>
+                  {getWOStatusLabel(wo.status)}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-slate-500">
+                  {wo.vehicle ? `${wo.vehicle.year} ${wo.vehicle.make} ${wo.vehicle.model}` : ''}
+                </p>
+                <p className="text-sm font-semibold text-slate-900">{formatCents(wo.total_cents)}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Vehicles Tab ──
+
+function VehiclesTab({ vehicles }) {
+  if (!vehicles?.length) {
+    return (
+      <EmptyState
+        icon={Car}
+        title="No vehicles on file"
+        message="Your vehicles will appear here once added by the shop."
+      />
+    )
+  }
+
+  return (
+    <div className="space-y-3">
+      {vehicles.map(v => (
+        <div key={v.id} className="bg-white rounded-xl border border-slate-200 p-4">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center">
+              <Car className="h-5 w-5 text-slate-400" />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-slate-900">
+                {v.year} {v.make} {v.model}
+              </p>
+              <div className="flex items-center gap-3 text-xs text-slate-500 mt-0.5">
+                {v.color && <span>{v.color}</span>}
+                {v.license_plate && <span className="font-mono">{v.license_plate}</span>}
+              </div>
+            </div>
+          </div>
+          {v.mileage && (
+            <p className="text-xs text-slate-400 mt-2 ml-13">
+              {Number(v.mileage).toLocaleString()} km
+            </p>
+          )}
+
+          {/* DVI stub */}
+          <div className="mt-3 px-3 py-2 bg-slate-50 rounded-lg border border-dashed border-slate-200 text-center">
+            <p className="text-[10px] text-slate-400">Digital vehicle inspection coming soon</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// ── Shared components ──
+
+function LoadingCard() {
+  return (
+    <div className="bg-white rounded-xl border border-slate-200 p-8 flex items-center justify-center">
+      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-teal-600" />
+    </div>
+  )
+}
+
+function EmptyState({ icon: Icon, title, message }) {
+  return (
+    <div className="bg-white rounded-xl border border-slate-200 p-8 text-center">
+      <div className="mx-auto w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center mb-3">
+        <Icon className="h-5 w-5 text-slate-400" />
+      </div>
+      <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
+      <p className="text-xs text-slate-500 mt-1">{message}</p>
+    </div>
+  )
+}

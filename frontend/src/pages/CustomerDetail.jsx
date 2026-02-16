@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { format, formatDistanceToNow } from 'date-fns'
-import { customers, analytics } from '@/api'
+import { customers, analytics, portal } from '@/api'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -32,6 +32,8 @@ import {
   CheckCircle2,
   Wrench,
   Target,
+  Send,
+  Check,
 } from 'lucide-react'
 import {
   formatTime12Hour,
@@ -40,6 +42,7 @@ import {
   cn,
   parseDateLocal,
 } from '@/lib/utils'
+import { useToast } from '@/hooks/use-toast'
 import PhoneNumber, { Email } from '@/components/PhoneNumber'
 import CarImage from '@/components/CarImage'
 import VehicleIntelligence from '@/components/VehicleIntelligence'
@@ -50,8 +53,11 @@ export default function CustomerDetail() {
   const { id } = useParams()
   const queryClient = useQueryClient()
   
+  const { toast } = useToast()
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [isAddVehicleOpen, setIsAddVehicleOpen] = useState(false)
+  const [portalSending, setPortalSending] = useState(false)
+  const [portalSent, setPortalSent] = useState(false)
   const [editForm, setEditForm] = useState({})
   const [vehicleForm, setVehicleForm] = useState({
     year: '',
@@ -116,6 +122,20 @@ export default function CustomerDetail() {
     return () => setEntityName(null)
   }, [customer, setEntityName])
 
+  const handleSendPortalLink = async () => {
+    setPortalSending(true)
+    try {
+      await portal.generateToken(id, true)
+      setPortalSent(true)
+      toast({ title: 'Portal link sent via SMS' })
+      setTimeout(() => setPortalSent(false), 3000)
+    } catch {
+      toast({ title: 'Failed to send portal link', variant: 'destructive' })
+    } finally {
+      setPortalSending(false)
+    }
+  }
+
   const handleEditOpen = () => {
     if (customer) {
       setEditForm({
@@ -179,6 +199,21 @@ export default function CustomerDetail() {
             </h1>
             <p className="text-xs text-slate-400">Customer Profile</p>
           </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleSendPortalLink}
+            disabled={portalSending || portalSent}
+            className="text-xs border-slate-600 bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white"
+          >
+            {portalSent ? (
+              <><Check className="mr-1.5 h-3.5 w-3.5" /> Sent</>
+            ) : portalSending ? (
+              'Sending...'
+            ) : (
+              <><Send className="mr-1.5 h-3.5 w-3.5" /> Portal</>
+            )}
+          </Button>
           <Button variant="outline" size="sm" onClick={handleEditOpen} className="text-xs border-slate-600 bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white">
             <Edit className="mr-1.5 h-3.5 w-3.5" />
             Edit

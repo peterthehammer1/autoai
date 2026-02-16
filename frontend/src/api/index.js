@@ -353,6 +353,14 @@ export const leads = {
   },
 }
 
+// Portal admin (protected)
+export const portal = {
+  generateToken: (customerId, sendSms = false) => fetchAPI('/portal-admin/generate-token', {
+    method: 'POST',
+    body: JSON.stringify({ customer_id: customerId, send_sms: sendSms }),
+  }),
+}
+
 export default {
   appointments,
   customers,
@@ -365,4 +373,5 @@ export default {
   reviews,
   search,
   leads,
+  portal,
 }

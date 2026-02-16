@@ -1,6 +1,9 @@
 import { Router } from 'express';
 import { supabase } from '../config/database.js';
 import { isValidUUID, clampPagination, validationError } from '../middleware/validate.js';
+import { ensurePortalToken, portalUrl } from './portal.js';
+import { sendPortalLinkSMS } from '../services/sms.js';
+import { logger } from '../utils/logger.js';
 
 const router = Router();
 
@@ -333,6 +336,27 @@ router.patch('/:id', async (req, res, next) => {
       .eq('id', id)
       .single();
 
+    // Send portal link SMS when estimate is sent to customer
+    if (updates.status === 'sent_to_customer' && fullWO.customer?.phone) {
+      try {
+        const token = await ensurePortalToken(fullWO.customer.id);
+        const customerName = `${fullWO.customer.first_name || ''} ${fullWO.customer.last_name || ''}`.trim();
+        const vehicleDesc = fullWO.vehicle
+          ? `${fullWO.vehicle.year} ${fullWO.vehicle.make} ${fullWO.vehicle.model}`
+          : null;
+        await sendPortalLinkSMS({
+          customerPhone: fullWO.customer.phone,
+          customerName,
+          portalUrl: portalUrl(token),
+          messageContext: 'estimate',
+          vehicleDescription: vehicleDesc,
+          customerId: fullWO.customer.id,
+        });
+      } catch (smsErr) {
+        logger.error('Portal SMS failed on WO sent_to_customer (non-blocking)', { error: smsErr });
+      }
+    }
+
     res.json({
       work_order: {
         ...fullWO,
@@ -601,4 +625,5 @@ router.get('/:id/payments', async (req, res, next) => {
   }
 });
 
+export { recalculateTotals };
 export default router;

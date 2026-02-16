@@ -1,4 +1,4 @@
-import { lazy } from 'react'
+import { lazy, Suspense } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from '@/components/ui/toaster'
 import ErrorBoundary from '@/components/ErrorBoundary'
@@ -31,6 +31,7 @@ const BayView = lazyWithRetry(() => import('@/pages/BayView'))
 const WorkOrders = lazyWithRetry(() => import('@/pages/WorkOrders'))
 const WorkOrderDetail = lazyWithRetry(() => import('@/pages/WorkOrderDetail'))
 const Reviews = lazyWithRetry(() => import('@/pages/Reviews'))
+const Portal = lazyWithRetry(() => import('@/pages/Portal'))
 
 export function PageLoader() {
   return (
@@ -49,6 +50,13 @@ function App() {
       <Routes>
         {/* Public landing page */}
         <Route path="/" element={<Landing />} />
+
+        {/* Public customer portal (magic-link, no dashboard layout) */}
+        <Route path="portal/:token" element={
+          <Suspense fallback={<PageLoader />}>
+            <Portal />
+          </Suspense>
+        } />
 
         {/* Dashboard routes (with sidebar layout) */}
         <Route element={<Layout />}>
