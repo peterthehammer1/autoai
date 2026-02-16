@@ -41,12 +41,12 @@ export default function ComparisonBar({ comprehensive }) {
   const loading = !comprehensive
 
   return (
-    <Card className="transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
+    <Card className="transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 h-full flex flex-col">
       <CardHeader className="pb-2">
         <CardTitle className="text-base">Period Comparison</CardTitle>
         <CardDescription>Current vs previous period</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex-1">
         <div className="space-y-4">
           {metrics.map(({ key, label, color, getCurrent, getChange, format: fmt }) => {
             if (loading) {

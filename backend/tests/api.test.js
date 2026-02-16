@@ -17,6 +17,11 @@ const BASE_URL = process.env.BASE_URL || 'http://localhost:3001';
 
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
+/** Format a Date as YYYY-MM-DD using local timezone (not UTC) */
+function localDateStr(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 async function get(path, headers = {}) {
   const res = await fetch(`${BASE_URL}${path}`, { headers });
   const data = await res.json().catch(() => ({}));
@@ -88,7 +93,7 @@ describe('Appointment input validation', () => {
     await sleep(1500);
     const d = new Date();
     while (d.getDay() !== 6) d.setDate(d.getDate() + 1);
-    const saturday = d.toISOString().slice(0, 10);
+    const saturday = localDateStr(d);
 
     const { status, data } = await post('/api/appointments', {
       customer_phone: '5551234567',
@@ -109,7 +114,7 @@ describe('Appointment input validation', () => {
     const d = new Date();
     d.setDate(d.getDate() + 1);
     while (d.getDay() === 0 || d.getDay() === 6) d.setDate(d.getDate() + 1);
-    const weekday = d.toISOString().slice(0, 10);
+    const weekday = localDateStr(d);
 
     const { status, data } = await post('/api/appointments', {
       customer_phone: '5551234567',
@@ -130,7 +135,7 @@ describe('Appointment input validation', () => {
     const d = new Date();
     d.setDate(d.getDate() + 1);
     while (d.getDay() === 0 || d.getDay() === 6) d.setDate(d.getDate() + 1);
-    const weekday = d.toISOString().slice(0, 10);
+    const weekday = localDateStr(d);
 
     const { status, data } = await post('/api/appointments', {
       customer_phone: '5551234567',

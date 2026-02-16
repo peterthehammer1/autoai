@@ -27,7 +27,7 @@ export default function CustomerHealth({ comprehensive }) {
   const total = healthData.reduce((sum, d) => sum + d.value, 0)
 
   return (
-    <Card className="transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
+    <Card className="transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 h-full flex flex-col">
       <CardHeader className="pb-2">
         <div className="flex items-center gap-2">
           <div className="p-2 rounded-lg bg-violet-100">
@@ -39,7 +39,7 @@ export default function CustomerHealth({ comprehensive }) {
           </div>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex-1">
         {loading ? (
           <div className="space-y-3">
             <div className="h-36 bg-slate-100 animate-pulse rounded" />

@@ -44,12 +44,12 @@ export default function ConversionFunnel({ comprehensive }) {
   }
 
   return (
-    <Card className="transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
+    <Card className="transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 h-full flex flex-col">
       <CardHeader className="pb-2">
         <CardTitle className="text-base">Conversion Funnel</CardTitle>
         <CardDescription>Call to revenue pipeline</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex-1">
         <div className="space-y-3">
           {steps.map((step, i) => (
             <div key={step.key}>

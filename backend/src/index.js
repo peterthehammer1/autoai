@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
+import { logger } from './utils/logger.js';
 
 // Load environment variables
 dotenv.config();
@@ -80,7 +81,10 @@ app.use(express.urlencoded({ extended: false }));
 // API key authentication — protects dashboard endpoints
 function requireApiKey(req, res, next) {
   const apiKey = process.env.API_KEY;
-  if (!apiKey) return next(); // Skip if not configured (dev mode)
+  if (!apiKey) {
+    logger.error('API_KEY environment variable is not configured — rejecting request');
+    return res.status(401).json({ error: { message: 'Unauthorized' } });
+  }
   const provided = req.headers['x-api-key'];
   if (provided === apiKey) return next();
   res.status(401).json({ error: { message: 'Unauthorized' } });

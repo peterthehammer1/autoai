@@ -18,7 +18,7 @@ export default function ServiceAnalysis({ comprehensive }) {
   })) || []
 
   return (
-    <Card className="transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
+    <Card className="transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 h-full flex flex-col">
       <CardHeader className="pb-2">
         <div className="flex items-center gap-2">
           <div className="p-2 rounded-lg bg-blue-100">
@@ -30,7 +30,7 @@ export default function ServiceAnalysis({ comprehensive }) {
           </div>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex-1">
         {loading ? (
           <div className="space-y-3">
             <div className="h-40 bg-slate-100 animate-pulse rounded" />

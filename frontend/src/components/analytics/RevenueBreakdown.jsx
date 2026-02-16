@@ -23,7 +23,7 @@ export default function RevenueBreakdown({ comprehensive }) {
   )
 
   return (
-    <Card className="transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
+    <Card className="transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 h-full flex flex-col">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -57,7 +57,7 @@ export default function RevenueBreakdown({ comprehensive }) {
           </div>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex-1">
         {loading ? (
           <div className="h-48 bg-slate-100 animate-pulse rounded" />
         ) : tab === 'category' ? (
