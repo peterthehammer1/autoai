@@ -23,6 +23,7 @@ import {
   Check,
   Edit,
   Send,
+  ShieldCheck,
 } from 'lucide-react'
 import { cn, formatCents, formatTime12Hour, parseDateLocal } from '@/lib/utils'
 import { useToast } from '@/hooks/use-toast'
@@ -903,10 +904,28 @@ export default function WorkOrderDetail() {
             </div>
           )}
           {wo.authorized_at && (
-            <div>
-              <span>Authorized: </span>
-              {format(new Date(wo.authorized_at), 'MMM d, yyyy h:mm a')}
-              {wo.authorized_by && ` by ${wo.authorized_by}`}
+            <div className="flex items-center gap-1.5">
+              <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700">
+                {wo.authorization_method === 'portal' ? 'Portal Approved' : 'Authorized'}
+              </span>
+              <span>
+                {format(new Date(wo.authorized_at), 'MMM d, yyyy h:mm a')}
+                {wo.authorized_by && ` by ${wo.authorized_by}`}
+              </span>
+              {wo.authorization_ip && (
+                <span className="text-slate-300">IP: {wo.authorization_ip}</span>
+              )}
+              {wo.work_order_items && (() => {
+                const approved = wo.work_order_items.filter(i => i.status === 'approved').length
+                const declined = wo.work_order_items.filter(i => i.status === 'declined').length
+                if (approved === 0 && declined === 0) return null
+                return (
+                  <span className="text-slate-400">
+                    ({approved} approved{declined > 0 ? `, ${declined} declined` : ''})
+                  </span>
+                )
+              })()}
             </div>
           )}
         </div>
@@ -919,12 +938,12 @@ function LineItemRow({ item, editable, onDelete, deleting }) {
   const Icon = ITEM_TYPE_ICONS[item.item_type] || Receipt
 
   return (
-    <div className="flex items-center gap-3 py-2 border-b border-slate-50 last:border-0 group">
+    <div className={cn("flex items-center gap-3 py-2 border-b border-slate-50 last:border-0 group", item.status === 'declined' && 'opacity-50')}>
       <div className="h-6 w-6 rounded bg-slate-50 flex items-center justify-center shrink-0">
         <Icon className="h-3 w-3 text-slate-400" />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm text-slate-700 truncate">{item.description}</p>
+        <p className={cn("text-sm text-slate-700 truncate", item.status === 'declined' && 'line-through')}>{item.description}</p>
         <p className="text-xs text-slate-400">
           {item.quantity > 1 && `${item.quantity} x `}
           {formatCents(item.unit_price_cents)}
@@ -938,10 +957,13 @@ function LineItemRow({ item, editable, onDelete, deleting }) {
         </p>
       </div>
       <div className="flex items-center gap-2">
+        {item.status === 'declined' && (
+          <span className="text-[10px] font-medium text-red-500 uppercase">Declined</span>
+        )}
         <span
           className={cn(
             'text-sm font-medium',
-            item.item_type === 'discount' ? 'text-red-600' : 'text-slate-700'
+            item.item_type === 'discount' ? 'text-red-600' : item.status === 'declined' ? 'text-slate-400 line-through' : 'text-slate-700'
           )}
         >
           {item.item_type === 'discount' ? '-' : ''}

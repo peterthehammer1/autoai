@@ -285,8 +285,11 @@ router.post('/:token/work-orders/:id/approve', requireToken, async (req, res, ne
       return validationError(res, 'Provide items array or approve_all: true');
     }
 
-    // Update WO authorization fields + status
+    // Update WO authorization fields + status (capture IP for digital signature)
     const customerName = `${customer.first_name || ''} ${customer.last_name || ''}`.trim();
+    const clientIp = req.headers['x-forwarded-for']?.split(',')[0]?.trim()
+      || req.socket?.remoteAddress || null;
+
     await supabase
       .from('work_orders')
       .update({
@@ -294,6 +297,7 @@ router.post('/:token/work-orders/:id/approve', requireToken, async (req, res, ne
         authorization_method: 'portal',
         authorized_at: new Date().toISOString(),
         authorized_by: customerName || 'Customer',
+        authorization_ip: clientIp,
         updated_at: new Date().toISOString(),
       })
       .eq('id', id);
@@ -307,7 +311,7 @@ router.post('/:token/work-orders/:id/approve', requireToken, async (req, res, ne
       .select(`
         id, work_order_number, status, notes,
         subtotal_cents, tax_cents, discount_cents, total_cents,
-        authorization_method, authorized_at, authorized_by,
+        authorization_method, authorized_at, authorized_by, authorization_ip,
         work_order_items(
           id, item_type, description, quantity,
           unit_price_cents, total_cents, status, sort_order
@@ -315,6 +319,29 @@ router.post('/:token/work-orders/:id/approve', requireToken, async (req, res, ne
       `)
       .eq('id', id)
       .single();
+
+    // Notify advisor via SMS (non-blocking)
+    try {
+      const { sendSMS } = await import('../services/sms.js');
+      const approvedCount = updated.work_order_items.filter(i => i.status === 'approved').length;
+      const totalItems = updated.work_order_items.length;
+      const totalDollars = (updated.total_cents / 100).toFixed(2);
+      const woDisplay = `WO-${1000 + updated.work_order_number}`;
+
+      // Fetch vehicle info for the notification
+      const { data: woFull } = await supabase
+        .from('work_orders')
+        .select('vehicle:vehicles(year, make, model)')
+        .eq('id', id)
+        .single();
+      const v = woFull?.vehicle;
+      const vehicleDesc = v ? `${v.year} ${v.make} ${v.model}` : 'vehicle';
+
+      const msg = `ESTIMATE APPROVED\n\n${customerName || 'Customer'} approved ${approvedCount} of ${totalItems} items on ${woDisplay} (${vehicleDesc}).\nTotal: $${totalDollars}\n\nAuthorized via portal.`;
+      await sendSMS(BUSINESS.advisorPhone, msg, { type: 'authorization_notification', customerId: customer.id });
+    } catch (notifyErr) {
+      logger.error('Advisor notification SMS failed (non-blocking)', { error: notifyErr });
+    }
 
     res.json({
       success: true,
