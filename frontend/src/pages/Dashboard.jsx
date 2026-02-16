@@ -15,7 +15,7 @@ import AIInsightsPanel from '@/components/dashboard/AIInsightsPanel'
 import SentimentChart from '@/components/dashboard/SentimentChart'
 import TodaysSchedule from '@/components/dashboard/TodaysSchedule'
 import AIAgentCard from '@/components/dashboard/AIAgentCard'
-import MissedRevenueCard from '@/components/dashboard/MissedRevenueCard'
+import RevenueGeneratedCard from '@/components/dashboard/RevenueGeneratedCard'
 import MiniCalendar from '@/components/dashboard/MiniCalendar'
 
 function getGreeting() {
@@ -72,9 +72,9 @@ export default function Dashboard() {
     queryFn: () => analytics.callTrends('week'),
   })
 
-  const { data: missedRevenue } = useQuery({
-    queryKey: ['analytics', 'missed-revenue'],
-    queryFn: analytics.missedRevenue,
+  const { data: aiRevenue } = useQuery({
+    queryKey: ['analytics', 'ai-revenue'],
+    queryFn: analytics.aiRevenue,
     refetchInterval: 15 * 60 * 1000,
     refetchIntervalInBackground: false,
   })
@@ -133,7 +133,7 @@ export default function Dashboard() {
         <div className="flex flex-col gap-5 min-h-0">
           <AIAgentCard overview={overview} />
 
-          <MissedRevenueCard missedRevenue={missedRevenue} />
+          <RevenueGeneratedCard aiRevenue={aiRevenue} />
 
           {/* Mini Calendar - Enhanced */}
           <Card data-tour="mini-calendar" className="shadow-lg border-0 overflow-hidden flex-1 flex flex-col">

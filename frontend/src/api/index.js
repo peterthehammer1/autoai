@@ -202,6 +202,8 @@ export const analytics = {
 
   missedRevenue: () => fetchAPI('/analytics/missed-revenue'),
 
+  aiRevenue: () => fetchAPI('/analytics/ai-revenue'),
+
   getTargets: () => fetchAPI('/analytics/targets'),
 
   updateTargets: (targets) => fetchAPI('/analytics/targets', {
