@@ -4,8 +4,7 @@ import { format, parseISO } from 'date-fns';
 import { assignTechnician, getRequiredSkillLevel, getBestBayType } from './retell-functions.js';
 import { isValidDate, isValidTime, isValidPhone, isValidUUID, isValidUUIDArray, isWeekday, isWithinBusinessHours, endsBeforeClose, isFutureDate, isWithinBookingWindow, clampPagination, validationError } from '../middleware/validate.js';
 import { nowEST, todayEST } from '../utils/timezone.js';
-import { sendConfirmationSMS, sendCancellationSMS, sendStatusUpdateSMS, sendCompletedSMS, sendPortalLinkSMS } from '../services/sms.js';
-import { ensurePortalToken, portalUrl } from './portal.js';
+import { sendConfirmationSMS, sendCancellationSMS, sendStatusUpdateSMS, sendCompletedSMS } from '../services/sms.js';
 
 const router = Router();
 
@@ -711,6 +710,8 @@ router.patch('/:id', async (req, res, next) => {
           await sendCompletedSMS(smsParams);
           // Also send portal link so customer can view service history
           try {
+            const { ensurePortalToken, portalUrl } = await import('./portal.js');
+            const { sendPortalLinkSMS } = await import('../services/sms.js');
             const token = await ensurePortalToken(appointment.customer.id);
             await sendPortalLinkSMS({
               customerPhone: appointment.customer.phone,

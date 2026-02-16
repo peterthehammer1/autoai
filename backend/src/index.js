@@ -27,7 +27,6 @@ import workOrderRoutes from './routes/work-orders.js';
 import reviewRoutes, { clickRouter as reviewClickRouter } from './routes/reviews.js';
 import portalRouter, { generateToken as portalGenerateToken } from './routes/portal.js';
 import { supabase } from './config/database.js';
-import { logger } from './utils/logger.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;

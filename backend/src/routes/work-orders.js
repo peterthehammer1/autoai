@@ -1,8 +1,6 @@
 import { Router } from 'express';
 import { supabase } from '../config/database.js';
 import { isValidUUID, clampPagination, validationError } from '../middleware/validate.js';
-import { ensurePortalToken, portalUrl } from './portal.js';
-import { sendPortalLinkSMS } from '../services/sms.js';
 import { logger } from '../utils/logger.js';
 
 const router = Router();
@@ -339,6 +337,8 @@ router.patch('/:id', async (req, res, next) => {
     // Send portal link SMS when estimate is sent to customer
     if (updates.status === 'sent_to_customer' && fullWO.customer?.phone) {
       try {
+        const { ensurePortalToken, portalUrl } = await import('./portal.js');
+        const { sendPortalLinkSMS } = await import('../services/sms.js');
         const token = await ensurePortalToken(fullWO.customer.id);
         const customerName = `${fullWO.customer.first_name || ''} ${fullWO.customer.last_name || ''}`.trim();
         const vehicleDesc = fullWO.vehicle
