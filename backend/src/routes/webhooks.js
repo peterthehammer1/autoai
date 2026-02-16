@@ -9,8 +9,8 @@ import { BUSINESS } from '../config/business.js';
 
 const router = Router();
 
-// API key for webhook verification (support white-label: NUCLEUS_API_KEY or RETELL_API_KEY)
-const RETELL_API_KEY = process.env.NUCLEUS_API_KEY || process.env.RETELL_API_KEY;
+// Webhook signature verification uses a dedicated secret (different from the API key)
+const RETELL_WEBHOOK_SECRET = process.env.RETELL_WEBHOOK_SECRET || process.env.NUCLEUS_API_KEY || process.env.RETELL_API_KEY;
 const RETELL_SKIP_WEBHOOK_VERIFY = process.env.RETELL_SKIP_WEBHOOK_VERIFY === 'true' || process.env.RETELL_SKIP_WEBHOOK_VERIFY === '1';
 
 /**
@@ -23,7 +23,7 @@ function verifyRetellSignature(req) {
     logger.warn('Webhook signature verification skipped', { reason: 'RETELL_SKIP_WEBHOOK_VERIFY' });
     return true;
   }
-  if (!RETELL_API_KEY) {
+  if (!RETELL_WEBHOOK_SECRET) {
     logger.error('Webhook rejected: API key not configured');
     return false;
   }
@@ -37,7 +37,7 @@ function verifyRetellSignature(req) {
   try {
     return Retell.verify(
       JSON.stringify(req.body),
-      RETELL_API_KEY,
+      RETELL_WEBHOOK_SECRET,
       signature
     );
   } catch (error) {

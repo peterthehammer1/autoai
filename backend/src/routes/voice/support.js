@@ -116,7 +116,7 @@ router.post('/request_callback', async (req, res, next) => {
       await client.messages.create({
         body: message,
         from: process.env.TWILIO_PHONE_NUMBER,
-        to: process.env.SERVICE_ADVISOR_PHONE || '+15199918959'
+        to: BUSINESS.advisorPhone
       });
     } catch (smsError) {
       logger.error('Failed to send callback notification SMS:', { error: smsError });
@@ -312,7 +312,7 @@ router.post('/submit_lead', async (req, res, next) => {
     await client.messages.create({
       body: message,
       from: process.env.TWILIO_PHONE_NUMBER,
-      to: '+15199918959' // Pete's number
+      to: process.env.LEAD_NOTIFY_PHONE || BUSINESS.advisorPhone
     });
 
     // Also send email to pete@nucleus.com
