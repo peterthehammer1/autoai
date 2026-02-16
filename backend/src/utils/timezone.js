@@ -54,3 +54,11 @@ export function daysAgoEST(n) {
 export function daysFromNowEST(n) {
   return format(addDays(nowEST(), n), 'yyyy-MM-dd');
 }
+
+/** Format "HH:MM" or "HH:MM:SS" to 12-hour display (e.g. "2:30 PM") */
+export function formatTime12Hour(timeStr) {
+  const [hours, mins] = timeStr.split(':').map(Number);
+  const period = hours >= 12 ? 'PM' : 'AM';
+  const hour12 = hours % 12 || 12;
+  return `${hour12}:${String(mins).padStart(2, '0')} ${period}`;
+}

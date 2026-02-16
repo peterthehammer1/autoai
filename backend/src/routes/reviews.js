@@ -6,6 +6,7 @@ import { logger } from '../utils/logger.js';
 const router = Router();
 
 // ── Helper: read a setting from the settings table ──
+// eslint-disable-next-line no-unused-vars
 async function getSetting(key) {
   const { data } = await supabase
     .from('settings')

@@ -4,6 +4,7 @@ import { supabase } from '../config/database.js';
 import { isValidUUID, validationError } from '../middleware/validate.js';
 import { recalculateTotals } from './work-orders.js';
 import { logger } from '../utils/logger.js';
+import { BUSINESS } from '../config/business.js';
 
 const router = Router();
 
@@ -69,7 +70,7 @@ export async function ensurePortalToken(customerId) {
  * Build portal URL from a token.
  */
 export function portalUrl(token) {
-  const base = process.env.FRONTEND_URL || 'https://premierauto.ai';
+  const base = process.env.FRONTEND_URL || BUSINESS.url;
   return `${base}/portal/${token}`;
 }
 

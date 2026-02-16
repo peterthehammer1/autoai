@@ -1,10 +1,11 @@
 import { Router } from 'express';
 import { Retell } from 'retell-sdk';
 import { supabase, normalizePhone } from '../config/database.js';
-import { toZonedTime, format as formatTz } from 'date-fns-tz';
+import { toZonedTime } from 'date-fns-tz';
 import { format, addDays, parseISO } from 'date-fns';
-import { todayEST, daysAgoEST } from '../utils/timezone.js';
+import { todayEST, daysAgoEST, TZ } from '../utils/timezone.js';
 import { logger } from '../utils/logger.js';
+import { BUSINESS } from '../config/business.js';
 
 const router = Router();
 
@@ -52,7 +53,7 @@ function verifyRetellSignature(req) {
  * Evening: 6:00 PM - 11:59 PM
  */
 function getTimeGreeting() {
-  const timezone = 'America/New_York';
+  const timezone = TZ;
   const now = toZonedTime(new Date(), timezone);
   const hour = now.getHours();
   
@@ -65,7 +66,7 @@ function getTimeGreeting() {
  * Get current date info in EST timezone for AI context
  */
 function getCurrentDateInfo() {
-  const timezone = 'America/New_York';
+  const timezone = TZ;
   const now = toZonedTime(new Date(), timezone);
   const dayOfWeek = now.getDay(); // 0=Sunday, 6=Saturday
   const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
@@ -95,28 +96,28 @@ router.post('/voice/inbound', async (req, res) => {
   try {
     // Verify webhook signature for security
     if (!verifyRetellSignature(req)) {
-      console.error('Invalid Retell webhook signature - rejecting request');
+      logger.error('Invalid Retell webhook signature - rejecting request');
       return res.status(401).json({ error: 'Invalid signature' });
     }
-    
+
     const { event, call_inbound } = req.body;
-    
-    console.log('Nucleus inbound webhook received, event:', req.body?.event);
+
+    logger.info('Nucleus inbound webhook received', { event: req.body?.event });
     
     if (event !== 'call_inbound' || !call_inbound) {
       return res.json({ call_inbound: {} });
     }
     
-    const { from_number, agent_id } = call_inbound;
+    const { from_number } = call_inbound;
     
     if (!from_number) {
-      console.log('No from_number in inbound webhook');
+      logger.info('No from_number in inbound webhook');
       return res.json({ call_inbound: {} });
     }
     
     // Look up customer by phone number
     const normalizedPhone = normalizePhone(from_number);
-    console.log('Looking up customer by phone');
+    logger.info('Looking up customer by phone');
     
     const { data: customer, error } = await supabase
       .from('customers')
@@ -144,7 +145,7 @@ router.post('/voice/inbound', async (req, res) => {
     const timeGreeting = getTimeGreeting();
     
     if (error || !customer) {
-      console.log('Customer not found, new caller');
+      logger.info('Customer not found, new caller');
       const dateInfo = getCurrentDateInfo();
       // New customer - pass info so agent knows
       return res.json({
@@ -152,7 +153,7 @@ router.post('/voice/inbound', async (req, res) => {
           agent_override: {
             retell_llm: {
               start_speaker: "agent",
-              begin_message: `${timeGreeting}! Thanks for calling Premier Auto Service, this is Amber. How can I help you today?`
+              begin_message: `${timeGreeting}! Thanks for calling ${BUSINESS.name}, this is ${BUSINESS.agentName}. How can I help you today?`
             }
           },
           dynamic_variables: {
@@ -174,7 +175,7 @@ router.post('/voice/inbound', async (req, res) => {
       });
     }
     
-    console.log('Found customer:', customer.id);
+    logger.info('Found customer', { customerId: customer.id });
     
     // Build vehicle info string
     let vehicleInfo = '';
@@ -224,7 +225,7 @@ router.post('/voice/inbound', async (req, res) => {
           maintenanceSuggestions = parts.join('; ');
         }
       } catch (e) {
-        console.log('Vehicle intelligence timeout/error (non-blocking):', e.message);
+        logger.info('Vehicle intelligence timeout/error (non-blocking)', { error: e.message });
       }
     }
     
@@ -235,14 +236,14 @@ router.post('/voice/inbound', async (req, res) => {
     
     // If incomplete, treat as NEW customer so agent collects missing info
     if (!isComplete) {
-      console.log('Customer record incomplete:', customer.id, '- missing:', !hasName ? 'name' : '', !hasVehicle ? 'vehicle' : '');
+      logger.info('Customer record incomplete', { customerId: customer.id, missingName: !hasName, missingVehicle: !hasVehicle });
       const dateInfo = getCurrentDateInfo();
       return res.json({
         call_inbound: {
           agent_override: {
             retell_llm: {
               start_speaker: "agent",
-              begin_message: `${timeGreeting}! Thanks for calling Premier Auto Service, this is Amber. How can I help you today?`
+              begin_message: `${timeGreeting}! Thanks for calling ${BUSINESS.name}, this is ${BUSINESS.agentName}. How can I help you today?`
             }
           },
           dynamic_variables: {
@@ -278,8 +279,8 @@ router.post('/voice/inbound', async (req, res) => {
     
     // Build greeting message
     const greetingWithName = nameGreeting 
-      ? `${timeGreeting}, ${nameGreeting}! Thanks for calling Premier Auto Service, this is Amber. How can I help you today?`
-      : `${timeGreeting}! Thanks for calling Premier Auto Service, this is Amber. How can I help you today?`;
+      ? `${timeGreeting}, ${nameGreeting}! Thanks for calling ${BUSINESS.name}, this is ${BUSINESS.agentName}. How can I help you today?`
+      : `${timeGreeting}! Thanks for calling ${BUSINESS.name}, this is ${BUSINESS.agentName}. How can I help you today?`;
     
     // Get current date info for AI context
     const dateInfo = getCurrentDateInfo();
@@ -384,7 +385,7 @@ router.post('/voice/inbound', async (req, res) => {
     });
     
   } catch (error) {
-    console.error('Inbound webhook error:', error);
+    logger.error('Inbound webhook error', { error });
     // Return empty response to allow call to proceed
     return res.json({ call_inbound: {} });
   }
@@ -399,13 +400,13 @@ router.post('/voice', async (req, res, next) => {
   try {
     // Verify webhook signature for security
     if (!verifyRetellSignature(req)) {
-      console.error('Invalid Retell webhook signature - rejecting request');
+      logger.error('Invalid Retell webhook signature - rejecting request');
       return res.status(401).json({ error: 'Invalid signature' });
     }
-    
+
     const { event, call } = req.body;
 
-    console.log(`Nucleus webhook: ${event}`, call?.call_id);
+    logger.info('Nucleus webhook', { event, callId: call?.call_id });
 
     switch (event) {
       case 'call_started':
@@ -421,13 +422,13 @@ router.post('/voice', async (req, res, next) => {
         break;
       
       default:
-        console.log(`Unknown webhook event: ${event}`);
+        logger.info('Unknown webhook event', { event });
     }
 
     res.json({ received: true });
 
   } catch (error) {
-    console.error('Webhook error:', error);
+    logger.error('Webhook error', { error });
     // Still return 200 to prevent retries
     res.json({ received: true, error: error.message });
   }
@@ -435,7 +436,7 @@ router.post('/voice', async (req, res, next) => {
 
 async function handleCallStarted(call) {
   try {
-    const { call_id, from_number, to_number, direction, start_timestamp } = call;
+    const { call_id, from_number, direction, start_timestamp } = call;
 
     // Create initial call log entry
     await supabase
@@ -463,7 +464,7 @@ async function handleCallStarted(call) {
         .eq('retell_call_id', call_id);
     }
   } catch (error) {
-    console.error('handleCallStarted error:', error);
+    logger.error('handleCallStarted error', { error });
   }
 }
 
@@ -476,7 +477,7 @@ async function handleCallEnded(call) {
       disconnection_reason
     } = call;
 
-    console.log('Call ended:', call_id, 'duration_ms:', duration_ms, 'disconnection_reason:', disconnection_reason);
+    logger.info('Call ended', { callId: call_id, duration_ms, disconnection_reason });
 
     // Determine outcome based on call data
     let outcome = 'inquiry';
@@ -506,7 +507,7 @@ async function handleCallEnded(call) {
       })
       .eq('retell_call_id', call_id);
   } catch (error) {
-    console.error('handleCallEnded error:', error);
+    logger.error('handleCallEnded error', { error });
   }
 }
 
@@ -525,10 +526,9 @@ async function handleCallAnalyzed(call) {
       call_analysis,
       agent_id,
       direction,
-      disconnection_reason
     } = call;
 
-    console.log('Call analyzed:', call_id, 'Capturing full call record');
+    logger.info('Call analyzed', { callId: call_id, action: 'Capturing full call record' });
 
     // Extract analysis data (payload may use call_analysis or top-level)
     const sentiment = (call_analysis?.user_sentiment || 'neutral').toString().toLowerCase();
@@ -638,7 +638,7 @@ async function handleCallAnalyzed(call) {
       await supabase.from('call_logs').insert(insertData);
     }
   } catch (error) {
-    console.error('handleCallAnalyzed error:', error);
+    logger.error('handleCallAnalyzed error', { error });
   }
 }
 
@@ -650,7 +650,7 @@ router.post('/twilio/sms', async (req, res, next) => {
   try {
     const { From, Body } = req.body;
 
-    console.log('Inbound SMS received');
+    logger.info('Inbound SMS received');
 
     // Handle STOP opt-out
     const message = (Body || '').toLowerCase().trim();
@@ -670,7 +670,7 @@ router.post('/twilio/sms', async (req, res, next) => {
     `);
 
   } catch (error) {
-    console.error('SMS webhook error:', error);
+    logger.error('SMS webhook error', { error });
     res.type('text/xml').send(`
       <?xml version="1.0" encoding="UTF-8"?>
       <Response></Response>

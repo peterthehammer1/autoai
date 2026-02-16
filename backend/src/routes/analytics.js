@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { supabase } from '../config/database.js';
-import { format, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, differenceInDays, addDays } from 'date-fns';
-import { nowEST, todayEST, weekStartEST, weekEndEST, monthStartEST, monthEndEST, daysAgoEST, formatDateEST } from '../utils/timezone.js';
+import { format, subDays, startOfWeek, endOfWeek, startOfMonth, differenceInDays, addDays } from 'date-fns';
+import { nowEST, todayEST, weekStartEST, weekEndEST, monthStartEST, monthEndEST, daysAgoEST } from '../utils/timezone.js';
 
 const router = Router();
 
@@ -1477,9 +1477,6 @@ router.get('/comprehensive', async (req, res, next) => {
       ? format(subDays(new Date(start), 1), 'yyyy-MM-dd')
       : format(subDays(today, days + 1), 'yyyy-MM-dd');
     const monthStart = monthStartEST();
-
-    const ninetyDaysAgo = format(subDays(today, 90), 'yyyy-MM-dd');
-    const sixtyDaysAgo = format(subDays(today, 60), 'yyyy-MM-dd');
 
     const endFilter = period === 'custom' ? end : null;
 

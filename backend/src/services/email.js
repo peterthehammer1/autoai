@@ -1,10 +1,11 @@
 import { format, parseISO } from 'date-fns';
 import { supabase } from '../config/database.js';
+import { formatTime12Hour } from '../utils/timezone.js';
+import { BUSINESS } from '../config/business.js';
+import { logger } from '../utils/logger.js';
 
 // SendGrid API key
 const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
-const FROM_EMAIL = process.env.FROM_EMAIL || 'noreply@premierauto.ai';
-const FROM_NAME = process.env.FROM_NAME || 'Premier Auto Service';
 
 /**
  * Log email to database
@@ -13,7 +14,7 @@ async function logEmail({ toEmail, subject, body, emailType, sendgridId, status,
   try {
     await supabase.from('email_logs').insert({
       to_email: toEmail,
-      from_email: FROM_EMAIL,
+      from_email: BUSINESS.fromEmail,
       subject,
       body,
       email_type: emailType,
@@ -24,18 +25,8 @@ async function logEmail({ toEmail, subject, body, emailType, sendgridId, status,
       appointment_id: appointmentId
     });
   } catch (err) {
-    console.error('[Email] Failed to log email:', err.message);
+    logger.error('[Email] Failed to log email', { error: err });
   }
-}
-
-/**
- * Format time to 12-hour format
- */
-function formatTime12Hour(timeStr) {
-  const [hours, mins] = timeStr.split(':').map(Number);
-  const period = hours >= 12 ? 'PM' : 'AM';
-  const hour12 = hours % 12 || 12;
-  return `${hour12}:${String(mins).padStart(2, '0')} ${period}`;
 }
 
 /**
@@ -45,7 +36,7 @@ export async function sendEmail(to, subject, html, options = {}) {
   const { emailType = 'custom', customerId, appointmentId } = options;
 
   if (!SENDGRID_API_KEY) {
-    console.log('[Email] No SENDGRID_API_KEY - skipping email send');
+    logger.info('[Email] No SENDGRID_API_KEY - skipping email send');
     return { success: false, error: 'Email not configured' };
   }
 
@@ -58,7 +49,7 @@ export async function sendEmail(to, subject, html, options = {}) {
       },
       body: JSON.stringify({
         personalizations: [{ to: [{ email: to }] }],
-        from: { email: FROM_EMAIL, name: FROM_NAME },
+        from: { email: BUSINESS.fromEmail, name: BUSINESS.fromName },
         subject,
         content: [{ type: 'text/html', value: html }]
       })
@@ -67,7 +58,7 @@ export async function sendEmail(to, subject, html, options = {}) {
     // SendGrid returns 202 Accepted on success with no body
     if (response.status === 202) {
       const messageId = response.headers.get('x-message-id');
-      console.log(`[Email] Sent ${emailType} email to ${to}, ID: ${messageId || 'accepted'}`);
+      logger.info('[Email] Sent email', { emailType, to, messageId: messageId || 'accepted' });
       await logEmail({
         toEmail: to,
         subject,
@@ -81,7 +72,7 @@ export async function sendEmail(to, subject, html, options = {}) {
       return { success: true, id: messageId };
     } else {
       const data = await response.json().catch(() => ({}));
-      console.error('[Email] Failed to send:', response.status, data);
+      logger.error('[Email] Failed to send', { status: response.status, data });
       await logEmail({
         toEmail: to,
         subject,
@@ -95,7 +86,7 @@ export async function sendEmail(to, subject, html, options = {}) {
       return { success: false, error: data.errors?.[0]?.message || 'Unknown error' };
     }
   } catch (error) {
-    console.error('[Email] Error:', error.message);
+    logger.error('[Email] Error', { error });
     await logEmail({
       toEmail: to,
       subject,
@@ -113,20 +104,20 @@ export async function sendEmail(to, subject, html, options = {}) {
 /**
  * Send appointment confirmation email
  */
-export async function sendConfirmationEmail({ 
-  to, 
-  customerName, 
-  appointmentDate, 
-  appointmentTime, 
-  services, 
+export async function sendConfirmationEmail({
+  to,
+  customerName,
+  appointmentDate,
+  appointmentTime,
+  services,
   vehicle,
   customerId,
   appointmentId
 }) {
-  const dateStr = typeof appointmentDate === 'string' 
+  const dateStr = typeof appointmentDate === 'string'
     ? format(parseISO(appointmentDate), 'EEEE, MMMM d, yyyy')
     : format(appointmentDate, 'EEEE, MMMM d, yyyy');
-  
+
   const timeStr = formatTime12Hour(appointmentTime);
   const firstName = customerName?.split(' ')[0] || 'there';
 
@@ -144,14 +135,14 @@ export async function sendConfirmationEmail({
     <tr>
       <td align="center" style="padding: 40px 20px;">
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 480px; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-          
+
           <!-- Header -->
           <tr>
             <td style="background-color: #1e293b; padding: 32px 40px; text-align: center;">
-              <h1 style="margin: 0; color: #ffffff; font-size: 20px; font-weight: 600; letter-spacing: -0.5px;">Premier Auto Service</h1>
+              <h1 style="margin: 0; color: #ffffff; font-size: 20px; font-weight: 600; letter-spacing: -0.5px;">${BUSINESS.name}</h1>
             </td>
           </tr>
-          
+
           <!-- Confirmation Badge -->
           <tr>
             <td style="padding: 32px 40px 24px; text-align: center;">
@@ -160,14 +151,14 @@ export async function sendConfirmationEmail({
               </div>
             </td>
           </tr>
-          
+
           <!-- Greeting -->
           <tr>
             <td style="padding: 0 40px 24px; text-align: center;">
               <p style="margin: 0; color: #374151; font-size: 16px;">Hi ${firstName}, your appointment is scheduled.</p>
             </td>
           </tr>
-          
+
           <!-- Appointment Details Card -->
           <tr>
             <td style="padding: 0 40px 32px;">
@@ -202,27 +193,27 @@ export async function sendConfirmationEmail({
               </table>
             </td>
           </tr>
-          
+
           <!-- Help Text -->
           <tr>
             <td style="padding: 0 40px 32px; text-align: center;">
               <p style="margin: 0; color: #64748b; font-size: 14px; line-height: 1.5;">
                 Need to reschedule? Call us at<br>
-                <a href="tel:+16473711990" style="color: #1e293b; font-weight: 600; text-decoration: none;">(647) 371-1990</a>
+                <a href="tel:${BUSINESS.phoneRaw}" style="color: #1e293b; font-weight: 600; text-decoration: none;">${BUSINESS.phone}</a>
               </p>
             </td>
           </tr>
-          
+
           <!-- Footer -->
           <tr>
             <td style="background-color: #f8fafc; padding: 24px 40px; border-top: 1px solid #e2e8f0; text-align: center;">
               <p style="margin: 0; color: #94a3b8; font-size: 12px;">
-                Premier Auto Service<br>
-                <a href="https://premierauto.ai" style="color: #94a3b8; text-decoration: none;">premierauto.ai</a>
+                ${BUSINESS.name}<br>
+                <a href="${BUSINESS.url}" style="color: #94a3b8; text-decoration: none;">${BUSINESS.domain}</a>
               </p>
             </td>
           </tr>
-          
+
         </table>
       </td>
     </tr>
@@ -254,7 +245,7 @@ export async function sendReminderEmail({
   const dateStr = typeof appointmentDate === 'string'
     ? format(parseISO(appointmentDate), 'EEEE, MMMM d')
     : format(appointmentDate, 'EEEE, MMMM d');
-  
+
   const timeStr = formatTime12Hour(appointmentTime);
   const firstName = customerName?.split(' ')[0] || 'there';
 
@@ -272,14 +263,14 @@ export async function sendReminderEmail({
     <tr>
       <td align="center" style="padding: 40px 20px;">
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 480px; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-          
+
           <!-- Header -->
           <tr>
             <td style="background-color: #1e293b; padding: 32px 40px; text-align: center;">
-              <h1 style="margin: 0; color: #ffffff; font-size: 20px; font-weight: 600; letter-spacing: -0.5px;">Premier Auto Service</h1>
+              <h1 style="margin: 0; color: #ffffff; font-size: 20px; font-weight: 600; letter-spacing: -0.5px;">${BUSINESS.name}</h1>
             </td>
           </tr>
-          
+
           <!-- Reminder Badge -->
           <tr>
             <td style="padding: 32px 40px 24px; text-align: center;">
@@ -288,14 +279,14 @@ export async function sendReminderEmail({
               </div>
             </td>
           </tr>
-          
+
           <!-- Greeting -->
           <tr>
             <td style="padding: 0 40px 24px; text-align: center;">
               <p style="margin: 0; color: #374151; font-size: 16px;">Hi ${firstName}, just a quick reminder about your appointment.</p>
             </td>
           </tr>
-          
+
           <!-- Appointment Details -->
           <tr>
             <td style="padding: 0 40px 32px;">
@@ -310,25 +301,25 @@ export async function sendReminderEmail({
               </table>
             </td>
           </tr>
-          
+
           <!-- Help Text -->
           <tr>
             <td style="padding: 0 40px 32px; text-align: center;">
               <p style="margin: 0; color: #64748b; font-size: 14px;">
-                Need to reschedule? Call <a href="tel:+16473711990" style="color: #1e293b; font-weight: 600; text-decoration: none;">(647) 371-1990</a>
+                Need to reschedule? Call <a href="tel:${BUSINESS.phoneRaw}" style="color: #1e293b; font-weight: 600; text-decoration: none;">${BUSINESS.phone}</a>
               </p>
             </td>
           </tr>
-          
+
           <!-- Footer -->
           <tr>
             <td style="background-color: #f8fafc; padding: 24px 40px; border-top: 1px solid #e2e8f0; text-align: center;">
               <p style="margin: 0; color: #94a3b8; font-size: 12px;">
-                Premier Auto Service · <a href="https://premierauto.ai" style="color: #94a3b8; text-decoration: none;">premierauto.ai</a>
+                ${BUSINESS.name} · <a href="${BUSINESS.url}" style="color: #94a3b8; text-decoration: none;">${BUSINESS.domain}</a>
               </p>
             </td>
           </tr>
-          
+
         </table>
       </td>
     </tr>

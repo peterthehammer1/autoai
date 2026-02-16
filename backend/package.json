@@ -10,7 +10,8 @@
     "seed": "node scripts/seed.js",
     "retell:latest-call": "node scripts/retell-fetch-latest-call.js",
     "regenerate-slots": "node scripts/regenerate-slots.js",
-    "test": "node --test tests/api.test.js"
+    "test": "node --test tests/api.test.js",
+    "lint": "eslint src/"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",
@@ -27,6 +28,9 @@
     "uuid": "^9.0.0"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.2",
+    "eslint": "^9.39.2",
+    "globals": "^15.15.0",
     "nodemon": "^3.0.2"
   },
   "engines": {

@@ -1,6 +1,9 @@
 import twilio from 'twilio';
 import { format, parseISO } from 'date-fns';
 import { supabase } from '../config/database.js';
+import { formatTime12Hour } from '../utils/timezone.js';
+import { BUSINESS } from '../config/business.js';
+import { logger } from '../utils/logger.js';
 
 // Initialize Twilio client
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
@@ -32,18 +35,8 @@ async function logSMS({ toPhone, body, messageType, twilioSid, status, errorMess
       direction: direction || 'outbound'
     });
   } catch (err) {
-    console.error('[SMS] Failed to log SMS:', err.message);
+    logger.error('[SMS] Failed to log SMS', { error: err });
   }
-}
-
-/**
- * Format time to 12-hour format
- */
-function formatTime12Hour(timeStr) {
-  const [hours, mins] = timeStr.split(':').map(Number);
-  const period = hours >= 12 ? 'PM' : 'AM';
-  const hour12 = hours % 12 || 12;
-  return `${hour12}:${String(mins).padStart(2, '0')} ${period}`;
 }
 
 /**
@@ -51,11 +44,11 @@ function formatTime12Hour(timeStr) {
  */
 export async function sendSMS(to, body, options = {}) {
   const { messageType = 'custom', customerId, appointmentId } = options;
-  
+
   // Format phone number for Twilio (needs +1 prefix for US/Canada)
   let formattedTo = to.replace(/\D/g, '');
   if (formattedTo.length < 10) {
-    console.error('[SMS] Invalid phone number: too few digits');
+    logger.error('[SMS] Invalid phone number: too few digits');
     return { success: false, error: 'Invalid phone number' };
   }
   if (formattedTo.length === 10) {
@@ -65,13 +58,13 @@ export async function sendSMS(to, body, options = {}) {
   }
 
   if (!twilioClient) {
-    console.log('[SMS] Twilio not configured. Would have sent to', to, ':', body);
+    logger.info('[SMS] Twilio not configured, skipping send', { to, body });
     // Still log the attempt
-    await logSMS({ 
-      toPhone: formattedTo, 
-      body, 
-      messageType, 
-      status: 'failed', 
+    await logSMS({
+      toPhone: formattedTo,
+      body,
+      messageType,
+      status: 'failed',
       errorMessage: 'Twilio not configured',
       customerId,
       appointmentId
@@ -86,34 +79,34 @@ export async function sendSMS(to, body, options = {}) {
       to: formattedTo
     });
 
-    console.log('[SMS] Sent successfully:', message.sid);
-    
+    logger.info('[SMS] Sent successfully', { sid: message.sid });
+
     // Log successful SMS
-    await logSMS({ 
-      toPhone: formattedTo, 
-      body, 
-      messageType, 
+    await logSMS({
+      toPhone: formattedTo,
+      body,
+      messageType,
       twilioSid: message.sid,
       status: 'sent',
       customerId,
       appointmentId
     });
-    
+
     return { success: true, messageId: message.sid };
   } catch (error) {
-    console.error('[SMS] Error sending:', error.message);
-    
+    logger.error('[SMS] Error sending', { error });
+
     // Log failed SMS
-    await logSMS({ 
-      toPhone: formattedTo, 
-      body, 
-      messageType, 
-      status: 'failed', 
+    await logSMS({
+      toPhone: formattedTo,
+      body,
+      messageType,
+      status: 'failed',
       errorMessage: error.message,
       customerId,
       appointmentId
     });
-    
+
     return { success: false, error: error.message };
   }
 }
@@ -121,11 +114,11 @@ export async function sendSMS(to, body, options = {}) {
 /**
  * Send appointment confirmation SMS
  */
-export async function sendConfirmationSMS({ 
-  customerPhone, 
-  customerName, 
-  appointmentDate, 
-  appointmentTime, 
+export async function sendConfirmationSMS({
+  customerPhone,
+  customerName,
+  appointmentDate,
+  appointmentTime,
   services,
   vehicleDescription,
   customerId,
@@ -137,36 +130,36 @@ export async function sendConfirmationSMS({
   const firstName = customerName?.split(' ')[0] || 'there';
 
   const vehicleLine = vehicleDescription ? `${vehicleDescription}\n` : '';
-  
+
   const message = `Hi ${firstName},
 
 Here is a quick confirmation for your records:
 
 ${services}
 ${vehicleLine}${formattedDate} at ${formattedTime}
-1250 Industrial Boulevard, Springfield
+${BUSINESS.address}
 
 Reply CONFIRM to confirm, RESCHEDULE to reschedule, or CANCEL to cancel.
 
-Thanks for choosing Premier Auto Service!
+Thanks for choosing ${BUSINESS.name}!
 
-- Amber`;
+- ${BUSINESS.agentName}`;
 
-  return sendSMS(customerPhone, message, { 
-    messageType: 'confirmation', 
-    customerId, 
-    appointmentId 
+  return sendSMS(customerPhone, message, {
+    messageType: 'confirmation',
+    customerId,
+    appointmentId
   });
 }
 
 /**
  * Send appointment reminder SMS (24 hours before)
  */
-export async function sendReminderSMS({ 
-  customerPhone, 
-  customerName, 
-  appointmentDate, 
-  appointmentTime, 
+export async function sendReminderSMS({
+  customerPhone,
+  customerName,
+  appointmentDate,
+  appointmentTime,
   services,
   vehicleDescription,
   customerId,
@@ -178,36 +171,36 @@ export async function sendReminderSMS({
   const firstName = customerName?.split(' ')[0] || 'there';
 
   const vehicleLine = vehicleDescription ? `${vehicleDescription}\n` : '';
-  
+
   const message = `Hi ${firstName},
 
 Just a friendly reminder about your appointment tomorrow:
 
 ${services}
 ${vehicleLine}${formattedDate} at ${formattedTime}
-1250 Industrial Boulevard, Springfield
+${BUSINESS.address}
 
 Reply CONFIRM to confirm, or RESCHEDULE if you need to change the time.
 
 See you soon!
 
-- Amber`;
+- ${BUSINESS.agentName}`;
 
-  return sendSMS(customerPhone, message, { 
-    messageType: 'reminder', 
-    customerId, 
-    appointmentId 
+  return sendSMS(customerPhone, message, {
+    messageType: 'reminder',
+    customerId,
+    appointmentId
   });
 }
 
 /**
  * Send appointment cancellation SMS
  */
-export async function sendCancellationSMS({ 
-  customerPhone, 
-  customerName, 
-  appointmentDate, 
-  appointmentTime, 
+export async function sendCancellationSMS({
+  customerPhone,
+  customerName,
+  appointmentDate,
+  appointmentTime,
   services,
   vehicleDescription,
   customerId,
@@ -227,14 +220,14 @@ Your appointment has been cancelled:
 ${services}
 ${vehicleLine}${formattedDate} at ${formattedTime}
 
-If you'd like to rebook, reply RESCHEDULE or call us at (647) 371-1990.
+If you'd like to rebook, reply RESCHEDULE or call us at ${BUSINESS.phone}.
 
-- Amber`;
+- ${BUSINESS.agentName}`;
 
-  return sendSMS(customerPhone, message, { 
-    messageType: 'cancellation', 
-    customerId, 
-    appointmentId 
+  return sendSMS(customerPhone, message, {
+    messageType: 'cancellation',
+    customerId,
+    appointmentId
   });
 }
 
@@ -265,7 +258,7 @@ Work has started${vehicleLine}! Our technician is on it.
 
 We'll let you know as soon as it's ready for pickup.
 
-- Amber, Premier Auto Service`;
+- ${BUSINESS.agentName}, ${BUSINESS.name}`;
   } else {
     // Generic status update fallback
     const statusLabel = status.replace(/_/g, ' ');
@@ -273,9 +266,9 @@ We'll let you know as soon as it's ready for pickup.
 
 Quick update — your appointment on ${formattedDate} at ${formattedTime} is now: ${statusLabel}.
 
-Questions? Call us at (647) 371-1990.
+Questions? Call us at ${BUSINESS.phone}.
 
-- Amber, Premier Auto Service`;
+- ${BUSINESS.agentName}, ${BUSINESS.name}`;
   }
 
   return sendSMS(customerPhone, message, {
@@ -304,7 +297,7 @@ Great news — ${vehicleLine} all done and ready for pickup!
 
 We're open until 5:00 PM today. See you soon!
 
-- Amber, Premier Auto Service`;
+- ${BUSINESS.agentName}, ${BUSINESS.name}`;
 
   return sendSMS(customerPhone, message, {
     messageType: 'completed',
@@ -334,9 +327,9 @@ export async function sendServiceReminderSMS({
 
 Friendly reminder — it looks like your ${serviceName.toLowerCase()}${vehicleLine} may be due.${lastDateLine}
 
-Want to book an appointment? Reply YES or call us at (647) 371-1990.
+Want to book an appointment? Reply YES or call us at ${BUSINESS.phone}.
 
-- Amber, Premier Auto Service`;
+- ${BUSINESS.agentName}, ${BUSINESS.name}`;
 
   return sendSMS(customerPhone, message, {
     messageType: 'service_reminder',
@@ -363,21 +356,21 @@ export async function sendReviewRequestSMS({
   if (reviewType === 'internal_feedback') {
     message = `Hi ${firstName},
 
-Thank you for visiting Premier Auto Service${vehicleLine}. We'd love to hear your feedback so we can improve.
+Thank you for visiting ${BUSINESS.name}${vehicleLine}. We'd love to hear your feedback so we can improve.
 
 Please take a moment to share your thoughts: ${trackingUrl}
 
-- Amber, Premier Auto Service`;
+- ${BUSINESS.agentName}, ${BUSINESS.name}`;
   } else {
     message = `Hi ${firstName},
 
-Thank you for choosing Premier Auto Service${vehicleLine}! We hope you had a great experience.
+Thank you for choosing ${BUSINESS.name}${vehicleLine}! We hope you had a great experience.
 
 If you have a moment, we'd really appreciate a Google review: ${trackingUrl}
 
 Your feedback helps us serve you better!
 
-- Amber, Premier Auto Service`;
+- ${BUSINESS.agentName}, ${BUSINESS.name}`;
   }
 
   return sendSMS(customerPhone, message, {
@@ -410,9 +403,9 @@ Your estimate${vehicleLine} is ready for review. You can view the details and ap
 
 ${portalUrl}
 
-Questions? Call us at (647) 371-1990.
+Questions? Call us at ${BUSINESS.phone}.
 
-- Amber, Premier Auto Service`;
+- ${BUSINESS.agentName}, ${BUSINESS.name}`;
   } else if (messageContext === 'completed') {
     message = `Hi ${firstName},
 
@@ -422,7 +415,7 @@ ${portalUrl}
 
 We're open until 5:00 PM today.
 
-- Amber, Premier Auto Service`;
+- ${BUSINESS.agentName}, ${BUSINESS.name}`;
   } else {
     message = `Hi ${firstName},
 
@@ -430,7 +423,7 @@ View your service details and vehicle history online:
 
 ${portalUrl}
 
-- Amber, Premier Auto Service`;
+- ${BUSINESS.agentName}, ${BUSINESS.name}`;
   }
 
   return sendSMS(customerPhone, message, {
@@ -440,7 +433,7 @@ ${portalUrl}
   });
 }
 
-export { logSMS, formatTime12Hour };
+export { logSMS };
 
 export default {
   sendSMS,
@@ -452,6 +445,5 @@ export default {
   sendServiceReminderSMS,
   sendReviewRequestSMS,
   sendPortalLinkSMS,
-  logSMS,
-  formatTime12Hour
+  logSMS
 };

@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { supabase } from '../config/database.js';
 import { format, parseISO } from 'date-fns';
 import { nowEST } from '../utils/timezone.js';
+import { logger } from '../utils/logger.js';
 
 const router = Router();
 
@@ -124,7 +125,7 @@ router.get('/calls', async (req, res, next) => {
     });
 
   } catch (error) {
-    console.error('Get calls error:', error);
+    logger.error('[CallCenter] Get calls error', { error });
     res.status(500).json({ success: false, error: error.message });
   }
 });
@@ -195,7 +196,7 @@ router.get('/calls/:id', async (req, res, next) => {
     });
 
   } catch (error) {
-    console.error('Get call error:', error);
+    logger.error('[CallCenter] Get call error', { error });
     res.status(500).json({ success: false, error: error.message });
   }
 });
@@ -282,7 +283,7 @@ router.get('/stats', async (req, res, next) => {
     });
 
   } catch (error) {
-    console.error('Get stats error:', error);
+    logger.error('[CallCenter] Get stats error', { error });
     res.status(500).json({ success: false, error: error.message });
   }
 });
@@ -329,7 +330,7 @@ router.get('/customers/:id/calls', async (req, res, next) => {
     });
 
   } catch (error) {
-    console.error('Get customer calls error:', error);
+    logger.error('[CallCenter] Get customer calls error', { error });
     res.status(500).json({ success: false, error: error.message });
   }
 });
@@ -379,7 +380,7 @@ router.get('/recent', async (req, res, next) => {
     });
 
   } catch (error) {
-    console.error('Get recent calls error:', error);
+    logger.error('[CallCenter] Get recent calls error', { error });
     res.status(500).json({ success: false, error: error.message });
   }
 });

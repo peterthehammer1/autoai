@@ -1,10 +1,12 @@
 import { Router } from 'express';
 import { supabase, normalizePhone } from '../config/database.js';
 import { format, parseISO } from 'date-fns';
-import { assignTechnician, getRequiredSkillLevel, getBestBayType } from './retell-functions.js';
+import { assignTechnician, getRequiredSkillLevel, getBestBayType } from './voice/utils.js';
 import { isValidDate, isValidTime, isValidPhone, isValidUUID, isValidUUIDArray, isWeekday, isWithinBusinessHours, endsBeforeClose, isFutureDate, isWithinBookingWindow, clampPagination, validationError } from '../middleware/validate.js';
-import { nowEST, todayEST } from '../utils/timezone.js';
+import { nowEST, todayEST, formatTime12Hour } from '../utils/timezone.js';
 import { sendConfirmationSMS, sendCancellationSMS, sendStatusUpdateSMS, sendCompletedSMS } from '../services/sms.js';
+import { BUSINESS } from '../config/business.js';
+import { logger } from '../utils/logger.js';
 
 const router = Router();
 
@@ -273,7 +275,7 @@ router.post('/', async (req, res, next) => {
 
     if (rpcError || !bookingResult?.success) {
       // Slot was taken between check and book — soft-delete the appointment for audit trail
-      console.error('Atomic booking failed:', rpcError || bookingResult);
+      logger.error('[Appointments] Atomic booking failed', { error: rpcError, bookingResult });
       await supabase.from('appointments')
         .update({ deleted_at: new Date().toISOString(), status: 'booking_failed' })
         .eq('id', appointment.id);
@@ -723,13 +725,13 @@ router.patch('/:id', async (req, res, next) => {
               appointmentId: appointment.id,
             });
           } catch (portalErr) {
-            console.error('[Appointments] Portal SMS failed (non-blocking):', portalErr.message);
+            logger.error('[Appointments] Portal SMS failed (non-blocking)', { error: portalErr });
           }
         } else if (updates.status === 'cancelled') {
           await sendCancellationSMS(smsParams);
         }
       } catch (smsErr) {
-        console.error('[Appointments] SMS send failed (non-blocking):', smsErr.message);
+        logger.error('[Appointments] SMS send failed (non-blocking)', { error: smsErr });
       }
     }
 
@@ -770,7 +772,7 @@ router.post('/:id/confirm', async (req, res, next) => {
     const time = formatTime12Hour(appointment.scheduled_time);
     const services = appointment.appointment_services.map(s => s.service_name).join(', ');
 
-    const message = `Hi ${appointment.customer.first_name}! Your appointment at Premier Auto Service is confirmed for ${dayName}, ${monthDay} at ${time}. Services: ${services}. Reply STOP to opt out.`;
+    const message = `Hi ${appointment.customer.first_name}! Your appointment at ${BUSINESS.name} is confirmed for ${dayName}, ${monthDay} at ${time}. Services: ${services}. Reply STOP to opt out.`;
 
     // Send confirmation SMS
     const vehicleDesc = appointment.vehicle
@@ -790,7 +792,7 @@ router.post('/:id/confirm', async (req, res, next) => {
         appointmentId: appointment.id
       });
     } catch (smsErr) {
-      console.error('[Confirm] SMS send failed:', smsErr.message);
+      logger.error('[Confirm] SMS send failed', { error: smsErr });
     }
 
     await supabase
@@ -811,14 +813,6 @@ router.post('/:id/confirm', async (req, res, next) => {
     next(error);
   }
 });
-
-// Helper function
-function formatTime12Hour(timeStr) {
-  const [hours, mins] = timeStr.split(':').map(Number);
-  const period = hours >= 12 ? 'PM' : 'AM';
-  const hour12 = hours % 12 || 12;
-  return `${hour12}:${String(mins).padStart(2, '0')} ${period}`;
-}
 
 /**
  * Calculate dynamic status based on scheduled time, duration, and current time
@@ -899,38 +893,40 @@ function enrichAppointmentWithDynamicStatus(appointment, now = nowEST()) {
 
 /**
  * GET /api/appointments/debug/tech-assignments
- * Diagnostic endpoint to verify technician-bay assignment data
+ * Diagnostic endpoint to verify technician-bay assignment data (dev only)
  */
-router.get('/debug/tech-assignments', async (req, res) => {
-  try {
-    const { data: assignments } = await supabase
-      .from('technician_bay_assignments')
-      .select('technician_id, bay_id, is_primary');
+if (process.env.NODE_ENV !== 'production') {
+  router.get('/debug/tech-assignments', async (req, res) => {
+    try {
+      const { data: assignments } = await supabase
+        .from('technician_bay_assignments')
+        .select('technician_id, bay_id, is_primary');
 
-    const { data: techs } = await supabase
-      .from('technicians')
-      .select('id, first_name, last_name, skill_level, is_active');
+      const { data: techs } = await supabase
+        .from('technicians')
+        .select('id, first_name, last_name, skill_level, is_active');
 
-    const { data: schedules } = await supabase
-      .from('technician_schedules')
-      .select('technician_id, day_of_week, start_time, end_time, is_active');
+      const { data: schedules } = await supabase
+        .from('technician_schedules')
+        .select('technician_id, day_of_week, start_time, end_time, is_active');
 
-    const { data: bays } = await supabase
-      .from('service_bays')
-      .select('id, name, bay_type, is_active');
+      const { data: bays } = await supabase
+        .from('service_bays')
+        .select('id, name, bay_type, is_active');
 
-    res.json({
-      assignments_count: assignments?.length || 0,
-      technicians_count: techs?.length || 0,
-      schedules_count: schedules?.length || 0,
-      bays_count: bays?.length || 0,
-      assignments: assignments?.slice(0, 5),
-      technicians: techs,
-      bays: bays,
-    });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
+      res.json({
+        assignments_count: assignments?.length || 0,
+        technicians_count: techs?.length || 0,
+        schedules_count: schedules?.length || 0,
+        bays_count: bays?.length || 0,
+        assignments: assignments?.slice(0, 5),
+        technicians: techs,
+        bays: bays,
+      });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+}
 
 export default router;

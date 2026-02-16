@@ -170,7 +170,7 @@ router.post('/', async (req, res, next) => {
  */
 router.get('/', async (req, res, next) => {
   try {
-    const { status, customer_id, start_date, end_date, search } = req.query;
+    const { status, customer_id, start_date, end_date } = req.query;
     const { limit, offset } = clampPagination(req.query.limit, req.query.offset);
 
     let query = supabase
@@ -308,7 +308,7 @@ router.patch('/:id', async (req, res, next) => {
 
     updates.updated_at = new Date().toISOString();
 
-    const { data: wo, error } = await supabase
+    const { error } = await supabase
       .from('work_orders')
       .update(updates)
       .eq('id', id)

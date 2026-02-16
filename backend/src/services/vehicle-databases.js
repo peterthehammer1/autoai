@@ -1,9 +1,11 @@
 /**
  * Vehicle Databases API Integration
  * https://vehicledatabases.com/docs/
- * 
+ *
  * Provides vehicle maintenance schedules, recalls, and VIN decoding
  */
+
+import { logger } from '../utils/logger.js';
 
 const VEHICLE_DB_API_KEY = process.env.VEHICLE_DATABASES_API_KEY;
 const BASE_URL = 'https://api.vehicledatabases.com';
@@ -15,7 +17,7 @@ const BASE_URL = 'https://api.vehicledatabases.com';
  */
 export async function decodeVIN(vin) {
   if (!VEHICLE_DB_API_KEY) {
-    console.log('[VehicleDB] API key not configured');
+    logger.info('[VehicleDB] API key not configured');
     return { success: false, error: 'API not configured' };
   }
 
@@ -58,7 +60,7 @@ export async function decodeVIN(vin) {
 
     return { success: false, error: data.message || 'VIN decode failed' };
   } catch (error) {
-    console.error('[VehicleDB] VIN decode error:', error);
+    logger.error('[VehicleDB] VIN decode error', { error });
     return { success: false, error: error.message };
   }
 }
@@ -70,7 +72,7 @@ export async function decodeVIN(vin) {
  */
 export async function getMaintenanceSchedule(vin) {
   if (!VEHICLE_DB_API_KEY) {
-    console.log('[VehicleDB] API key not configured');
+    logger.info('[VehicleDB] API key not configured');
     return { success: false, error: 'API not configured' };
   }
 
@@ -124,7 +126,7 @@ export async function getMaintenanceSchedule(vin) {
 
     return { success: false, error: data.message || 'Maintenance lookup failed' };
   } catch (error) {
-    console.error('[VehicleDB] Maintenance schedule error:', error);
+    logger.error('[VehicleDB] Maintenance schedule error', { error });
     return { success: false, error: error.message };
   }
 }
@@ -136,7 +138,7 @@ export async function getMaintenanceSchedule(vin) {
  */
 export async function getRecalls(vin) {
   if (!VEHICLE_DB_API_KEY) {
-    console.log('[VehicleDB] API key not configured');
+    logger.info('[VehicleDB] API key not configured');
     return { success: false, error: 'API not configured' };
   }
 
@@ -178,7 +180,7 @@ export async function getRecalls(vin) {
 
     return { success: false, error: data.message || 'Recall lookup failed' };
   } catch (error) {
-    console.error('[VehicleDB] Recalls error:', error);
+    logger.error('[VehicleDB] Recalls error', { error });
     return { success: false, error: error.message };
   }
 }

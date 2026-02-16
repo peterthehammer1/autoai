@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 /**
  * Structured JSON logger for production debugging.
  * Outputs JSON lines to stdout/stderr for easy parsing by log aggregators.

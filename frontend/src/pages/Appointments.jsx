@@ -62,7 +62,7 @@ import {
   getNextBusinessDay,
   parseDateLocal,
 } from '@/lib/utils'
-import NewAppointmentModal from '@/components/NewAppointmentModal'
+import NewAppointmentModal from '@/components/appointments/NewAppointmentModal'
 import PhoneNumber from '@/components/PhoneNumber'
 import CarImage from '@/components/CarImage'
 import { useAppointmentsTour } from '@/hooks/use-appointments-tour'

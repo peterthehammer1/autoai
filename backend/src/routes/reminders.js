@@ -1,8 +1,8 @@
 import { Router } from 'express';
 import { supabase } from '../config/database.js';
-import { format, addDays } from 'date-fns';
 import { sendReminderSMS } from '../services/sms.js';
-import { nowEST, daysFromNowEST } from '../utils/timezone.js';
+import { daysFromNowEST } from '../utils/timezone.js';
+import { logger } from '../utils/logger.js';
 
 const router = Router();
 
@@ -16,7 +16,7 @@ router.post('/send-24h', async (req, res, next) => {
     // Get tomorrow's date
     const tomorrowDate = daysFromNowEST(1);
     
-    console.log(`[Reminders] Checking for appointments on ${tomorrowDate}`);
+    logger.info('[Reminders] Checking for appointments', { date: tomorrowDate });
 
     // Get all appointments for tomorrow that haven't been reminded
     const { data: appointments, error } = await supabase
@@ -47,7 +47,7 @@ router.post('/send-24h', async (req, res, next) => {
     if (error) throw error;
 
     if (!appointments || appointments.length === 0) {
-      console.log('[Reminders] No appointments to remind');
+      logger.info('[Reminders] No appointments to remind');
       return res.json({ 
         success: true, 
         message: 'No appointments need reminders',
@@ -55,13 +55,13 @@ router.post('/send-24h', async (req, res, next) => {
       });
     }
 
-    console.log(`[Reminders] Found ${appointments.length} appointments to remind`);
+    logger.info('[Reminders] Found appointments to remind', { count: appointments.length });
 
     const results = [];
     
     for (const apt of appointments) {
       if (!apt.customer?.phone) {
-        console.log(`[Reminders] Skipping appointment ${apt.id} - no phone number`);
+        logger.info('[Reminders] Skipping appointment - no phone number', { appointmentId: apt.id });
         continue;
       }
 
@@ -109,7 +109,7 @@ router.post('/send-24h', async (req, res, next) => {
     });
 
   } catch (error) {
-    console.error('[Reminders] Error:', error);
+    logger.error('[Reminders] Error', { error });
     next(error);
   }
 });

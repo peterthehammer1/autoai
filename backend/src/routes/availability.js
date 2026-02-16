@@ -1,9 +1,8 @@
 import { Router } from 'express';
 import { supabase } from '../config/database.js';
-import { format, addDays, parseISO, isAfter, isBefore, setHours, setMinutes } from 'date-fns';
-import { formatInTimeZone, toZonedTime } from 'date-fns-tz';
+import { format, addDays, parseISO } from 'date-fns';
 import { isValidDate, isValidUUID, validationError } from '../middleware/validate.js';
-import { nowEST, todayEST } from '../utils/timezone.js';
+import { nowEST, todayEST, formatTime12Hour } from '../utils/timezone.js';
 
 const router = Router();
 
@@ -77,7 +76,7 @@ router.get('/check', async (req, res, next) => {
       timeFilter = { start: '12:00', end: '16:00' };
     } else if (/^\d{2}:\d{2}$/.test(time_preference)) {
       // Specific time requested - look for slots within 2 hours (cap at 4pm close)
-      const [hours, mins] = time_preference.split(':').map(Number);
+      const [hours] = time_preference.split(':').map(Number);
       const startHour = Math.max(7, hours - 1);
       const endHour = Math.min(16, hours + 2);
       timeFilter = { 
@@ -402,14 +401,6 @@ function addMinutesToTime(timeStr, minutes) {
   const newHours = Math.floor(totalMins / 60);
   const newMins = totalMins % 60;
   return `${String(newHours).padStart(2, '0')}:${String(newMins).padStart(2, '0')}:00`;
-}
-
-// Helper function to format time in 12-hour format
-function formatTime12Hour(timeStr) {
-  const [hours, mins] = timeStr.split(':').map(Number);
-  const period = hours >= 12 ? 'PM' : 'AM';
-  const hour12 = hours % 12 || 12;
-  return `${hour12}:${String(mins).padStart(2, '0')} ${period}`;
 }
 
 export default router;

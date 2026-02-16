@@ -234,7 +234,7 @@ router.get('/send-reminders', async (req, res) => {
         } else {
           failed++;
         }
-      } catch (smsErr) {
+      } catch (_smsErr) {
         failed++;
       }
     }

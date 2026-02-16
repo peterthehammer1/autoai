@@ -101,7 +101,7 @@ function requireApiKey(req, res, next) {
 // Root endpoint - API info
 app.get('/', (req, res) => {
   res.json({
-    name: 'Premier Auto Service Booking API',
+    name: 'Auto Service Booking API',
     version: '1.0.0',
     status: 'online',
     description: 'AI-powered voice booking system for automotive service centers',
@@ -119,7 +119,7 @@ app.get('/', (req, res) => {
 app.get('/health', async (req, res) => {
   const start = Date.now();
   try {
-    const { count, error } = await supabase
+    const { error } = await supabase
       .from('service_bays')
       .select('id', { count: 'exact', head: true });
 
@@ -158,7 +158,11 @@ app.use('/api/call-center', generalLimiter, requireApiKey, callCenterRoutes);
 
 // External service endpoints — no API key (authenticated by their own mechanisms)
 app.use('/api/webhooks', webhookLimiter, webhookRoutes);
-app.use('/api/voice', webhookLimiter, (await import('./routes/retell-functions.js')).default);
+// Voice API routes (split from retell-functions.js)
+app.use('/api/voice', webhookLimiter, (await import('./routes/voice/customer.js')).default);
+app.use('/api/voice', webhookLimiter, (await import('./routes/voice/booking.js')).default);
+app.use('/api/voice', webhookLimiter, (await import('./routes/voice/services.js')).default);
+app.use('/api/voice', webhookLimiter, (await import('./routes/voice/support.js')).default);
 app.use('/api/cron', cronRoutes);
 
 // Public click tracking (no API key — redirect-based)
