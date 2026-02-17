@@ -102,7 +102,7 @@ export default function Dashboard() {
             href="https://nucleus.com"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1.5 px-2.5 py-1 opacity-60 hover:opacity-100 transition-opacity"
+            className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 opacity-60 hover:opacity-100 transition-opacity"
           >
             <span className="text-[11px] text-slate-400">Powered by</span>
             <img

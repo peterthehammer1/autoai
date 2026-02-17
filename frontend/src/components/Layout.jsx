@@ -270,7 +270,7 @@ export default function Layout() {
       </div>
 
       {/* Main content */}
-      <div className="lg:pl-64">
+      <div className="lg:pl-64 overflow-x-hidden">
         {/* Mobile menu button - fixed position */}
         <div className="lg:hidden fixed top-3 left-3 z-50">
           <Button
