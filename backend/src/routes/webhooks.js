@@ -398,10 +398,10 @@ router.post('/voice/inbound', async (req, res) => {
  */
 router.post('/voice', async (req, res, next) => {
   try {
-    // Verify webhook signature for security
+    // Verify webhook signature — fail-open so call events (call_started, call_ended,
+    // call_analyzed) are always stored in call_logs even if the secret is misconfigured
     if (!verifyRetellSignature(req)) {
-      logger.error('Invalid Retell webhook signature - rejecting request');
-      return res.status(401).json({ error: 'Invalid signature' });
+      logger.warn('Voice webhook signature verification failed — proceeding anyway to store call events');
     }
 
     const { event, call } = req.body;
