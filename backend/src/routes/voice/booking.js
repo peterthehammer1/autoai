@@ -608,7 +608,7 @@ router.post('/book_appointment', async (req, res, next) => {
       const latestStartMins = 16 * 60 - totalDuration;
       const latestH = Math.floor(latestStartMins / 60);
       const latestM = latestStartMins % 60;
-      const latestFormatted = `${latestH > 12 ? latestH - 12 : latestH}:${String(latestM).padStart(2, '0')} ${latestH >= 12 ? 'PM' : 'AM'}`;
+      const latestFormatted = latestM === 0 ? `${latestH > 12 ? latestH - 12 : latestH} ${latestH >= 12 ? 'PM' : 'AM'}` : `${latestH > 12 ? latestH - 12 : latestH}:${String(latestM).padStart(2, '0')} ${latestH >= 12 ? 'PM' : 'AM'}`;
       return res.json({
         success: false,
         booked: false,
@@ -942,7 +942,7 @@ router.post('/modify_appointment', async (req, res, next) => {
         const latestMins = 16 * 60 - apptDuration;
         const lH = Math.floor(latestMins / 60);
         const lM = latestMins % 60;
-        const latestStr = `${lH > 12 ? lH - 12 : lH}:${String(lM).padStart(2, '0')} ${lH >= 12 ? 'PM' : 'AM'}`;
+        const latestStr = lM === 0 ? `${lH > 12 ? lH - 12 : lH} ${lH >= 12 ? 'PM' : 'AM'}` : `${lH > 12 ? lH - 12 : lH}:${String(lM).padStart(2, '0')} ${lH >= 12 ? 'PM' : 'AM'}`;
         return res.json({
           success: false,
           message: `Your service takes about ${apptDuration} minutes, which would run past our 4 PM close. The latest start time is ${latestStr}. Would that work?`
