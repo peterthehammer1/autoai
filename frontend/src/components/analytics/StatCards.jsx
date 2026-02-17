@@ -63,7 +63,7 @@ function StatCard({ title, value, change, changeLabel, icon: Icon, iconColor, ic
             )}
             {change !== undefined && change !== null && (
               <div className={cn(
-                "flex items-center gap-0.5 mt-1 text-[10px] font-medium",
+                "flex items-center gap-0.5 mt-1 text-xs font-medium",
                 isPositive ? "text-emerald-600" : isNegative ? "text-red-600" : "text-slate-500"
               )}>
                 {isPositive ? <ArrowUpRight className="h-3 w-3 shrink-0" /> :
@@ -84,7 +84,7 @@ function StatCard({ title, value, change, changeLabel, icon: Icon, iconColor, ic
                     style={{ width: `${Math.min(targetPercent, 100)}%` }}
                   />
                 </div>
-                <p className="text-[10px] text-slate-400 mt-0.5">{targetPercent}% of target</p>
+                <p className="text-xs text-slate-400 mt-0.5">{targetPercent}% of target</p>
               </div>
             )}
           </div>

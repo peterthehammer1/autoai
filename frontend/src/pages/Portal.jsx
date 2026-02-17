@@ -213,7 +213,7 @@ export default function Portal() {
           <Phone className="h-3 w-3" />
           (647) 371-1990
         </a>
-        <p className="text-[10px] text-slate-400 mt-1">Premier Auto Service</p>
+        <p className="text-xs text-slate-400 mt-1">Premier Auto Service</p>
       </footer>
     </div>
   )
@@ -731,7 +731,7 @@ function VehiclesTab({ vehicles }) {
 
           {/* DVI stub */}
           <div className="mt-3 px-3 py-2 bg-slate-50 rounded-lg border border-dashed border-slate-200 text-center">
-            <p className="text-[10px] text-slate-400">Digital vehicle inspection coming soon</p>
+            <p className="text-xs text-slate-400">Digital vehicle inspection coming soon</p>
           </div>
         </div>
       ))}

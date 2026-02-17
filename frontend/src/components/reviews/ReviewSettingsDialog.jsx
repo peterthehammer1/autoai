@@ -76,7 +76,7 @@ export default function ReviewSettingsDialog({ open, onOpenChange }) {
                   href={form.google_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-[10px] text-blue-500 hover:text-blue-600"
+                  className="inline-flex items-center gap-1 text-xs text-blue-500 hover:text-blue-600"
                 >
                   Preview link <ExternalLink className="h-2.5 w-2.5" />
                 </a>
@@ -87,7 +87,7 @@ export default function ReviewSettingsDialog({ open, onOpenChange }) {
             <div className="flex items-center justify-between">
               <div>
                 <Label className="text-xs text-slate-600">Auto-send after completion</Label>
-                <p className="text-[10px] text-slate-400">Automatically send review requests via daily cron</p>
+                <p className="text-xs text-slate-400">Automatically send review requests via daily cron</p>
               </div>
               <button
                 type="button"
@@ -118,7 +118,7 @@ export default function ReviewSettingsDialog({ open, onOpenChange }) {
                 className="h-9 text-sm w-20"
               />
             </div>
-            <p className="text-[10px] text-slate-400">
+            <p className="text-xs text-slate-400">
               Customers won't receive another review request within this window.
             </p>
           </div>

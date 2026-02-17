@@ -13,7 +13,7 @@ export default function BulkActionBar({ count, onClear, actions = [] }) {
             variant="ghost"
             size="sm"
             onClick={onClear}
-            className="text-slate-400 hover:text-white hover:bg-slate-800 h-7 px-2 text-xs"
+            className="text-slate-400 hover:text-white hover:bg-slate-800 h-8 px-2 text-xs"
           >
             <X className="h-3.5 w-3.5 mr-1" />
             Clear

@@ -53,7 +53,7 @@ export default function InsightsPanel({ insightsData, loading }) {
                         <p className="text-xs font-medium text-white truncate">{insight.title}</p>
                         {insight.value && (
                           <span className={cn(
-                            'text-[10px] font-bold shrink-0',
+                            'text-xs font-bold shrink-0',
                             insight.type === 'trend_up' || insight.type === 'success' ? 'text-emerald-400' :
                             insight.type === 'trend_down' || insight.type === 'warning' ? 'text-amber-400' :
                             'text-blue-400'
@@ -62,7 +62,7 @@ export default function InsightsPanel({ insightsData, loading }) {
                           </span>
                         )}
                       </div>
-                      <p className="text-[10px] text-slate-400 mt-0.5 line-clamp-2">{insight.message}</p>
+                      <p className="text-xs text-slate-400 mt-0.5 line-clamp-2">{insight.message}</p>
                     </div>
                   </div>
                 </div>

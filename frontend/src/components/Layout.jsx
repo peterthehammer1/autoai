@@ -140,7 +140,7 @@ export default function Layout() {
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-white">{num.phone}</p>
-                  <p className="text-[10px] text-slate-400">{num.label} • AI Booking</p>
+                  <p className="text-xs text-slate-400">{num.label} • AI Booking</p>
                 </div>
               </a>
             ))}
@@ -154,10 +154,12 @@ export default function Layout() {
               rel="noopener noreferrer"
               className="flex items-center justify-center gap-2 py-2 opacity-60 hover:opacity-100 transition-opacity"
             >
-              <span className="text-[11px] text-slate-400">Powered by</span>
-              <img 
-                src="/nucleus-logo.svg" 
-                alt="Nucleus" 
+              <span className="text-xs text-slate-400">Powered by</span>
+              <img
+                src="/nucleus-logo.svg"
+                alt="Nucleus"
+                width="56"
+                height="14"
                 className="h-3.5 brightness-0 invert opacity-70"
               />
             </a>
@@ -182,9 +184,9 @@ export default function Layout() {
             >
               <Search className="h-4 w-4" />
               <span className="flex-1 text-left">Search...</span>
-              <kbd className="px-1.5 py-0.5 text-[10px] font-medium text-slate-500 bg-slate-800 border border-slate-700 rounded">⌘K</kbd>
+              <kbd className="px-1.5 py-0.5 text-xs font-medium text-slate-500 bg-slate-800 border border-slate-700 rounded">⌘K</kbd>
             </button>
-            <p className="px-3 py-2 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+            <p className="px-3 py-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">
               Main
             </p>
             {navigation.map((item) => (
@@ -232,7 +234,7 @@ export default function Layout() {
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-white">{num.phone}</p>
-                  <p className="text-[10px] text-slate-400">{num.label} • AI Booking</p>
+                  <p className="text-xs text-slate-400">{num.label} • AI Booking</p>
                 </div>
               </a>
             ))}
@@ -254,10 +256,12 @@ export default function Layout() {
               rel="noopener noreferrer"
               className="flex items-center justify-center gap-2 py-2 mt-2 opacity-50 hover:opacity-100 transition-opacity"
             >
-              <span className="text-[11px] text-slate-400">Powered by</span>
-              <img 
-                src="/nucleus-logo.svg" 
-                alt="Nucleus" 
+              <span className="text-xs text-slate-400">Powered by</span>
+              <img
+                src="/nucleus-logo.svg"
+                alt="Nucleus"
+                width="56"
+                height="14"
                 className="h-3.5 brightness-0 invert opacity-70"
               />
             </a>

@@ -90,7 +90,7 @@ export default function ExportButton({ comprehensive }) {
             <Icon className="h-4 w-4 text-slate-500 shrink-0" />
             <div>
               <p className="text-sm font-medium text-slate-900">{label}</p>
-              <p className="text-[10px] text-slate-500">{desc}</p>
+              <p className="text-xs text-slate-500">{desc}</p>
             </div>
           </button>
         ))}

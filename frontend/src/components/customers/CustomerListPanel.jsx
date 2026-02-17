@@ -97,7 +97,7 @@ export default function CustomerListPanel({
                               <TagBadge key={tag.id} tag={tag} size="sm" />
                             ))}
                             {customer.tags.length > 2 && (
-                              <span className="text-[10px] text-slate-400">+{customer.tags.length - 2}</span>
+                              <span className="text-xs text-slate-400">+{customer.tags.length - 2}</span>
                             )}
                           </span>
                         )}

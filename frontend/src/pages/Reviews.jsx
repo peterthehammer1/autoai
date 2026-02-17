@@ -91,7 +91,7 @@ export default function Reviews() {
             <span className="text-xs text-slate-500">Requests Sent</span>
           </div>
           <p className="text-2xl font-bold text-slate-800">{stats?.total_sent || 0}</p>
-          <p className="text-[10px] text-slate-400">{stats?.sent_30d || 0} in last 30 days</p>
+          <p className="text-xs text-slate-400">{stats?.sent_30d || 0} in last 30 days</p>
         </div>
         <div className="bg-white rounded-lg shadow-lg border-0 p-4">
           <div className="flex items-center gap-2 mb-1">
@@ -99,7 +99,7 @@ export default function Reviews() {
             <span className="text-xs text-slate-500">Click Rate</span>
           </div>
           <p className="text-2xl font-bold text-slate-800">{stats?.click_rate || '0.0'}%</p>
-          <p className="text-[10px] text-slate-400">{stats?.total_clicked || 0} clicked</p>
+          <p className="text-xs text-slate-400">{stats?.total_clicked || 0} clicked</p>
         </div>
         <div className="bg-white rounded-lg shadow-lg border-0 p-4">
           <div className="flex items-center gap-2 mb-1">
@@ -242,7 +242,7 @@ export default function Reviews() {
                 size="sm"
                 onClick={() => setPage((p) => p - 1)}
                 disabled={page === 0}
-                className="text-xs h-7"
+                className="text-xs h-8"
               >
                 Previous
               </Button>
@@ -251,7 +251,7 @@ export default function Reviews() {
                 size="sm"
                 onClick={() => setPage((p) => p + 1)}
                 disabled={!pagination.has_more}
-                className="text-xs h-7"
+                className="text-xs h-8"
               >
                 Next
               </Button>

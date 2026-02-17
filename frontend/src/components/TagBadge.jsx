@@ -18,7 +18,7 @@ export default function TagBadge({ tag, onRemove, size = 'sm' }) {
       className={cn(
         'inline-flex items-center gap-1 rounded-full border font-medium',
         colors,
-        size === 'sm' ? 'text-[10px] px-1.5 py-0' : 'text-xs px-2 py-0.5'
+        size === 'sm' ? 'text-xs px-1.5 py-0' : 'text-xs px-2 py-0.5'
       )}
     >
       {tag.name}

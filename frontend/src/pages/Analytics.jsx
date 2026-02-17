@@ -194,21 +194,21 @@ export default function Analytics() {
                       <div className="flex mb-1">
                         <div className="w-10" />
                         {mobileHours.map((hour) => (
-                          <div key={hour} className="flex-1 text-center text-[10px] text-slate-400">
+                          <div key={hour} className="flex-1 text-center text-xs text-slate-400">
                             {formatHour(hour)}
                           </div>
                         ))}
                       </div>
                       {callTrends.day_labels.map((day, dayIdx) => (
                         <div key={day} className="flex items-center mb-1">
-                          <div className="w-10 text-[10px] text-slate-500 font-medium">{day.slice(0, 3)}</div>
+                          <div className="w-10 text-xs text-slate-500 font-medium">{day.slice(0, 3)}</div>
                           {mobileHours.map((hour) => {
                             const value = callTrends.hourly_heatmap[dayIdx]?.[hour] || 0
                             const intensity = value / maxValue
                             return (
                               <div
                                 key={hour}
-                                className="flex-1 aspect-square mx-px rounded-sm flex items-center justify-center text-[10px] font-medium"
+                                className="flex-1 aspect-square mx-px rounded-sm flex items-center justify-center text-xs font-medium"
                                 style={{
                                   backgroundColor: value === 0 ? '#f1f5f9' : `rgba(59, 130, 246, ${0.2 + intensity * 0.8})`,
                                   color: intensity > 0.5 ? 'white' : '#64748b'

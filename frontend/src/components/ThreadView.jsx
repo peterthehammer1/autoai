@@ -93,7 +93,7 @@ export default function ThreadView({ phone, onBack }) {
                 {showTimeDivider && (
                   <div className="flex items-center gap-3 my-4">
                     <div className="flex-1 h-px bg-slate-200" />
-                    <span className="text-[10px] text-slate-400">
+                    <span className="text-xs text-slate-400">
                       {format(new Date(msg.created_at), 'MMM d, h:mm a')}
                     </span>
                     <div className="flex-1 h-px bg-slate-200" />
@@ -108,7 +108,7 @@ export default function ThreadView({ phone, onBack }) {
                   )}>
                     <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.message_body}</p>
                     <p className={cn(
-                      'text-[10px] mt-1',
+                      'text-xs mt-1',
                       isInbound ? 'text-slate-400' : 'text-blue-200'
                     )}>
                       {msg.created_at ? format(new Date(msg.created_at), 'h:mm a') : ''}

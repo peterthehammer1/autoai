@@ -66,7 +66,7 @@ export default function ConversationList({ onSelectThread, selectedPhone }) {
                   <p className="text-sm font-medium text-slate-900 truncate">
                     {name || conv.phone}
                   </p>
-                  <span className="text-[10px] text-slate-400 shrink-0">
+                  <span className="text-xs text-slate-400 shrink-0">
                     {conv.last_activity ? formatDistanceToNow(new Date(conv.last_activity), { addSuffix: true }) : ''}
                   </span>
                 </div>
@@ -74,7 +74,7 @@ export default function ConversationList({ onSelectThread, selectedPhone }) {
                   <p className="text-xs text-slate-500 truncate">
                     {conv.latest_message?.slice(0, 60) || 'No message'}
                   </p>
-                  <Badge variant="secondary" className="text-[10px] h-4 px-1.5 shrink-0">
+                  <Badge variant="secondary" className="text-xs h-4 px-1.5 shrink-0">
                     {conv.message_count}
                   </Badge>
                 </div>

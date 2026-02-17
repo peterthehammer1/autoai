@@ -105,7 +105,7 @@ export default function RevenueBreakdown({ comprehensive }) {
               </div>
               <div className="flex flex-wrap gap-2 justify-center mt-2">
                 {outcomeData.map((item, idx) => (
-                  <span key={item.name} className="flex items-center gap-1 text-[10px]">
+                  <span key={item.name} className="flex items-center gap-1 text-xs">
                     <div className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[idx % COLORS.length] }} />
                     {item.name}: {item.value}
                   </span>

@@ -264,7 +264,7 @@ export default function SmsLogs() {
               >
                 <Filter className="h-4 w-4" />
                 {activeFilterCount > 0 && (
-                  <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-blue-600 text-white text-[10px] flex items-center justify-center">
+                  <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-blue-600 text-white text-xs flex items-center justify-center">
                     {activeFilterCount}
                   </span>
                 )}
@@ -274,7 +274,7 @@ export default function SmsLogs() {
               <div className="space-y-2 pt-1">
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="text-[10px] text-slate-400 uppercase tracking-wider">From</label>
+                    <label className="text-xs text-slate-400 uppercase tracking-wider">From</label>
                     <Input
                       type="date"
                       value={dateFrom}
@@ -283,7 +283,7 @@ export default function SmsLogs() {
                     />
                   </div>
                   <div>
-                    <label className="text-[10px] text-slate-400 uppercase tracking-wider">To</label>
+                    <label className="text-xs text-slate-400 uppercase tracking-wider">To</label>
                     <Input
                       type="date"
                       value={dateTo}
@@ -296,7 +296,7 @@ export default function SmsLogs() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-6 text-xs text-slate-500 px-2"
+                    className="h-8 text-xs text-slate-500 px-2"
                     onClick={() => { setDateFrom(''); setDateTo('') }}
                   >
                     Clear filters

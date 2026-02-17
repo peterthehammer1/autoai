@@ -90,7 +90,7 @@ export default function TargetsSettingsDialog({ open, onOpenChange, targets }) {
                 />
               </div>
             ))}
-            <p className="text-[10px] text-slate-400 mt-2">
+            <p className="text-xs text-slate-400 mt-2">
               Targets are per-week. Revenue and avg ticket values are in dollars.
             </p>
           </div>

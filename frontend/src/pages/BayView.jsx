@@ -201,7 +201,7 @@ export default function BayView() {
                   </span>
                 )}
               </div>
-              <span className="truncate text-[10px] text-slate-500">{serviceName}</span>
+              <span className="truncate text-xs text-slate-500">{serviceName}</span>
               <span className="truncate text-[9px] text-slate-400">
                 {formatTime12Hour(apt.scheduled_time)} – {getEndTime(apt)}
               </span>
@@ -396,7 +396,7 @@ export default function BayView() {
               {HOURS.map((hour) => (
                 <div
                   key={hour}
-                  className="flex-1 text-center text-[10px] font-medium text-slate-400 py-2.5 border-l border-slate-200/60 first:border-l-0"
+                  className="flex-1 text-center text-xs font-medium text-slate-400 py-2.5 border-l border-slate-200/60 first:border-l-0"
                 >
                   {hour === 12 ? '12 PM' : hour > 12 ? `${hour - 12} PM` : `${hour} AM`}
                 </div>
@@ -416,10 +416,10 @@ export default function BayView() {
                     <BayIcon className="h-3.5 w-3.5 text-slate-400 shrink-0" />
                     <span className="text-sm font-semibold text-slate-800 truncate">{bay.name}</span>
                   </div>
-                  <span className="text-[10px] text-slate-400 capitalize pl-5.5">{bay.bay_type?.replace(/_/g, ' ')}</span>
+                  <span className="text-xs text-slate-400 capitalize pl-5.5">{bay.bay_type?.replace(/_/g, ' ')}</span>
                   <div className="flex items-center gap-2 pl-5.5">
                     {firstTech && (
-                      <span className="text-[10px] text-slate-500 truncate">
+                      <span className="text-xs text-slate-500 truncate">
                         {firstTech.first_name} {(firstTech.last_name || '')[0]}.
                       </span>
                     )}
@@ -447,7 +447,7 @@ export default function BayView() {
                   <AlertCircle className="h-3.5 w-3.5 text-amber-500 shrink-0" />
                   <span className="text-sm font-semibold text-amber-700">Unassigned</span>
                 </div>
-                <span className="text-[10px] text-amber-500 pl-5.5">
+                <span className="text-xs text-amber-500 pl-5.5">
                   {unassigned.length} appointment{unassigned.length !== 1 ? 's' : ''} need a bay
                 </span>
               </div>

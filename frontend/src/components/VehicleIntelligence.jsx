@@ -47,7 +47,7 @@ export default function VehicleIntelligence({ customerId, vehicleId, vin }) {
         <Cpu className="h-3.5 w-3.5 text-blue-500" />
         Vehicle Intelligence
         {data?.recalls?.has_open_recalls && (
-          <Badge className="ml-auto text-[10px] bg-red-100 text-red-700 hover:bg-red-100">
+          <Badge className="ml-auto text-xs bg-red-100 text-red-700 hover:bg-red-100">
             {data.recalls.count} Recall{data.recalls.count > 1 ? 's' : ''}
           </Badge>
         )}
@@ -69,7 +69,7 @@ export default function VehicleIntelligence({ customerId, vehicleId, vin }) {
               {/* Specs */}
               {data.vehicle && (
                 <div>
-                  <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Specs</p>
+                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Specs</p>
                   <div className="grid grid-cols-3 gap-2 text-xs">
                     {data.vehicle.engine?.description && (
                       <div>
@@ -96,7 +96,7 @@ export default function VehicleIntelligence({ customerId, vehicleId, vin }) {
               {/* Recalls */}
               {data.recalls && (
                 <div>
-                  <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5 flex items-center gap-1">
                     <Shield className="h-3 w-3" />
                     Recalls
                   </p>
@@ -126,14 +126,14 @@ export default function VehicleIntelligence({ customerId, vehicleId, vin }) {
               {/* Maintenance */}
               {data.maintenance && (
                 <div>
-                  <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5 flex items-center gap-1">
                     <Wrench className="h-3 w-3" />
                     Maintenance
                   </p>
                   <div className="space-y-1.5">
                     {data.maintenance.recently_due?.map((item, idx) => (
                       <div key={`overdue-${idx}`} className="flex items-center gap-2 text-xs">
-                        <Badge className="text-[10px] bg-red-100 text-red-700 hover:bg-red-100 shrink-0">
+                        <Badge className="text-xs bg-red-100 text-red-700 hover:bg-red-100 shrink-0">
                           Overdue
                         </Badge>
                         <span className="text-slate-700 truncate">
@@ -146,7 +146,7 @@ export default function VehicleIntelligence({ customerId, vehicleId, vin }) {
                     ))}
                     {data.maintenance.upcoming_services?.map((item, idx) => (
                       <div key={`upcoming-${idx}`} className="flex items-center gap-2 text-xs">
-                        <Badge className="text-[10px] bg-blue-100 text-blue-700 hover:bg-blue-100 shrink-0">
+                        <Badge className="text-xs bg-blue-100 text-blue-700 hover:bg-blue-100 shrink-0">
                           Upcoming
                         </Badge>
                         <span className="text-slate-700 truncate">

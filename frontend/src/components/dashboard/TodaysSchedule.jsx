@@ -138,7 +138,7 @@ function TodaysSchedule({ todayData, todayLoading, isWeekendDay, statusMutation,
                           <div className="w-28 flex justify-end">
                             <Badge
                               className={cn(
-                                'shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full',
+                                'shrink-0 text-xs font-semibold px-2 py-0.5 rounded-full',
                                 getStatusColor(apt.display_status || apt.status)
                               )}
                               aria-label={`Status: ${(apt.display_status || apt.status).replace('_', ' ')}`}
@@ -204,7 +204,7 @@ function TodaysSchedule({ todayData, todayLoading, isWeekendDay, statusMutation,
                         <div className="flex items-center gap-1.5 shrink-0">
                           <Badge
                             className={cn(
-                              'shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full',
+                              'shrink-0 text-xs font-semibold px-2 py-0.5 rounded-full',
                               getStatusColor(apt.display_status || apt.status)
                             )}
                           >

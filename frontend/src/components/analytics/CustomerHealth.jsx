@@ -73,7 +73,7 @@ export default function CustomerHealth({ comprehensive }) {
             </div>
             <div className="flex flex-wrap gap-2 justify-center mb-3">
               {healthData.map((item) => (
-                <span key={item.name} className="flex items-center gap-1 text-[10px]">
+                <span key={item.name} className="flex items-center gap-1 text-xs">
                   <div className="w-2 h-2 rounded-full" style={{ backgroundColor: HEALTH_COLORS[item.name] }} />
                   {item.name}: {item.value}
                 </span>

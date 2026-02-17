@@ -189,7 +189,7 @@ function AddItemForm({ workOrderId, onClose }) {
 
       <div className="grid grid-cols-3 gap-2">
         <div>
-          <label className="text-[10px] text-slate-400 uppercase">Qty</label>
+          <label className="text-xs text-slate-400 uppercase">Qty</label>
           <Input
             type="number"
             step="0.01"
@@ -200,7 +200,7 @@ function AddItemForm({ workOrderId, onClose }) {
           />
         </div>
         <div>
-          <label className="text-[10px] text-slate-400 uppercase">Unit Price ($)</label>
+          <label className="text-xs text-slate-400 uppercase">Unit Price ($)</label>
           <Input
             type="number"
             step="0.01"
@@ -213,7 +213,7 @@ function AddItemForm({ workOrderId, onClose }) {
           />
         </div>
         <div>
-          <label className="text-[10px] text-slate-400 uppercase">Cost ($)</label>
+          <label className="text-xs text-slate-400 uppercase">Cost ($)</label>
           <Input
             type="number"
             step="0.01"
@@ -227,10 +227,10 @@ function AddItemForm({ workOrderId, onClose }) {
       </div>
 
       <div className="flex justify-end gap-2">
-        <Button type="button" variant="outline" size="sm" onClick={onClose} className="text-xs h-7">
+        <Button type="button" variant="outline" size="sm" onClick={onClose} className="text-xs h-8">
           Cancel
         </Button>
-        <Button type="submit" size="sm" disabled={addMutation.isPending} className="text-xs h-7 bg-slate-800 hover:bg-slate-700">
+        <Button type="submit" size="sm" disabled={addMutation.isPending} className="text-xs h-8 bg-slate-800 hover:bg-slate-700">
           {addMutation.isPending ? 'Adding...' : 'Add Item'}
         </Button>
       </div>
@@ -279,7 +279,7 @@ function RecordPaymentForm({ workOrderId, balanceDue, onClose }) {
       </div>
       <div className="grid grid-cols-2 gap-2">
         <div>
-          <label className="text-[10px] text-slate-400 uppercase">Amount ($)</label>
+          <label className="text-xs text-slate-400 uppercase">Amount ($)</label>
           <Input
             type="number"
             step="0.01"
@@ -291,7 +291,7 @@ function RecordPaymentForm({ workOrderId, balanceDue, onClose }) {
           />
         </div>
         <div>
-          <label className="text-[10px] text-slate-400 uppercase">Method</label>
+          <label className="text-xs text-slate-400 uppercase">Method</label>
           <select
             value={method}
             onChange={(e) => setMethod(e.target.value)}
@@ -312,14 +312,14 @@ function RecordPaymentForm({ workOrderId, balanceDue, onClose }) {
         className="h-8 text-sm"
       />
       <div className="flex justify-end gap-2">
-        <Button type="button" variant="outline" size="sm" onClick={onClose} className="text-xs h-7">
+        <Button type="button" variant="outline" size="sm" onClick={onClose} className="text-xs h-8">
           Cancel
         </Button>
         <Button
           type="submit"
           size="sm"
           disabled={paymentMutation.isPending}
-          className="text-xs h-7 bg-green-600 hover:bg-green-700"
+          className="text-xs h-8 bg-green-600 hover:bg-green-700"
         >
           {paymentMutation.isPending ? 'Processing...' : 'Record Payment'}
         </Button>
@@ -596,7 +596,7 @@ export default function WorkOrderDetail() {
               variant="outline"
               size="sm"
               onClick={() => setShowAddItem(true)}
-              className="text-xs h-7"
+              className="text-xs h-8"
             >
               <Plus className="h-3 w-3 mr-1" />
               Add Item
@@ -614,7 +614,7 @@ export default function WorkOrderDetail() {
           {/* Group: Labor */}
           {laborItems.length > 0 && (
             <div className="mb-3">
-              <p className="text-[10px] uppercase tracking-wider text-slate-400 font-medium mb-1">
+              <p className="text-xs uppercase tracking-wider text-slate-400 font-medium mb-1">
                 Labor
               </p>
               {laborItems.map((item) => (
@@ -632,7 +632,7 @@ export default function WorkOrderDetail() {
           {/* Group: Parts */}
           {partItems.length > 0 && (
             <div className="mb-3">
-              <p className="text-[10px] uppercase tracking-wider text-slate-400 font-medium mb-1">
+              <p className="text-xs uppercase tracking-wider text-slate-400 font-medium mb-1">
                 Parts
               </p>
               {partItems.map((item) => (
@@ -650,7 +650,7 @@ export default function WorkOrderDetail() {
           {/* Group: Other */}
           {otherItems.length > 0 && (
             <div className="mb-3">
-              <p className="text-[10px] uppercase tracking-wider text-slate-400 font-medium mb-1">
+              <p className="text-xs uppercase tracking-wider text-slate-400 font-medium mb-1">
                 Other
               </p>
               {otherItems.map((item) => (
@@ -714,7 +714,7 @@ export default function WorkOrderDetail() {
               variant="outline"
               size="sm"
               onClick={() => setShowPayment(true)}
-              className="text-xs h-7"
+              className="text-xs h-8"
             >
               <Plus className="h-3 w-3 mr-1" />
               Record Payment
@@ -806,7 +806,7 @@ export default function WorkOrderDetail() {
                     variant="outline"
                     size="sm"
                     onClick={() => setEditingNotes(false)}
-                    className="text-xs h-7"
+                    className="text-xs h-8"
                   >
                     Cancel
                   </Button>
@@ -816,7 +816,7 @@ export default function WorkOrderDetail() {
                       updateMutation.mutate({ notes: notesValue })
                       setEditingNotes(false)
                     }}
-                    className="text-xs h-7 bg-slate-800 hover:bg-slate-700"
+                    className="text-xs h-8 bg-slate-800 hover:bg-slate-700"
                   >
                     Save
                   </Button>
@@ -863,7 +863,7 @@ export default function WorkOrderDetail() {
                     variant="outline"
                     size="sm"
                     onClick={() => setEditingInternalNotes(false)}
-                    className="text-xs h-7"
+                    className="text-xs h-8"
                   >
                     Cancel
                   </Button>
@@ -873,7 +873,7 @@ export default function WorkOrderDetail() {
                       updateMutation.mutate({ internal_notes: internalNotesValue })
                       setEditingInternalNotes(false)
                     }}
-                    className="text-xs h-7 bg-slate-800 hover:bg-slate-700"
+                    className="text-xs h-8 bg-slate-800 hover:bg-slate-700"
                   >
                     Save
                   </Button>
@@ -906,7 +906,7 @@ export default function WorkOrderDetail() {
           {wo.authorized_at && (
             <div className="flex items-center gap-1.5">
               <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
-              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700">
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">
                 {wo.authorization_method === 'portal' ? 'Portal Approved' : 'Authorized'}
               </span>
               <span>
@@ -958,7 +958,7 @@ function LineItemRow({ item, editable, onDelete, deleting }) {
       </div>
       <div className="flex items-center gap-2">
         {item.status === 'declined' && (
-          <span className="text-[10px] font-medium text-red-500 uppercase">Declined</span>
+          <span className="text-xs font-medium text-red-500 uppercase">Declined</span>
         )}
         <span
           className={cn(

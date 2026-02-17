@@ -377,7 +377,7 @@ export default function CustomerDetail() {
         <div data-tour="custdetail-vehicles" className="bg-white shadow-lg border-0 rounded-lg overflow-hidden md:col-span-3">
           <div className="px-4 py-3 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
             <h3 className="text-sm font-medium text-slate-700">Vehicles</h3>
-            <Button size="sm" onClick={() => setIsAddVehicleOpen(true)} className="text-xs h-7">
+            <Button size="sm" onClick={() => setIsAddVehicleOpen(true)} className="text-xs h-8">
               <Plus className="mr-1 h-3.5 w-3.5" />
               Add Vehicle
             </Button>
@@ -452,7 +452,7 @@ export default function CustomerDetail() {
                       <p className="text-sm font-semibold text-slate-800">
                         {format(parseDateLocal(apt.scheduled_date), 'd')}
                       </p>
-                      <p className="text-[10px] text-muted-foreground">
+                      <p className="text-xs text-muted-foreground">
                         {format(parseDateLocal(apt.scheduled_date), 'MMM')}
                       </p>
                     </div>

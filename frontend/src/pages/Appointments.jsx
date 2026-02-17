@@ -231,10 +231,10 @@ export default function Appointments() {
         <p className="text-xs font-semibold truncate">
           {apt.customer?.first_name} {apt.customer?.last_name}
         </p>
-        <p className="text-[10px] truncate opacity-70">
+        <p className="text-xs truncate opacity-70">
           {serviceName}
         </p>
-        <p className="text-[10px] opacity-60">
+        <p className="text-xs opacity-60">
           {formatTime12Hour(apt.scheduled_time)} - {endTime}
         </p>
       </Link>
@@ -305,7 +305,7 @@ export default function Appointments() {
                     "flex h-10 w-10 flex-col items-center justify-center rounded-lg",
                     isToday(parseISO(date)) ? "bg-gradient-to-br from-blue-600 to-blue-700 text-white" : "bg-slate-100 text-slate-600"
                   )}>
-                    <span className="text-[10px] font-medium uppercase">
+                    <span className="text-xs font-medium uppercase">
                       {format(parseISO(date), 'MMM')}
                     </span>
                     <span className="text-sm font-semibold leading-none">
@@ -336,7 +336,7 @@ export default function Appointments() {
                             <span className="text-sm font-semibold text-slate-700">
                               {formatTime12Hour(apt.scheduled_time).split(' ')[0]}
                             </span>
-                            <span className="text-[10px] text-slate-500">
+                            <span className="text-xs text-slate-500">
                               {formatTime12Hour(apt.scheduled_time).split(' ')[1]}
                             </span>
                           </div>
@@ -468,7 +468,7 @@ export default function Appointments() {
                     <div>
                       {hours.map((hour) => (
                         <div key={hour} className="relative border-b border-slate-100" style={{ height: HOUR_HEIGHT }}>
-                          <span className="absolute -top-2.5 right-1 text-[10px] text-slate-400 font-medium">
+                          <span className="absolute -top-2.5 right-1 text-xs text-slate-400 font-medium">
                             {hour === 12 ? '12 PM' : hour > 12 ? `${hour - 12} PM` : `${hour} AM`}
                           </span>
                         </div>
@@ -646,7 +646,7 @@ export default function Appointments() {
                                       {apt.customer?.first_name}
                                     </span>
                                   </span>
-                                  <span className="text-[10px] sm:text-xs opacity-60 truncate block hidden sm:block">
+                                  <span className="text-xs sm:text-xs opacity-60 truncate block hidden sm:block">
                                     {formatTime12Hour(apt.scheduled_time)}
                                   </span>
                                 </Link>
@@ -733,7 +733,7 @@ export default function Appointments() {
               "flex h-10 w-10 flex-col items-center justify-center rounded-lg",
               isToday(parseDateLocal(dateFilter)) ? "bg-gradient-to-br from-blue-600 to-blue-700 text-white" : "bg-slate-100 text-slate-600"
             )}>
-              <span className="text-[10px] font-medium uppercase">
+              <span className="text-xs font-medium uppercase">
                 {format(parseDateLocal(dateFilter), 'MMM')}
               </span>
               <span className="text-sm font-semibold leading-none">
@@ -786,7 +786,7 @@ export default function Appointments() {
                           <span className="text-sm font-semibold text-slate-700">
                             {formatTime12Hour(apt.scheduled_time).split(' ')[0]}
                           </span>
-                          <span className="text-[10px] text-slate-500">
+                          <span className="text-xs text-slate-500">
                             {formatTime12Hour(apt.scheduled_time).split(' ')[1]}
                           </span>
                         </div>

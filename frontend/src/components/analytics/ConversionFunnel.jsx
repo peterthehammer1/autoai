@@ -76,7 +76,7 @@ export default function ConversionFunnel({ comprehensive }) {
               {i < steps.length - 1 && (
                 <div className="flex items-center justify-center my-1">
                   <ArrowRight className="h-3 w-3 text-slate-400" />
-                  <span className="text-[10px] text-slate-500 ml-1">
+                  <span className="text-xs text-slate-500 ml-1">
                     {loading ? '...' : rates[i]}
                   </span>
                 </div>

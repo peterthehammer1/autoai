@@ -263,7 +263,7 @@ export default function Services() {
                             : (service.price_display || 'Free')
                           }
                         </span>
-                        <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => handleOpenEdit(service)}>
+                        <Button variant="ghost" size="sm" className="h-8 px-2 text-xs" onClick={() => handleOpenEdit(service)}>
                           Edit
                         </Button>
                       </div>
@@ -273,7 +273,7 @@ export default function Services() {
                         <Clock className="h-3.5 w-3.5" />
                         {formatDuration(service.duration_minutes)}
                       </div>
-                      <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                      <Badge variant="outline" className="text-xs px-1.5 py-0">
                         {service.category?.name || '-'}
                       </Badge>
                     </div>
@@ -322,7 +322,7 @@ export default function Services() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="svc-duration">Duration (min) *</Label>
                   <Input
@@ -355,7 +355,7 @@ export default function Services() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="svc-price-min">Price Min ($)</Label>
                   <Input
@@ -389,7 +389,7 @@ export default function Services() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="svc-bay">Bay Type</Label>
                   <Select

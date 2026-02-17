@@ -57,12 +57,12 @@ export default function ComparisonBar({ comprehensive }) {
                   </div>
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      <span className="text-[10px] text-slate-500 w-12">Current</span>
+                      <span className="text-xs text-slate-500 w-12">Current</span>
                       <div className="flex-1 h-4 bg-slate-100 animate-pulse rounded-full" />
                       <div className="w-16 h-4 bg-slate-100 animate-pulse rounded" />
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-[10px] text-slate-500 w-12">Previous</span>
+                      <span className="text-xs text-slate-500 w-12">Previous</span>
                       <div className="flex-1 h-4 bg-slate-100 animate-pulse rounded-full" />
                       <div className="w-16 h-4 bg-slate-100 animate-pulse rounded" />
                     </div>
@@ -94,7 +94,7 @@ export default function ComparisonBar({ comprehensive }) {
                 </div>
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] text-slate-500 w-12">Current</span>
+                    <span className="text-xs text-slate-500 w-12">Current</span>
                     <div className="flex-1 h-4 bg-slate-100 rounded-full overflow-hidden">
                       <div
                         className={cn("h-full rounded-full transition-all duration-500", color)}
@@ -104,7 +104,7 @@ export default function ComparisonBar({ comprehensive }) {
                     <span className="text-xs font-semibold text-slate-900 w-16 text-right">{fmt(current)}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] text-slate-500 w-12">Previous</span>
+                    <span className="text-xs text-slate-500 w-12">Previous</span>
                     <div className="flex-1 h-4 bg-slate-100 rounded-full overflow-hidden">
                       <div
                         className="h-full bg-slate-300 rounded-full transition-all duration-500"

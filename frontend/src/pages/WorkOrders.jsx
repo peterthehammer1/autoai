@@ -215,7 +215,7 @@ export default function WorkOrders() {
                 size="sm"
                 onClick={() => setPage((p) => p - 1)}
                 disabled={page === 0}
-                className="text-xs h-7"
+                className="text-xs h-8"
               >
                 Previous
               </Button>
@@ -224,7 +224,7 @@ export default function WorkOrders() {
                 size="sm"
                 onClick={() => setPage((p) => p + 1)}
                 disabled={!pagination.has_more}
-                className="text-xs h-7"
+                className="text-xs h-8"
               >
                 Next
               </Button>

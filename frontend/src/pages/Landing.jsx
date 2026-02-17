@@ -195,7 +195,7 @@ export default function Landing() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center">
-              <img src="/logo-light.png" alt="Premier Auto Service" className="h-10 sm:h-12 md:h-14 object-contain" />
+              <img src="/logo-light.png" alt="Premier Auto Service" width="256" height="256" className="h-10 sm:h-12 md:h-14 object-contain" />
             </div>
 
             <div className="hidden md:flex items-center gap-8">
@@ -382,7 +382,7 @@ export default function Landing() {
                       <div key={i} className="bg-slate-800/50 rounded-lg p-2 sm:p-3 text-center border border-slate-700">
                         <stat.icon className="h-4 w-4 sm:h-5 sm:w-5 text-blue-400 mx-auto mb-1" />
                         <p className="text-sm sm:text-lg font-bold text-white">{stat.value}</p>
-                        <p className="text-[10px] sm:text-xs text-slate-400 leading-tight">{stat.label}</p>
+                        <p className="text-xs sm:text-xs text-slate-400 leading-tight">{stat.label}</p>
                       </div>
                     ))}
                   </div>
@@ -405,7 +405,7 @@ export default function Landing() {
                             <div className="flex-1 min-w-0">
                               <div className="text-xs text-slate-300 truncate">{apt.service}</div>
                             </div>
-                            <div className="h-5 w-16 bg-emerald-500/20 rounded text-[10px] text-emerald-400 flex items-center justify-center shrink-0">
+                            <div className="h-5 w-16 bg-emerald-500/20 rounded text-xs text-emerald-400 flex items-center justify-center shrink-0">
                               {apt.status}
                             </div>
                           </div>
@@ -984,7 +984,7 @@ function ChatBubble({ agent, children }) {
   }
   return (
     <div className="flex gap-3 justify-end">
-      <div className="bg-blue-500 rounded-2xl rounded-tr-sm px-4 py-3 max-w-[80%]">
+      <div className="bg-blue-600 rounded-2xl rounded-tr-sm px-4 py-3 max-w-[80%]">
         <p className="text-sm text-white">{children}</p>
       </div>
       <div className="h-8 w-8 rounded-full bg-blue-500/20 flex items-center justify-center shrink-0">

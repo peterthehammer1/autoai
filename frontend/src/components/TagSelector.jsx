@@ -80,7 +80,7 @@ export default function TagSelector({ customerId, assignedTags = [] }) {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="outline" size="sm" className="h-7 px-2 text-xs gap-1">
+        <Button variant="outline" size="sm" className="h-8 px-2 text-xs gap-1">
           <Plus className="h-3 w-3" />
           Tag
         </Button>
