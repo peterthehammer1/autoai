@@ -75,12 +75,14 @@ router.post('/check_availability', async (req, res, next) => {
 
     // Determine date range - ALWAYS start from today or future, never past
     const today = nowEST();
+    const todayDateStr = format(today, 'yyyy-MM-dd');
     let startDate = today;
 
     if (preferred_date) {
-      const requestedDate = parseISO(preferred_date);
-      // If requested date is in the past, use today instead
-      startDate = requestedDate > today ? requestedDate : today;
+      // Compare as date strings to avoid UTC vs EST mismatch
+      if (preferred_date > todayDateStr) {
+        startDate = parseISO(preferred_date);
+      }
     }
 
     // Use 14 days by default for wider search range
@@ -481,6 +483,7 @@ router.post('/book_appointment', async (req, res, next) => {
           make: vehicle_make,
           model: vehicle_model,
           mileage: vehicle_mileage,
+          mileage_updated_at: vehicle_mileage ? new Date().toISOString() : null,
           is_primary: true
         })
         .select('id, year, make, model')
@@ -897,40 +900,54 @@ router.post('/modify_appointment', async (req, res, next) => {
         });
       }
 
-      // Get the required bay type from the first service
-      const { data: service } = await supabase
+      // Get the required bay type from ALL services (use most specialized)
+      const serviceIds = appointmentServices.map(s => s.service_id);
+      const { data: services } = await supabase
         .from('services')
         .select('required_bay_type')
-        .eq('id', appointmentServices[0].service_id)
-        .single();
+        .in('id', serviceIds);
+
+      const bayType = getBestBayType(services || []);
 
       // Get compatible bays
       const { data: bays } = await supabase
         .from('service_bays')
         .select('id')
         .eq('is_active', true)
-        .eq('bay_type', service?.required_bay_type || 'standard');
+        .eq('bay_type', bayType);
 
       const bayIds = bays?.map(b => b.id) || [];
 
-      // Check availability - handle time format with or without seconds
-      const timeWithSeconds = new_time.includes(':') && new_time.split(':').length === 2
-        ? `${new_time}:00`
-        : new_time;
+      // Check ALL required slots for the full duration, not just the first one
+      const slotsNeeded = Math.ceil(apptDuration / 30);
+      const [rH, rM] = new_time.split(':').map(Number);
+      let rMins = rH * 60 + rM;
+      const requiredSlotTimes = [];
+      for (let i = 0; i < slotsNeeded; i++) {
+        requiredSlotTimes.push(`${String(Math.floor(rMins / 60)).padStart(2, '0')}:${String(rMins % 60).padStart(2, '0')}:00`);
+        rMins += 30;
+      }
 
-      logger.info('Checking slot availability:', { data: { date: new_date, time: timeWithSeconds, bayIds } });
+      logger.info('Checking slot availability:', { data: { date: new_date, requiredSlotTimes, bayIds } });
 
-      const { data: slot, error: slotError } = await supabase
-        .from('time_slots')
-        .select('bay_id')
-        .eq('slot_date', new_date)
-        .eq('start_time', timeWithSeconds)
-        .eq('is_available', true)
-        .in('bay_id', bayIds)
-        .limit(1)
-        .single();
+      // Find a bay with ALL required consecutive slots available
+      let slot = null;
+      for (const bayId of bayIds) {
+        const { data: baySlots } = await supabase
+          .from('time_slots')
+          .select('start_time')
+          .eq('slot_date', new_date)
+          .eq('bay_id', bayId)
+          .eq('is_available', true)
+          .in('start_time', requiredSlotTimes);
 
-      logger.info('Slot check result:', { data: { slot, error: slotError } });
+        if (baySlots && baySlots.length === slotsNeeded) {
+          slot = { bay_id: bayId };
+          break;
+        }
+      }
+
+      logger.info('Slot check result:', { data: { slot } });
 
       if (!slot) {
         return res.json({
@@ -1097,25 +1114,39 @@ router.post('/modify_appointment', async (req, res, next) => {
         })
         .eq('id', appointment_id);
 
-      // Book additional time slots if needed
-      const additionalSlots = Math.ceil(additionalDuration / 30);
-      if (additionalSlots > 0) {
+      // Book additional time slots atomically if needed
+      if (additionalDuration > 0) {
         const currentEndTime = addMinutesToTime(appointment.scheduled_time, appointment.estimated_duration_minutes || 30);
-        const slotTimes = [];
-        const [h, m] = currentEndTime.split(':').map(Number);
-        let mins = h * 60 + m;
 
-        for (let i = 0; i < additionalSlots; i++) {
-          slotTimes.push(`${String(Math.floor(mins / 60)).padStart(2, '0')}:${String(mins % 60).padStart(2, '0')}:00`);
-          mins += 30;
+        const { data: bookingResult, error: rpcError } = await supabase
+          .rpc('book_appointment_slots', {
+            p_bay_id: appointment.bay_id,
+            p_date: appointment.scheduled_date,
+            p_start_time: currentEndTime,
+            p_duration_minutes: additionalDuration,
+            p_appointment_id: appointment_id
+          });
+
+        if (rpcError || !bookingResult?.success) {
+          logger.error('[add_services] Atomic slot booking failed:', { error: rpcError || bookingResult });
+          // Slots unavailable — revert the service additions and duration/total update
+          await supabase
+            .from('appointment_services')
+            .delete()
+            .eq('appointment_id', appointment_id)
+            .in('service_id', service_ids);
+          await supabase
+            .from('appointments')
+            .update({
+              estimated_duration_minutes: appointment.estimated_duration_minutes || 0,
+              quoted_total: appointment.quoted_total || 0
+            })
+            .eq('id', appointment_id);
+          return res.json({
+            success: false,
+            message: 'I\'m sorry, there isn\'t enough time in the schedule to add that service. Would you like to reschedule to a longer window?'
+          });
         }
-
-        await supabase
-          .from('time_slots')
-          .update({ is_available: false, appointment_id })
-          .eq('slot_date', appointment.scheduled_date)
-          .eq('bay_id', appointment.bay_id)
-          .in('start_time', slotTimes);
       }
 
       // Send updated confirmation SMS (async, don't block response)

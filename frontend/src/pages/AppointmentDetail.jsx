@@ -71,12 +71,14 @@ export default function AppointmentDetail() {
   })
 
   const createWOMutation = useMutation({
-    mutationFn: () =>
-      workOrders.create({
+    mutationFn: () => {
+      const current = queryClient.getQueryData(['appointment', id])?.appointment
+      return workOrders.create({
         appointment_id: id,
-        customer_id: apt?.customer?.id,
-        vehicle_id: apt?.vehicle?.id,
-      }),
+        customer_id: current?.customer?.id,
+        vehicle_id: current?.vehicle?.id,
+      })
+    },
     onSuccess: (data) => {
       toast({ title: `Work order ${data.work_order.work_order_display} created` })
       navigate(`/work-orders/${data.work_order.id}`)

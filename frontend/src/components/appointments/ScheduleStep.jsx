@@ -1,4 +1,5 @@
-import { format, parseISO, isToday, isTomorrow } from 'date-fns'
+import { format, isToday, isTomorrow } from 'date-fns'
+import { parseDateLocal } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { formatDuration, formatTime12Hour } from '@/lib/utils'
@@ -52,7 +53,7 @@ function ScheduleStep({
       ) : (
         <div className="space-y-4">
           {Object.entries(slotsByDate).map(([date, slots]) => {
-            const dateObj = parseISO(date)
+            const dateObj = parseDateLocal(date)
             const dayLabel = isToday(dateObj)
               ? 'Today'
               : isTomorrow(dateObj)
@@ -99,7 +100,7 @@ function ScheduleStep({
               <span className="font-semibold">Selected Time</span>
             </div>
             <p className="text-lg mt-2">
-              {format(parseISO(selectedDate), 'EEEE, MMMM d, yyyy')} at{' '}
+              {format(parseDateLocal(selectedDate), 'EEEE, MMMM d, yyyy')} at{' '}
               {formatTime12Hour(selectedTime)}
             </p>
           </CardContent>

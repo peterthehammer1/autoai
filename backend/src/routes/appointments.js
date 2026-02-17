@@ -660,8 +660,8 @@ router.patch('/:id', async (req, res, next) => {
       }
     }
 
-    // If cancelling, free up slots
-    if (updates.status === 'cancelled' || updates.status === 'no_show') {
+    // If cancelling (and we didn't already free+rebook via reschedule above), free up slots
+    if ((updates.status === 'cancelled' || updates.status === 'no_show') && !updates.scheduled_date && !updates.scheduled_time) {
       await supabase.rpc('free_appointment_slots', { p_appointment_id: id });
     }
 

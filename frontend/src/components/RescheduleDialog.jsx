@@ -44,7 +44,7 @@ export default function RescheduleDialog({ appointment, open, onOpenChange }) {
     { dayOfWeek: [0, 6] },
   ]
 
-  const timeSlots = slotsData?.slots?.filter(s => s.available) || []
+  const timeSlots = slotsData?.slots?.filter(s => s.is_available) || []
 
   return (
     <Dialog open={open} onOpenChange={(v) => {
@@ -124,16 +124,16 @@ export default function RescheduleDialog({ appointment, open, onOpenChange }) {
                 <div className="grid grid-cols-4 gap-2 max-h-48 overflow-y-auto">
                   {timeSlots.map((slot) => (
                     <button
-                      key={slot.time}
-                      onClick={() => setSelectedTime(slot.time)}
+                      key={slot.start_time}
+                      onClick={() => setSelectedTime(slot.start_time)}
                       className={cn(
                         "px-2 py-2 text-xs font-medium rounded-md border transition-colors",
-                        selectedTime === slot.time
+                        selectedTime === slot.start_time
                           ? "bg-blue-600 text-white border-blue-600"
                           : "bg-white text-slate-700 border-slate-200 hover:border-blue-300 hover:bg-blue-50"
                       )}
                     >
-                      {formatTime12Hour(slot.time)}
+                      {formatTime12Hour(slot.start_time)}
                     </button>
                   ))}
                 </div>

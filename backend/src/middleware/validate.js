@@ -1,7 +1,7 @@
 /**
  * Input validation helpers for API endpoints.
- * Lightweight — no external dependencies.
  */
+import { todayEST } from '../utils/timezone.js';
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const TIME_RE = /^\d{2}:\d{2}(:\d{2})?$/;
@@ -66,17 +66,14 @@ export function clampPagination(limit, offset) {
 
 /**
  * Check that a date is not in the past and within the booking window (60 days).
+ * Uses EST to match business timezone (Vercel runs in UTC).
  */
 export function isFutureDate(dateStr) {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const date = new Date(dateStr + 'T12:00:00');
-  return date >= today;
+  return dateStr >= todayEST();
 }
 
 export function isWithinBookingWindow(dateStr, maxDays = 60) {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const today = new Date(todayEST() + 'T12:00:00');
   const date = new Date(dateStr + 'T12:00:00');
   const maxDate = new Date(today);
   maxDate.setDate(maxDate.getDate() + maxDays);
