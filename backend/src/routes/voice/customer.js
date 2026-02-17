@@ -57,6 +57,25 @@ router.post('/lookup_customer', async (req, res, next) => {
       }
     }
 
+    // Fallback 3: Retell API direct lookup
+    if (!phone_number && call_id && process.env.RETELL_API_KEY) {
+      try {
+        logger.info('lookup_customer: recovering phone from Retell API', { data: call_id });
+        const resp = await fetch(`https://api.retellai.com/v2/get-call/${call_id}`, {
+          headers: { 'Authorization': `Bearer ${process.env.RETELL_API_KEY}` }
+        });
+        if (resp.ok) {
+          const callData = await resp.json();
+          if (callData?.from_number) {
+            phone_number = callData.from_number;
+            logger.info('lookup_customer: recovered phone from Retell API', { data: phone_number });
+          }
+        }
+      } catch (e) {
+        logger.info('lookup_customer: Retell API fallback failed', { data: e.message });
+      }
+    }
+
     if (!phone_number) {
       logger.info('lookup_customer: phone still missing after all fallbacks');
       return res.json({
@@ -321,6 +340,25 @@ router.post('/get_customer_appointments', async (req, res, next) => {
       if (recentCall?.phone_number) {
         customer_phone = recentCall.phone_number;
         logger.info('get_customer_appointments: recovered phone from recent active call', { data: customer_phone });
+      }
+    }
+
+    // Fallback 3: Retell API direct lookup
+    if (!customer_phone && call_id && process.env.RETELL_API_KEY) {
+      try {
+        logger.info('get_customer_appointments: recovering phone from Retell API', { data: call_id });
+        const resp = await fetch(`https://api.retellai.com/v2/get-call/${call_id}`, {
+          headers: { 'Authorization': `Bearer ${process.env.RETELL_API_KEY}` }
+        });
+        if (resp.ok) {
+          const callData = await resp.json();
+          if (callData?.from_number) {
+            customer_phone = callData.from_number;
+            logger.info('get_customer_appointments: recovered phone from Retell API', { data: customer_phone });
+          }
+        }
+      } catch (e) {
+        logger.info('get_customer_appointments: Retell API fallback failed', { data: e.message });
       }
     }
 

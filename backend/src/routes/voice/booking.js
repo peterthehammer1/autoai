@@ -342,7 +342,8 @@ router.post('/book_appointment', async (req, res, next) => {
     const loaner_requested = body.loaner_requested;
     const shuttle_requested = body.shuttle_requested;
     const notes = cleanNull(body.notes);
-    let call_id = cleanNull(body.call_id);
+    // Retell sends call_id at req.body top level, not inside args
+    let call_id = cleanNull(req.body.call_id) || cleanNull(body.call_id);
     if (isTemplateVar(call_id)) call_id = null;
 
     // Fallback: recover customer_phone from call_logs if template var wasn't substituted
@@ -375,6 +376,25 @@ router.post('/book_appointment', async (req, res, next) => {
         customer_phone = recentCall.phone_number;
         if (!call_id) call_id = recentCall.retell_call_id;
         logger.info('book_appointment: recovered phone from recent active call', { data: customer_phone });
+      }
+    }
+
+    // Fallback 3: if still no phone but have call_id, ask Retell API directly
+    if (!customer_phone && call_id && process.env.RETELL_API_KEY) {
+      try {
+        logger.info('book_appointment: recovering phone from Retell API', { data: call_id });
+        const resp = await fetch(`https://api.retellai.com/v2/get-call/${call_id}`, {
+          headers: { 'Authorization': `Bearer ${process.env.RETELL_API_KEY}` }
+        });
+        if (resp.ok) {
+          const callData = await resp.json();
+          if (callData?.from_number) {
+            customer_phone = callData.from_number;
+            logger.info('book_appointment: recovered phone from Retell API', { data: customer_phone });
+          }
+        }
+      } catch (e) {
+        logger.info('book_appointment: Retell API fallback failed', { data: e.message });
       }
     }
 
