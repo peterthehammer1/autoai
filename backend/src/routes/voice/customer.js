@@ -1,9 +1,9 @@
 import { Router } from 'express';
 import { supabase, normalizePhone } from '../../config/database.js';
-import { format, parseISO } from 'date-fns';
+import { parseISO } from 'date-fns';
 import { nowEST, todayEST, daysAgoEST } from '../../utils/timezone.js';
 import { logger } from '../../utils/logger.js';
-import { formatTime12Hour } from './utils.js';
+import { formatDateSpoken, formatTime12Hour } from './utils.js';
 
 const router = Router();
 
@@ -178,7 +178,7 @@ router.post('/lookup_customer', async (req, res, next) => {
         id: apt.id,
         date: apt.scheduled_date,
         time: apt.scheduled_time,
-        formatted: `${format(date, 'EEEE, MMMM d')} at ${formatTime12Hour(apt.scheduled_time)}`,
+        formatted: `${formatDateSpoken(date)} at ${formatTime12Hour(apt.scheduled_time)}`,
         services,
         service_ids: serviceIds
       };
@@ -432,7 +432,7 @@ router.post('/get_customer_appointments', async (req, res, next) => {
         date: apt.scheduled_date,
         time: apt.scheduled_time,
         status: apt.status,
-        formatted: `${format(date, 'EEEE, MMMM d')} at ${formatTime12Hour(apt.scheduled_time)}`,
+        formatted: `${formatDateSpoken(date)} at ${formatTime12Hour(apt.scheduled_time)}`,
         services,
         service_ids, // Include for rescheduling - use these with check_availability, not appointment id
         vehicle

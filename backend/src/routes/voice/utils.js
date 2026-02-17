@@ -1,5 +1,5 @@
 import { supabase } from '../../config/database.js';
-import { parseISO } from 'date-fns';
+import { parseISO, format } from 'date-fns';
 import { formatTime12Hour } from '../../utils/timezone.js';
 import { logger } from '../../utils/logger.js';
 
@@ -217,4 +217,12 @@ function getOrdinalSuffix(day) {
   }
 }
 
-export { SKILL_RANK, BAY_TYPE_RANK, getBestBayType, getRequiredSkillLevel, assignTechnician, addMinutesToTime, getOrdinalSuffix, formatTime12Hour };
+/** Format a date as "Wednesday, March 5th" — TTS-friendly with ordinal suffix */
+function formatDateSpoken(date) {
+  const dayName = format(date, 'EEEE');
+  const monthName = format(date, 'MMMM');
+  const dayOfMonth = parseInt(format(date, 'd'));
+  return `${dayName}, ${monthName} ${dayOfMonth}${getOrdinalSuffix(dayOfMonth)}`;
+}
+
+export { SKILL_RANK, BAY_TYPE_RANK, getBestBayType, getRequiredSkillLevel, assignTechnician, addMinutesToTime, getOrdinalSuffix, formatDateSpoken, formatTime12Hour };

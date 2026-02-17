@@ -5,7 +5,7 @@ import { sendConfirmationSMS } from '../../services/sms.js';
 import { sendConfirmationEmail } from '../../services/email.js';
 import { nowEST, todayEST } from '../../utils/timezone.js';
 import { logger } from '../../utils/logger.js';
-import { assignTechnician, getBestBayType, getRequiredSkillLevel, addMinutesToTime, getOrdinalSuffix, formatTime12Hour } from './utils.js';
+import { assignTechnician, getBestBayType, getRequiredSkillLevel, addMinutesToTime, getOrdinalSuffix, formatDateSpoken, formatTime12Hour } from './utils.js';
 
 const router = Router();
 
@@ -263,11 +263,11 @@ router.post('/check_availability', async (req, res, next) => {
       const monthName = format(date, 'MMMM');
       return {
         ...s,
-        formatted: `${dayName}, ${monthName} ${dayOfMonth} at ${formatTime12Hour(s.time)}`,
+        formatted: `${dayName}, ${monthName} ${dayOfMonth}${getOrdinalSuffix(parseInt(dayOfMonth))} at ${formatTime12Hour(s.time)}`,
         day_name: dayName,
         day_of_month: dayOfMonth,
         month_name: monthName,
-        date_formatted: `${monthName} ${dayOfMonth}`,
+        date_formatted: `${monthName} ${dayOfMonth}${getOrdinalSuffix(parseInt(dayOfMonth))}`,
         time_formatted: formatTime12Hour(s.time),
         // Explicit: "Monday the 9th" format for voice
         spoken_date: `${dayName} the ${dayOfMonth}${getOrdinalSuffix(parseInt(dayOfMonth))}`
@@ -747,7 +747,8 @@ router.post('/book_appointment', async (req, res, next) => {
     // 8. Format response
     const date = parseISO(appointment_date);
     const dayName = format(date, 'EEEE');
-    const monthDay = format(date, 'MMMM d');
+    const dayOfMonthNum = parseInt(format(date, 'd'));
+    const monthDay = `${format(date, 'MMMM')} ${dayOfMonthNum}${getOrdinalSuffix(dayOfMonthNum)}`;
     const timeFormatted = formatTime12Hour(appointment_time);
     const serviceNames = services.map(s => s.name).join(' and ');
 
@@ -1100,7 +1101,7 @@ router.post('/modify_appointment', async (req, res, next) => {
         action: 'rescheduled',
         new_date,
         new_time,
-        message: `I've rescheduled your appointment to ${format(date, 'EEEE, MMMM d')} at ${formatTime12Hour(new_time)}.${smsNote} You'll get a text with the updated details.`
+        message: `I've rescheduled your appointment to ${formatDateSpoken(date)} at ${formatTime12Hour(new_time)}.${smsNote} You'll get a text with the updated details.`
       });
     }
 
