@@ -36,10 +36,10 @@ const navigation = [
   { name: 'Analytics', href: '/analytics', icon: BarChart3 },
   { name: 'Appointments', href: '/appointments', icon: Calendar },
   { name: 'Bay View', href: '/bay-view', icon: Columns },
-  { name: 'Work Orders', href: '/work-orders', icon: ClipboardList },
   { name: 'Customers', href: '/customers', icon: Users },
   { name: 'Call Logs', href: '/call-logs', icon: Phone },
   { name: 'SMS Messages', href: '/sms-logs', icon: MessageSquare },
+  { name: 'Work Orders', href: '/work-orders', icon: ClipboardList },
   { name: 'Reports', href: '/reports', icon: FileDown },
   // Hidden for now - pages still accessible via direct URL
   // { name: 'Services', href: '/services', icon: Wrench },
