@@ -17,10 +17,48 @@ router.post('/lookup_customer', async (req, res, next) => {
     logger.info('lookup_customer received:', { data: JSON.stringify(req.body) });
 
     // Handle both direct params and nested args from Nucleus AI
-    const phone_number = req.body.phone_number || req.body.args?.phone_number;
+    const isTemplateVar = (val) => typeof val === 'string' && (val.includes('{{') || val.includes('}}'));
+    let phone_number = req.body.phone_number || req.body.args?.phone_number;
+    if (isTemplateVar(phone_number)) {
+      logger.info('lookup_customer: phone_number is template variable');
+      phone_number = null;
+    }
+    let call_id = req.body.call_id || req.body.args?.call_id;
+    if (isTemplateVar(call_id)) call_id = null;
+
+    // Fallback: recover phone from call_logs using call_id
+    if (!phone_number && call_id) {
+      logger.info('lookup_customer: recovering phone from call_id', { data: call_id });
+      const { data: callLog } = await supabase
+        .from('call_logs')
+        .select('phone_number')
+        .eq('retell_call_id', call_id)
+        .single();
+      if (callLog?.phone_number) {
+        phone_number = callLog.phone_number;
+        logger.info('lookup_customer: recovered phone from call_logs', { data: phone_number });
+      }
+    }
+
+    // Fallback 2: recent active call within last 5 min
+    if (!phone_number) {
+      const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+      const { data: recentCall } = await supabase
+        .from('call_logs')
+        .select('phone_number')
+        .gte('started_at', fiveMinAgo)
+        .is('ended_at', null)
+        .order('started_at', { ascending: false })
+        .limit(1)
+        .single();
+      if (recentCall?.phone_number) {
+        phone_number = recentCall.phone_number;
+        logger.info('lookup_customer: recovered phone from recent active call', { data: phone_number });
+      }
+    }
 
     if (!phone_number) {
-      logger.info('No phone_number found in request');
+      logger.info('lookup_customer: phone still missing after all fallbacks');
       return res.json({
         success: false,
         found: false,
@@ -237,8 +275,12 @@ router.post('/get_customer_appointments', async (req, res, next) => {
     // 1. Direct params: { customer_phone: "..." }
     // 2. Nested args: { args: { customer_phone: "..." } }
     // 3. Array format: [{ customer_phone: "..." }]
+    const isTemplateVar = (val) => typeof val === 'string' && (val.includes('{{') || val.includes('}}'));
+
     let customer_phone = req.body.customer_phone || req.body.args?.customer_phone;
     let status = req.body.status || req.body.args?.status || 'upcoming';
+    let call_id = req.body.call_id || req.body.args?.call_id;
+    if (isTemplateVar(call_id)) call_id = null;
 
     // Handle array format (some LLMs send args as array)
     if (Array.isArray(req.body) && req.body[0]) {
@@ -246,21 +288,50 @@ router.post('/get_customer_appointments', async (req, res, next) => {
       status = status || req.body[0].status || 'upcoming';
     }
 
-    // Handle case where body might be the args directly
-    if (!customer_phone && typeof req.body === 'object') {
-      const keys = Object.keys(req.body);
-      logger.info('Body keys:', { data: keys });
+    if (isTemplateVar(customer_phone)) {
+      logger.info('get_customer_appointments: customer_phone is template variable');
+      customer_phone = null;
+    }
+
+    // Fallback: recover phone from call_logs using call_id
+    if (!customer_phone && call_id) {
+      logger.info('get_customer_appointments: recovering phone from call_id', { data: call_id });
+      const { data: callLog } = await supabase
+        .from('call_logs')
+        .select('phone_number')
+        .eq('retell_call_id', call_id)
+        .single();
+      if (callLog?.phone_number) {
+        customer_phone = callLog.phone_number;
+        logger.info('get_customer_appointments: recovered phone from call_logs', { data: customer_phone });
+      }
+    }
+
+    // Fallback 2: recent active call within last 5 min
+    if (!customer_phone) {
+      const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+      const { data: recentCall } = await supabase
+        .from('call_logs')
+        .select('phone_number')
+        .gte('started_at', fiveMinAgo)
+        .is('ended_at', null)
+        .order('started_at', { ascending: false })
+        .limit(1)
+        .single();
+      if (recentCall?.phone_number) {
+        customer_phone = recentCall.phone_number;
+        logger.info('get_customer_appointments: recovered phone from recent active call', { data: customer_phone });
+      }
     }
 
     logger.info('Extracted customer_phone:', { data: customer_phone });
     logger.info('Extracted status:', { data: status });
 
-    const isTemplateVar = (val) => typeof val === 'string' && (val.includes('{{') || val.includes('}}'));
-    if (!customer_phone || isTemplateVar(customer_phone)) {
-      if (isTemplateVar(customer_phone)) logger.info('get_customer_appointments: customer_phone is template variable (inbound webhook may have failed)');
+    if (!customer_phone) {
+      logger.info('get_customer_appointments: phone still missing after all fallbacks');
       return res.json({
         success: false,
-        message: 'I need the number you\'re calling from to look up your appointments. Is this the best number for your account?'
+        message: 'I wasn\'t able to pull up your phone number. Could you tell me the best number for your account?'
       });
     }
 

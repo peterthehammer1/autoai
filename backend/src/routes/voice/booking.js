@@ -342,20 +342,59 @@ router.post('/book_appointment', async (req, res, next) => {
     const loaner_requested = body.loaner_requested;
     const shuttle_requested = body.shuttle_requested;
     const notes = cleanNull(body.notes);
-    const call_id = cleanNull(body.call_id);
+    let call_id = cleanNull(body.call_id);
+    if (isTemplateVar(call_id)) call_id = null;
+
+    // Fallback: recover customer_phone from call_logs if template var wasn't substituted
+    if (!customer_phone && call_id) {
+      logger.info('book_appointment: recovering phone from call_id', { data: call_id });
+      const { data: callLog } = await supabase
+        .from('call_logs')
+        .select('phone_number')
+        .eq('retell_call_id', call_id)
+        .single();
+      if (callLog?.phone_number) {
+        customer_phone = callLog.phone_number;
+        logger.info('book_appointment: recovered phone from call_logs', { data: customer_phone });
+      }
+    }
+
+    // Fallback 2: if still no phone, try to find the most recent active call (within last 5 min)
+    if (!customer_phone) {
+      logger.info('book_appointment: attempting to recover phone from recent call_logs');
+      const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+      const { data: recentCall } = await supabase
+        .from('call_logs')
+        .select('phone_number, retell_call_id')
+        .gte('started_at', fiveMinAgo)
+        .is('ended_at', null)
+        .order('started_at', { ascending: false })
+        .limit(1)
+        .single();
+      if (recentCall?.phone_number) {
+        customer_phone = recentCall.phone_number;
+        if (!call_id) call_id = recentCall.retell_call_id;
+        logger.info('book_appointment: recovered phone from recent active call', { data: customer_phone });
+      }
+    }
 
     logger.info('Parsed values:', { data: { customer_phone, service_ids, appointment_date, appointment_time, vehicle_year, vehicle_make, vehicle_model } });
 
-    // Validate required fields (customer_phone can be missing if inbound webhook didn't set it)
-    if (!customer_phone || !service_ids || !appointment_date || !appointment_time) {
-      logger.info('Validation failed:', { data: { has_phone: !!customer_phone, has_services: !!service_ids, has_date: !!appointment_date, has_time: !!appointment_time } });
-      const phoneMessage = !customer_phone
-        ? 'I need the number you\'re calling from to complete the booking. Is this the best number for your account?'
-        : 'I\'m missing some information. I need your phone number, the service you want, and your preferred date and time.';
+    // Validate required fields
+    if (!service_ids || !appointment_date || !appointment_time) {
       return res.json({
         success: false,
         booked: false,
-        message: phoneMessage
+        message: 'I\'m missing some information to complete the booking. I need the service, date, and time.'
+      });
+    }
+
+    if (!customer_phone) {
+      logger.info('book_appointment: phone still missing after all fallbacks');
+      return res.json({
+        success: false,
+        booked: false,
+        message: 'I wasn\'t able to pull up your phone number. Could you tell me the best number for your account?'
       });
     }
 
@@ -379,24 +418,26 @@ router.post('/book_appointment', async (req, res, next) => {
     let customerEmail = customer_email;
 
     if (!customer) {
-      // NEW CUSTOMER - require name and vehicle info!
-      if (!customer_first_name) {
-        logger.info('New customer missing name');
-        return res.json({
-          success: false,
-          booked: false,
-          missing_info: 'name',
-          message: 'I just need to get your name before I book that. What\'s your first name?'
-        });
-      }
+      // NEW CUSTOMER - collect all missing info in ONE response to avoid serial Q&A
+      const missingFields = [];
+      if (!customer_first_name) missingFields.push('name');
+      if (!vehicle_year || !vehicle_make || !vehicle_model) missingFields.push('vehicle');
 
-      if (!vehicle_year || !vehicle_make || !vehicle_model) {
-        logger.info('New customer missing vehicle info');
+      if (missingFields.length > 0) {
+        logger.info('New customer missing info:', { data: missingFields });
+        let message;
+        if (missingFields.length === 2) {
+          message = 'I just need your name and the vehicle you\'re bringing in — year, make, and model — and I\'ll get you booked.';
+        } else if (missingFields[0] === 'name') {
+          message = 'I just need your name to get you booked. What\'s your first and last name?';
+        } else {
+          message = 'What vehicle will you be bringing in? I\'ll need the year, make, and model.';
+        }
         return res.json({
           success: false,
           booked: false,
-          missing_info: 'vehicle',
-          message: 'And what kind of car will you be bringing in? I\'ll need the year, make, and model.'
+          missing_info: missingFields.join(','),
+          message
         });
       }
 
@@ -418,25 +459,26 @@ router.post('/book_appointment', async (req, res, next) => {
       }
       customer = newCustomer;
     } else {
-      // Existing customer - check if their record is complete
-      if (!customer.first_name && !customer_first_name) {
-        logger.info('Existing customer missing name');
-        return res.json({
-          success: false,
-          booked: false,
-          missing_info: 'name',
-          message: 'I have your number on file but need to get your name. What\'s your first name?'
-        });
-      }
+      // Existing customer - collect ALL missing info in ONE response
+      const missingFields = [];
+      if (!customer.first_name && !customer_first_name) missingFields.push('name');
+      if (!hasExistingVehicle && !vehicle_id && (!vehicle_year || !vehicle_make || !vehicle_model)) missingFields.push('vehicle');
 
-      // Check if vehicle info is needed
-      if (!hasExistingVehicle && !vehicle_id && (!vehicle_year || !vehicle_make || !vehicle_model)) {
-        logger.info('Existing customer missing vehicle info');
+      if (missingFields.length > 0) {
+        logger.info('Existing customer missing info:', { data: missingFields });
+        let message;
+        if (missingFields.length === 2) {
+          message = 'I have your number on file. I just need your name and the vehicle you\'re bringing in — year, make, and model.';
+        } else if (missingFields[0] === 'name') {
+          message = 'I have your number on file but need to get your name. What\'s your first and last name?';
+        } else {
+          message = 'What vehicle will you be bringing in? I\'ll need the year, make, and model.';
+        }
         return res.json({
           success: false,
           booked: false,
-          missing_info: 'vehicle',
-          message: 'And what kind of car will you be bringing in? I\'ll need the year, make, and model.'
+          missing_info: missingFields.join(','),
+          message
         });
       }
 
