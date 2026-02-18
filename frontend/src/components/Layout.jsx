@@ -270,7 +270,7 @@ export default function Layout() {
       </div>
 
       {/* Main content */}
-      <div className="lg:pl-64 overflow-x-hidden">
+      <div className="lg:pl-64 min-w-0 overflow-x-hidden">
         {/* Mobile menu button - fixed position */}
         <div className="lg:hidden fixed top-3 left-3 z-50">
           <Button
@@ -285,7 +285,7 @@ export default function Layout() {
         </div>
 
         {/* Page content */}
-        <main id="main-content" className="px-4 sm:px-6 pb-4 sm:pb-6" role="main">
+        <main id="main-content" className="px-4 sm:px-6 pb-4 sm:pb-6 max-w-full overflow-hidden" role="main">
           <BreadcrumbProvider>
             <Breadcrumbs />
             <Suspense fallback={<PageLoader />}>

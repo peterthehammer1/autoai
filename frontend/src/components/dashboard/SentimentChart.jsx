@@ -23,7 +23,7 @@ function SentimentChart({ callTrends }) {
     if (!callTrends?.sentiment_trend?.length) return null
 
     return (
-      <Card className="shadow-card">
+      <Card className="shadow-card min-w-0 overflow-hidden">
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">

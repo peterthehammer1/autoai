@@ -40,7 +40,7 @@ const RESCHEDULABLE = ['scheduled', 'confirmed', 'checked_in']
 
 function TodaysSchedule({ todayData, todayLoading, isWeekendDay, statusMutation, setRescheduleAppointment }) {
   return (
-    <Card data-tour="todays-schedule" className="shadow-lg border-0 overflow-hidden">
+    <Card data-tour="todays-schedule" className="shadow-lg border-0 overflow-hidden min-w-0">
       <CardHeader className="pb-3 bg-gradient-to-r from-slate-50 to-white border-b">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">

@@ -80,7 +80,7 @@ export default function Dashboard() {
   })
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 min-w-0">
       {/* Page Header */}
       <div data-tour="dashboard-header" className="bg-gradient-to-r from-slate-800 to-slate-900 -mx-4 sm:-mx-6 px-4 pl-14 sm:px-6 lg:pl-6 py-4">
         <div className="flex items-center justify-between">
@@ -115,9 +115,9 @@ export default function Dashboard() {
       </div>
 
       {/* Main Content Grid */}
-      <div className="grid gap-5 lg:grid-cols-3 lg:items-stretch">
+      <div className="grid gap-5 lg:grid-cols-3 lg:items-stretch min-w-0">
         {/* Left Column - 2/3 width */}
-        <div className="lg:col-span-2 flex flex-col gap-5">
+        <div className="lg:col-span-2 flex flex-col gap-5 min-w-0">
           <TodaysSchedule
             todayData={todayData}
             todayLoading={todayLoading}
@@ -130,7 +130,7 @@ export default function Dashboard() {
         </div>
 
         {/* Right Column - 1/3 width */}
-        <div className="flex flex-col gap-5 min-h-0">
+        <div className="flex flex-col gap-5 min-h-0 min-w-0">
           <AIAgentCard overview={overview} />
 
           <RevenueGeneratedCard aiRevenue={aiRevenue} />
