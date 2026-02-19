@@ -684,20 +684,32 @@ router.post('/get_vehicle_info', async (req, res, next) => {
     const intelligence = await vehicleDB.getVehicleIntelligence(vehicleVin, vehicleMileage);
 
     if (!intelligence.success) {
+      // Even if API fails, try VIN year decode as fallback
+      const fallbackYear = vehicleDB.decodeVINYear(vehicleVin);
+      if (fallbackYear) {
+        return res.json({
+          success: true,
+          partial: true,
+          vehicle: { vin: vehicleVin, year: fallbackYear },
+          message: `I can tell from the VIN this is a ${fallbackYear} model. I wasn't able to pull the full details right now, but I can still help you book. What service do you need?`
+        });
+      }
       return res.json({
         success: false,
-        message: 'I had trouble looking up that VIN. Let me help you with what I know about your vehicle on file.'
+        message: 'I had trouble looking up that VIN. No worries though, I can still help you get booked in. What service do you need?'
       });
     }
 
     // Build response message
     let messageParts = [];
 
-    if (intelligence.vehicle) {
-      messageParts.push(`I found your ${intelligence.vehicle.year} ${intelligence.vehicle.make} ${intelligence.vehicle.model}`);
-      if (intelligence.vehicle.trim) {
-        messageParts[0] += ` ${intelligence.vehicle.trim}`;
-      }
+    if (intelligence.vehicle && intelligence.vehicle.make) {
+      let vehicleDesc = `${intelligence.vehicle.year} ${intelligence.vehicle.make} ${intelligence.vehicle.model}`;
+      if (intelligence.vehicle.trim) vehicleDesc += ` ${intelligence.vehicle.trim}`;
+      messageParts.push(`I found your ${vehicleDesc}`);
+    } else if (intelligence.vehicle?.year) {
+      // Partial decode — we at least have the year from VIN
+      messageParts.push(`I can see this is a ${intelligence.vehicle.year} model`);
     }
 
     // Check for recalls - this is important!
@@ -711,6 +723,16 @@ router.post('/get_vehicle_info', async (req, res, next) => {
         messageParts.push(`The most recent one is for ${topRecall.component}`);
       }
       messageParts.push('These are covered free of charge - would you like me to schedule that?');
+    }
+
+    // Warranty info
+    if (intelligence.warranty && Array.isArray(intelligence.warranty)) {
+      const basicWarranty = intelligence.warranty.find(w =>
+        w.type?.toLowerCase().includes('basic') || w.type?.toLowerCase().includes('bumper')
+      );
+      if (basicWarranty) {
+        messageParts.push(`Your basic warranty covers ${basicWarranty.miles?.toLocaleString() || 'N/A'} miles or ${basicWarranty.months ? Math.floor(basicWarranty.months / 12) : 'N/A'} years`);
+      }
     }
 
     // Mention upcoming maintenance if we have mileage
@@ -729,15 +751,19 @@ router.post('/get_vehicle_info', async (req, res, next) => {
       }
     }
 
-    const message = messageParts.length > 0
-      ? messageParts.join('. ') + '.'
-      : 'I found your vehicle information. How can I help you today?';
+    // If we got the vehicle but NO maintenance/recalls/warranty, be upfront
+    if (messageParts.length <= 1 && !intelligence.recalls?.has_open_recalls && !intelligence.maintenance?.upcoming_services?.length) {
+      messageParts.push('I don\'t have a detailed maintenance schedule on file for this one, but I can still help you book any service you need');
+    }
+
+    const message = messageParts.join('. ') + '.';
 
     return res.json({
       success: true,
       vehicle: intelligence.vehicle,
       recalls: intelligence.recalls,
       maintenance: intelligence.maintenance,
+      warranty: intelligence.warranty,
       summary: intelligence.summary,
       message
     });
