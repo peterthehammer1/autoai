@@ -2,7 +2,8 @@
  * Vehicle Databases API Integration
  * https://vehicledatabases.com/docs/
  *
- * Provides vehicle maintenance schedules, recalls, VIN decoding, and warranty info
+ * Provides vehicle specs, maintenance, recalls, warranty, repair costs,
+ * market value, plate decode, owner's manuals, and YMMT specifications
  */
 
 import { logger } from '../utils/logger.js';
@@ -276,6 +277,303 @@ export async function getWarranty(year, make, model) {
 }
 
 /**
+ * Get common repair costs for a vehicle by VIN
+ * Returns parts and labor costs for common repairs (dealer vs independent shop)
+ */
+export async function getRepairCosts(vin) {
+  if (!VEHICLE_DB_API_KEY) {
+    return { success: false, error: 'API not configured' };
+  }
+
+  if (!vin || vin.length !== 17) {
+    return { success: false, error: 'Invalid VIN - must be 17 characters' };
+  }
+
+  try {
+    const response = await fetchWithTimeout(`${BASE_URL}/vehicle-repairs/v2/${vin}`, {
+      headers: { 'x-authkey': VEHICLE_DB_API_KEY }
+    });
+
+    const data = await response.json();
+
+    if (data.status === 'success' && data.data) {
+      const repairs = (data.data.repair || []).map(repair => {
+        const dealer = repair.costs?.dealer || [];
+        const independent = repair.costs?.independent || [];
+        return {
+          title: repair.title,
+          description: repair.description !== 'N/A' ? repair.description : null,
+          dealer_costs: dealer.map(c => ({ type: c.name, avg: c.average, low: c.low, high: c.high })),
+          independent_costs: independent.map(c => ({ type: c.name, avg: c.average, low: c.low, high: c.high }))
+        };
+      });
+
+      return {
+        success: true,
+        vehicle: {
+          vin: data.data.vin,
+          year: data.data.year,
+          make: data.data.make,
+          model: data.data.model
+        },
+        currency: data.data.currency || 'USD',
+        repairs,
+        repair_count: repairs.length
+      };
+    }
+
+    return { success: false, error: data.message || 'Repair costs lookup failed' };
+  } catch (error) {
+    logger.error('[VehicleDB] Repair costs error', { error: error.message });
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Get maintenance cost estimates by mileage interval for a vehicle
+ * Returns itemized parts, labor, and total costs at each service interval
+ */
+export async function getRepairEstimates(vin) {
+  if (!VEHICLE_DB_API_KEY) {
+    return { success: false, error: 'API not configured' };
+  }
+
+  if (!vin || vin.length !== 17) {
+    return { success: false, error: 'Invalid VIN - must be 17 characters' };
+  }
+
+  try {
+    const response = await fetchWithTimeout(`${BASE_URL}/repair-estimates/${vin}`, {
+      headers: { 'x-authkey': VEHICLE_DB_API_KEY }
+    });
+
+    const data = await response.json();
+
+    if (data.status === 'success' && data.data) {
+      const intervals = (data.data.data || []).map(interval => ({
+        mileage: parseInt(interval.mileage, 10),
+        items: (interval.items || []).map(item => ({
+          parts: (item.parts || []).map(p => ({ service: p.type, cost: p.total_cost })),
+          labor: (item.labor || []).map(l => ({ service: l.type, hours: l.time_required_hours })),
+          totals: (item.total || []).map(t => ({ service: t.type, cost: t.total_cost }))
+        }))
+      }));
+
+      return {
+        success: true,
+        vehicle: {
+          year: data.data.year,
+          make: data.data.make,
+          model: data.data.model,
+          trim: data.data.trim
+        },
+        intervals,
+        interval_count: intervals.length
+      };
+    }
+
+    return { success: false, error: data.message || 'Repair estimates lookup failed' };
+  } catch (error) {
+    logger.error('[VehicleDB] Repair estimates error', { error: error.message });
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Get market value for a vehicle by VIN
+ * Returns trade-in, private party, and dealer retail values by condition
+ */
+export async function getMarketValue(vin, mileage = null, state = null) {
+  if (!VEHICLE_DB_API_KEY) {
+    return { success: false, error: 'API not configured' };
+  }
+
+  if (!vin || vin.length !== 17) {
+    return { success: false, error: 'Invalid VIN - must be 17 characters' };
+  }
+
+  try {
+    let url = `${BASE_URL}/market-value/v2/${vin}`;
+    const params = [];
+    if (mileage) params.push(`mileage=${mileage}`);
+    if (state) params.push(`state=${encodeURIComponent(state)}`);
+    if (params.length) url += `?${params.join('&')}`;
+
+    const response = await fetchWithTimeout(url, {
+      headers: { 'x-authkey': VEHICLE_DB_API_KEY }
+    });
+
+    const data = await response.json();
+
+    if (data.status === 'success' && data.data) {
+      const valuations = (data.data.market_value?.market_value_data || []).map(entry => ({
+        trim: entry.trim,
+        values: (entry['market value'] || []).map(v => ({
+          condition: v.Condition,
+          trade_in: v['Trade-In'],
+          private_party: v['Private Party'],
+          dealer_retail: v['Dealer Retail']
+        }))
+      }));
+
+      return {
+        success: true,
+        vehicle: {
+          vin: data.data.intro?.vin,
+          year: data.data.basic?.year,
+          make: data.data.basic?.make,
+          model: data.data.basic?.model,
+          trim: data.data.basic?.trim,
+          state: data.data.basic?.state,
+          mileage: data.data.basic?.mileage
+        },
+        valuations,
+        has_values: valuations.length > 0
+      };
+    }
+
+    return { success: false, error: data.message || 'Market value lookup failed' };
+  } catch (error) {
+    logger.error('[VehicleDB] Market value error', { error: error.message });
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Decode a US license plate to get VIN and vehicle info
+ */
+export async function decodePlate(plate, state) {
+  if (!VEHICLE_DB_API_KEY) {
+    return { success: false, error: 'API not configured' };
+  }
+
+  if (!plate || !state) {
+    return { success: false, error: 'License plate and state are required' };
+  }
+
+  try {
+    const response = await fetchWithTimeout(
+      `${BASE_URL}/license-decode/${encodeURIComponent(plate)}/${encodeURIComponent(state)}`,
+      { headers: { 'x-authkey': VEHICLE_DB_API_KEY } }
+    );
+
+    const data = await response.json();
+
+    if (data.status === 'success' && data.data) {
+      return {
+        success: true,
+        vin: data.data.intro?.vin,
+        plate: data.data.intro?.license,
+        state: data.data.intro?.state,
+        vehicle: {
+          year: data.data.basic?.year,
+          make: data.data.basic?.make,
+          model: data.data.basic?.model
+        }
+      };
+    }
+
+    return { success: false, error: data.message || 'Plate decode failed' };
+  } catch (error) {
+    logger.error('[VehicleDB] Plate decode error', { error: error.message });
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Get owner's manual PDF link for a vehicle by VIN
+ */
+export async function getOwnerManual(vin) {
+  if (!VEHICLE_DB_API_KEY) {
+    return { success: false, error: 'API not configured' };
+  }
+
+  if (!vin || vin.length !== 17) {
+    return { success: false, error: 'Invalid VIN - must be 17 characters' };
+  }
+
+  try {
+    const response = await fetchWithTimeout(`${BASE_URL}/owner-manual/${vin}`, {
+      headers: { 'x-authkey': VEHICLE_DB_API_KEY }
+    });
+
+    const data = await response.json();
+
+    if (data.status === 'success' && data.data) {
+      return {
+        success: true,
+        vehicle: {
+          year: data.data.year,
+          make: data.data.make,
+          model: data.data.model
+        },
+        manual_url: data.data.path || null
+      };
+    }
+
+    return { success: false, error: data.message || 'Owner manual lookup failed' };
+  } catch (error) {
+    logger.error('[VehicleDB] Owner manual error', { error: error.message });
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Get vehicle specifications by Year/Make/Model/Trim (no VIN needed)
+ */
+export async function getSpecsByYMMT(year, make, model, trim) {
+  if (!VEHICLE_DB_API_KEY) {
+    return { success: false, error: 'API not configured' };
+  }
+
+  if (!year || !make || !model) {
+    return { success: false, error: 'Year, make, and model are required' };
+  }
+
+  try {
+    let url = `${BASE_URL}/ymm-specs/v3/${year}/${encodeURIComponent(make)}/${encodeURIComponent(model)}`;
+    if (trim) url += `/${encodeURIComponent(trim)}`;
+
+    const response = await fetchWithTimeout(url, {
+      headers: { 'x-authkey': VEHICLE_DB_API_KEY }
+    });
+
+    const data = await response.json();
+
+    if (data.status === 'success' && data.data) {
+      const d = data.data;
+      const engine = Array.isArray(d.engine) ? d.engine[0] : d.engine;
+
+      return {
+        success: true,
+        vehicle: {
+          year: d.year,
+          make: d.make,
+          model: d.model,
+          trim: d.trim,
+          msrp: d.price?.base_msrp || null,
+          currency: d.price?.currency || 'USD',
+          engine: engine ? {
+            size: engine.engine_size?.[0]?.value,
+            horsepower: engine.horsepower?.[0]?.value,
+            cylinders: engine.cylinders?.[0]?.value || engine.cylinders
+          } : null,
+          transmission: d.transmission ? {
+            type: d.transmission.type,
+            speeds: d.transmission.number_of_speeds
+          } : null
+        }
+      };
+    }
+
+    return { success: false, error: data.message || 'YMMT specs lookup failed' };
+  } catch (error) {
+    logger.error('[VehicleDB] YMMT specs error', { error: error.message });
+    return { success: false, error: error.message };
+  }
+}
+
+/**
  * Get next recommended service based on current mileage
  */
 export async function getNextService(vin, currentMileage) {
@@ -382,14 +680,21 @@ export async function isServiceDue(vin, currentMileage, serviceType) {
 
 /**
  * Get combined vehicle intelligence for voice agent
- * Runs VIN decode + recalls + maintenance + warranty in parallel
+ * Runs VIN decode + recalls + maintenance + repair costs + market value in parallel
  */
 export async function getVehicleIntelligence(vin, currentMileage = null) {
-  const [vinResult, recallsResult, maintenanceResult] = await Promise.all([
+  const parallelCalls = [
     decodeVIN(vin),
     getRecalls(vin),
-    currentMileage ? getNextService(vin, currentMileage) : getMaintenanceSchedule(vin)
-  ]);
+    currentMileage ? getNextService(vin, currentMileage) : getMaintenanceSchedule(vin),
+    getRepairCosts(vin)
+  ];
+
+  if (currentMileage) {
+    parallelCalls.push(getMarketValue(vin, currentMileage));
+  }
+
+  const [vinResult, recallsResult, maintenanceResult, repairCostsResult, marketValueResult] = await Promise.all(parallelCalls);
 
   // Fetch warranty if we got year/make/model from VIN decode
   let warrantyResult = { success: false };
@@ -407,7 +712,12 @@ export async function getVehicleIntelligence(vin, currentMileage = null) {
       items: recallsResult.recalls?.slice(0, 3)
     } : null,
     maintenance: maintenanceResult.success ? maintenanceResult : null,
-    warranty: warrantyResult.success ? warrantyResult.warranty : null
+    warranty: warrantyResult.success ? warrantyResult.warranty : null,
+    repair_costs: repairCostsResult?.success ? {
+      count: repairCostsResult.repair_count,
+      repairs: repairCostsResult.repairs?.slice(0, 10)
+    } : null,
+    market_value: marketValueResult?.success ? marketValueResult.valuations : null
   };
 
   // Build voice-friendly summary
@@ -435,6 +745,10 @@ export async function getVehicleIntelligence(vin, currentMileage = null) {
     summaryParts.push(`${intervalCount} maintenance intervals on file`);
   }
 
+  if (repairCostsResult?.success && repairCostsResult.repair_count > 0) {
+    summaryParts.push(`${repairCostsResult.repair_count} repair cost estimates available`);
+  }
+
   intelligence.summary = summaryParts.join(' | ');
 
   return intelligence;
@@ -446,6 +760,12 @@ export default {
   getMaintenanceSchedule,
   getRecalls,
   getWarranty,
+  getRepairCosts,
+  getRepairEstimates,
+  getMarketValue,
+  decodePlate,
+  getOwnerManual,
+  getSpecsByYMMT,
   getNextService,
   isServiceDue,
   getVehicleIntelligence

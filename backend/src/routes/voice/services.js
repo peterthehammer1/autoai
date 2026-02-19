@@ -622,12 +622,27 @@ router.post('/get_vehicle_info', async (req, res, next) => {
 
     const body = req.body.args || req.body;
     const vin = body.vin;
+    const license_plate = body.license_plate;
+    const plate_state = body.plate_state;
     const customer_phone = body.customer_phone;
     const current_mileage = body.current_mileage ? parseInt(body.current_mileage, 10) : null;
     const check_service = body.check_service; // Optional: specific service to check
 
-    // If no VIN provided, try to look up from customer's vehicle
+    // If license plate provided, decode it to get VIN
     let vehicleVin = vin;
+    if (!vehicleVin && license_plate && plate_state) {
+      const vehicleDB = await import('../../services/vehicle-databases.js');
+      const plateResult = await vehicleDB.decodePlate(license_plate, plate_state);
+      if (plateResult.success && plateResult.vin) {
+        vehicleVin = plateResult.vin;
+        logger.info('[Voice] Plate decoded to VIN', { plate: license_plate, state: plate_state, vin: vehicleVin });
+      } else {
+        return res.json({
+          success: false,
+          message: `I wasn't able to look up that plate number. Do you have the VIN instead? It's on the driver's side dashboard or door jamb.`
+        });
+      }
+    }
     let vehicleMileage = current_mileage;
 
     if (!vehicleVin && customer_phone) {

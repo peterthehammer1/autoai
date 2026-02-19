@@ -655,4 +655,72 @@ router.get('/:id/vehicles/:vehicleId/intelligence', async (req, res, next) => {
   }
 });
 
+/**
+ * GET /api/customers/:id/vehicles/:vehicleId/market-value
+ * Get market value estimates for a customer's vehicle
+ */
+router.get('/:id/vehicles/:vehicleId/market-value', async (req, res, next) => {
+  try {
+    const { id, vehicleId } = req.params;
+    if (!isValidUUID(id)) return validationError(res, 'Invalid customer ID');
+    if (!isValidUUID(vehicleId)) return validationError(res, 'Invalid vehicle ID');
+
+    const { data: vehicle, error } = await supabase
+      .from('vehicles')
+      .select('id, vin, mileage')
+      .eq('id', vehicleId)
+      .eq('customer_id', id)
+      .single();
+
+    if (error || !vehicle) {
+      return res.status(404).json({ error: { message: 'Vehicle not found' } });
+    }
+
+    if (!vehicle.vin || vehicle.vin.length !== 17) {
+      return res.json({ success: false, error: 'No VIN on file' });
+    }
+
+    const vehicleDB = await import('../services/vehicle-databases.js');
+    const result = await vehicleDB.getMarketValue(vehicle.vin, vehicle.mileage || null);
+
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * GET /api/customers/:id/vehicles/:vehicleId/repair-costs
+ * Get common repair cost estimates for a customer's vehicle
+ */
+router.get('/:id/vehicles/:vehicleId/repair-costs', async (req, res, next) => {
+  try {
+    const { id, vehicleId } = req.params;
+    if (!isValidUUID(id)) return validationError(res, 'Invalid customer ID');
+    if (!isValidUUID(vehicleId)) return validationError(res, 'Invalid vehicle ID');
+
+    const { data: vehicle, error } = await supabase
+      .from('vehicles')
+      .select('id, vin')
+      .eq('id', vehicleId)
+      .eq('customer_id', id)
+      .single();
+
+    if (error || !vehicle) {
+      return res.status(404).json({ error: { message: 'Vehicle not found' } });
+    }
+
+    if (!vehicle.vin || vehicle.vin.length !== 17) {
+      return res.json({ success: false, error: 'No VIN on file' });
+    }
+
+    const vehicleDB = await import('../services/vehicle-databases.js');
+    const result = await vehicleDB.getRepairCosts(vehicle.vin);
+
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+});
+
 export default router;
