@@ -86,8 +86,8 @@ export default function Layout() {
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         )}>
           <div className="flex h-20 items-center justify-between px-2 overflow-hidden">
-            <div className="h-20 w-48 overflow-hidden flex items-center justify-center">
-              <img src="/logo-dark.png" alt="Premier Auto Service" className="w-48 scale-100 sm:scale-[1.4]" />
+            <div className="h-20 w-56 overflow-hidden flex items-center justify-center">
+              <img src="/logo-dark.png" alt="Premier Auto Service" className="w-56 scale-[1.4]" />
             </div>
             <Button
               variant="ghost"
