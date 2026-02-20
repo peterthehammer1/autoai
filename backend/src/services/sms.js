@@ -461,6 +461,40 @@ ${portalUrl}
   });
 }
 
+/**
+ * Send inspection report SMS with portal link
+ */
+export async function sendInspectionSMS({
+  customerPhone,
+  customerName,
+  portalUrl,
+  vehicleDescription,
+  summary,
+  customerId,
+  workOrderId,
+}) {
+  const firstName = customerName?.split(' ')[0] || 'there';
+  const vehicleLine = vehicleDescription ? ` for your ${vehicleDescription}` : '';
+  const attentionCount = (summary?.needs_attention || 0) + (summary?.urgent || 0);
+  const attentionLine = attentionCount > 0
+    ? `\n${attentionCount} item${attentionCount > 1 ? 's' : ''} need${attentionCount === 1 ? 's' : ''} your attention.`
+    : '\nEverything looks great!';
+
+  const message = `Hi ${firstName},
+
+Your vehicle inspection${vehicleLine} is complete.${attentionLine}
+
+View your full report with photos: ${portalUrl}
+
+- ${BUSINESS.agentName}, ${BUSINESS.name}`;
+
+  return sendSMS(customerPhone, message, {
+    messageType: 'inspection_report',
+    customerId,
+    workOrderId,
+  });
+}
+
 export { logSMS };
 
 export default {
@@ -473,5 +507,6 @@ export default {
   sendServiceReminderSMS,
   sendReviewRequestSMS,
   sendPortalLinkSMS,
+  sendInspectionSMS,
   logSMS
 };

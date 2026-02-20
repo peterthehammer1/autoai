@@ -32,6 +32,7 @@ const WorkOrders = lazyWithRetry(() => import('@/pages/WorkOrders'))
 const WorkOrderDetail = lazyWithRetry(() => import('@/pages/WorkOrderDetail'))
 const Reviews = lazyWithRetry(() => import('@/pages/Reviews'))
 const Portal = lazyWithRetry(() => import('@/pages/Portal'))
+const InspectionEditor = lazyWithRetry(() => import('@/pages/InspectionEditor'))
 
 export function PageLoader() {
   return (
@@ -62,6 +63,11 @@ function App() {
             <Portal />
           </Suspense>
         } />
+        <Route path="portal/:token/inspection/:inspectionId" element={
+          <Suspense fallback={<PageLoader />}>
+            <Portal />
+          </Suspense>
+        } />
 
         {/* Dashboard routes (with sidebar layout) */}
         <Route element={<Layout />}>
@@ -77,6 +83,7 @@ function App() {
           <Route path="bay-view" element={<BayView />} />
           <Route path="work-orders" element={<WorkOrders />} />
           <Route path="work-orders/:id" element={<WorkOrderDetail />} />
+          <Route path="inspections/:id" element={<InspectionEditor />} />
           <Route path="reviews" element={<Reviews />} />
           <Route path="services" element={<Services />} />
           <Route path="settings" element={<Settings />} />

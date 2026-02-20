@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { format } from 'date-fns'
-import { workOrders, services as servicesApi, portal } from '@/api'
+import { workOrders, services as servicesApi, portal, inspections } from '@/api'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -24,6 +24,13 @@ import {
   Edit,
   Send,
   ShieldCheck,
+  ClipboardCheck,
+  CheckCircle,
+  AlertTriangle,
+  AlertCircle as AlertCircleIcon,
+  XCircle,
+  Loader2,
+  ExternalLink,
 } from 'lucide-react'
 import { cn, formatCents, formatTime12Hour, parseDateLocal } from '@/lib/utils'
 import { useToast } from '@/hooks/use-toast'
@@ -702,6 +709,15 @@ export default function WorkOrderDetail() {
         </div>
       </div>
 
+      {/* Inspection */}
+      {wo.vehicle?.id && !['draft', 'void'].includes(wo.status) && (
+        <InspectionCard
+          workOrderId={id}
+          vehicleId={wo.vehicle.id}
+          status={wo.status}
+        />
+      )}
+
       {/* Payments */}
       <div className="bg-white shadow-lg border-0 rounded-lg overflow-hidden">
         <div className="px-4 py-3 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-blue-50/30 flex items-center justify-between">
@@ -929,6 +945,219 @@ export default function WorkOrderDetail() {
             </div>
           )}
         </div>
+      </div>
+    </div>
+  )
+}
+
+const CONDITION_COLORS = {
+  good: 'bg-emerald-500',
+  fair: 'bg-amber-400',
+  needs_attention: 'bg-orange-500',
+  urgent: 'bg-red-600',
+}
+
+function InspectionCard({ workOrderId, vehicleId, status: woStatus }) {
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
+  const { toast } = useToast()
+  const [creating, setCreating] = useState(false)
+  const [sending, setSending] = useState(false)
+  const [addingToEstimate, setAddingToEstimate] = useState(false)
+
+  const { data: inspectionData, isLoading } = useQuery({
+    queryKey: ['inspections', { work_order_id: workOrderId }],
+    queryFn: () => inspections.list({ work_order_id: workOrderId }),
+  })
+
+  const inspection = inspectionData?.inspections?.[0]
+  const items = inspection?.inspection_items || []
+  const totalItems = items.length
+  const inspectedCount = items.filter(i => i.condition !== 'not_inspected').length
+
+  // Summary counts
+  const summary = { good: 0, fair: 0, needs_attention: 0, urgent: 0 }
+  for (const item of items) {
+    if (summary[item.condition] !== undefined) summary[item.condition]++
+  }
+
+  const handleCreate = async () => {
+    setCreating(true)
+    try {
+      const result = await inspections.create({ work_order_id: workOrderId, vehicle_id: vehicleId })
+      queryClient.invalidateQueries({ queryKey: ['inspections'] })
+      navigate(`/inspections/${result.inspection.id}`)
+    } catch (err) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' })
+    } finally {
+      setCreating(false)
+    }
+  }
+
+  const handleSend = async () => {
+    setSending(true)
+    try {
+      await inspections.update(inspection.id, { status: 'sent' })
+      queryClient.invalidateQueries({ queryKey: ['inspections'] })
+      queryClient.invalidateQueries({ queryKey: ['work-order', workOrderId] })
+      toast({ title: 'Inspection sent to customer' })
+    } catch (err) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' })
+    } finally {
+      setSending(false)
+    }
+  }
+
+  const handleAddToEstimate = async () => {
+    const flaggedIds = items
+      .filter(i => i.condition === 'needs_attention' || i.condition === 'urgent')
+      .map(i => i.id)
+    if (flaggedIds.length === 0) return
+    setAddingToEstimate(true)
+    try {
+      await inspections.addToEstimate(inspection.id, flaggedIds)
+      queryClient.invalidateQueries({ queryKey: ['work-order', workOrderId] })
+      toast({ title: `${flaggedIds.length} item${flaggedIds.length > 1 ? 's' : ''} added to estimate` })
+    } catch (err) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' })
+    } finally {
+      setAddingToEstimate(false)
+    }
+  }
+
+  if (isLoading) return null
+
+  return (
+    <div className="bg-white shadow-lg border-0 rounded-lg overflow-hidden">
+      <div className="px-4 py-3 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-blue-50/30 flex items-center justify-between">
+        <h3 className="text-sm font-medium text-slate-700 flex items-center gap-2">
+          <ClipboardCheck className="h-4 w-4 text-blue-400" />
+          Vehicle Inspection
+        </h3>
+        {inspection && (
+          <span className={cn(
+            'text-xs px-2 py-0.5 rounded capitalize',
+            inspection.status === 'completed' ? 'bg-emerald-100 text-emerald-700'
+              : inspection.status === 'sent' ? 'bg-purple-100 text-purple-700'
+              : 'bg-amber-100 text-amber-700'
+          )}>
+            {inspection.status === 'in_progress' ? 'In Progress' : inspection.status}
+          </span>
+        )}
+      </div>
+
+      <div className="p-4">
+        {!inspection ? (
+          <div className="text-center py-4">
+            <p className="text-sm text-slate-400 mb-3">No inspection started yet</p>
+            <Button
+              onClick={handleCreate}
+              disabled={creating || !vehicleId}
+              size="sm"
+              className="bg-slate-700 hover:bg-slate-800"
+            >
+              {creating ? (
+                <><Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> Creating...</>
+              ) : (
+                <><ClipboardCheck className="h-3.5 w-3.5 mr-1.5" /> Start Inspection</>
+              )}
+            </Button>
+            {!vehicleId && (
+              <p className="text-xs text-red-500 mt-2">Vehicle required to start inspection</p>
+            )}
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {/* Progress */}
+            {inspection.status === 'in_progress' && (
+              <div className="flex items-center gap-2">
+                <div className="flex-1 h-2 bg-slate-200 rounded-full overflow-hidden">
+                  <div
+                    className={cn('h-full rounded-full transition-all', inspectedCount === totalItems ? 'bg-emerald-500' : 'bg-blue-500')}
+                    style={{ width: `${totalItems > 0 ? Math.round((inspectedCount / totalItems) * 100) : 0}%` }}
+                  />
+                </div>
+                <span className="text-xs font-medium text-slate-500 whitespace-nowrap">
+                  {inspectedCount}/{totalItems}
+                </span>
+              </div>
+            )}
+
+            {/* Summary badges (completed or sent) */}
+            {(inspection.status === 'completed' || inspection.status === 'sent') && (
+              <div className="flex flex-wrap gap-2">
+                {summary.good > 0 && (
+                  <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full bg-emerald-50 text-emerald-700">
+                    <CheckCircle className="h-3 w-3" /> {summary.good} Good
+                  </span>
+                )}
+                {summary.fair > 0 && (
+                  <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full bg-amber-50 text-amber-700">
+                    <AlertTriangle className="h-3 w-3" /> {summary.fair} Fair
+                  </span>
+                )}
+                {summary.needs_attention > 0 && (
+                  <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full bg-orange-50 text-orange-700">
+                    <AlertCircleIcon className="h-3 w-3" /> {summary.needs_attention} Attention
+                  </span>
+                )}
+                {summary.urgent > 0 && (
+                  <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full bg-red-50 text-red-700">
+                    <XCircle className="h-3 w-3" /> {summary.urgent} Urgent
+                  </span>
+                )}
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate(`/inspections/${inspection.id}`)}
+                className="text-xs h-8"
+              >
+                <ExternalLink className="h-3 w-3 mr-1" />
+                {inspection.status === 'in_progress' ? 'Continue Inspection' : 'View Report'}
+              </Button>
+
+              {inspection.status === 'completed' && (
+                <>
+                  <Button
+                    size="sm"
+                    onClick={handleSend}
+                    disabled={sending}
+                    className="text-xs h-8 bg-teal-600 hover:bg-teal-700"
+                  >
+                    {sending ? 'Sending...' : (
+                      <><Send className="h-3 w-3 mr-1" /> Send to Customer</>
+                    )}
+                  </Button>
+                  {(summary.needs_attention + summary.urgent) > 0 && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleAddToEstimate}
+                      disabled={addingToEstimate}
+                      className="text-xs h-8 text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                    >
+                      {addingToEstimate ? 'Adding...' : (
+                        <><Plus className="h-3 w-3 mr-1" /> Add to Estimate</>
+                      )}
+                    </Button>
+                  )}
+                </>
+              )}
+            </div>
+
+            {/* Sent timestamp */}
+            {inspection.status === 'sent' && inspection.sent_at && (
+              <p className="text-xs text-slate-400">
+                Sent {format(new Date(inspection.sent_at), 'MMM d, yyyy h:mm a')}
+              </p>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )

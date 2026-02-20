@@ -7,13 +7,18 @@ import {
   Car,
   Calendar,
   ClipboardList,
+  ClipboardCheck,
   Clock,
   CheckCircle2,
+  CheckCircle,
   Circle,
   Phone,
   FileText,
   ChevronRight,
+  ChevronDown,
   AlertCircle,
+  AlertTriangle,
+  XCircle,
   Loader2,
   Check,
   X,
@@ -91,10 +96,10 @@ function getWOStatusColor(status) {
 // ── Main Portal Component ──
 
 export default function Portal() {
-  const { token, workOrderId } = useParams()
+  const { token, workOrderId, inspectionId } = useParams()
   const [state, setState] = useState('loading') // loading | valid | expired | error
   const [customer, setCustomer] = useState(null)
-  const [tab, setTab] = useState(workOrderId ? 'tracker' : 'status')
+  const [tab, setTab] = useState(workOrderId ? 'tracker' : inspectionId ? 'inspection' : 'status')
   const [errorMsg, setErrorMsg] = useState('')
 
   useEffect(() => {
@@ -185,9 +190,48 @@ export default function Portal() {
     )
   }
 
+  // Direct inspection view (from SMS deep link)
+  if (inspectionId) {
+    return (
+      <div className="min-h-screen bg-slate-50">
+        <header className="bg-white border-b border-slate-200 sticky top-0 z-10">
+          <div className="max-w-lg mx-auto px-4 py-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-base font-bold text-slate-900">Premier Auto Service</h1>
+                <p className="text-xs text-slate-500">
+                  Hi {customer?.first_name || 'there'}
+                </p>
+              </div>
+              <div className="h-8 w-8 rounded-full bg-teal-600 flex items-center justify-center">
+                <span className="text-white text-xs font-bold">
+                  {(customer?.first_name?.[0] || 'P').toUpperCase()}
+                </span>
+              </div>
+            </div>
+          </div>
+        </header>
+        <main className="max-w-lg mx-auto px-4 py-4 space-y-4">
+          <InspectionReport token={token} inspectionId={inspectionId} />
+        </main>
+        <footer className="max-w-lg mx-auto px-4 py-6 text-center">
+          <a
+            href="tel:+16473711990"
+            className="inline-flex items-center gap-1.5 text-teal-600 text-xs font-medium hover:underline"
+          >
+            <Phone className="h-3 w-3" />
+            (647) 371-1990
+          </a>
+          <p className="text-xs text-slate-400 mt-1">Premier Auto Service</p>
+        </footer>
+      </div>
+    )
+  }
+
   const tabs = [
     { key: 'status', label: 'Status', icon: Clock },
     { key: 'estimate', label: 'Estimate', icon: FileText },
+    { key: 'inspection', label: 'Inspection', icon: ClipboardCheck },
     { key: 'history', label: 'History', icon: Calendar },
     { key: 'vehicles', label: 'Vehicles', icon: Car },
   ]
@@ -221,6 +265,7 @@ export default function Portal() {
             return (
               <button
                 key={t.key}
+                data-tab={t.key}
                 onClick={() => setTab(t.key)}
                 className={cn(
                   'flex items-center gap-1.5 px-3 py-2.5 text-xs font-medium whitespace-nowrap border-b-2 transition-colors',
@@ -241,6 +286,7 @@ export default function Portal() {
       <main className="max-w-lg mx-auto px-4 py-4 space-y-4">
         {tab === 'status' && <StatusTab token={token} />}
         {tab === 'estimate' && <EstimateTab token={token} customer={customer} />}
+        {tab === 'inspection' && <InspectionTab token={token} />}
         {tab === 'history' && <HistoryTab token={token} />}
         {tab === 'vehicles' && <VehiclesTab vehicles={customer?.vehicles || []} />}
       </main>
@@ -1065,12 +1111,287 @@ function VehiclesTab({ vehicles }) {
             </p>
           )}
 
-          {/* DVI stub */}
-          <div className="mt-3 px-3 py-2 bg-slate-50 rounded-lg border border-dashed border-slate-200 text-center">
-            <p className="text-xs text-slate-400">Digital vehicle inspection coming soon</p>
-          </div>
+          {/* Link to inspection tab */}
+          <button
+            onClick={() => {
+              // Navigate to Inspection tab (parent sets tab via ref or we use a simple approach)
+              const tabBtn = document.querySelector('[data-tab="inspection"]')
+              if (tabBtn) tabBtn.click()
+            }}
+            className="mt-3 w-full px-3 py-2 bg-teal-50 rounded-lg border border-teal-200 text-center hover:bg-teal-100 transition-colors"
+          >
+            <p className="text-xs text-teal-700 font-medium flex items-center justify-center gap-1">
+              <ClipboardCheck className="h-3 w-3" />
+              View Vehicle Inspections
+            </p>
+          </button>
         </div>
       ))}
+    </div>
+  )
+}
+
+// ── Inspection Tab ──
+
+const CONDITION_STYLES = {
+  good: { bg: 'bg-emerald-50', text: 'text-emerald-700', dot: 'bg-emerald-500', icon: CheckCircle, label: 'Good' },
+  fair: { bg: 'bg-amber-50', text: 'text-amber-700', dot: 'bg-amber-400', icon: AlertTriangle, label: 'Monitor' },
+  needs_attention: { bg: 'bg-orange-50', text: 'text-orange-700', dot: 'bg-orange-500', icon: AlertCircle, label: 'Attention' },
+  urgent: { bg: 'bg-red-50', text: 'text-red-700', dot: 'bg-red-600', icon: XCircle, label: 'Urgent' },
+}
+
+function InspectionTab({ token }) {
+  const [inspectionsList, setInspectionsList] = useState(null)
+  const [selectedId, setSelectedId] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    portalFetch(token, '/inspections')
+      .then(data => setInspectionsList(data.inspections || []))
+      .catch(() => setInspectionsList([]))
+      .finally(() => setLoading(false))
+  }, [token])
+
+  if (loading) return <LoadingCard />
+
+  if (!inspectionsList?.length) {
+    return (
+      <EmptyState
+        icon={ClipboardCheck}
+        title="No inspections"
+        message="Your vehicle inspection reports will appear here."
+      />
+    )
+  }
+
+  // If viewing a specific inspection
+  if (selectedId) {
+    return (
+      <div className="space-y-3">
+        {inspectionsList.length > 1 && (
+          <button
+            onClick={() => setSelectedId(null)}
+            className="flex items-center gap-1 text-xs text-teal-600 hover:underline"
+          >
+            <ArrowLeft className="h-3 w-3" />
+            Back to inspections
+          </button>
+        )}
+        <InspectionReport token={token} inspectionId={selectedId} />
+      </div>
+    )
+  }
+
+  // Auto-select if only one
+  if (inspectionsList.length === 1) {
+    return <InspectionReport token={token} inspectionId={inspectionsList[0].id} />
+  }
+
+  // List view
+  return (
+    <div className="space-y-3">
+      <p className="text-xs text-slate-500">{inspectionsList.length} inspection report{inspectionsList.length > 1 ? 's' : ''}</p>
+      {inspectionsList.map(insp => {
+        const vehicle = insp.vehicle
+        const vehicleLabel = vehicle ? `${vehicle.year} ${vehicle.make} ${vehicle.model}` : null
+        return (
+          <button
+            key={insp.id}
+            onClick={() => setSelectedId(insp.id)}
+            className="w-full bg-white rounded-xl border border-slate-200 p-4 text-left hover:border-teal-300 transition-colors"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                {vehicleLabel && <p className="text-sm font-semibold text-slate-900">{vehicleLabel}</p>}
+                <p className="text-xs text-slate-500">
+                  {format(new Date(insp.completed_at || insp.created_at), 'MMM d, yyyy')}
+                </p>
+              </div>
+              <ChevronRight className="h-4 w-4 text-slate-400" />
+            </div>
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+function InspectionReport({ token, inspectionId }) {
+  const [data, setData] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [expandedCategories, setExpandedCategories] = useState({})
+  const [lightboxPhoto, setLightboxPhoto] = useState(null)
+
+  useEffect(() => {
+    setLoading(true)
+    portalFetch(token, `/inspections/${inspectionId}`)
+      .then(result => {
+        setData(result)
+        // Auto-expand categories with flagged items
+        const expanded = {}
+        for (const item of result.inspection?.inspection_items || []) {
+          if (item.condition === 'needs_attention' || item.condition === 'urgent') {
+            expanded[item.category] = true
+          }
+        }
+        setExpandedCategories(expanded)
+      })
+      .catch(() => setData(null))
+      .finally(() => setLoading(false))
+  }, [token, inspectionId])
+
+  if (loading) return <LoadingCard />
+  if (!data?.inspection) {
+    return <EmptyState icon={AlertCircle} title="Not found" message="Could not load inspection report." />
+  }
+
+  const { inspection, summary } = data
+  const items = inspection.inspection_items || []
+  const vehicle = inspection.vehicle
+
+  // Group items by category
+  const categories = {}
+  for (const item of items) {
+    if (!categories[item.category]) categories[item.category] = []
+    categories[item.category].push(item)
+  }
+
+  const toggleCategory = (cat) => {
+    setExpandedCategories(prev => ({ ...prev, [cat]: !prev[cat] }))
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Header */}
+      <div className="bg-white rounded-xl border border-slate-200 p-4">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-full bg-teal-50 flex items-center justify-center">
+            <ClipboardCheck className="h-5 w-5 text-teal-600" />
+          </div>
+          <div>
+            <h3 className="text-sm font-semibold text-slate-900">Vehicle Inspection Report</h3>
+            {vehicle && (
+              <p className="text-xs text-slate-500">{vehicle.year} {vehicle.make} {vehicle.model}</p>
+            )}
+          </div>
+        </div>
+        {inspection.completed_at && (
+          <p className="text-xs text-slate-400 mt-2">
+            Completed {format(new Date(inspection.completed_at), 'MMM d, yyyy')}
+          </p>
+        )}
+      </div>
+
+      {/* Summary badges */}
+      <div className="grid grid-cols-4 gap-2">
+        {['good', 'fair', 'needs_attention', 'urgent'].map(key => {
+          const style = CONDITION_STYLES[key]
+          const Icon = style.icon
+          const count = summary?.[key] || 0
+          return (
+            <div
+              key={key}
+              className={cn('rounded-xl border p-3 text-center', style.bg, count > 0 ? 'border-transparent' : 'border-slate-200 bg-white')}
+            >
+              <Icon className={cn('h-4 w-4 mx-auto mb-1', count > 0 ? style.text : 'text-slate-300')} />
+              <p className={cn('text-lg font-bold', count > 0 ? style.text : 'text-slate-300')}>{count}</p>
+              <p className={cn('text-[10px] font-medium', count > 0 ? style.text : 'text-slate-400')}>{style.label}</p>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Category sections */}
+      <div className="space-y-2">
+        {Object.entries(categories).map(([category, catItems]) => {
+          const expanded = expandedCategories[category]
+          const hasFlagged = catItems.some(i => i.condition === 'needs_attention' || i.condition === 'urgent')
+          return (
+            <div key={category} className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+              <button
+                onClick={() => toggleCategory(category)}
+                className="w-full flex items-center justify-between px-4 py-3 hover:bg-slate-50 transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  {expanded ? <ChevronDown className="h-4 w-4 text-slate-400" /> : <ChevronRight className="h-4 w-4 text-slate-400" />}
+                  <span className="text-sm font-semibold text-slate-700">{category}</span>
+                  {hasFlagged && !expanded && (
+                    <span className="h-2 w-2 rounded-full bg-red-500" />
+                  )}
+                </div>
+                <div className="flex gap-1">
+                  {catItems.map((item, i) => (
+                    <div key={i} className={cn('h-2 w-2 rounded-full', CONDITION_STYLES[item.condition]?.dot || 'bg-slate-300')} />
+                  ))}
+                </div>
+              </button>
+
+              {expanded && (
+                <div className="border-t border-slate-100 divide-y divide-slate-50">
+                  {catItems.map(item => {
+                    const style = CONDITION_STYLES[item.condition]
+                    const Icon = style?.icon
+                    const photos = item.inspection_photos || []
+                    return (
+                      <div key={item.id} className="px-4 py-3">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-sm text-slate-700">{item.item_name}</span>
+                          {style && (
+                            <span className={cn('inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full', style.bg, style.text)}>
+                              <Icon className="h-3 w-3" />
+                              {style.label}
+                            </span>
+                          )}
+                        </div>
+                        {item.notes && (
+                          <p className="text-xs text-slate-500 mt-1">{item.notes}</p>
+                        )}
+                        {photos.length > 0 && (
+                          <div className="flex gap-2 mt-2 overflow-x-auto">
+                            {photos.map(photo => (
+                              <button
+                                key={photo.id}
+                                onClick={() => setLightboxPhoto(photo.photo_url)}
+                                className="flex-shrink-0"
+                              >
+                                <img
+                                  src={photo.photo_url}
+                                  alt={photo.caption || item.item_name}
+                                  className="h-16 w-16 object-cover rounded-lg border border-slate-200"
+                                />
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Lightbox */}
+      {lightboxPhoto && (
+        <div
+          className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4"
+          onClick={() => setLightboxPhoto(null)}
+        >
+          <button
+            className="absolute top-4 right-4 text-white/80 hover:text-white"
+            onClick={() => setLightboxPhoto(null)}
+          >
+            <X className="h-6 w-6" />
+          </button>
+          <img
+            src={lightboxPhoto}
+            alt="Inspection photo"
+            className="max-w-full max-h-[85vh] object-contain rounded-lg"
+          />
+        </div>
+      )}
     </div>
   )
 }

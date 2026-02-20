@@ -355,6 +355,57 @@ export const leads = {
   },
 }
 
+// Inspections
+export const inspections = {
+  list: (params = {}) => {
+    const cleanParams = Object.fromEntries(
+      Object.entries(params).filter(([_, v]) => v != null && v !== '')
+    )
+    const query = new URLSearchParams(cleanParams).toString()
+    return fetchAPI(`/inspections${query ? `?${query}` : ''}`)
+  },
+
+  get: (id) => fetchAPI(`/inspections/${id}`),
+
+  create: (data) => fetchAPI('/inspections', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+
+  update: (id, data) => fetchAPI(`/inspections/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  }),
+
+  updateItem: (id, itemId, data) => fetchAPI(`/inspections/${id}/items/${itemId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  }),
+
+  batchUpdateItems: (id, items) => fetchAPI(`/inspections/${id}/items/batch`, {
+    method: 'PATCH',
+    body: JSON.stringify({ items }),
+  }),
+
+  getUploadUrl: (id, itemId) => fetchAPI(`/inspections/${id}/items/${itemId}/upload-url`, {
+    method: 'POST',
+  }),
+
+  addPhoto: (id, itemId, data) => fetchAPI(`/inspections/${id}/items/${itemId}/photos`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+
+  deletePhoto: (id, itemId, photoId) => fetchAPI(`/inspections/${id}/items/${itemId}/photos/${photoId}`, {
+    method: 'DELETE',
+  }),
+
+  addToEstimate: (id, itemIds) => fetchAPI(`/inspections/${id}/add-to-estimate`, {
+    method: 'POST',
+    body: JSON.stringify({ item_ids: itemIds }),
+  }),
+}
+
 // Portal admin (protected)
 export const portal = {
   generateToken: (customerId, sendSms = false) => fetchAPI('/portal-admin/generate-token', {
@@ -372,6 +423,7 @@ export default {
   callLogs,
   smsLogs,
   workOrders,
+  inspections,
   reviews,
   search,
   leads,

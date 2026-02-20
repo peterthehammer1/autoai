@@ -140,6 +140,117 @@ router.get('/:token/appointments', requireToken, async (req, res, next) => {
 });
 
 /**
+ * GET /:token/inspections — List sent inspections for customer
+ */
+router.get('/:token/inspections', requireToken, async (req, res, next) => {
+  try {
+    const { id } = req.portalCustomer;
+
+    // Get customer's vehicles
+    const { data: vehicles } = await supabase
+      .from('vehicles')
+      .select('id')
+      .eq('customer_id', id);
+
+    const vehicleIds = (vehicles || []).map(v => v.id);
+    if (vehicleIds.length === 0) {
+      return res.json({ inspections: [] });
+    }
+
+    const { data: inspections, error } = await supabase
+      .from('inspections')
+      .select(`
+        id, status, sent_at, completed_at, created_at,
+        vehicle:vehicles(id, year, make, model),
+        technician:technicians(id, first_name, last_name),
+        work_order:work_orders(id, work_order_number)
+      `)
+      .in('vehicle_id', vehicleIds)
+      .eq('status', 'sent')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    res.json({ inspections: inspections || [] });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * GET /:token/inspections/:id — Full inspection report for customer
+ */
+router.get('/:token/inspections/:id', requireToken, async (req, res, next) => {
+  try {
+    const customerId = req.portalCustomer.id;
+    const { id } = req.params;
+    if (!isValidUUID(id)) return validationError(res, 'Invalid inspection ID');
+
+    // Get customer's vehicles for ownership check
+    const { data: vehicles } = await supabase
+      .from('vehicles')
+      .select('id')
+      .eq('customer_id', customerId);
+
+    const vehicleIds = (vehicles || []).map(v => v.id);
+
+    const { data: inspection, error } = await supabase
+      .from('inspections')
+      .select(`
+        id, status, sent_at, completed_at, created_at,
+        vehicle:vehicles(id, year, make, model, color, license_plate),
+        technician:technicians(id, first_name, last_name)
+      `)
+      .eq('id', id)
+      .in('vehicle_id', vehicleIds)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return res.status(404).json({ error: { message: 'Inspection not found' } });
+      }
+      throw error;
+    }
+
+    // Fetch items with photos
+    const { data: items } = await supabase
+      .from('inspection_items')
+      .select(`
+        id, category, item_name, condition, notes, sort_order,
+        inspection_photos(id, photo_url, caption, sort_order)
+      `)
+      .eq('inspection_id', id)
+      .order('sort_order');
+
+    for (const item of items || []) {
+      if (item.inspection_photos) {
+        item.inspection_photos.sort((a, b) => a.sort_order - b.sort_order);
+      }
+    }
+
+    // Summary counts
+    const summary = { good: 0, fair: 0, needs_attention: 0, urgent: 0 };
+    for (const item of items || []) {
+      if (summary[item.condition] !== undefined) summary[item.condition]++;
+    }
+
+    res.json({
+      inspection: {
+        ...inspection,
+        inspection_items: items || [],
+        summary,
+      },
+      shop: {
+        name: BUSINESS.name,
+        phone: BUSINESS.phone,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
  * GET /:token/work-orders — List work orders (customer-safe)
  */
 router.get('/:token/work-orders', requireToken, async (req, res, next) => {
