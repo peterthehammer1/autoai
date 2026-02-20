@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from 'react'
-import { useParams } from 'react-router-dom'
-import { format } from 'date-fns'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
+import { format, formatDistanceToNow } from 'date-fns'
 import { Button } from '@/components/ui/button'
 import { cn, formatCents, formatTime12Hour, parseDateLocal, getStatusColor } from '@/lib/utils'
 import {
@@ -17,6 +17,9 @@ import {
   Loader2,
   Check,
   X,
+  Wrench,
+  ArrowLeft,
+  RefreshCw,
 } from 'lucide-react'
 
 const API_BASE = import.meta.env.VITE_API_URL || '/api'
@@ -88,10 +91,10 @@ function getWOStatusColor(status) {
 // ── Main Portal Component ──
 
 export default function Portal() {
-  const { token } = useParams()
+  const { token, workOrderId } = useParams()
   const [state, setState] = useState('loading') // loading | valid | expired | error
   const [customer, setCustomer] = useState(null)
-  const [tab, setTab] = useState('status')
+  const [tab, setTab] = useState(workOrderId ? 'tracker' : 'status')
   const [errorMsg, setErrorMsg] = useState('')
 
   useEffect(() => {
@@ -140,6 +143,44 @@ export default function Portal() {
             (647) 371-1990
           </a>
         </div>
+      </div>
+    )
+  }
+
+  // Direct tracker view (from SMS deep link)
+  if (workOrderId) {
+    return (
+      <div className="min-h-screen bg-slate-50">
+        <header className="bg-white border-b border-slate-200 sticky top-0 z-10">
+          <div className="max-w-lg mx-auto px-4 py-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-base font-bold text-slate-900">Premier Auto Service</h1>
+                <p className="text-xs text-slate-500">
+                  Hi {customer?.first_name || 'there'}
+                </p>
+              </div>
+              <div className="h-8 w-8 rounded-full bg-teal-600 flex items-center justify-center">
+                <span className="text-white text-xs font-bold">
+                  {(customer?.first_name?.[0] || 'P').toUpperCase()}
+                </span>
+              </div>
+            </div>
+          </div>
+        </header>
+        <main className="max-w-lg mx-auto px-4 py-4 space-y-4">
+          <RepairTracker token={token} workOrderId={workOrderId} />
+        </main>
+        <footer className="max-w-lg mx-auto px-4 py-6 text-center">
+          <a
+            href="tel:+16473711990"
+            className="inline-flex items-center gap-1.5 text-teal-600 text-xs font-medium hover:underline"
+          >
+            <Phone className="h-3 w-3" />
+            (647) 371-1990
+          </a>
+          <p className="text-xs text-slate-400 mt-1">Premier Auto Service</p>
+        </footer>
       </div>
     )
   }
@@ -219,82 +260,101 @@ export default function Portal() {
   )
 }
 
-// ── Status Tab ──
+// ── Repair Tracker ──
 
-function StatusTab({ token }) {
-  const [appointments, setAppointments] = useState(null)
+const WO_TRACKER_STEPS = [
+  { key: 'estimated', label: 'Estimate Sent' },
+  { key: 'approved', label: 'Approved' },
+  { key: 'in_progress', label: 'In Progress' },
+  { key: 'completed', label: 'Completed' },
+  { key: 'invoiced', label: 'Ready for Pickup' },
+]
+
+function getTrackerStepIndex(status) {
+  const idx = WO_TRACKER_STEPS.findIndex(s => s.key === status)
+  // paid maps to invoiced (last visible step)
+  if (status === 'paid') return WO_TRACKER_STEPS.length - 1
+  if (status === 'sent_to_customer') return 0
+  return idx >= 0 ? idx : 0
+}
+
+function RepairTracker({ token, workOrderId }) {
+  const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [lastUpdated, setLastUpdated] = useState(null)
+  const intervalRef = useRef(null)
+
+  const fetchTracker = useCallback(async () => {
+    try {
+      const result = await portalFetch(token, `/work-orders/${workOrderId}/tracker`)
+      setData(result)
+      setLastUpdated(new Date())
+    } catch {
+      // keep showing stale data if we have it
+    } finally {
+      setLoading(false)
+    }
+  }, [token, workOrderId])
 
   useEffect(() => {
-    portalFetch(token, '/appointments')
-      .then(data => setAppointments(data.appointments))
-      .catch(() => setAppointments([]))
-      .finally(() => setLoading(false))
-  }, [token])
+    fetchTracker()
+    // Poll every 30 seconds
+    intervalRef.current = setInterval(fetchTracker, 30000)
+    return () => clearInterval(intervalRef.current)
+  }, [fetchTracker])
 
   if (loading) return <LoadingCard />
-
-  // Find the most recent active (non-completed, non-cancelled) appointment
-  const active = appointments?.find(a =>
-    !['completed', 'cancelled', 'no_show'].includes(a.status)
-  )
-
-  if (!active) {
-    return (
-      <EmptyState
-        icon={Clock}
-        title="No active appointments"
-        message="You don't have any upcoming appointments right now."
-      />
-    )
+  if (!data) {
+    return <EmptyState icon={AlertCircle} title="Not found" message="Could not load repair status." />
   }
 
-  const stepIndex = getStepIndex(active.status)
-  const vehicle = active.vehicle
+  const { work_order: wo, status_history: history, shop } = data
+  const stepIndex = getTrackerStepIndex(wo.status)
+  const vehicle = wo.vehicle
   const vehicleLabel = vehicle ? `${vehicle.year} ${vehicle.make} ${vehicle.model}` : null
-  const services = active.appointment_services?.map(s => s.service_name) || []
+  const items = wo.work_order_items || []
+
+  // Build a map of step -> timestamp from history
+  const stepTimestamps = {}
+  for (const entry of history) {
+    if (!stepTimestamps[entry.status]) {
+      stepTimestamps[entry.status] = entry.created_at
+    }
+  }
+  // sent_to_customer maps to estimated step
+  if (stepTimestamps.sent_to_customer && !stepTimestamps.estimated) {
+    stepTimestamps.estimated = stepTimestamps.sent_to_customer
+  }
 
   return (
     <div className="space-y-4">
-      {/* Appointment Card */}
-      <div className="bg-white rounded-xl border border-slate-200 p-4 space-y-4">
-        <div className="flex items-center justify-between">
+      {/* Vehicle + WO header */}
+      <div className="bg-white rounded-xl border border-slate-200 p-4">
+        <div className="flex items-center justify-between mb-2">
           <div>
-            <p className="text-sm font-semibold text-slate-900">
-              {format(parseDateLocal(active.scheduled_date), 'EEEE, MMMM do')}
-            </p>
-            <p className="text-xs text-slate-500">
-              {formatTime12Hour(active.scheduled_time)}
-            </p>
+            <p className="text-sm font-semibold text-slate-900">{wo.work_order_display}</p>
+            <span className={cn('px-2 py-0.5 rounded-full text-xs font-medium', getWOStatusColor(wo.status))}>
+              {getWOStatusLabel(wo.status)}
+            </span>
           </div>
-          <span className={cn('px-2 py-0.5 rounded-full text-xs font-medium', getStatusColor(active.status))}>
-            {active.status.replace(/_/g, ' ')}
-          </span>
+          {vehicleLabel && (
+            <div className="flex items-center gap-1.5 text-xs text-slate-500">
+              <Car className="h-3.5 w-3.5 text-slate-400" />
+              {vehicleLabel}
+            </div>
+          )}
         </div>
-
-        {vehicleLabel && (
-          <div className="flex items-center gap-2 text-xs text-slate-600">
-            <Car className="h-3.5 w-3.5 text-slate-400" />
-            {vehicleLabel}
-          </div>
-        )}
-
-        {services.length > 0 && (
-          <div className="flex items-start gap-2 text-xs text-slate-600">
-            <ClipboardList className="h-3.5 w-3.5 text-slate-400 mt-0.5" />
-            <div>{services.join(', ')}</div>
-          </div>
-        )}
       </div>
 
-      {/* Timeline */}
+      {/* Progress Stepper */}
       <div className="bg-white rounded-xl border border-slate-200 p-4">
-        <h3 className="text-xs font-medium uppercase tracking-wider text-slate-400 mb-4">Progress</h3>
+        <h3 className="text-xs font-medium uppercase tracking-wider text-slate-400 mb-4">Repair Progress</h3>
         <div className="space-y-0">
-          {APPOINTMENT_STEPS.map((step, i) => {
+          {WO_TRACKER_STEPS.map((step, i) => {
             const isComplete = i < stepIndex
             const isCurrent = i === stepIndex
             const isFuture = i > stepIndex
+            const timestamp = stepTimestamps[step.key]
             return (
               <div key={step.key} className="flex items-start gap-3">
                 <div className="flex flex-col items-center">
@@ -302,29 +362,305 @@ function StatusTab({ token }) {
                     <CheckCircle2 className="h-5 w-5 text-teal-600" />
                   ) : isCurrent ? (
                     <div className="h-5 w-5 rounded-full border-2 border-teal-600 bg-teal-50 flex items-center justify-center">
-                      <div className="h-2 w-2 rounded-full bg-teal-600" />
+                      <div className="h-2 w-2 rounded-full bg-teal-600 animate-pulse" />
                     </div>
                   ) : (
                     <Circle className="h-5 w-5 text-slate-300" />
                   )}
-                  {i < APPOINTMENT_STEPS.length - 1 && (
+                  {i < WO_TRACKER_STEPS.length - 1 && (
                     <div className={cn(
-                      'w-0.5 h-6',
+                      'w-0.5 h-8',
                       isComplete ? 'bg-teal-600' : 'bg-slate-200'
                     )} />
                   )}
                 </div>
-                <p className={cn(
-                  'text-sm pt-0.5',
-                  isCurrent ? 'font-semibold text-teal-700' : isComplete ? 'text-slate-600' : 'text-slate-400'
-                )}>
-                  {step.label}
-                </p>
+                <div className="pt-0.5 pb-3">
+                  <p className={cn(
+                    'text-sm',
+                    isCurrent ? 'font-semibold text-teal-700' : isComplete ? 'font-medium text-slate-700' : 'text-slate-400'
+                  )}>
+                    {step.label}
+                    {isCurrent && (
+                      <span className="ml-2 inline-flex items-center gap-1 text-xs font-normal text-teal-600">
+                        <span className="relative flex h-2 w-2">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75" />
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-teal-500" />
+                        </span>
+                        Current
+                      </span>
+                    )}
+                  </p>
+                  {(isComplete || isCurrent) && timestamp && (
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      {format(new Date(timestamp), 'MMM d, h:mm a')}
+                    </p>
+                  )}
+                </div>
               </div>
             )
           })}
         </div>
       </div>
+
+      {/* Service Summary */}
+      {items.length > 0 && (
+        <div className="bg-white rounded-xl border border-slate-200 divide-y divide-slate-100">
+          <div className="px-4 py-3">
+            <h3 className="text-xs font-medium uppercase tracking-wider text-slate-400">Services</h3>
+          </div>
+          {items.map(item => (
+            <div key={item.id} className="px-4 py-3 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Wrench className="h-3.5 w-3.5 text-slate-400" />
+                <span className="text-sm text-slate-700">{item.description}</span>
+              </div>
+              <span className="text-sm font-medium text-slate-900">{formatCents(item.total_cents)}</span>
+            </div>
+          ))}
+          <div className="px-4 py-3 flex items-center justify-between bg-slate-50">
+            <span className="text-sm font-semibold text-slate-900">Total</span>
+            <span className="text-sm font-semibold text-slate-900">{formatCents(wo.total_cents)}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Timeline Feed */}
+      {history.length > 0 && (
+        <div className="bg-white rounded-xl border border-slate-200 p-4">
+          <h3 className="text-xs font-medium uppercase tracking-wider text-slate-400 mb-3">Activity</h3>
+          <div className="space-y-3">
+            {[...history].reverse().map(entry => (
+              <div key={entry.id} className="flex items-start gap-3">
+                <div className="h-6 w-6 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <Clock className="h-3 w-3 text-slate-400" />
+                </div>
+                <div>
+                  <p className="text-sm text-slate-700">
+                    {getWOStatusLabel(entry.status)}
+                  </p>
+                  <p className="text-xs text-slate-400">
+                    {format(new Date(entry.created_at), 'MMM d, h:mm a')}
+                  </p>
+                  {entry.notes && (
+                    <p className="text-xs text-slate-500 mt-0.5">{entry.notes}</p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Contact + last updated */}
+      <div className="text-center space-y-2">
+        {lastUpdated && (
+          <p className="text-xs text-slate-400 flex items-center justify-center gap-1">
+            <RefreshCw className="h-3 w-3" />
+            Updates every 30s
+          </p>
+        )}
+        {shop && (
+          <a
+            href={`tel:${shop.phone}`}
+            className="inline-flex items-center gap-1.5 text-teal-600 text-xs font-medium hover:underline"
+          >
+            <Phone className="h-3 w-3" />
+            Questions? Call {shop.name}
+          </a>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ── Status Tab ──
+
+function StatusTab({ token }) {
+  const navigate = useNavigate()
+  const [appointments, setAppointments] = useState(null)
+  const [workOrders, setWorkOrders] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [trackerWOId, setTrackerWOId] = useState(null)
+
+  useEffect(() => {
+    Promise.all([
+      portalFetch(token, '/appointments'),
+      portalFetch(token, '/work-orders'),
+    ])
+      .then(([aptData, woData]) => {
+        setAppointments(aptData.appointments || [])
+        setWorkOrders(woData.work_orders || [])
+      })
+      .catch(() => {
+        setAppointments([])
+        setWorkOrders([])
+      })
+      .finally(() => setLoading(false))
+  }, [token])
+
+  if (loading) return <LoadingCard />
+
+  // If viewing inline tracker
+  if (trackerWOId) {
+    return (
+      <div className="space-y-3">
+        <button
+          onClick={() => setTrackerWOId(null)}
+          className="flex items-center gap-1 text-xs text-teal-600 hover:underline"
+        >
+          <ArrowLeft className="h-3 w-3" />
+          Back to status
+        </button>
+        <RepairTracker token={token} workOrderId={trackerWOId} />
+      </div>
+    )
+  }
+
+  // Active work orders (approved, in_progress)
+  const activeWOs = (workOrders || []).filter(wo =>
+    ['approved', 'in_progress', 'sent_to_customer'].includes(wo.status)
+  )
+
+  // Find the most recent active appointment
+  const activeApt = appointments?.find(a =>
+    !['completed', 'cancelled', 'no_show'].includes(a.status)
+  )
+
+  if (activeWOs.length === 0 && !activeApt) {
+    return (
+      <EmptyState
+        icon={Clock}
+        title="No active services"
+        message="You don't have any upcoming appointments or active repairs right now."
+      />
+    )
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Active Work Orders — Repair Tracker Cards */}
+      {activeWOs.length > 0 && (
+        <div className="space-y-3">
+          <h3 className="text-xs font-medium uppercase tracking-wider text-slate-400">Active Repairs</h3>
+          {activeWOs.map(wo => {
+            const stepIndex = getTrackerStepIndex(wo.status)
+            const vehicle = wo.vehicle
+            const vehicleLabel = vehicle ? `${vehicle.year} ${vehicle.make} ${vehicle.model}` : null
+            return (
+              <button
+                key={wo.id}
+                onClick={() => setTrackerWOId(wo.id)}
+                className="w-full bg-white rounded-xl border border-slate-200 p-4 text-left hover:border-teal-300 transition-colors"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900">{wo.work_order_display}</p>
+                    {vehicleLabel && (
+                      <p className="text-xs text-slate-500">{vehicleLabel}</p>
+                    )}
+                  </div>
+                  <span className={cn('px-2 py-0.5 rounded-full text-xs font-medium', getWOStatusColor(wo.status))}>
+                    {getWOStatusLabel(wo.status)}
+                  </span>
+                </div>
+                {/* Mini progress bar */}
+                <div className="flex gap-1">
+                  {WO_TRACKER_STEPS.map((step, i) => (
+                    <div
+                      key={step.key}
+                      className={cn(
+                        'h-1.5 flex-1 rounded-full',
+                        i <= stepIndex ? 'bg-teal-500' : 'bg-slate-200'
+                      )}
+                    />
+                  ))}
+                </div>
+                <div className="flex items-center justify-between mt-2">
+                  <span className="text-xs text-teal-600 font-medium">Track progress</span>
+                  <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
+                </div>
+              </button>
+            )
+          })}
+        </div>
+      )}
+
+      {/* Active Appointment (fallback when no active WOs) */}
+      {activeApt && (
+        <div className="space-y-3">
+          {activeWOs.length > 0 && (
+            <h3 className="text-xs font-medium uppercase tracking-wider text-slate-400">Appointment</h3>
+          )}
+          <div className="bg-white rounded-xl border border-slate-200 p-4 space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold text-slate-900">
+                  {format(parseDateLocal(activeApt.scheduled_date), 'EEEE, MMMM do')}
+                </p>
+                <p className="text-xs text-slate-500">
+                  {formatTime12Hour(activeApt.scheduled_time)}
+                </p>
+              </div>
+              <span className={cn('px-2 py-0.5 rounded-full text-xs font-medium', getStatusColor(activeApt.status))}>
+                {activeApt.status.replace(/_/g, ' ')}
+              </span>
+            </div>
+
+            {activeApt.vehicle && (
+              <div className="flex items-center gap-2 text-xs text-slate-600">
+                <Car className="h-3.5 w-3.5 text-slate-400" />
+                {activeApt.vehicle.year} {activeApt.vehicle.make} {activeApt.vehicle.model}
+              </div>
+            )}
+
+            {activeApt.appointment_services?.length > 0 && (
+              <div className="flex items-start gap-2 text-xs text-slate-600">
+                <ClipboardList className="h-3.5 w-3.5 text-slate-400 mt-0.5" />
+                <div>{activeApt.appointment_services.map(s => s.service_name).join(', ')}</div>
+              </div>
+            )}
+          </div>
+
+          {/* Appointment Timeline */}
+          <div className="bg-white rounded-xl border border-slate-200 p-4">
+            <h3 className="text-xs font-medium uppercase tracking-wider text-slate-400 mb-4">Progress</h3>
+            <div className="space-y-0">
+              {APPOINTMENT_STEPS.map((step, i) => {
+                const aptStepIndex = getStepIndex(activeApt.status)
+                const isComplete = i < aptStepIndex
+                const isCurrent = i === aptStepIndex
+                return (
+                  <div key={step.key} className="flex items-start gap-3">
+                    <div className="flex flex-col items-center">
+                      {isComplete ? (
+                        <CheckCircle2 className="h-5 w-5 text-teal-600" />
+                      ) : isCurrent ? (
+                        <div className="h-5 w-5 rounded-full border-2 border-teal-600 bg-teal-50 flex items-center justify-center">
+                          <div className="h-2 w-2 rounded-full bg-teal-600" />
+                        </div>
+                      ) : (
+                        <Circle className="h-5 w-5 text-slate-300" />
+                      )}
+                      {i < APPOINTMENT_STEPS.length - 1 && (
+                        <div className={cn(
+                          'w-0.5 h-6',
+                          isComplete ? 'bg-teal-600' : 'bg-slate-200'
+                        )} />
+                      )}
+                    </div>
+                    <p className={cn(
+                      'text-sm pt-0.5',
+                      isCurrent ? 'font-semibold text-teal-700' : isComplete ? 'text-slate-600' : 'text-slate-400'
+                    )}>
+                      {step.label}
+                    </p>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

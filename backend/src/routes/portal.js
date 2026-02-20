@@ -238,6 +238,68 @@ router.get('/:token/work-orders/:id', requireToken, async (req, res, next) => {
 });
 
 /**
+ * GET /:token/work-orders/:id/tracker — Live repair tracker data
+ */
+router.get('/:token/work-orders/:id/tracker', requireToken, async (req, res, next) => {
+  try {
+    const customerId = req.portalCustomer.id;
+    const { id } = req.params;
+    if (!isValidUUID(id)) return validationError(res, 'Invalid work order ID');
+
+    // Fetch WO with vehicle, items
+    const { data: wo, error } = await supabase
+      .from('work_orders')
+      .select(`
+        id, work_order_number, status, notes,
+        subtotal_cents, tax_cents, discount_cents, total_cents,
+        created_at, updated_at,
+        vehicle:vehicles(id, year, make, model, color, license_plate),
+        work_order_items(
+          id, item_type, description, quantity,
+          unit_price_cents, total_cents, status, sort_order
+        )
+      `)
+      .eq('id', id)
+      .eq('customer_id', customerId)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return res.status(404).json({ error: { message: 'Work order not found' } });
+      }
+      throw error;
+    }
+
+    // Sort items
+    if (wo.work_order_items) {
+      wo.work_order_items.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
+    }
+
+    // Fetch status history timeline
+    const { data: history } = await supabase
+      .from('work_order_status_history')
+      .select('id, status, changed_by, notes, created_at')
+      .eq('work_order_id', id)
+      .order('created_at', { ascending: true });
+
+    res.json({
+      work_order: {
+        ...wo,
+        work_order_display: `WO-${1000 + wo.work_order_number}`,
+      },
+      status_history: history || [],
+      shop: {
+        name: BUSINESS.name,
+        phone: BUSINESS.phone,
+        address: BUSINESS.address,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
  * POST /:token/work-orders/:id/approve — Approve/decline estimate items
  */
 router.post('/:token/work-orders/:id/approve', requireToken, async (req, res, next) => {

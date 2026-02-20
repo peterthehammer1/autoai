@@ -20,9 +20,9 @@ if (accountSid && authToken && accountSid !== 'your-account-sid') {
 /**
  * Log SMS to database
  */
-async function logSMS({ toPhone, body, messageType, twilioSid, status, errorMessage, customerId, appointmentId, direction }) {
+async function logSMS({ toPhone, body, messageType, twilioSid, status, errorMessage, customerId, appointmentId, workOrderId, direction }) {
   try {
-    await supabase.from('sms_logs').insert({
+    const row = {
       to_phone: toPhone,
       from_phone: fromNumber,
       message_body: body,
@@ -33,7 +33,9 @@ async function logSMS({ toPhone, body, messageType, twilioSid, status, errorMess
       customer_id: customerId,
       appointment_id: appointmentId,
       direction: direction || 'outbound'
-    });
+    };
+    if (workOrderId) row.work_order_id = workOrderId;
+    await supabase.from('sms_logs').insert(row);
   } catch (err) {
     logger.error('[SMS] Failed to log SMS', { error: err });
   }
@@ -43,7 +45,7 @@ async function logSMS({ toPhone, body, messageType, twilioSid, status, errorMess
  * Send SMS message
  */
 export async function sendSMS(to, body, options = {}) {
-  const { messageType = 'custom', customerId, appointmentId } = options;
+  const { messageType = 'custom', customerId, appointmentId, workOrderId } = options;
 
   // Format phone number for Twilio (needs +1 prefix for US/Canada)
   let formattedTo = to.replace(/\D/g, '');
@@ -67,7 +69,8 @@ export async function sendSMS(to, body, options = {}) {
       status: 'failed',
       errorMessage: 'Twilio not configured',
       customerId,
-      appointmentId
+      appointmentId,
+      workOrderId
     });
     return { success: false, error: 'Twilio not configured' };
   }
@@ -89,7 +92,8 @@ export async function sendSMS(to, body, options = {}) {
       twilioSid: message.sid,
       status: 'sent',
       customerId,
-      appointmentId
+      appointmentId,
+      workOrderId
     });
 
     return { success: true, messageId: message.sid };
@@ -104,7 +108,8 @@ export async function sendSMS(to, body, options = {}) {
       status: 'failed',
       errorMessage: error.message,
       customerId,
-      appointmentId
+      appointmentId,
+      workOrderId
     });
 
     return { success: false, error: error.message };
@@ -391,9 +396,11 @@ export async function sendPortalLinkSMS({
   vehicleDescription,
   customerId,
   appointmentId,
+  workOrderId,
 }) {
   const firstName = customerName?.split(' ')[0] || 'there';
   const vehicleLine = vehicleDescription ? ` for your ${vehicleDescription}` : '';
+  const vehicleSubject = vehicleDescription ? `your ${vehicleDescription}` : 'your vehicle';
 
   let message;
   if (messageContext === 'estimate') {
@@ -406,14 +413,34 @@ ${portalUrl}
 Questions? Call us at ${BUSINESS.phone}.
 
 - ${BUSINESS.agentName}, ${BUSINESS.name}`;
+  } else if (messageContext === 'in_progress') {
+    message = `Hi ${firstName},
+
+Work has started on ${vehicleSubject}! Track live progress here:
+
+${portalUrl}
+
+We'll keep you updated at every step.
+
+- ${BUSINESS.agentName}, ${BUSINESS.name}`;
   } else if (messageContext === 'completed') {
     message = `Hi ${firstName},
 
-Great news — your vehicle is ready! View your service details and history:
+Great news — ${vehicleSubject} is all done and ready for pickup! View your service details:
 
 ${portalUrl}
 
 We're open until 5:00 PM today.
+
+- ${BUSINESS.agentName}, ${BUSINESS.name}`;
+  } else if (messageContext === 'invoiced') {
+    message = `Hi ${firstName},
+
+Your invoice${vehicleLine} is ready to view:
+
+${portalUrl}
+
+Questions? Call us at ${BUSINESS.phone}.
 
 - ${BUSINESS.agentName}, ${BUSINESS.name}`;
   } else {
@@ -430,6 +457,7 @@ ${portalUrl}
     messageType: 'portal_link',
     customerId,
     appointmentId,
+    workOrderId,
   });
 }
 

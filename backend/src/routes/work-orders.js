@@ -334,8 +334,22 @@ router.patch('/:id', async (req, res, next) => {
       .eq('id', id)
       .single();
 
-    // Send portal link SMS when estimate is sent to customer
-    if (updates.status === 'sent_to_customer' && fullWO.customer?.phone) {
+    // Log status change to history
+    if (updates.status) {
+      try {
+        await supabase.from('work_order_status_history').insert({
+          work_order_id: id,
+          status: updates.status,
+          changed_by: req.body.changed_by || 'advisor',
+        });
+      } catch (histErr) {
+        logger.error('Failed to log WO status history (non-blocking)', { error: histErr });
+      }
+    }
+
+    // Auto-SMS on key status transitions
+    const SMS_TRIGGERS = ['sent_to_customer', 'in_progress', 'completed', 'invoiced'];
+    if (updates.status && SMS_TRIGGERS.includes(updates.status) && fullWO.customer?.phone) {
       try {
         const { ensurePortalToken, portalUrl } = await import('./portal.js');
         const { sendPortalLinkSMS } = await import('../services/sms.js');
@@ -344,16 +358,32 @@ router.patch('/:id', async (req, res, next) => {
         const vehicleDesc = fullWO.vehicle
           ? `${fullWO.vehicle.year} ${fullWO.vehicle.make} ${fullWO.vehicle.model}`
           : null;
+
+        // Map WO status to message context
+        const contextMap = {
+          sent_to_customer: 'estimate',
+          in_progress: 'in_progress',
+          completed: 'completed',
+          invoiced: 'invoiced',
+        };
+
+        // For in_progress/completed/invoiced, link directly to the tracker
+        const trackerStatuses = ['in_progress', 'completed', 'invoiced'];
+        const url = trackerStatuses.includes(updates.status)
+          ? `${portalUrl(token)}/track/${id}`
+          : portalUrl(token);
+
         await sendPortalLinkSMS({
           customerPhone: fullWO.customer.phone,
           customerName,
-          portalUrl: portalUrl(token),
-          messageContext: 'estimate',
+          portalUrl: url,
+          messageContext: contextMap[updates.status],
           vehicleDescription: vehicleDesc,
           customerId: fullWO.customer.id,
+          workOrderId: id,
         });
       } catch (smsErr) {
-        logger.error('Portal SMS failed on WO sent_to_customer (non-blocking)', { error: smsErr });
+        logger.error(`Portal SMS failed on WO ${updates.status} (non-blocking)`, { error: smsErr });
       }
     }
 

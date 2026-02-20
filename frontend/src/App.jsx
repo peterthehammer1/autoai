@@ -57,6 +57,11 @@ function App() {
             <Portal />
           </Suspense>
         } />
+        <Route path="portal/:token/track/:workOrderId" element={
+          <Suspense fallback={<PageLoader />}>
+            <Portal />
+          </Suspense>
+        } />
 
         {/* Dashboard routes (with sidebar layout) */}
         <Route element={<Layout />}>
