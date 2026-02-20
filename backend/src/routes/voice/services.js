@@ -475,9 +475,90 @@ router.post('/get_repair_status', async (req, res, next) => {
     const today = todayEST();
     const now = nowEST();
     const currentTimeMinutes = now.getHours() * 60 + now.getMinutes();
+    const firstName = customer.first_name || '';
+    const namePrefix = firstName ? `${firstName}, ` : '';
 
-    // Look for today's appointments (scheduled, checked_in, or in_progress)
-    // We'll auto-treat "scheduled" appointments as in-progress if appointment time has passed
+    // Check for active work orders first (richer data than appointments alone)
+    const { data: activeWOs } = await supabase
+      .from('work_orders')
+      .select(`
+        id,
+        work_order_number,
+        status,
+        subtotal_cents,
+        total_cents,
+        notes,
+        internal_notes,
+        created_at,
+        vehicle:vehicles (year, make, model),
+        work_order_items (description, item_type, status, total_cents)
+      `)
+      .eq('customer_id', customer.id)
+      .in('status', ['in_progress', 'completed', 'invoiced', 'approved'])
+      .order('created_at', { ascending: false })
+      .limit(3);
+
+    // If we have an active work order, return WO-level status
+    if (activeWOs && activeWOs.length > 0) {
+      const wo = activeWOs[0];
+      const vehicle = wo.vehicle ? `${wo.vehicle.year} ${wo.vehicle.make} ${wo.vehicle.model}` : 'your vehicle';
+      const approvedItems = (wo.work_order_items || [])
+        .filter(i => i.status === 'approved' && i.item_type === 'labor')
+        .map(i => i.description);
+      const itemList = approvedItems.length > 0 ? approvedItems.join(', ') : 'service';
+      const totalDollars = wo.total_cents ? `$${(wo.total_cents / 100).toFixed(2)}` : null;
+      const woNum = `WO-${wo.work_order_number}`;
+
+      // Check if there are payments already
+      const { data: payments } = await supabase
+        .from('payments')
+        .select('amount_cents')
+        .eq('work_order_id', wo.id)
+        .eq('status', 'completed');
+      const paidCents = (payments || []).reduce((sum, p) => sum + p.amount_cents, 0);
+      const isPaidInFull = paidCents >= wo.total_cents;
+
+      let statusMessage = '';
+      let estimatedReady = '';
+
+      if (wo.status === 'in_progress') {
+        statusMessage = `${vehicle} is currently being worked on`;
+        estimatedReady = `We're doing ${itemList}. We'll text you as soon as it's ready.`;
+      } else if (wo.status === 'completed') {
+        statusMessage = `Great news \u2014 ${vehicle} is all done and ready for pickup!`;
+        estimatedReady = isPaidInFull
+          ? 'Everything is paid up. You can come grab it whenever you\'re ready.'
+          : totalDollars
+            ? `Your total is ${totalDollars}. You can pay online or when you pick up.`
+            : 'Just head on over whenever you\'re ready.';
+      } else if (wo.status === 'invoiced') {
+        statusMessage = `${vehicle} is ready for pickup`;
+        estimatedReady = isPaidInFull
+          ? 'Your invoice has been paid. Come grab it whenever you\'re ready.'
+          : totalDollars
+            ? `Your invoice is ${totalDollars}. You can pay online or when you pick up.`
+            : 'We sent you an invoice \u2014 you can pay online or when you pick up.';
+      } else if (wo.status === 'approved') {
+        statusMessage = `Your estimate for ${vehicle} has been approved`;
+        estimatedReady = `We're getting started on ${itemList}. We'll keep you posted.`;
+      }
+
+      return res.json({
+        success: true,
+        has_vehicle_in_shop: true,
+        status: wo.status,
+        work_order_number: woNum,
+        vehicle,
+        services: itemList,
+        total: totalDollars,
+        paid_in_full: isPaidInFull,
+        status_message: statusMessage,
+        estimated_ready: estimatedReady,
+        message: `${namePrefix}${statusMessage}. ${estimatedReady} Anything else I can help with?`
+      });
+    }
+
+    // Fall back to appointment-based status check
     const { data: todayAppointments } = await supabase
       .from('appointments')
       .select(`
@@ -502,7 +583,7 @@ router.post('/get_repair_status', async (req, res, next) => {
       return res.json({
         success: true,
         has_vehicle_in_shop: false,
-        message: `${customer.first_name ? customer.first_name + ', I' : 'I'} don't see any appointments for you today. Did you drop off recently, or were you checking on a past repair?`
+        message: `${firstName ? firstName + ', I' : 'I'} don't see any active repairs or appointments for you right now. Did you drop off recently, or were you checking on a past repair?`
       });
     }
 
@@ -540,7 +621,7 @@ router.post('/get_repair_status', async (req, res, next) => {
           services,
           vehicle: nextApt.vehicle ? `${nextApt.vehicle.year} ${nextApt.vehicle.make} ${nextApt.vehicle.model}` : null
         },
-        message: `${customer.first_name ? customer.first_name + ', your' : 'Your'} appointment is at ${formatTime12Hour(nextApt.scheduled_time)} for ${services}. Are you on your way?`
+        message: `${firstName ? firstName + ', your' : 'Your'} appointment is at ${formatTime12Hour(nextApt.scheduled_time)} for ${services}. Are you on your way?`
       });
     }
 
@@ -599,7 +680,7 @@ router.post('/get_repair_status', async (req, res, next) => {
       estimated_ready_time: estimatedReadyTime,
       status_message: statusMessage,
       estimated_ready: estimatedReady,
-      message: `${customer.first_name ? customer.first_name + ', ' : ''}${statusMessage} for ${services}. ${estimatedReady}.${techNotes} We'll text you when it's ready. Anything else I can help with?`
+      message: `${namePrefix}${statusMessage} for ${services}. ${estimatedReady}.${techNotes} We'll text you when it's ready. Anything else I can help with?`
     });
 
   } catch (error) {
