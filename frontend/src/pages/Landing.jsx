@@ -247,29 +247,29 @@ export default function Landing() {
   return (
     <div className="min-h-screen bg-white" itemScope itemType="https://schema.org/AutoRepair">
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-lg border-b border-slate-200">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-xl border-b border-slate-200/80 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center">
-              <img src="/logo-light.png" alt="Premier Auto Service" width="256" height="256" className="h-16 sm:h-20 md:h-24 object-contain" />
-            </div>
+          <div className="flex items-center justify-between h-20">
+            <a href="/" className="flex items-center gap-3 shrink-0">
+              <img src="/logo-light.png" alt="Premier Auto Service" width="256" height="256" className="h-14 sm:h-16 object-contain" />
+            </a>
 
             <div className="hidden md:flex items-center gap-8">
               <a href="#features" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">Features</a>
               <a href="#how-it-works" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">How It Works</a>
               <a href="#faq" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">FAQ</a>
               <a href="#testimonials" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">Testimonials</a>
-              <a href="tel:+16473711990" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors flex items-center gap-1">
+              <a href="tel:+16473711990" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors flex items-center gap-1.5">
                 <Phone className="h-4 w-4" />
                 (647) 371-1990
               </a>
             </div>
 
             <div className="hidden md:flex items-center gap-3">
-              <Button variant="ghost" asChild>
+              <Button variant="ghost" asChild className="text-slate-600 hover:text-slate-900">
                 <Link to="/dashboard">Dashboard</Link>
               </Button>
-              <Button asChild className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800">
+              <Button asChild className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-md shadow-blue-500/20">
                 <a href="#contact">
                   Join Waitlist
                 </a>
@@ -359,7 +359,7 @@ export default function Landing() {
       </nav>
 
       {/* Hero */}
-      <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
+      <section className="pt-36 pb-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="text-center lg:text-left">
