@@ -335,7 +335,7 @@ router.post('/:id/send', async (req, res) => {
     // Build audience query
     let query = supabase
       .from('customers')
-      .select('id, first_name, last_name, phone, marketing_opt_in, portal_token')
+      .select('id, first_name, last_name, phone, marketing_opt_in, portal_token, portal_short_code')
       .eq('marketing_opt_in', true)
       .not('phone', 'is', null);
 
@@ -420,7 +420,9 @@ router.post('/:id/send', async (req, res) => {
         continue;
       }
 
-      const portalUrl = customer.portal_token ? `${portalBase}/portal/${customer.portal_token}` : '';
+      const portalUrl = customer.portal_short_code
+        ? `${portalBase}/p/${customer.portal_short_code}`
+        : customer.portal_token ? `${portalBase}/portal/${customer.portal_token}` : '';
       const vehicleDescription = vehicleMap.get(customer.id) || null;
 
       try {

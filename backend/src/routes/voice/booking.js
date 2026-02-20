@@ -759,7 +759,7 @@ router.post('/book_appointment', async (req, res, next) => {
       try {
         const { ensurePortalToken, portalUrl: buildPortalUrl } = await import('../portal.js');
         const portalToken = await ensurePortalToken(customer.id);
-        const customerPortalUrl = buildPortalUrl(portalToken);
+        const customerPortalUrl = await buildPortalUrl(portalToken);
 
         const result = await sendConfirmationSMS({
           customerPhone: customer_phone,
@@ -1415,7 +1415,7 @@ router.post('/send_confirmation', async (req, res, next) => {
     let customerPortalUrl;
     try {
       const portalToken = await ensurePortalToken(appointment.customer.id);
-      customerPortalUrl = buildPortalUrl(portalToken);
+      customerPortalUrl = await buildPortalUrl(portalToken);
     } catch (err) {
       logger.error('Portal token generation error in send_confirmation:', { error: err });
     }

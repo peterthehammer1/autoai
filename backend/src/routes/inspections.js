@@ -288,7 +288,7 @@ router.patch('/:id', async (req, res, next) => {
           await sendInspectionSMS({
             customerPhone: customer.phone,
             customerName: `${customer.first_name || ''} ${customer.last_name || ''}`.trim(),
-            portalUrl: `${portalUrl(token)}/inspection/${id}`,
+            portalUrl: `${await portalUrl(token)}/inspection/${id}`,
             vehicleDescription: vehicleDesc,
             summary,
             customerId: customer.id,

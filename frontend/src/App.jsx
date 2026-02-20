@@ -1,5 +1,5 @@
-import { lazy, Suspense } from 'react'
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { lazy, Suspense, useEffect, useState } from 'react'
+import { Routes, Route, Navigate, useParams, useNavigate, useLocation } from 'react-router-dom'
 import { Toaster } from '@/components/ui/toaster'
 import ErrorBoundary from '@/components/ErrorBoundary'
 import Layout from '@/components/Layout'
@@ -44,6 +44,48 @@ export function PageLoader() {
   )
 }
 
+const API_BASE = import.meta.env.VITE_API_URL || '/api'
+
+function PortalShortLink() {
+  const { shortCode, workOrderId, inspectionId } = useParams()
+  const navigate = useNavigate()
+  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    fetch(`${API_BASE}/portal/s/${shortCode}`)
+      .then(res => {
+        if (!res.ok) throw new Error(res.status === 410 ? 'expired' : 'not_found')
+        return res.json()
+      })
+      .then(({ token }) => {
+        let path = `/portal/${token}`
+        if (workOrderId) path += `/track/${workOrderId}`
+        else if (inspectionId) path += `/inspection/${inspectionId}`
+        navigate(path, { replace: true })
+      })
+      .catch(err => setError(err.message))
+  }, [shortCode, workOrderId, inspectionId, navigate])
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+        <div className="max-w-sm w-full text-center space-y-4">
+          <h1 className="text-lg font-semibold text-slate-900">
+            {error === 'expired' ? 'Link Expired' : 'Link Not Found'}
+          </h1>
+          <p className="text-sm text-slate-500">
+            {error === 'expired'
+              ? 'This portal link has expired. Please contact us for a new one.'
+              : 'This link is no longer valid. Please contact us for assistance.'}
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  return <PageLoader />
+}
+
 function App() {
   return (
     <ErrorBoundary>
@@ -73,6 +115,23 @@ function App() {
         <Route path="portal/:token/inspection/:inspectionId" element={
           <Suspense fallback={<PageLoader />}>
             <Portal />
+          </Suspense>
+        } />
+
+        {/* Short portal links — resolve short code to full token */}
+        <Route path="p/:shortCode" element={
+          <Suspense fallback={<PageLoader />}>
+            <PortalShortLink />
+          </Suspense>
+        } />
+        <Route path="p/:shortCode/track/:workOrderId" element={
+          <Suspense fallback={<PageLoader />}>
+            <PortalShortLink />
+          </Suspense>
+        } />
+        <Route path="p/:shortCode/inspection/:inspectionId" element={
+          <Suspense fallback={<PageLoader />}>
+            <PortalShortLink />
           </Suspense>
         } />
 

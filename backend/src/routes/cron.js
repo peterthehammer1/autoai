@@ -656,7 +656,9 @@ router.get('/marketing-campaigns', async (req, res) => {
       const campaign = campaignMap[type];
       if (!campaign || campaign.status !== 'active') return;
 
-      const portalUrl = customer.portal_token ? `${portalBase}/portal/${customer.portal_token}` : '';
+      const portalUrl = customer.portal_short_code
+        ? `${portalBase}/p/${customer.portal_short_code}`
+        : customer.portal_token ? `${portalBase}/portal/${customer.portal_token}` : '';
 
       try {
         const result = await sendCampaignSMS({
@@ -698,7 +700,7 @@ router.get('/marketing-campaigns', async (req, res) => {
         .from('appointments')
         .select(`
           id,
-          customer:customers!inner (id, first_name, last_name, phone, marketing_opt_in, portal_token, total_visits),
+          customer:customers!inner (id, first_name, last_name, phone, marketing_opt_in, portal_token, portal_short_code, total_visits),
           vehicle:vehicles (year, make, model)
         `)
         .eq('scheduled_date', yesterdayStr)
@@ -739,7 +741,7 @@ router.get('/marketing-campaigns', async (req, res) => {
         .from('appointments')
         .select(`
           id,
-          customer:customers!inner (id, first_name, last_name, phone, marketing_opt_in, portal_token),
+          customer:customers!inner (id, first_name, last_name, phone, marketing_opt_in, portal_token, portal_short_code),
           vehicle:vehicles (year, make, model)
         `)
         .eq('scheduled_date', threeDaysAgoStr)
@@ -792,7 +794,7 @@ router.get('/marketing-campaigns', async (req, res) => {
 
       const { data: lapsedCustomers } = await supabase
         .from('customers')
-        .select('id, first_name, last_name, phone, marketing_opt_in, portal_token')
+        .select('id, first_name, last_name, phone, marketing_opt_in, portal_token, portal_short_code')
         .eq('marketing_opt_in', true)
         .not('phone', 'is', null)
         .not('last_visit_date', 'is', null)

@@ -370,9 +370,10 @@ router.patch('/:id', async (req, res, next) => {
 
         // For in_progress/completed/invoiced, link directly to the tracker
         const trackerStatuses = ['in_progress', 'completed', 'invoiced'];
+        const baseUrl = await portalUrl(token);
         const url = trackerStatuses.includes(updates.status)
-          ? `${portalUrl(token)}/track/${id}`
-          : portalUrl(token);
+          ? `${baseUrl}/track/${id}`
+          : baseUrl;
 
         await sendPortalLinkSMS({
           customerPhone: fullWO.customer.phone,
@@ -690,10 +691,10 @@ router.post('/:id/send-payment-link', async (req, res, next) => {
     if (balanceDue <= 0) return validationError(res, 'No balance due on this work order');
 
     // Ensure portal token (dynamic import to avoid circular dependency)
-    const { ensurePortalToken } = await import('./portal.js');
+    const { ensurePortalToken, portalUrl: getPortalUrl } = await import('./portal.js');
     const token = await ensurePortalToken(wo.customer.id);
-    const portalBase = process.env.PORTAL_BASE_URL || 'https://premierauto.ai';
-    const portalUrl = `${portalBase}/portal/${token}/track/${id}`;
+    const baseUrl = await getPortalUrl(token);
+    const portalUrl = `${baseUrl}/track/${id}`;
 
     const vehicleDescription = wo.vehicle
       ? `${wo.vehicle.year} ${wo.vehicle.make} ${wo.vehicle.model}`

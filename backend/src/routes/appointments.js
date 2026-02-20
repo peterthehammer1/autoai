@@ -718,7 +718,7 @@ router.patch('/:id', async (req, res, next) => {
             await sendPortalLinkSMS({
               customerPhone: appointment.customer.phone,
               customerName,
-              portalUrl: portalUrl(token),
+              portalUrl: await portalUrl(token),
               messageContext: 'completed',
               vehicleDescription: vehicleDesc,
               customerId: appointment.customer.id,

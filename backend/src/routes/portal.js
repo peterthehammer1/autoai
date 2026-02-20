@@ -39,7 +39,7 @@ async function validatePortalToken(token) {
 export async function ensurePortalToken(customerId) {
   const { data: customer } = await supabase
     .from('customers')
-    .select('portal_token, portal_token_expires_at')
+    .select('portal_token, portal_token_expires_at, portal_short_code, first_name')
     .eq('id', customerId)
     .single();
 
@@ -48,18 +48,25 @@ export async function ensurePortalToken(customerId) {
     customer.portal_token_expires_at &&
     new Date(customer.portal_token_expires_at) > new Date()
   ) {
+    // Backfill short code if missing
+    if (!customer.portal_short_code) {
+      const shortCode = await generateShortCode(customer.first_name);
+      await supabase.from('customers').update({ portal_short_code: shortCode }).eq('id', customerId);
+    }
     return customer.portal_token;
   }
 
   const token = crypto.randomBytes(32).toString('hex');
   const expiresAt = new Date();
   expiresAt.setMonth(expiresAt.getMonth() + 6);
+  const shortCode = customer?.portal_short_code || await generateShortCode(customer?.first_name);
 
   await supabase
     .from('customers')
     .update({
       portal_token: token,
       portal_token_expires_at: expiresAt.toISOString(),
+      portal_short_code: shortCode,
     })
     .eq('id', customerId);
 
@@ -67,11 +74,65 @@ export async function ensurePortalToken(customerId) {
 }
 
 /**
- * Build portal URL from a token.
+ * Generate a short, readable portal code like "Frank3B4k"
+ * Format: {FirstName}{4 alphanumeric chars}
  */
-export function portalUrl(token) {
+async function generateShortCode(firstName) {
+  const name = (firstName || 'Guest').replace(/[^a-zA-Z]/g, '').slice(0, 10);
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789'; // no ambiguous 0/O/1/l/I
+  for (let attempt = 0; attempt < 10; attempt++) {
+    let suffix = '';
+    for (let i = 0; i < 4; i++) {
+      suffix += chars[Math.floor(Math.random() * chars.length)];
+    }
+    const code = `${name}${suffix}`;
+    // Check uniqueness
+    const { data: existing } = await supabase
+      .from('customers')
+      .select('id')
+      .eq('portal_short_code', code)
+      .maybeSingle();
+    if (!existing) return code;
+  }
+  // Fallback: use 8 random chars
+  let fallback = '';
+  for (let i = 0; i < 8; i++) {
+    fallback += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return fallback;
+}
+
+/**
+ * Build portal URL using short code.
+ * Falls back to full token URL if short code unavailable.
+ */
+export async function portalUrl(tokenOrCustomerId, isCustomerId = false) {
   const base = process.env.FRONTEND_URL || BUSINESS.url;
-  return `${base}/portal/${token}`;
+
+  if (isCustomerId) {
+    const { data: customer } = await supabase
+      .from('customers')
+      .select('portal_short_code')
+      .eq('id', tokenOrCustomerId)
+      .single();
+    if (customer?.portal_short_code) {
+      return `${base}/p/${customer.portal_short_code}`;
+    }
+  }
+
+  // Try to look up short code from token
+  const { data: customer } = await supabase
+    .from('customers')
+    .select('portal_short_code')
+    .eq('portal_token', tokenOrCustomerId)
+    .maybeSingle();
+
+  if (customer?.portal_short_code) {
+    return `${base}/p/${customer.portal_short_code}`;
+  }
+
+  // Fallback to long URL
+  return `${base}/portal/${tokenOrCustomerId}`;
 }
 
 // ── Middleware: validate token on every public request ──
@@ -84,6 +145,35 @@ async function requireToken(req, res, next) {
   req.portalCustomer = customer;
   next();
 }
+
+// ── Short code resolution ──
+
+/**
+ * GET /s/:shortCode — Resolve short code to full portal token
+ * Returns { token } so the frontend can load the portal
+ */
+router.get('/s/:shortCode', async (req, res) => {
+  const { shortCode } = req.params;
+  if (!shortCode || shortCode.length < 3 || shortCode.length > 20) {
+    return res.status(400).json({ error: { message: 'Invalid link' } });
+  }
+
+  const { data: customer } = await supabase
+    .from('customers')
+    .select('portal_token, portal_token_expires_at')
+    .eq('portal_short_code', shortCode)
+    .maybeSingle();
+
+  if (!customer?.portal_token) {
+    return res.status(404).json({ error: { message: 'Link not found' } });
+  }
+
+  if (customer.portal_token_expires_at && new Date(customer.portal_token_expires_at) < new Date()) {
+    return res.status(410).json({ error: { message: 'This link has expired' } });
+  }
+
+  res.json({ token: customer.portal_token });
+});
 
 // ── Public endpoints (no API key — token-validated) ──
 
@@ -690,7 +780,7 @@ export async function generateToken(req, res, next) {
     }
 
     const token = await ensurePortalToken(customer_id);
-    const url = portalUrl(token);
+    const url = await portalUrl(token);
 
     // Optionally send SMS with portal link
     if (send_sms && customer.phone) {
