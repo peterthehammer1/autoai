@@ -408,6 +408,95 @@ export async function getRecalls(vin) {
 }
 
 /**
+ * Get Transport Canada recalls by make/model/year
+ * Free government API — no API key required
+ * Returns Canadian-specific recall campaigns (separate from NHTSA/US recalls)
+ */
+const TC_RECALL_BASE = 'http://data.tc.gc.ca/v1.3/api/eng/vehicle-recall-database';
+
+export async function getCanadianRecalls(year, make, model) {
+  if (!year || !make || !model) {
+    return { success: false, error: 'Year, make, and model are required' };
+  }
+
+  try {
+    const encodedMake = encodeURIComponent(make.toUpperCase());
+    const encodedModel = encodeURIComponent(model.toUpperCase());
+
+    // Step 1: Search for recall numbers by make/model/year
+    const searchUrl = `${TC_RECALL_BASE}/recall/make-name/${encodedMake}/model-name/${encodedModel}/year-range/${year}-${year}?format=json`;
+    const searchResponse = await fetchWithTimeout(searchUrl, {}, 5000);
+    const searchData = await searchResponse.json();
+
+    const resultSet = searchData?.ResultSet || [];
+    if (resultSet.length === 0) {
+      return {
+        success: true,
+        source: 'Transport Canada',
+        vehicle: { year, make, model },
+        recalls: [],
+        has_open_recalls: false,
+        recall_count: 0
+      };
+    }
+
+    // Extract recall numbers
+    const recallNumbers = resultSet.map(record => {
+      const fields = {};
+      for (const field of record) {
+        fields[field.Name] = field.Value?.Literal;
+      }
+      return fields['Recall number'];
+    }).filter(Boolean);
+
+    // Step 2: Fetch details for each recall (limit to 5 to avoid excessive calls)
+    const detailPromises = recallNumbers.slice(0, 5).map(async (recallNum) => {
+      try {
+        const detailUrl = `${TC_RECALL_BASE}/recall-summary/recall-number/${recallNum}?format=json`;
+        const detailResponse = await fetchWithTimeout(detailUrl, {}, 5000);
+        const detailData = await detailResponse.json();
+
+        const details = detailData?.ResultSet || [];
+        if (details.length === 0) return null;
+
+        // Parse the field array into a flat object
+        const fields = {};
+        for (const field of details[0]) {
+          fields[field.Name] = field.Value?.Literal;
+        }
+
+        return {
+          recall_number: fields.RECALL_NUMBER_NUM,
+          manufacturer_recall_number: fields.MANUFACTURER_RECALL_NO_TXT,
+          recall_date: fields.RECALL_DATE_DTE?.split(' ')[0] || null,
+          system_type: fields.SYSTEM_TYPE_ETXT,
+          category: fields.CATEGORY_ETXT,
+          units_affected: fields.UNIT_AFFECTED_NBR ? parseInt(fields.UNIT_AFFECTED_NBR, 10) : null,
+          description: fields.COMMENT_ETXT,
+          notification_type: fields.NOTIFICATION_TYPE_ETXT
+        };
+      } catch {
+        return null;
+      }
+    });
+
+    const recalls = (await Promise.all(detailPromises)).filter(Boolean);
+
+    return {
+      success: true,
+      source: 'Transport Canada',
+      vehicle: { year, make, model },
+      recalls,
+      has_open_recalls: recalls.length > 0,
+      recall_count: recalls.length
+    };
+  } catch (error) {
+    logger.error('[TransportCanada] Recalls error', { error: error.message });
+    return { success: false, error: error.message };
+  }
+}
+
+/**
  * Get warranty information for a vehicle
  */
 export async function getWarranty(year, make, model) {
@@ -863,9 +952,40 @@ export async function getVehicleIntelligence(vin, currentMileage = null) {
 
   const [vinResult, repairCostsResult, marketValueResult] = await Promise.all(parallelCalls);
 
-  // Use embedded data from VIN decode (no extra API calls)
-  const hasRecalls = vinResult.success && vinResult.has_open_recalls;
+  // Fetch Transport Canada recalls in parallel (needs make/model/year from VIN decode)
+  let canadianRecallsResult = { success: false };
+  if (vinResult.success && vinResult.vehicle?.year && vinResult.vehicle?.make && vinResult.vehicle?.model) {
+    // Fire and don't block — merge later
+    canadianRecallsResult = await getCanadianRecalls(
+      vinResult.vehicle.year, vinResult.vehicle.make, vinResult.vehicle.model
+    ).catch(() => ({ success: false }));
+  }
+
+  // Use embedded data from VIN decode (no extra API calls for US recalls/warranties/maintenance)
   const embeddedRecalls = vinResult.success ? vinResult.recalls : [];
+  const canadianRecalls = canadianRecallsResult.success ? canadianRecallsResult.recalls : [];
+
+  // Merge US (NHTSA) + Canadian (Transport Canada) recalls, deduplicating by description similarity
+  const allRecalls = [...embeddedRecalls];
+  for (const caRecall of canadianRecalls) {
+    const isDuplicate = allRecalls.some(usRecall => {
+      const usDesc = (usRecall.summary || usRecall.description || '').toLowerCase();
+      const caDesc = (caRecall.description || '').toLowerCase();
+      return usRecall.component?.toLowerCase() === caRecall.system_type?.toLowerCase()
+        || (usDesc.length > 20 && caDesc.length > 20 && usDesc.substring(0, 40) === caDesc.substring(0, 40));
+    });
+    if (!isDuplicate) {
+      allRecalls.push({
+        campaign_id: caRecall.recall_number,
+        recall_date: caRecall.recall_date,
+        component: caRecall.system_type,
+        summary: caRecall.description,
+        source: 'Transport Canada'
+      });
+    }
+  }
+
+  const hasRecalls = allRecalls.length > 0;
   const embeddedWarranties = vinResult.success ? vinResult.warranties : [];
   const embeddedMaintenance = vinResult.success ? vinResult.maintenance : null;
 
@@ -911,8 +1031,8 @@ export async function getVehicleIntelligence(vin, currentMileage = null) {
     vehicle: vinResult.success ? vinResult.vehicle : null,
     recalls: hasRecalls ? {
       has_open_recalls: true,
-      count: vinResult.recall_count,
-      items: embeddedRecalls.slice(0, 3)
+      count: allRecalls.length,
+      items: allRecalls.slice(0, 5)
     } : (vinResult.success ? { has_open_recalls: false, count: 0, items: [] } : null),
     maintenance: maintenanceInfo,
     warranty: embeddedWarranties.length > 0 ? embeddedWarranties : null,
@@ -937,7 +1057,7 @@ export async function getVehicleIntelligence(vin, currentMileage = null) {
   }
 
   if (hasRecalls) {
-    summaryParts.push(`${vinResult.recall_count} open recall${vinResult.recall_count > 1 ? 's' : ''}`);
+    summaryParts.push(`${allRecalls.length} open recall${allRecalls.length > 1 ? 's' : ''}`);
   }
 
   if (maintenanceInfo?.upcoming_services?.length > 0) {
@@ -962,6 +1082,7 @@ export default {
   getMaintenanceSchedule,
   getMaintenanceByYMM,
   getRecalls,
+  getCanadianRecalls,
   getWarranty,
   getRepairCosts,
   getRepairEstimates,
