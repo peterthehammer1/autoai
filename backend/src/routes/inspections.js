@@ -202,8 +202,8 @@ router.get('/:id', async (req, res, next) => {
       inspection: {
         ...inspection,
         inspection_items: items || [],
-        summary,
       },
+      summary,
     });
   } catch (error) {
     next(error);

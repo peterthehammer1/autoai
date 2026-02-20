@@ -238,8 +238,8 @@ router.get('/:token/inspections/:id', requireToken, async (req, res, next) => {
       inspection: {
         ...inspection,
         inspection_items: items || [],
-        summary,
       },
+      summary,
       shop: {
         name: BUSINESS.name,
         phone: BUSINESS.phone,
