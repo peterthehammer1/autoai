@@ -67,38 +67,74 @@ export async function decodeVIN(vin) {
 
     if (data.status === 'success' && data.data) {
       const d = data.data;
-      const engine = Array.isArray(d.engine) ? d.engine[0] : d.engine;
-      const fuel = Array.isArray(d.fuel) ? d.fuel[0] : d.fuel;
+
+      // Advanced VIN Decode v2 structure:
+      // - Top-level: vin, year, make, model, trim, price, vehicle, transmission
+      // - dimensions[]: array of {key: data} objects — engine (hp/torque/size), fuel, mpg
+      // - specifications[]: array of {key: data} objects — engine (type/config), fuel (type), mpg (EPA)
+
+      // Extract named entries from dimensions[] and specifications[] arrays
+      const dims = {};
+      if (Array.isArray(d.dimensions)) {
+        for (const entry of d.dimensions) {
+          const key = Object.keys(entry)[0];
+          if (key) dims[key] = entry[key];
+        }
+      }
+      const specs = {};
+      if (Array.isArray(d.specifications)) {
+        for (const entry of d.specifications) {
+          const key = Object.keys(entry)[0];
+          if (key) specs[key] = entry[key];
+        }
+      }
+
+      // dimensions.engine is array of [{engine_size: [...]}, {horsepower: [...]}, {torque: [...]}]
+      const dimEngine = {};
+      if (Array.isArray(dims.engine)) {
+        for (const item of dims.engine) {
+          Object.assign(dimEngine, item);
+        }
+      }
+
+      // specifications.engine is flat: {type, displacement, compressor, drivetype, cam_type, ...}
+      const specEngine = specs.engine || {};
+      // specifications.fuel is flat: {type, grade}
+      const specFuel = specs.fuel || {};
+      // specifications.mpg is flat: {epa_city_economy, epa_hwy_economy, epa_combined_economy}
+      const specMpg = specs.mpg || {};
 
       return {
         success: true,
         vehicle: {
           vin: d.vin,
-          year: d.year || d.basic?.year,
-          make: d.make || d.basic?.make,
-          model: d.model || d.basic?.model,
-          trim: d.trim || d.basic?.trim,
-          body_type: d.basic?.body_type,
-          vehicle_type: d.basic?.vehicle_type,
-          doors: d.basic?.doors,
+          year: d.year,
+          make: d.make,
+          model: d.model,
+          trim: d.trim,
+          body_type: d.vehicle?.body_type,
+          vehicle_type: d.vehicle?.epa_classification,
+          doors: d.vehicle?.doors,
           engine: {
-            cylinders: engine?.cylinders?.[0]?.value || engine?.cylinders,
-            size: engine?.engine_size?.[0]?.value || engine?.engine_size,
-            description: engine?.engine_description || engine?.description,
-            horsepower: engine?.horsepower?.find(h => h.unit === 'hp')?.value,
-            torque: engine?.torque?.find(t => t.unit === 'lb.ft')?.value,
-            fuel_type: fuel?.fuel_type
+            type: specEngine.type || specEngine.cylinders_configuration,
+            cylinders: specEngine.cylinders_configuration,
+            size: dimEngine.engine_size?.[0]?.value || specEngine.displacement,
+            compressor: specEngine.compressor,
+            horsepower: dimEngine.horsepower?.find(h => h.unit === 'hp')?.value,
+            torque: dimEngine.torque?.find(t => t.unit === 'lb.ft')?.value,
+            fuel_type: specFuel.type,
+            fuel_grade: specFuel.grade,
+            drive_type: specEngine.drivetype
           },
-          transmission: d.transmission?.description || d.transmission?.transmission_style,
-          drive_type: d.drivetrain?.drive_type,
-          fuel_economy: fuel ? {
-            city_mpg: fuel.city_mpg?.[0]?.value,
-            highway_mpg: fuel.highway_mpg?.[0]?.value,
-            combined_mpg: fuel.combined_mpg?.[0]?.value
-          } : null,
+          transmission: d.transmission?.description || d.transmission?.type,
+          drive_type: specEngine.drivetype,
+          fuel_economy: {
+            city_mpg: specMpg.epa_city_economy || null,
+            highway_mpg: specMpg.epa_hwy_economy || null,
+            combined_mpg: specMpg.epa_combined_economy || null
+          },
           msrp: d.price?.base_msrp || null,
-          manufacturer: d.manufacturer?.manufacturer,
-          plant_country: d.manufacturer?.country
+          summary: d.summary || null
         }
       };
     }
@@ -555,7 +591,7 @@ export async function getSpecsByYMMT(year, make, model, trim) {
           currency: d.price?.currency || 'USD',
           engine: engine ? {
             size: engine.engine_size?.[0]?.value,
-            horsepower: engine.horsepower?.[0]?.value,
+            horsepower: engine.horsepower?.find(h => h.unit === 'hp')?.value,
             cylinders: engine.cylinders?.[0]?.value || engine.cylinders
           } : null,
           transmission: d.transmission ? {
