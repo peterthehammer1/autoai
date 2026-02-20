@@ -98,7 +98,7 @@ router.get('/:token', requireToken, async (req, res, next) => {
       .from('customers')
       .select(`
         id, first_name, last_name, phone, email,
-        vehicles(id, year, make, model, color, license_plate, mileage)
+        vehicles(id, year, make, model, color, license_plate, mileage, vin)
       `)
       .eq('id', id)
       .single();
@@ -123,7 +123,7 @@ router.get('/:token/appointments', requireToken, async (req, res, next) => {
       .select(`
         id, status, scheduled_date, scheduled_time, quoted_total,
         customer_notes, loaner_requested, shuttle_requested, waiter,
-        vehicle:vehicles(id, year, make, model, color),
+        vehicle:vehicles(id, year, make, model, color, vin),
         appointment_services(service_name, quoted_price, duration_minutes)
       `)
       .eq('customer_id', id)
@@ -608,6 +608,61 @@ router.post('/:token/work-orders/:id/pay', requireToken, async (req, res, next) 
       payment,
       total_paid_cents: newTotalPaid,
       balance_due_cents: Math.max(0, newBalance),
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * GET /:token/vehicles/:vehicleId/intelligence — Vehicle health data (maintenance, recalls, warranty)
+ */
+router.get('/:token/vehicles/:vehicleId/intelligence', requireToken, async (req, res, next) => {
+  try {
+    const customerId = req.portalCustomer.id;
+    const { vehicleId } = req.params;
+    if (!isValidUUID(vehicleId)) return validationError(res, 'Invalid vehicle ID');
+
+    // Verify vehicle belongs to customer
+    const { data: vehicle, error } = await supabase
+      .from('vehicles')
+      .select('id, year, make, model, vin, mileage')
+      .eq('id', vehicleId)
+      .eq('customer_id', customerId)
+      .single();
+
+    if (error || !vehicle) {
+      return res.status(404).json({ error: { message: 'Vehicle not found' } });
+    }
+
+    const { getVehicleIntelligence, getWarranty, getCanadianRecalls } = await import('../services/vehicle-databases.js');
+
+    if (vehicle.vin && vehicle.vin.length === 17) {
+      // Full intelligence with VIN
+      const result = await getVehicleIntelligence(vehicle.vin, vehicle.mileage || null);
+      return res.json(result);
+    }
+
+    // Fallback: YMM-only (warranty + Canadian recalls)
+    const [warrantyResult, recallsResult] = await Promise.all([
+      getWarranty(vehicle.year, vehicle.make, vehicle.model).catch(() => ({ success: false })),
+      getCanadianRecalls(vehicle.year, vehicle.make, vehicle.model).catch(() => ({ success: false })),
+    ]);
+
+    res.json({
+      success: true,
+      vin: null,
+      vehicle: { year: vehicle.year, make: vehicle.make, model: vehicle.model },
+      recalls: recallsResult.success ? {
+        has_open_recalls: recallsResult.recall_count > 0,
+        count: recallsResult.recall_count || 0,
+        items: recallsResult.recalls || [],
+      } : null,
+      maintenance: null,
+      warranty: warrantyResult.success ? warrantyResult.warranty : null,
+      repair_costs: null,
+      market_value: null,
+      summary: 'Add VIN for full maintenance schedule and recall data',
     });
   } catch (error) {
     next(error);

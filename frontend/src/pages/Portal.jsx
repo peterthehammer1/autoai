@@ -30,7 +30,11 @@ import {
   Shield,
   PhoneCall,
   MapPin,
+  ShieldAlert,
+  Settings,
+  Activity,
 } from 'lucide-react'
+import CarImage from '@/components/CarImage'
 
 const API_BASE = import.meta.env.VITE_API_URL || '/api'
 
@@ -284,7 +288,7 @@ export default function Portal() {
         {tab === 'estimate' && <EstimateTab token={token} customer={customer} />}
         {tab === 'inspection' && <InspectionTab token={token} />}
         {tab === 'history' && <HistoryTab token={token} />}
-        {tab === 'vehicles' && <VehiclesTab vehicles={customer?.vehicles || []} />}
+        {tab === 'vehicles' && <VehiclesTab vehicles={customer?.vehicles || []} token={token} />}
       </main>
 
       {/* Footer */}
@@ -367,11 +371,18 @@ function RepairTracker({ token, workOrderId }) {
       {/* Vehicle + WO header */}
       <div className="bg-gradient-to-br from-slate-800 to-slate-700 rounded-2xl p-5 text-white shadow-lg">
         <div className="flex items-center justify-between mb-3">
-          <div>
-            <p className="text-lg font-bold">{wo.work_order_display}</p>
-            {vehicleLabel && (
-              <p className="text-sm text-slate-300 mt-0.5">{vehicleLabel}</p>
+          <div className="flex items-center gap-3">
+            {vehicle && (
+              <div className="h-12 w-12 rounded-xl overflow-hidden flex-shrink-0 bg-white/10">
+                <CarImage make={vehicle.make} model={vehicle.model} year={vehicle.year} size="sm" />
+              </div>
             )}
+            <div>
+              <p className="text-lg font-bold">{wo.work_order_display}</p>
+              {vehicleLabel && (
+                <p className="text-sm text-slate-300 mt-0.5">{vehicleLabel}</p>
+              )}
+            </div>
           </div>
           <span className={cn(
             'px-3 py-1 rounded-full text-xs font-semibold',
@@ -620,15 +631,22 @@ function StatusTab({ token }) {
                 )}
               >
                 <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <p className={cn('text-base font-bold', isInProgress ? 'text-white' : 'text-slate-900')}>
-                      {wo.work_order_display}
-                    </p>
-                    {vehicleLabel && (
-                      <p className={cn('text-sm mt-0.5', isInProgress ? 'text-teal-100' : 'text-slate-500')}>
-                        {vehicleLabel}
-                      </p>
+                  <div className="flex items-center gap-3">
+                    {vehicle && (
+                      <div className={cn('h-11 w-11 rounded-xl overflow-hidden flex-shrink-0', isInProgress ? 'bg-white/15' : 'bg-slate-100')}>
+                        <CarImage make={vehicle.make} model={vehicle.model} year={vehicle.year} size="sm" />
+                      </div>
                     )}
+                    <div>
+                      <p className={cn('text-base font-bold', isInProgress ? 'text-white' : 'text-slate-900')}>
+                        {wo.work_order_display}
+                      </p>
+                      {vehicleLabel && (
+                        <p className={cn('text-sm mt-0.5', isInProgress ? 'text-teal-100' : 'text-slate-500')}>
+                          {vehicleLabel}
+                        </p>
+                      )}
+                    </div>
                   </div>
                   <span className={cn(
                     'px-3 py-1 rounded-full text-xs font-semibold',
@@ -695,8 +713,8 @@ function StatusTab({ token }) {
             <div className="p-5 space-y-4">
               {activeApt.vehicle && (
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0">
-                    <Car className="h-5 w-5 text-slate-500" />
+                  <div className="h-12 w-12 rounded-xl overflow-hidden flex-shrink-0 bg-slate-100">
+                    <CarImage make={activeApt.vehicle.make} model={activeApt.vehicle.model} year={activeApt.vehicle.year} size="sm" />
                   </div>
                   <div>
                     <p className="text-sm font-semibold text-slate-900">
@@ -904,6 +922,7 @@ function PortalPaymentForm({ token, workOrderId, balanceDueCents, onPaymentCompl
 
 function EstimateTab({ token, customer }) {
   const [workOrders, setWorkOrders] = useState(null)
+  const [appointments, setAppointments] = useState(null)
   const [selectedWO, setSelectedWO] = useState(null)
   const [woDetail, setWODetail] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -913,18 +932,25 @@ function EstimateTab({ token, customer }) {
   const [itemStatuses, setItemStatuses] = useState({})
 
   useEffect(() => {
-    portalFetch(token, '/work-orders')
-      .then(data => {
-        const pending = (data.work_orders || []).filter(wo =>
+    Promise.all([
+      portalFetch(token, '/work-orders'),
+      portalFetch(token, '/appointments'),
+    ])
+      .then(([woData, aptData]) => {
+        const pending = (woData.work_orders || []).filter(wo =>
           ['estimated', 'sent_to_customer'].includes(wo.status)
         )
         setWorkOrders(pending)
+        setAppointments(aptData.appointments || [])
         // Auto-select the first pending WO
         if (pending.length === 1) {
           loadWODetail(pending[0].id)
         }
       })
-      .catch(() => setWorkOrders([]))
+      .catch(() => {
+        setWorkOrders([])
+        setAppointments([])
+      })
       .finally(() => setLoading(false))
   }, [token])
 
@@ -977,12 +1003,115 @@ function EstimateTab({ token, customer }) {
   if (loading) return <LoadingCard />
 
   if (!workOrders?.length) {
+    // Show appointment-based estimate if there's an upcoming appointment
+    const upcomingApt = appointments?.find(a =>
+      !['completed', 'cancelled', 'no_show'].includes(a.status)
+    )
+
+    if (!upcomingApt || !upcomingApt.appointment_services?.length) {
+      return (
+        <EmptyState
+          icon={FileText}
+          title="No pending estimates"
+          message="Your service estimates will appear here when you have an upcoming appointment."
+        />
+      )
+    }
+
+    const services = upcomingApt.appointment_services
+    const totalCost = services.reduce((sum, s) => sum + (parseFloat(s.quoted_price) || 0), 0)
+    const totalMinutes = services.reduce((sum, s) => sum + (s.duration_minutes || 0), 0)
+    const totalHours = Math.floor(totalMinutes / 60)
+    const remainingMinutes = totalMinutes % 60
+
+    // Calculate estimated ready time
+    let readyTimeLabel = null
+    if (upcomingApt.scheduled_time && totalMinutes > 0) {
+      const [h, m] = upcomingApt.scheduled_time.split(':').map(Number)
+      const readyH = h + Math.floor((m + totalMinutes) / 60)
+      const readyM = (m + totalMinutes) % 60
+      const period = readyH >= 12 ? 'PM' : 'AM'
+      const displayH = readyH > 12 ? readyH - 12 : readyH === 0 ? 12 : readyH
+      readyTimeLabel = `${displayH}:${String(readyM).padStart(2, '0')} ${period}`
+    }
+
+    const vehicle = upcomingApt.vehicle
+
     return (
-      <EmptyState
-        icon={FileText}
-        title="No pending estimates"
-        message="You don't have any estimates waiting for approval."
-      />
+      <div className="space-y-4">
+        {/* Estimate header */}
+        <div className="bg-gradient-to-br from-slate-800 to-slate-700 rounded-2xl p-5 text-white shadow-lg">
+          <div className="flex items-center gap-3 mb-3">
+            {vehicle && (
+              <div className="h-12 w-12 rounded-xl overflow-hidden flex-shrink-0 bg-white/10">
+                <CarImage make={vehicle.make} model={vehicle.model} year={vehicle.year} size="sm" />
+              </div>
+            )}
+            <div>
+              <p className="text-base font-bold">Service Estimate</p>
+              {vehicle && (
+                <p className="text-sm text-slate-300 mt-0.5">{vehicle.year} {vehicle.make} {vehicle.model}</p>
+              )}
+            </div>
+          </div>
+          <div className="flex items-center gap-2 text-xs text-slate-400">
+            <Calendar className="h-3.5 w-3.5" />
+            <span>{format(parseDateLocal(upcomingApt.scheduled_date), 'EEEE, MMMM do')} at {formatTime12Hour(upcomingApt.scheduled_time)}</span>
+          </div>
+        </div>
+
+        {/* Services breakdown */}
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm divide-y divide-slate-100 overflow-hidden">
+          <div className="px-5 py-3.5">
+            <h3 className="text-xs font-medium uppercase tracking-wider text-slate-400">Services</h3>
+          </div>
+          {services.map((s, i) => (
+            <div key={i} className="px-5 py-3.5 flex items-center justify-between">
+              <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                <Wrench className="h-4 w-4 text-teal-500 flex-shrink-0" />
+                <div className="min-w-0">
+                  <span className="text-sm text-slate-700 block truncate">{s.service_name}</span>
+                  {s.duration_minutes > 0 && (
+                    <span className="text-xs text-slate-400">{s.duration_minutes} min</span>
+                  )}
+                </div>
+              </div>
+              {s.quoted_price > 0 && (
+                <span className="text-sm font-semibold text-slate-900 ml-3">${parseFloat(s.quoted_price).toFixed(2)}</span>
+              )}
+            </div>
+          ))}
+          <div className="px-5 py-4 flex items-center justify-between bg-slate-50">
+            <span className="text-base font-bold text-slate-900">Estimated Total</span>
+            <span className="text-base font-bold text-slate-900">${totalCost.toFixed(2)}</span>
+          </div>
+        </div>
+
+        {/* Time estimate */}
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+          <h3 className="text-xs font-medium uppercase tracking-wider text-slate-400 mb-3">Time Estimate</h3>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-slate-50 rounded-xl p-3 text-center">
+              <Clock className="h-4 w-4 text-teal-500 mx-auto mb-1" />
+              <p className="text-lg font-bold text-slate-900">
+                {totalHours > 0 ? `${totalHours}h ` : ''}{remainingMinutes > 0 ? `${remainingMinutes}m` : totalHours > 0 ? '' : '0m'}
+              </p>
+              <p className="text-[11px] text-slate-500">Est. Duration</p>
+            </div>
+            {readyTimeLabel && (
+              <div className="bg-teal-50 rounded-xl p-3 text-center">
+                <CheckCircle2 className="h-4 w-4 text-teal-600 mx-auto mb-1" />
+                <p className="text-lg font-bold text-teal-700">{readyTimeLabel}</p>
+                <p className="text-[11px] text-teal-600">Est. Ready By</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <p className="text-xs text-slate-400 text-center px-4">
+          This is an estimate based on your booked services. Final pricing may vary based on inspection findings.
+        </p>
+      </div>
     )
   }
 
@@ -1217,20 +1346,29 @@ function HistoryTab({ token }) {
             const services = apt.appointment_services?.map(s => s.service_name) || []
             return (
               <div key={apt.id} className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-sm font-semibold text-slate-900">
-                    {format(parseDateLocal(apt.scheduled_date), 'MMM d, yyyy')}
-                  </p>
-                  <span className={cn('px-2.5 py-0.5 rounded-full text-xs font-medium', getStatusColor(apt.status))}>
-                    {apt.status.replace(/_/g, ' ')}
-                  </span>
+                <div className="flex items-center gap-3">
+                  {vehicle && (
+                    <div className="h-10 w-10 rounded-lg overflow-hidden flex-shrink-0 bg-slate-100">
+                      <CarImage make={vehicle.make} model={vehicle.model} year={vehicle.year} size="xs" />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-0.5">
+                      <p className="text-sm font-semibold text-slate-900">
+                        {format(parseDateLocal(apt.scheduled_date), 'MMM d, yyyy')}
+                      </p>
+                      <span className={cn('px-2.5 py-0.5 rounded-full text-xs font-medium', getStatusColor(apt.status))}>
+                        {apt.status.replace(/_/g, ' ')}
+                      </span>
+                    </div>
+                    {vehicle && (
+                      <p className="text-xs text-slate-500">{vehicle.year} {vehicle.make} {vehicle.model}</p>
+                    )}
+                    {services.length > 0 && (
+                      <p className="text-xs text-slate-400 mt-0.5 truncate">{services.join(', ')}</p>
+                    )}
+                  </div>
                 </div>
-                {vehicle && (
-                  <p className="text-xs text-slate-500">{vehicle.year} {vehicle.make} {vehicle.model}</p>
-                )}
-                {services.length > 0 && (
-                  <p className="text-xs text-slate-400 mt-1">{services.join(', ')}</p>
-                )}
               </div>
             )
           })}
@@ -1265,7 +1403,9 @@ function HistoryTab({ token }) {
 
 // ── Vehicles Tab ──
 
-function VehiclesTab({ vehicles }) {
+function VehiclesTab({ vehicles, token }) {
+  const [expandedVehicle, setExpandedVehicle] = useState(null)
+
   if (!vehicles?.length) {
     return (
       <EmptyState
@@ -1277,44 +1417,234 @@ function VehiclesTab({ vehicles }) {
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {vehicles.map(v => (
-        <div key={v.id} className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
-          <div className="flex items-center gap-3">
-            <div className="h-11 w-11 rounded-full bg-slate-100 flex items-center justify-center">
-              <Car className="h-5 w-5 text-slate-500" />
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-semibold text-slate-900">
-                {v.year} {v.make} {v.model}
-              </p>
-              <div className="flex items-center gap-3 text-xs text-slate-500 mt-0.5">
-                {v.color && <span>{v.color}</span>}
-                {v.license_plate && <span className="font-mono">{v.license_plate}</span>}
+        <div key={v.id} className="space-y-3">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+            <div className="flex items-center gap-3">
+              <div className="h-14 w-14 rounded-xl overflow-hidden flex-shrink-0 bg-slate-100">
+                <CarImage make={v.make} model={v.model} year={v.year} size="md" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-slate-900">
+                  {v.year} {v.make} {v.model}
+                </p>
+                <div className="flex items-center gap-3 text-xs text-slate-500 mt-0.5">
+                  {v.color && <span>{v.color}</span>}
+                  {v.license_plate && <span className="font-mono">{v.license_plate}</span>}
+                </div>
               </div>
             </div>
-          </div>
-          {v.mileage && (
-            <p className="text-xs text-slate-400 mt-2 pl-14">
-              {Number(v.mileage).toLocaleString()} km
-            </p>
-          )}
+            {v.mileage && (
+              <p className="text-xs text-slate-400 mt-2 pl-[68px]">
+                {Number(v.mileage).toLocaleString()} km
+              </p>
+            )}
 
-          {/* Link to inspection tab */}
-          <button
-            onClick={() => {
-              const tabBtn = document.querySelector('[data-tab="inspection"]')
-              if (tabBtn) tabBtn.click()
-            }}
-            className="mt-4 w-full px-3 py-2.5 bg-teal-50 rounded-xl border border-teal-200 text-center active:bg-teal-100 transition-colors"
-          >
-            <p className="text-xs text-teal-700 font-medium flex items-center justify-center gap-1.5">
-              <ClipboardCheck className="h-3.5 w-3.5" />
-              View Vehicle Inspections
-            </p>
-          </button>
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              <button
+                onClick={() => setExpandedVehicle(expandedVehicle === v.id ? null : v.id)}
+                className={cn(
+                  'px-3 py-2.5 rounded-xl border text-center active:scale-[0.98] transition-all',
+                  expandedVehicle === v.id
+                    ? 'bg-teal-600 border-teal-600 text-white'
+                    : 'bg-teal-50 border-teal-200 active:bg-teal-100'
+                )}
+              >
+                <p className={cn('text-xs font-medium flex items-center justify-center gap-1.5', expandedVehicle === v.id ? 'text-white' : 'text-teal-700')}>
+                  <Activity className="h-3.5 w-3.5" />
+                  Vehicle Health
+                </p>
+              </button>
+              <button
+                onClick={() => {
+                  const tabBtn = document.querySelector('[data-tab="inspection"]')
+                  if (tabBtn) tabBtn.click()
+                }}
+                className="px-3 py-2.5 bg-slate-50 rounded-xl border border-slate-200 text-center active:bg-slate-100 transition-colors"
+              >
+                <p className="text-xs text-slate-700 font-medium flex items-center justify-center gap-1.5">
+                  <ClipboardCheck className="h-3.5 w-3.5" />
+                  Inspections
+                </p>
+              </button>
+            </div>
+          </div>
+
+          {expandedVehicle === v.id && (
+            <VehicleIntelligence token={token} vehicle={v} />
+          )}
         </div>
       ))}
+    </div>
+  )
+}
+
+// ── Vehicle Intelligence ──
+
+function VehicleIntelligence({ token, vehicle }) {
+  const [data, setData] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    setLoading(true)
+    setError(null)
+    portalFetch(token, `/vehicles/${vehicle.id}/intelligence`)
+      .then(result => setData(result))
+      .catch(err => setError(err.message))
+      .finally(() => setLoading(false))
+  }, [token, vehicle.id])
+
+  if (loading) {
+    return (
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 flex flex-col items-center justify-center gap-2">
+        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-teal-600" />
+        <p className="text-xs text-slate-400">Loading vehicle health data...</p>
+      </div>
+    )
+  }
+
+  if (error || !data?.success) {
+    return (
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 text-center">
+        <AlertCircle className="h-5 w-5 text-slate-400 mx-auto mb-2" />
+        <p className="text-sm text-slate-500">Vehicle health data unavailable</p>
+        <p className="text-xs text-slate-400 mt-1">{error || 'Could not fetch data'}</p>
+      </div>
+    )
+  }
+
+  const { recalls, maintenance, warranty } = data
+
+  return (
+    <div className="space-y-3">
+      {/* Recalls */}
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className="px-5 py-3.5 flex items-center gap-2 border-b border-slate-100">
+          <ShieldAlert className={cn('h-4 w-4', recalls?.has_open_recalls ? 'text-red-500' : 'text-emerald-500')} />
+          <h4 className="text-xs font-medium uppercase tracking-wider text-slate-400">Safety Recalls</h4>
+          {recalls?.count > 0 && (
+            <span className="ml-auto px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-700">{recalls.count}</span>
+          )}
+        </div>
+        <div className="px-5 py-4">
+          {!recalls || recalls.count === 0 ? (
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+              <p className="text-sm text-slate-600">No open recalls found</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {recalls.items.slice(0, 5).map((recall, i) => (
+                <div key={i} className="border-l-2 border-red-300 pl-3">
+                  <p className="text-sm font-medium text-slate-800">{recall.component || recall.system_type || 'Safety Recall'}</p>
+                  <p className="text-xs text-slate-500 mt-0.5 line-clamp-2">{recall.summary || recall.description}</p>
+                  {recall.recall_date && (
+                    <p className="text-[11px] text-slate-400 mt-1">Issued: {recall.recall_date}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Maintenance Schedule */}
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className="px-5 py-3.5 flex items-center gap-2 border-b border-slate-100">
+          <Settings className="h-4 w-4 text-teal-500" />
+          <h4 className="text-xs font-medium uppercase tracking-wider text-slate-400">Maintenance Schedule</h4>
+        </div>
+        <div className="px-5 py-4">
+          {!maintenance ? (
+            <div className="text-center py-2">
+              <p className="text-sm text-slate-500">{vehicle.vin ? 'Maintenance data unavailable' : 'Add VIN for full maintenance schedule'}</p>
+            </div>
+          ) : maintenance.upcoming_services?.length > 0 ? (
+            <div className="space-y-3">
+              <p className="text-xs text-slate-400 font-medium">Upcoming services:</p>
+              {maintenance.upcoming_services.map((svc, i) => (
+                <div key={i} className="bg-slate-50 rounded-xl p-3">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-xs font-semibold text-teal-700">At {svc.at_mileage?.toLocaleString()} mi</span>
+                    {svc.miles_until && (
+                      <span className="text-xs text-slate-500">{svc.miles_until.toLocaleString()} mi away</span>
+                    )}
+                  </div>
+                  <div className="space-y-1">
+                    {(svc.services || []).slice(0, 5).map((s, j) => (
+                      <div key={j} className="flex items-center gap-2">
+                        <Wrench className="h-3 w-3 text-slate-400 flex-shrink-0" />
+                        <span className="text-xs text-slate-600">{typeof s === 'string' ? s : s.name || s.description || 'Service'}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : maintenance.schedule?.intervals?.length > 0 ? (
+            <div className="space-y-3">
+              <p className="text-xs text-slate-400 font-medium">{maintenance.schedule.intervals.length} service intervals on file</p>
+              {maintenance.schedule.intervals.slice(0, 4).map((interval, i) => (
+                <div key={i} className="bg-slate-50 rounded-xl p-3">
+                  <p className="text-xs font-semibold text-teal-700 mb-1.5">
+                    {interval.mileage_miles ? `${interval.mileage_miles.toLocaleString()} mi` : `Interval ${i + 1}`}
+                    {interval.months && ` / ${interval.months} months`}
+                  </p>
+                  <div className="space-y-1">
+                    {(interval.services || []).slice(0, 5).map((s, j) => (
+                      <div key={j} className="flex items-center gap-2">
+                        <Wrench className="h-3 w-3 text-slate-400 flex-shrink-0" />
+                        <span className="text-xs text-slate-600">{typeof s === 'string' ? s : s.name || s.description || 'Service'}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-slate-500 text-center py-2">No maintenance schedule available</p>
+          )}
+        </div>
+      </div>
+
+      {/* Warranty */}
+      {warranty && (
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="px-5 py-3.5 flex items-center gap-2 border-b border-slate-100">
+            <Shield className="h-4 w-4 text-blue-500" />
+            <h4 className="text-xs font-medium uppercase tracking-wider text-slate-400">Warranty Coverage</h4>
+          </div>
+          <div className="px-5 py-4">
+            {Array.isArray(warranty) ? (
+              <div className="space-y-2.5">
+                {warranty.slice(0, 6).map((w, i) => (
+                  <div key={i} className="flex items-center justify-between">
+                    <span className="text-xs text-slate-600">{w.type || w.name || 'Coverage'}</span>
+                    <span className="text-xs font-medium text-slate-800">
+                      {w.miles ? `${Number(w.miles).toLocaleString()} mi` : ''}
+                      {w.miles && w.months ? ' / ' : ''}
+                      {w.months ? `${w.months} mo` : ''}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : typeof warranty === 'object' ? (
+              <div className="space-y-2.5">
+                {Object.entries(warranty).filter(([, v]) => v).slice(0, 6).map(([key, val]) => (
+                  <div key={key} className="flex items-center justify-between">
+                    <span className="text-xs text-slate-600">{key.replace(/_/g, ' ')}</span>
+                    <span className="text-xs font-medium text-slate-800">{typeof val === 'string' ? val : JSON.stringify(val)}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-slate-500 text-center py-2">Warranty data unavailable</p>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
