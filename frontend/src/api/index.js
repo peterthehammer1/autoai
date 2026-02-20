@@ -443,6 +443,25 @@ export const technicians = {
   },
 }
 
+// Campaigns
+export const campaigns = {
+  list: (params = {}) => {
+    const cleanParams = Object.fromEntries(
+      Object.entries(params).filter(([_, v]) => v != null && v !== '')
+    )
+    const query = new URLSearchParams(cleanParams).toString()
+    return fetchAPI(`/campaigns${query ? `?${query}` : ''}`)
+  },
+  get: (id) => fetchAPI(`/campaigns/${id}`),
+  stats: () => fetchAPI('/campaigns/stats'),
+  create: (data) => fetchAPI('/campaigns', { method: 'POST', body: JSON.stringify(data) }),
+  update: (id, data) => fetchAPI(`/campaigns/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  remove: (id) => fetchAPI(`/campaigns/${id}`, { method: 'DELETE' }),
+  send: (id, dryRun = false) => fetchAPI(`/campaigns/${id}/send${dryRun ? '?dry_run=true' : ''}`, { method: 'POST' }),
+  getSettings: () => fetchAPI('/campaigns/settings'),
+  updateSettings: (data) => fetchAPI('/campaigns/settings', { method: 'PUT', body: JSON.stringify(data) }),
+}
+
 // Portal admin (protected)
 export const portal = {
   generateToken: (customerId, sendSms = false) => fetchAPI('/portal-admin/generate-token', {
@@ -463,6 +482,7 @@ export default {
   inspections,
   technicians,
   reviews,
+  campaigns,
   search,
   leads,
   portal,

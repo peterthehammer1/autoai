@@ -495,6 +495,35 @@ View your full report with photos: ${portalUrl}
   });
 }
 
+/**
+ * Send campaign SMS with template variable substitution
+ */
+export async function sendCampaignSMS({
+  customerPhone,
+  customerName,
+  vehicleDescription,
+  portalUrl,
+  campaignType,
+  messageTemplate,
+  customerId,
+}) {
+  const firstName = customerName?.split(' ')[0] || 'there';
+  const vehicle = vehicleDescription || 'vehicle';
+
+  const body = messageTemplate
+    .replace(/\{first_name\}/g, firstName)
+    .replace(/\{vehicle\}/g, vehicle)
+    .replace(/\{portal_link\}/g, portalUrl || '')
+    .replace(/\{business_name\}/g, BUSINESS.name)
+    .replace(/\{business_phone\}/g, BUSINESS.phone)
+    .replace(/\{agent_name\}/g, BUSINESS.agentName);
+
+  return sendSMS(customerPhone, body, {
+    messageType: `campaign_${campaignType}`,
+    customerId,
+  });
+}
+
 export { logSMS };
 
 export default {
@@ -508,5 +537,6 @@ export default {
   sendReviewRequestSMS,
   sendPortalLinkSMS,
   sendInspectionSMS,
+  sendCampaignSMS,
   logSMS
 };

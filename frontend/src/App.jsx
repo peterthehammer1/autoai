@@ -34,6 +34,7 @@ const Reviews = lazyWithRetry(() => import('@/pages/Reviews'))
 const Portal = lazyWithRetry(() => import('@/pages/Portal'))
 const InspectionEditor = lazyWithRetry(() => import('@/pages/InspectionEditor'))
 const TechClock = lazyWithRetry(() => import('@/pages/TechClock'))
+const Campaigns = lazyWithRetry(() => import('@/pages/Campaigns'))
 
 export function PageLoader() {
   return (
@@ -91,6 +92,7 @@ function App() {
           <Route path="work-orders/:id" element={<WorkOrderDetail />} />
           <Route path="inspections/:id" element={<InspectionEditor />} />
           <Route path="reviews" element={<Reviews />} />
+          <Route path="campaigns" element={<Campaigns />} />
           <Route path="services" element={<Services />} />
           <Route path="settings" element={<Settings />} />
         </Route>

@@ -27,6 +27,7 @@ import workOrderRoutes from './routes/work-orders.js';
 import inspectionRoutes from './routes/inspections.js';
 import technicianRoutes from './routes/technicians.js';
 import reviewRoutes, { clickRouter as reviewClickRouter } from './routes/reviews.js';
+import campaignRoutes from './routes/campaigns.js';
 import portalRouter, { generateToken as portalGenerateToken } from './routes/portal.js';
 import { supabase } from './config/database.js';
 
@@ -158,6 +159,7 @@ app.use('/api/work-orders', generalLimiter, requireApiKey, workOrderRoutes);
 app.use('/api/inspections', generalLimiter, requireApiKey, inspectionRoutes);
 app.use('/api/technicians', generalLimiter, requireApiKey, technicianRoutes);
 app.use('/api/reviews', generalLimiter, requireApiKey, reviewRoutes);
+app.use('/api/campaigns', generalLimiter, requireApiKey, campaignRoutes);
 app.use('/api/call-center', generalLimiter, requireApiKey, callCenterRoutes);
 
 // External service endpoints — no API key (authenticated by their own mechanisms)

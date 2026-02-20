@@ -17,6 +17,7 @@ import {
   ClipboardList,
   Wrench,
   Settings,
+  Megaphone,
   Menu,
   X,
   ChevronRight,
@@ -41,6 +42,7 @@ const navigation = [
   { name: 'SMS Messages', href: '/sms-logs', icon: MessageSquare },
   { name: 'Work Orders', href: '/work-orders', icon: ClipboardList },
   { name: 'Reports', href: '/reports', icon: FileDown },
+  { name: 'Campaigns', href: '/campaigns', icon: Megaphone },
   // Hidden for now - pages still accessible via direct URL
   // { name: 'Services', href: '/services', icon: Wrench },
   // { name: 'Settings', href: '/settings', icon: Settings },

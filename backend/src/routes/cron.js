@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { supabase } from '../config/database.js';
 import { nowEST, daysFromNowEST } from '../utils/timezone.js';
-import { sendReminderSMS, sendServiceReminderSMS, sendReviewRequestSMS } from '../services/sms.js';
+import { sendReminderSMS, sendServiceReminderSMS, sendReviewRequestSMS, sendCampaignSMS } from '../services/sms.js';
 import { logger } from '../utils/logger.js';
 import { format, subDays } from 'date-fns';
 
@@ -604,6 +604,254 @@ router.get('/send-review-requests', async (req, res) => {
 
   } catch (err) {
     logger.error('Cron send-review-requests failed', { error: err });
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * GET /api/cron/marketing-campaigns
+ * Called by Vercel Cron daily at 10am EST (15:00 UTC) on weekdays.
+ * Handles 3 auto-campaign types: welcome, follow_up, win_back.
+ * Requires CRON_SECRET in Authorization header.
+ */
+router.get('/marketing-campaigns', async (req, res) => {
+  if (!verifyCronAuth(req, res)) return;
+
+  try {
+    // Read settings
+    const { data: settingsRows } = await supabase
+      .from('settings')
+      .select('key, value')
+      .like('key', 'campaign_%');
+
+    const cfg = {};
+    for (const row of settingsRows || []) cfg[row.key] = row.value;
+
+    const dedupDays = parseInt(cfg.campaign_dedup_days || '30', 10);
+    const winBackDays = parseInt(cfg.campaign_win_back_days || '180', 10);
+
+    const today = nowEST();
+    const todayStr = formatDate(today);
+    const dedupCutoff = new Date();
+    dedupCutoff.setDate(dedupCutoff.getDate() - dedupDays);
+
+    // Load auto-campaign templates
+    const { data: autoCampaigns } = await supabase
+      .from('campaigns')
+      .select('id, campaign_type, message_template, status')
+      .in('campaign_type', ['welcome', 'follow_up', 'win_back']);
+
+    const campaignMap = {};
+    for (const c of autoCampaigns || []) campaignMap[c.campaign_type] = c;
+
+    const portalBase = process.env.PORTAL_BASE_URL || 'https://premierauto.ai';
+    const results = {
+      welcome: { sent: 0, skipped: 0, failed: 0 },
+      follow_up: { sent: 0, skipped: 0, failed: 0 },
+      win_back: { sent: 0, skipped: 0, failed: 0 },
+    };
+
+    // Helper: send a campaign message to one customer
+    async function sendOne(type, customer, vehicleDescription) {
+      const campaign = campaignMap[type];
+      if (!campaign || campaign.status !== 'active') return;
+
+      const portalUrl = customer.portal_token ? `${portalBase}/portal/${customer.portal_token}` : '';
+
+      try {
+        const result = await sendCampaignSMS({
+          customerPhone: customer.phone,
+          customerName: `${customer.first_name || ''} ${customer.last_name || ''}`.trim(),
+          vehicleDescription,
+          portalUrl,
+          campaignType: type,
+          messageTemplate: campaign.message_template,
+          customerId: customer.id,
+        });
+
+        await supabase.from('campaign_sends').insert({
+          campaign_id: campaign.id,
+          customer_id: customer.id,
+          status: result.success ? 'sent' : 'failed',
+          skip_reason: result.success ? null : result.error,
+        });
+
+        if (result.success) {
+          results[type].sent++;
+          await supabase.from('campaigns')
+            .update({ total_sent: campaign.total_sent + results[type].sent, updated_at: new Date().toISOString() })
+            .eq('id', campaign.id);
+        } else {
+          results[type].failed++;
+        }
+      } catch (smsErr) {
+        results[type].failed++;
+        logger.error(`Campaign ${type} SMS failed`, { customerId: customer.id, error: smsErr.message });
+      }
+    }
+
+    // ── WELCOME: first-time customers whose appointment completed yesterday ──
+    if (cfg.campaign_welcome_enabled !== 'false' && campaignMap.welcome?.status === 'active') {
+      const yesterdayStr = formatDate(addDays(today, -1));
+
+      const { data: yesterdayApts } = await supabase
+        .from('appointments')
+        .select(`
+          id,
+          customer:customers!inner (id, first_name, last_name, phone, marketing_opt_in, portal_token, total_visits),
+          vehicle:vehicles (year, make, model)
+        `)
+        .eq('scheduled_date', yesterdayStr)
+        .in('status', ['completed', 'invoiced', 'paid']);
+
+      // Filter to first-visit customers who opted in
+      const welcomeTargets = (yesterdayApts || []).filter(
+        a => a.customer?.marketing_opt_in && a.customer?.phone && a.customer?.total_visits <= 1
+      );
+
+      // Dedup
+      const welcomeIds = welcomeTargets.map(a => a.customer.id);
+      let welcomeDedup = new Set();
+      if (welcomeIds.length > 0 && campaignMap.welcome) {
+        const { data: recent } = await supabase
+          .from('campaign_sends')
+          .select('customer_id')
+          .eq('campaign_id', campaignMap.welcome.id)
+          .eq('status', 'sent')
+          .in('customer_id', welcomeIds)
+          .gte('sent_at', dedupCutoff.toISOString());
+        welcomeDedup = new Set((recent || []).map(r => r.customer_id));
+      }
+
+      for (const apt of welcomeTargets) {
+        if (welcomeDedup.has(apt.customer.id)) { results.welcome.skipped++; continue; }
+        welcomeDedup.add(apt.customer.id);
+        const veh = apt.vehicle ? `${apt.vehicle.year} ${apt.vehicle.make} ${apt.vehicle.model}` : null;
+        await sendOne('welcome', apt.customer, veh);
+      }
+    }
+
+    // ── FOLLOW-UP: appointments completed 3 days ago ──
+    if (cfg.campaign_follow_up_enabled !== 'false' && campaignMap.follow_up?.status === 'active') {
+      const threeDaysAgoStr = formatDate(addDays(today, -3));
+
+      const { data: followUpApts } = await supabase
+        .from('appointments')
+        .select(`
+          id,
+          customer:customers!inner (id, first_name, last_name, phone, marketing_opt_in, portal_token),
+          vehicle:vehicles (year, make, model)
+        `)
+        .eq('scheduled_date', threeDaysAgoStr)
+        .in('status', ['completed', 'invoiced', 'paid']);
+
+      const followUpTargets = (followUpApts || []).filter(
+        a => a.customer?.marketing_opt_in && a.customer?.phone
+      );
+
+      // Dedup: campaign_sends + review_requests
+      const followUpIds = followUpTargets.map(a => a.customer.id);
+      let followUpDedup = new Set();
+      if (followUpIds.length > 0) {
+        if (campaignMap.follow_up) {
+          const { data: recent } = await supabase
+            .from('campaign_sends')
+            .select('customer_id')
+            .eq('campaign_id', campaignMap.follow_up.id)
+            .eq('status', 'sent')
+            .in('customer_id', followUpIds)
+            .gte('sent_at', dedupCutoff.toISOString());
+          followUpDedup = new Set((recent || []).map(r => r.customer_id));
+        }
+
+        // Also skip if customer already got a review request recently
+        const { data: recentReviews } = await supabase
+          .from('review_requests')
+          .select('customer_id')
+          .in('customer_id', followUpIds)
+          .in('status', ['sent', 'clicked', 'completed'])
+          .gte('sent_at', dedupCutoff.toISOString());
+        for (const r of recentReviews || []) followUpDedup.add(r.customer_id);
+      }
+
+      const seenFollowUp = new Set();
+      for (const apt of followUpTargets) {
+        if (followUpDedup.has(apt.customer.id) || seenFollowUp.has(apt.customer.id)) {
+          results.follow_up.skipped++;
+          continue;
+        }
+        seenFollowUp.add(apt.customer.id);
+        const veh = apt.vehicle ? `${apt.vehicle.year} ${apt.vehicle.make} ${apt.vehicle.model}` : null;
+        await sendOne('follow_up', apt.customer, veh);
+      }
+    }
+
+    // ── WIN-BACK: customers with no visit in win_back_days+ ──
+    if (cfg.campaign_win_back_enabled !== 'false' && campaignMap.win_back?.status === 'active') {
+      const cutoffDate = formatDate(addDays(today, -winBackDays));
+
+      const { data: lapsedCustomers } = await supabase
+        .from('customers')
+        .select('id, first_name, last_name, phone, marketing_opt_in, portal_token')
+        .eq('marketing_opt_in', true)
+        .not('phone', 'is', null)
+        .not('last_visit_date', 'is', null)
+        .lt('last_visit_date', cutoffDate);
+
+      // Dedup
+      const lapsedIds = (lapsedCustomers || []).map(c => c.id);
+      let winBackDedup = new Set();
+      if (lapsedIds.length > 0 && campaignMap.win_back) {
+        const { data: recent } = await supabase
+          .from('campaign_sends')
+          .select('customer_id')
+          .eq('campaign_id', campaignMap.win_back.id)
+          .eq('status', 'sent')
+          .in('customer_id', lapsedIds)
+          .gte('sent_at', dedupCutoff.toISOString());
+        winBackDedup = new Set((recent || []).map(r => r.customer_id));
+      }
+
+      // Also skip if customer has upcoming appointment
+      let upcomingCustomers = new Set();
+      if (lapsedIds.length > 0) {
+        const { data: upcoming } = await supabase
+          .from('appointments')
+          .select('customer_id')
+          .in('customer_id', lapsedIds)
+          .in('status', ['scheduled', 'confirmed'])
+          .gte('scheduled_date', todayStr);
+        upcomingCustomers = new Set((upcoming || []).map(a => a.customer_id));
+      }
+
+      // Get most recent vehicle per customer
+      const vehicleMap = new Map();
+      if (lapsedIds.length > 0) {
+        const { data: vehicles } = await supabase
+          .from('vehicles')
+          .select('customer_id, year, make, model')
+          .in('customer_id', lapsedIds)
+          .order('created_at', { ascending: false });
+        for (const v of vehicles || []) {
+          if (!vehicleMap.has(v.customer_id)) {
+            vehicleMap.set(v.customer_id, `${v.year} ${v.make} ${v.model}`);
+          }
+        }
+      }
+
+      for (const customer of lapsedCustomers || []) {
+        if (winBackDedup.has(customer.id) || upcomingCustomers.has(customer.id)) {
+          results.win_back.skipped++;
+          continue;
+        }
+        await sendOne('win_back', customer, vehicleMap.get(customer.id) || null);
+      }
+    }
+
+    res.json({ success: true, date: todayStr, results });
+
+  } catch (err) {
+    logger.error('Cron marketing-campaigns failed', { error: err });
     res.status(500).json({ error: err.message });
   }
 });
