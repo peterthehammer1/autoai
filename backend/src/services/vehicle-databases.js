@@ -10,7 +10,7 @@ import { logger } from '../utils/logger.js';
 
 const VEHICLE_DB_API_KEY = process.env.VEHICLE_DATABASES_API_KEY;
 const BASE_URL = 'https://api.vehicledatabases.com';
-const API_TIMEOUT_MS = 3000;
+const API_TIMEOUT_MS = 6000;
 
 // VIN year code lookup (10th character -> model year)
 const VIN_YEAR_MAP = {
@@ -62,6 +62,12 @@ export async function decodeVIN(vin) {
     const response = await fetchWithTimeout(`${BASE_URL}/advanced-vin-decode/v2/${vin}`, {
       headers: { 'x-authkey': VEHICLE_DB_API_KEY }
     });
+
+    if (!response.ok) {
+      logger.error('[VehicleDB] VIN decode HTTP error', { status: response.status, vin });
+      const errBody = await response.text().catch(() => '');
+      return { success: false, error: `HTTP ${response.status}: ${errBody.substring(0, 200)}` };
+    }
 
     const data = await response.json();
 
