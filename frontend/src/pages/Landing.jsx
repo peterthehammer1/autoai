@@ -249,21 +249,24 @@ export default function Landing() {
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-xl shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-24">
-            <a href="/" className="shrink-0">
-              <img src="/logo-light.png" alt="Premier Auto Service" width="256" height="256" className="h-20 sm:h-[88px] object-contain" />
+          <div className="flex items-center h-28">
+            <a href="/" className="shrink-0 mr-8">
+              <img src="/logo-light.png" alt="Premier Auto Service" width="256" height="256" className="h-24 sm:h-[104px] object-contain" />
             </a>
 
-            <div className="hidden lg:flex items-center gap-7">
+            <div className="hidden lg:flex items-center gap-7 mr-auto">
               <a href="#features" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">Features</a>
               <a href="#how-it-works" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">How It Works</a>
               <a href="#faq" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">FAQ</a>
               <a href="#testimonials" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">Testimonials</a>
-              <span className="w-px h-5 bg-slate-200" />
+            </div>
+
+            <div className="hidden lg:flex items-center gap-4">
               <a href="tel:+16473711990" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors flex items-center gap-1.5">
                 <Phone className="h-4 w-4" />
                 (647) 371-1990
               </a>
+              <span className="w-px h-5 bg-slate-200" />
               <Button variant="ghost" size="sm" asChild className="text-slate-600 hover:text-slate-900">
                 <Link to="/dashboard">Dashboard</Link>
               </Button>
@@ -357,7 +360,7 @@ export default function Landing() {
       </nav>
 
       {/* Hero */}
-      <section className="pt-40 pb-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
+      <section className="pt-44 pb-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="text-center lg:text-left">
