@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { supabase } from '../config/database.js';
 import { isValidUUID, clampPagination, validationError } from '../middleware/validate.js';
 import { logger } from '../utils/logger.js';
+import { sendPaymentLinkSMS } from '../services/sms.js';
 
 const router = Router();
 
@@ -11,7 +12,7 @@ const VALID_STATUSES = [
 ];
 
 const VALID_ITEM_TYPES = ['labor', 'part', 'fee', 'sublet', 'discount'];
-const VALID_PAYMENT_METHODS = ['cash', 'card', 'debit', 'check', 'e_transfer'];
+const VALID_PAYMENT_METHODS = ['cash', 'card', 'debit', 'check', 'e_transfer', 'online'];
 
 /**
  * Recalculate work order totals from line items
@@ -650,6 +651,69 @@ router.get('/:id/payments', async (req, res, next) => {
       .reduce((sum, p) => sum + p.amount_cents, 0);
 
     res.json({ payments: payments || [], total_paid_cents: totalPaid });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * POST /api/work-orders/:id/send-payment-link
+ * Send SMS with portal payment link to customer
+ */
+router.post('/:id/send-payment-link', async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    if (!isValidUUID(id)) return validationError(res, 'Invalid work order ID');
+
+    const { data: wo, error: woErr } = await supabase
+      .from('work_orders')
+      .select(`
+        id, work_order_number, total_cents, status,
+        customer:customers (id, first_name, last_name, phone),
+        vehicle:vehicles (year, make, model)
+      `)
+      .eq('id', id)
+      .single();
+
+    if (woErr || !wo) return res.status(404).json({ error: { message: 'Work order not found' } });
+    if (!wo.customer?.phone) return validationError(res, 'Customer has no phone number');
+
+    // Get balance
+    const { data: payments } = await supabase
+      .from('payments')
+      .select('amount_cents')
+      .eq('work_order_id', id)
+      .eq('status', 'completed');
+    const totalPaid = (payments || []).reduce((sum, p) => sum + p.amount_cents, 0);
+    const balanceDue = wo.total_cents - totalPaid;
+
+    if (balanceDue <= 0) return validationError(res, 'No balance due on this work order');
+
+    // Ensure portal token (dynamic import to avoid circular dependency)
+    const { ensurePortalToken } = await import('./portal.js');
+    const token = await ensurePortalToken(wo.customer.id);
+    const portalBase = process.env.PORTAL_BASE_URL || 'https://premierauto.ai';
+    const portalUrl = `${portalBase}/portal/${token}/track/${id}`;
+
+    const vehicleDescription = wo.vehicle
+      ? `${wo.vehicle.year} ${wo.vehicle.make} ${wo.vehicle.model}`
+      : null;
+
+    const result = await sendPaymentLinkSMS({
+      customerPhone: wo.customer.phone,
+      customerName: `${wo.customer.first_name || ''} ${wo.customer.last_name || ''}`.trim(),
+      vehicleDescription,
+      portalUrl,
+      balanceCents: balanceDue,
+      customerId: wo.customer.id,
+      workOrderId: id,
+    });
+
+    if (!result.success) {
+      return res.status(500).json({ error: { message: result.error || 'Failed to send SMS' } });
+    }
+
+    res.json({ success: true, message_id: result.messageId });
   } catch (error) {
     next(error);
   }

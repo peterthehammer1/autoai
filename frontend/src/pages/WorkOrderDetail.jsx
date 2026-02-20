@@ -427,6 +427,16 @@ export default function WorkOrderDetail() {
     },
   })
 
+  const paymentLinkMutation = useMutation({
+    mutationFn: () => workOrders.sendPaymentLink(id),
+    onSuccess: () => {
+      toast({ title: 'Payment link sent', description: `SMS sent to ${wo.customer?.name || 'customer'}` })
+    },
+    onError: (err) => {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' })
+    },
+  })
+
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -728,15 +738,27 @@ export default function WorkOrderDetail() {
             Payments
           </h3>
           {wo.total_cents > 0 && balanceDue > 0 && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowPayment(true)}
-              className="text-xs h-8"
-            >
-              <Plus className="h-3 w-3 mr-1" />
-              Record Payment
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => paymentLinkMutation.mutate()}
+                disabled={paymentLinkMutation.isPending}
+                className="text-xs h-8"
+              >
+                <Send className="h-3 w-3 mr-1" />
+                {paymentLinkMutation.isPending ? 'Sending...' : 'Send Payment Link'}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowPayment(true)}
+                className="text-xs h-8"
+              >
+                <Plus className="h-3 w-3 mr-1" />
+                Record Payment
+              </Button>
+            </div>
           )}
         </div>
 

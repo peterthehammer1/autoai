@@ -528,6 +528,92 @@ router.post('/:token/work-orders/:id/approve', requireToken, async (req, res, ne
   }
 });
 
+/**
+ * POST /:token/work-orders/:id/pay — Process online payment (demo mode)
+ */
+router.post('/:token/work-orders/:id/pay', requireToken, async (req, res, next) => {
+  try {
+    const customer = req.portalCustomer;
+    const { id } = req.params;
+    if (!isValidUUID(id)) return validationError(res, 'Invalid work order ID');
+
+    // Verify WO belongs to customer and is payable
+    const { data: wo, error: woErr } = await supabase
+      .from('work_orders')
+      .select('id, customer_id, total_cents, status')
+      .eq('id', id)
+      .eq('customer_id', customer.id)
+      .single();
+
+    if (woErr || !wo) {
+      return res.status(404).json({ error: { message: 'Work order not found' } });
+    }
+
+    if (!['completed', 'invoiced'].includes(wo.status)) {
+      return res.status(400).json({ error: { message: 'Work order is not ready for payment' } });
+    }
+
+    // Calculate current balance
+    const { data: existingPayments } = await supabase
+      .from('payments')
+      .select('amount_cents')
+      .eq('work_order_id', id)
+      .eq('status', 'completed');
+
+    const totalPaid = (existingPayments || []).reduce((sum, p) => sum + p.amount_cents, 0);
+    const balanceDue = wo.total_cents - totalPaid;
+
+    if (balanceDue <= 0) {
+      return res.status(400).json({ error: { message: 'No balance due' } });
+    }
+
+    // Use provided amount or default to full balance
+    const amountCents = req.body.amount_cents
+      ? Math.min(req.body.amount_cents, balanceDue)
+      : balanceDue;
+
+    if (amountCents <= 0) {
+      return validationError(res, 'Invalid payment amount');
+    }
+
+    // Record payment
+    const { data: payment, error: payErr } = await supabase
+      .from('payments')
+      .insert({
+        work_order_id: id,
+        customer_id: customer.id,
+        amount_cents: amountCents,
+        method: 'online',
+        status: 'completed',
+        reference_number: `PORTAL-${Date.now()}`,
+        notes: 'Paid via customer portal',
+      })
+      .select('*')
+      .single();
+
+    if (payErr) throw payErr;
+
+    const newTotalPaid = totalPaid + amountCents;
+    const newBalance = wo.total_cents - newTotalPaid;
+
+    // Auto-update WO to 'paid' if fully covered
+    if (newBalance <= 0) {
+      await supabase
+        .from('work_orders')
+        .update({ status: 'paid', updated_at: new Date().toISOString() })
+        .eq('id', id);
+    }
+
+    res.json({
+      payment,
+      total_paid_cents: newTotalPaid,
+      balance_due_cents: Math.max(0, newBalance),
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // ── Protected: generate/refresh portal token (requires API key) ──
 
 export async function generateToken(req, res, next) {

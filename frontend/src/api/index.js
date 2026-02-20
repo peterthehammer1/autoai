@@ -309,6 +309,10 @@ export const workOrders = {
   getPayments: (id) => fetchAPI(`/work-orders/${id}/payments`),
 
   getTimeEntries: (id) => fetchAPI(`/work-orders/${id}/time-entries`),
+
+  sendPaymentLink: (id) => fetchAPI(`/work-orders/${id}/send-payment-link`, {
+    method: 'POST',
+  }),
 }
 
 // Reviews

@@ -25,6 +25,9 @@ import {
   Wrench,
   ArrowLeft,
   RefreshCw,
+  CreditCard,
+  Lock,
+  Shield,
 } from 'lucide-react'
 
 const API_BASE = import.meta.env.VITE_API_URL || '/api'
@@ -711,6 +714,126 @@ function StatusTab({ token }) {
   )
 }
 
+// ── Portal Payment Form ──
+
+function PortalPaymentForm({ token, workOrderId, balanceDueCents, onPaymentComplete }) {
+  const [paying, setPaying] = useState(false)
+  const [paid, setPaid] = useState(false)
+  const [error, setError] = useState(null)
+  const [cardNumber, setCardNumber] = useState('4242 4242 4242 4242')
+  const [expiry, setExpiry] = useState('12/28')
+  const [cvc, setCvc] = useState('123')
+
+  if (balanceDueCents <= 0 || paid) {
+    return (
+      <div className="bg-emerald-50 rounded-xl border border-emerald-200 p-4 text-center space-y-1">
+        <CheckCircle2 className="h-6 w-6 text-emerald-600 mx-auto" />
+        <p className="text-sm font-semibold text-emerald-700">
+          {paid ? 'Payment received — thank you!' : 'Paid in full'}
+        </p>
+      </div>
+    )
+  }
+
+  const handlePay = async () => {
+    setPaying(true)
+    setError(null)
+    try {
+      await portalPost(token, `/work-orders/${workOrderId}/pay`, {
+        amount_cents: balanceDueCents,
+      })
+      setPaid(true)
+      onPaymentComplete?.()
+    } catch (err) {
+      setError(err.message || 'Payment failed')
+    } finally {
+      setPaying(false)
+    }
+  }
+
+  return (
+    <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+      <div className="bg-slate-800 px-4 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-2 text-white">
+          <CreditCard className="h-4 w-4" />
+          <span className="text-sm font-medium">Pay Online</span>
+        </div>
+        <div className="flex items-center gap-1 text-slate-400">
+          <Lock className="h-3 w-3" />
+          <span className="text-xs">Secure</span>
+        </div>
+      </div>
+      <div className="p-4 space-y-3">
+        <div className="text-center pb-2">
+          <p className="text-xs text-slate-500">Balance Due</p>
+          <p className="text-2xl font-bold text-slate-800">{formatCents(balanceDueCents)}</p>
+        </div>
+
+        <div className="space-y-2">
+          <div>
+            <label className="text-xs text-slate-500 block mb-1">Card Number</label>
+            <input
+              type="text"
+              value={cardNumber}
+              onChange={(e) => setCardNumber(e.target.value)}
+              className="w-full h-10 px-3 rounded-lg border border-slate-200 text-sm bg-slate-50 font-mono"
+              placeholder="4242 4242 4242 4242"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="text-xs text-slate-500 block mb-1">Expiry</label>
+              <input
+                type="text"
+                value={expiry}
+                onChange={(e) => setExpiry(e.target.value)}
+                className="w-full h-10 px-3 rounded-lg border border-slate-200 text-sm bg-slate-50 font-mono"
+                placeholder="MM/YY"
+              />
+            </div>
+            <div>
+              <label className="text-xs text-slate-500 block mb-1">CVC</label>
+              <input
+                type="text"
+                value={cvc}
+                onChange={(e) => setCvc(e.target.value)}
+                className="w-full h-10 px-3 rounded-lg border border-slate-200 text-sm bg-slate-50 font-mono"
+                placeholder="123"
+              />
+            </div>
+          </div>
+        </div>
+
+        {error && (
+          <p className="text-xs text-red-600 text-center">{error}</p>
+        )}
+
+        <Button
+          onClick={handlePay}
+          disabled={paying}
+          className="w-full bg-teal-600 hover:bg-teal-700 text-white py-3 text-base"
+        >
+          {paying ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              Processing...
+            </>
+          ) : (
+            <>
+              <Shield className="h-4 w-4 mr-2" />
+              Pay {formatCents(balanceDueCents)}
+            </>
+          )}
+        </Button>
+
+        <p className="text-xs text-slate-400 text-center">
+          Demo mode — no real charges
+        </p>
+      </div>
+    </div>
+  )
+}
+
 // ── Estimate Tab ──
 
 function EstimateTab({ token, customer }) {
@@ -961,14 +1084,14 @@ function EstimateTab({ token, customer }) {
         </Button>
       )}
 
-      {/* Payment stub */}
-      {woDetail.balance_due_cents > 0 && woDetail.status !== 'estimated' && woDetail.status !== 'sent_to_customer' && (
-        <div className="bg-slate-50 rounded-xl border border-dashed border-slate-300 p-4 text-center">
-          <p className="text-xs text-slate-400">Online payment coming soon</p>
-          <p className="text-sm font-semibold text-slate-600 mt-1">
-            Balance due: {formatCents(woDetail.balance_due_cents)}
-          </p>
-        </div>
+      {/* Online Payment */}
+      {woDetail.status !== 'estimated' && woDetail.status !== 'sent_to_customer' && (
+        <PortalPaymentForm
+          token={token}
+          workOrderId={woDetail.id}
+          balanceDueCents={woDetail.balance_due_cents}
+          onPaymentComplete={() => loadWODetail(woDetail.id)}
+        />
       )}
     </div>
   )

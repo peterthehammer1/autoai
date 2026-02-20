@@ -524,6 +524,41 @@ export async function sendCampaignSMS({
   });
 }
 
+/**
+ * Send payment link SMS with portal URL
+ */
+export async function sendPaymentLinkSMS({
+  customerPhone,
+  customerName,
+  vehicleDescription,
+  portalUrl,
+  balanceCents,
+  customerId,
+  workOrderId,
+}) {
+  const firstName = customerName?.split(' ')[0] || 'there';
+  const vehicleLine = vehicleDescription ? ` for your ${vehicleDescription}` : '';
+  const balanceFormatted = `$${(balanceCents / 100).toFixed(2)}`;
+
+  const message = `Hi ${firstName},
+
+Your invoice${vehicleLine} is ready. Pay securely online:
+
+${portalUrl}
+
+Balance due: ${balanceFormatted}
+
+Questions? Call us at ${BUSINESS.phone}.
+
+- ${BUSINESS.agentName}, ${BUSINESS.name}`;
+
+  return sendSMS(customerPhone, message, {
+    messageType: 'payment_link',
+    customerId,
+    workOrderId,
+  });
+}
+
 export { logSMS };
 
 export default {
@@ -538,5 +573,6 @@ export default {
   sendPortalLinkSMS,
   sendInspectionSMS,
   sendCampaignSMS,
+  sendPaymentLinkSMS,
   logSMS
 };
