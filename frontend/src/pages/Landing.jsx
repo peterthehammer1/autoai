@@ -249,9 +249,9 @@ export default function Landing() {
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-xl shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center h-28">
+          <div className="flex items-center h-32">
             <a href="/" className="shrink-0 mr-8">
-              <img src="/logo-light.png" alt="Premier Auto Service" width="256" height="256" className="h-24 sm:h-[104px] object-contain" />
+              <img src="/logo-light.png" alt="Premier Auto Service" width="256" height="256" className="h-28 sm:h-32 object-contain" />
             </a>
 
             <div className="hidden lg:flex items-center gap-7 mr-auto">
@@ -360,7 +360,7 @@ export default function Landing() {
       </nav>
 
       {/* Hero */}
-      <section className="pt-44 pb-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
+      <section className="pt-48 pb-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="text-center lg:text-left">
