@@ -32,6 +32,10 @@ import {
   Truck,
   Bell,
   Loader2,
+  ClipboardList,
+  Globe,
+  ClipboardCheck,
+  Megaphone,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -108,6 +112,54 @@ const features = [
     bgColor: 'bg-slate-100',
     iconColor: 'text-slate-600',
   },
+  {
+    icon: ClipboardList,
+    title: 'Estimates & Work Orders',
+    description: 'Full estimate-to-invoice pipeline with line items, tax calculation, status tracking, and digital authorization. Track every job from quote to payment.',
+    color: 'from-cyan-500 to-blue-600',
+    bgColor: 'bg-cyan-50',
+    iconColor: 'text-cyan-600',
+  },
+  {
+    icon: Globe,
+    title: 'Customer Portal',
+    description: 'Customers view estimates, approve work, track repair status, and pay invoices — all from a secure magic-link portal sent via SMS.',
+    color: 'from-teal-500 to-emerald-600',
+    bgColor: 'bg-teal-50',
+    iconColor: 'text-teal-600',
+  },
+  {
+    icon: ClipboardCheck,
+    title: 'Digital Vehicle Inspection',
+    description: 'Technicians photograph and grade every component. Customers get a visual traffic-light report with photos — boosting approval rates by 20-30%.',
+    color: 'from-lime-500 to-green-600',
+    bgColor: 'bg-lime-50',
+    iconColor: 'text-lime-600',
+  },
+  {
+    icon: CreditCard,
+    title: 'Online Payments',
+    description: 'Send payment links via SMS and let customers pay invoices online. Split payments, deposits, and multiple payment methods supported.',
+    color: 'from-green-500 to-emerald-600',
+    bgColor: 'bg-green-50',
+    iconColor: 'text-green-600',
+  },
+  {
+    icon: Star,
+    title: 'Reputation Management',
+    description: 'Automatically request Google reviews after completed services. Track click-through rates, manage feedback, and grow your online presence.',
+    color: 'from-amber-500 to-yellow-600',
+    bgColor: 'bg-amber-50',
+    iconColor: 'text-amber-600',
+  },
+  {
+    icon: Megaphone,
+    title: 'Marketing Automation',
+    description: 'Automated welcome, follow-up, and win-back campaigns. Build custom seasonal promotions with audience targeting and template variables.',
+    color: 'from-fuchsia-500 to-pink-600',
+    bgColor: 'bg-fuchsia-50',
+    iconColor: 'text-fuchsia-600',
+  },
 ]
 
 const stats = [
@@ -128,6 +180,9 @@ const capabilities = [
   { text: 'Proactive service reminders when maintenance is due', icon: Wrench },
   { text: 'Live status texts during service', icon: Smartphone },
   { text: 'Multi-vehicle customer support', icon: Car },
+  { text: 'Digital vehicle inspections with photos', icon: ClipboardCheck },
+  { text: 'Customer portal for estimates & payments', icon: Globe },
+  { text: 'Automated review requests & marketing', icon: Megaphone },
 ]
 
 const testimonials = [
@@ -321,7 +376,8 @@ export default function Landing() {
 
               <p className="mt-6 text-lg sm:text-xl text-slate-600 max-w-2xl mx-auto lg:mx-0" itemProp="description">
                 Amber answers your shop's phone 24/7 — booking appointments, quoting services,
-                and sending confirmations.
+                and sending confirmations. Backed by a full shop management platform with work orders,
+                inspections, payments, and more.
               </p>
 
               <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
@@ -652,8 +708,8 @@ export default function Landing() {
                 <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />Conversion rate & revenue tracking</li>
                 <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />Customer sentiment trends</li>
                 <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />Peak call hours heatmap</li>
-                <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />Bay utilization metrics</li>
-                <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />Missed revenue tracking</li>
+                <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />Tech efficiency & labor utilization</li>
+                <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />Reputation & review metrics</li>
               </ul>
             </div>
 
@@ -663,25 +719,25 @@ export default function Landing() {
               </div>
               <h3 className="text-lg font-semibold text-slate-900 mb-3">Shop Management</h3>
               <ul className="space-y-2.5 text-sm text-slate-600">
+                <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />Estimate-to-invoice work orders</li>
+                <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />Digital vehicle inspections (DVI)</li>
+                <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />Tech time tracking & clock-in/out</li>
+                <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />Customer authorization (text-to-approve)</li>
                 <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />Bay & technician scheduling</li>
-                <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />Skill-based technician assignment</li>
-                <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />40+ pre-loaded service catalog</li>
-                <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />Atomic booking (no double-books)</li>
-                <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />Proactive service reminders</li>
               </ul>
             </div>
 
             <div className="bg-white rounded-2xl p-8 border border-slate-200">
               <div className="h-12 w-12 rounded-xl bg-amber-100 flex items-center justify-center mb-5">
-                <FileSearch className="h-6 w-6 text-amber-600" />
+                <Globe className="h-6 w-6 text-amber-600" />
               </div>
-              <h3 className="text-lg font-semibold text-slate-900 mb-3">Reports & Export</h3>
+              <h3 className="text-lg font-semibold text-slate-900 mb-3">Customer Experience</h3>
               <ul className="space-y-2.5 text-sm text-slate-600">
-                <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />Customer & appointment reports</li>
-                <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />Call log export with transcripts</li>
-                <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />SMS history export</li>
-                <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />Summary reports with KPIs</li>
-                <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />CSV export for all data</li>
+                <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />Self-service customer portal</li>
+                <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />Online payment links via SMS</li>
+                <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />Automated marketing campaigns</li>
+                <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />Google review automation</li>
+                <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />Real-time repair status tracking</li>
               </ul>
             </div>
           </div>
