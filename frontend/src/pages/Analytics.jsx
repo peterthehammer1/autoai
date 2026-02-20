@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { format } from 'date-fns'
-import { analytics } from '@/api'
+import { analytics, technicians as techniciansApi } from '@/api'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
-import { BarChart3, Clock, Activity } from 'lucide-react'
+import { BarChart3, Clock, Activity, Timer, Wrench } from 'lucide-react'
 
 // Analytics sub-components
 import StatCards from '@/components/analytics/StatCards'
@@ -65,6 +65,15 @@ export default function Analytics() {
   })
   const targets = targetsData?.targets || []
   const revenueTarget = targets.find(t => t.metric_name === 'revenue')?.target_value
+
+  const { data: efficiencyData } = useQuery({
+    queryKey: ['analytics', 'tech-efficiency', period, customDates.startDate, customDates.endDate],
+    queryFn: () => techniciansApi.efficiencySummary({
+      start_date: customDates.startDate,
+      end_date: customDates.endDate,
+    }),
+    enabled: !!queryEnabled,
+  })
 
   return (
     <div className="space-y-6">
@@ -287,6 +296,65 @@ export default function Analytics() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Section: Tech Efficiency */}
+      {(efficiencyData?.summary || []).some(t => t.actual_minutes > 0) && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Timer className="h-5 w-5 text-blue-500" />
+              Tech Efficiency
+            </CardTitle>
+            <CardDescription>Billed hours vs clock hours per technician</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-slate-200">
+                    <th className="text-xs font-medium uppercase tracking-wider text-slate-400 text-left py-2 pr-4">Technician</th>
+                    <th className="text-xs font-medium uppercase tracking-wider text-slate-400 text-left py-2 pr-4">Skill</th>
+                    <th className="text-xs font-medium uppercase tracking-wider text-slate-400 text-right py-2 pr-4">Clock Hrs</th>
+                    <th className="text-xs font-medium uppercase tracking-wider text-slate-400 text-right py-2 pr-4">Billed Hrs</th>
+                    <th className="text-xs font-medium uppercase tracking-wider text-slate-400 text-right py-2">Efficiency</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                  {(efficiencyData?.summary || [])
+                    .filter(t => t.actual_minutes > 0)
+                    .sort((a, b) => (b.efficiency_pct || 0) - (a.efficiency_pct || 0))
+                    .map(tech => (
+                      <tr key={tech.technician_id}>
+                        <td className="py-2 pr-4 font-medium text-slate-800">{tech.name}</td>
+                        <td className="py-2 pr-4 text-slate-500 capitalize">{tech.skill_level}</td>
+                        <td className="py-2 pr-4 text-right text-slate-600">
+                          {(tech.actual_minutes / 60).toFixed(1)}h
+                        </td>
+                        <td className="py-2 pr-4 text-right text-slate-600">
+                          {(tech.billed_minutes / 60).toFixed(1)}h
+                        </td>
+                        <td className="py-2 text-right">
+                          {tech.efficiency_pct !== null ? (
+                            <span className={cn(
+                              'font-semibold',
+                              tech.efficiency_pct >= 90 ? 'text-emerald-600'
+                                : tech.efficiency_pct >= 75 ? 'text-amber-600'
+                                : 'text-red-600'
+                            )}>
+                              {tech.efficiency_pct}%
+                            </span>
+                          ) : (
+                            <span className="text-slate-400">—</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Drill-down dialog */}
       <DrillDownDialog drillDown={drillDown} onClose={() => setDrillDown(null)} />

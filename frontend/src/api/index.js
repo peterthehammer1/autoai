@@ -307,6 +307,8 @@ export const workOrders = {
   }),
 
   getPayments: (id) => fetchAPI(`/work-orders/${id}/payments`),
+
+  getTimeEntries: (id) => fetchAPI(`/work-orders/${id}/time-entries`),
 }
 
 // Reviews
@@ -406,6 +408,41 @@ export const inspections = {
   }),
 }
 
+// Technicians
+export const technicians = {
+  list: () => fetchAPI('/technicians'),
+
+  activeEntry: (techId) => fetchAPI(`/technicians/${techId}/active-entry`),
+
+  clockIn: (techId, data = {}) => fetchAPI(`/technicians/${techId}/clock-in`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+
+  clockOut: (techId, data) => fetchAPI(`/technicians/${techId}/clock-out`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+
+  timeEntries: (techId, params = {}) => {
+    const cleanParams = Object.fromEntries(
+      Object.entries(params).filter(([_, v]) => v != null && v !== '')
+    )
+    const query = new URLSearchParams(cleanParams).toString()
+    return fetchAPI(`/technicians/${techId}/time-entries${query ? `?${query}` : ''}`)
+  },
+
+  efficiency: (techId, params = {}) => {
+    const query = new URLSearchParams(params).toString()
+    return fetchAPI(`/technicians/${techId}/efficiency${query ? `?${query}` : ''}`)
+  },
+
+  efficiencySummary: (params = {}) => {
+    const query = new URLSearchParams(params).toString()
+    return fetchAPI(`/technicians/efficiency-summary${query ? `?${query}` : ''}`)
+  },
+}
+
 // Portal admin (protected)
 export const portal = {
   generateToken: (customerId, sendSms = false) => fetchAPI('/portal-admin/generate-token', {
@@ -424,6 +461,7 @@ export default {
   smsLogs,
   workOrders,
   inspections,
+  technicians,
   reviews,
   search,
   leads,

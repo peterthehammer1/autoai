@@ -33,6 +33,7 @@ const WorkOrderDetail = lazyWithRetry(() => import('@/pages/WorkOrderDetail'))
 const Reviews = lazyWithRetry(() => import('@/pages/Reviews'))
 const Portal = lazyWithRetry(() => import('@/pages/Portal'))
 const InspectionEditor = lazyWithRetry(() => import('@/pages/InspectionEditor'))
+const TechClock = lazyWithRetry(() => import('@/pages/TechClock'))
 
 export function PageLoader() {
   return (
@@ -56,6 +57,11 @@ function App() {
         <Route path="portal/:token" element={
           <Suspense fallback={<PageLoader />}>
             <Portal />
+          </Suspense>
+        } />
+        <Route path="tech-clock" element={
+          <Suspense fallback={<PageLoader />}>
+            <TechClock />
           </Suspense>
         } />
         <Route path="portal/:token/track/:workOrderId" element={

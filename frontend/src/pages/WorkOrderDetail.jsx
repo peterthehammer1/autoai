@@ -31,6 +31,8 @@ import {
   XCircle,
   Loader2,
   ExternalLink,
+  Clock,
+  Timer,
 } from 'lucide-react'
 import { cn, formatCents, formatTime12Hour, parseDateLocal } from '@/lib/utils'
 import { useToast } from '@/hooks/use-toast'
@@ -787,6 +789,11 @@ export default function WorkOrderDetail() {
         </div>
       </div>
 
+      {/* Time Logged */}
+      {['in_progress', 'completed', 'invoiced', 'paid'].includes(wo.status) && (
+        <TimeCard workOrderId={id} laborItems={laborItems} />
+      )}
+
       {/* Notes */}
       <div className="grid gap-4 md:grid-cols-2">
         <div className="bg-white shadow-lg border-0 rounded-lg overflow-hidden">
@@ -1155,6 +1162,106 @@ function InspectionCard({ workOrderId, vehicleId, status: woStatus }) {
               <p className="text-xs text-slate-400">
                 Sent {format(new Date(inspection.sent_at), 'MMM d, yyyy h:mm a')}
               </p>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function formatMinutes(minutes) {
+  if (!minutes && minutes !== 0) return '—'
+  const h = Math.floor(minutes / 60)
+  const m = Math.round(minutes % 60)
+  return h > 0 ? `${h}h ${m}m` : `${m}m`
+}
+
+function TimeCard({ workOrderId, laborItems }) {
+  const { data, isLoading } = useQuery({
+    queryKey: ['work-order-time', workOrderId],
+    queryFn: () => workOrders.getTimeEntries(workOrderId),
+  })
+
+  const entries = data?.time_entries || []
+  const totalMinutes = data?.total_minutes || 0
+  const billedHours = laborItems.reduce((sum, i) => sum + (parseFloat(i.quantity) || 0), 0)
+  const billedMinutes = billedHours * 60
+  const efficiencyPct = totalMinutes > 0 ? Math.round((billedMinutes / totalMinutes) * 100) : null
+
+  if (isLoading) return null
+
+  return (
+    <div className="bg-white shadow-lg border-0 rounded-lg overflow-hidden">
+      <div className="px-4 py-3 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-blue-50/30 flex items-center justify-between">
+        <h3 className="text-sm font-medium text-slate-700 flex items-center gap-2">
+          <Timer className="h-4 w-4 text-blue-400" />
+          Time Logged
+        </h3>
+        {totalMinutes > 0 && (
+          <span className="text-xs font-medium text-slate-500">
+            {formatMinutes(totalMinutes)} total
+          </span>
+        )}
+      </div>
+
+      <div className="p-4">
+        {entries.length === 0 ? (
+          <p className="text-sm text-slate-400 text-center py-2">No time entries yet</p>
+        ) : (
+          <div className="space-y-1">
+            {entries.map(entry => (
+              <div key={entry.id} className="flex items-center justify-between py-1.5 border-b border-slate-50 last:border-0">
+                <div>
+                  <p className="text-sm text-slate-700">
+                    {entry.technician
+                      ? `${entry.technician.first_name} ${entry.technician.last_name}`
+                      : 'Unknown'}
+                  </p>
+                  <p className="text-xs text-slate-400">
+                    {format(new Date(entry.clock_in), 'h:mm a')}
+                    {entry.clock_out && ` – ${format(new Date(entry.clock_out), 'h:mm a')}`}
+                  </p>
+                </div>
+                <div>
+                  {entry.clock_out ? (
+                    <span className="text-sm font-medium text-slate-700">
+                      {formatMinutes(entry.duration_minutes)}
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-600">
+                      <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
+                      Active
+                    </span>
+                  )}
+                </div>
+              </div>
+            ))}
+
+            {/* Summary */}
+            {totalMinutes > 0 && billedHours > 0 && (
+              <div className="border-t border-slate-200 pt-3 mt-2 space-y-1">
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-500">Clock time</span>
+                  <span className="text-slate-700">{formatMinutes(totalMinutes)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-500">Billed labor</span>
+                  <span className="text-slate-700">{billedHours.toFixed(1)}h</span>
+                </div>
+                {efficiencyPct !== null && (
+                  <div className="flex justify-between text-sm font-medium">
+                    <span className="text-slate-500">Efficiency</span>
+                    <span className={cn(
+                      efficiencyPct >= 90 ? 'text-emerald-600'
+                        : efficiencyPct >= 75 ? 'text-amber-600'
+                        : 'text-red-600'
+                    )}>
+                      {efficiencyPct}%
+                    </span>
+                  </div>
+                )}
+              </div>
             )}
           </div>
         )}

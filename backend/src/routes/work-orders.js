@@ -655,5 +655,35 @@ router.get('/:id/payments', async (req, res, next) => {
   }
 });
 
+/**
+ * GET /api/work-orders/:id/time-entries
+ * All time entries for a work order
+ */
+router.get('/:id/time-entries', async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    if (!isValidUUID(id)) return validationError(res, 'Invalid work order ID');
+
+    const { data, error } = await supabase
+      .from('time_entries')
+      .select(`
+        *,
+        technician:technicians(id, first_name, last_name)
+      `)
+      .eq('work_order_id', id)
+      .order('clock_in', { ascending: true });
+
+    if (error) throw error;
+
+    const totalMinutes = (data || [])
+      .filter(e => e.duration_minutes)
+      .reduce((sum, e) => sum + e.duration_minutes, 0);
+
+    res.json({ time_entries: data || [], total_minutes: totalMinutes });
+  } catch (error) {
+    next(error);
+  }
+});
+
 export { recalculateTotals };
 export default router;

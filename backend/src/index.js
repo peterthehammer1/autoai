@@ -25,6 +25,7 @@ import createLeadsRouter from './routes/leads.js';
 import searchRoutes from './routes/search.js';
 import workOrderRoutes from './routes/work-orders.js';
 import inspectionRoutes from './routes/inspections.js';
+import technicianRoutes from './routes/technicians.js';
 import reviewRoutes, { clickRouter as reviewClickRouter } from './routes/reviews.js';
 import portalRouter, { generateToken as portalGenerateToken } from './routes/portal.js';
 import { supabase } from './config/database.js';
@@ -155,6 +156,7 @@ app.use('/api/sms-logs', generalLimiter, requireApiKey, smsLogRoutes);
 app.use('/api/search', generalLimiter, requireApiKey, searchRoutes);
 app.use('/api/work-orders', generalLimiter, requireApiKey, workOrderRoutes);
 app.use('/api/inspections', generalLimiter, requireApiKey, inspectionRoutes);
+app.use('/api/technicians', generalLimiter, requireApiKey, technicianRoutes);
 app.use('/api/reviews', generalLimiter, requireApiKey, reviewRoutes);
 app.use('/api/call-center', generalLimiter, requireApiKey, callCenterRoutes);
 
