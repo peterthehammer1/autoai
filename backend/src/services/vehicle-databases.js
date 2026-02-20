@@ -962,8 +962,8 @@ export async function getVehicleIntelligence(vin, currentMileage = null) {
   }
 
   // Use embedded data from VIN decode (no extra API calls for US recalls/warranties/maintenance)
-  const embeddedRecalls = vinResult.success ? vinResult.recalls : [];
-  const canadianRecalls = canadianRecallsResult.success ? canadianRecallsResult.recalls : [];
+  const embeddedRecalls = (vinResult.success ? vinResult.recalls : null) || [];
+  const canadianRecalls = (canadianRecallsResult.success ? canadianRecallsResult.recalls : null) || [];
 
   // Merge US (NHTSA) + Canadian (Transport Canada) recalls, deduplicating by description similarity
   const allRecalls = [...embeddedRecalls];
@@ -986,7 +986,7 @@ export async function getVehicleIntelligence(vin, currentMileage = null) {
   }
 
   const hasRecalls = allRecalls.length > 0;
-  const embeddedWarranties = vinResult.success ? vinResult.warranties : [];
+  const embeddedWarranties = (vinResult.success ? vinResult.warranties : null) || [];
   const embeddedMaintenance = vinResult.success ? vinResult.maintenance : null;
 
   // Compute upcoming/overdue services if mileage provided
