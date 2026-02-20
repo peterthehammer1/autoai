@@ -715,4 +715,47 @@ export async function generateToken(req, res, next) {
   }
 }
 
+// ── Temporary debug endpoint (remove after troubleshooting) ──
+router.get('/debug/vin-test/:vin', async (req, res) => {
+  const { vin } = req.params;
+  const apiKey = process.env.VEHICLE_DATABASES_API_KEY;
+  const keyInfo = apiKey ? `${apiKey.substring(0, 6)}...${apiKey.substring(apiKey.length - 4)} (len=${apiKey.length})` : 'NOT SET';
+
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000);
+    const startTime = Date.now();
+
+    const response = await fetch(`https://api.vehicledatabases.com/advanced-vin-decode/v2/${vin}`, {
+      headers: { 'x-authkey': apiKey },
+      signal: controller.signal
+    });
+    clearTimeout(timeout);
+
+    const elapsed = Date.now() - startTime;
+    const rawText = await response.text();
+
+    let parsed = null;
+    try { parsed = JSON.parse(rawText); } catch { /* not JSON */ }
+
+    res.json({
+      debug: true,
+      key: keyInfo,
+      httpStatus: response.status,
+      elapsed,
+      responseLength: rawText.length,
+      status: parsed?.status,
+      hasData: !!parsed?.data,
+      make: parsed?.data?.make,
+      model: parsed?.data?.model,
+      year: parsed?.data?.year,
+      dataKeys: parsed?.data ? Object.keys(parsed.data) : null,
+      message: parsed?.message,
+      rawPreview: rawText.substring(0, 500)
+    });
+  } catch (err) {
+    res.json({ debug: true, key: keyInfo, error: err.message, name: err.name });
+  }
+});
+
 export default router;
