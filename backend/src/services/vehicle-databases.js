@@ -59,17 +59,29 @@ export async function decodeVIN(vin) {
   }
 
   try {
+    const startTime = Date.now();
     const response = await fetchWithTimeout(`${BASE_URL}/advanced-vin-decode/v2/${vin}`, {
       headers: { 'x-authkey': VEHICLE_DB_API_KEY }
     });
 
+    const elapsed = Date.now() - startTime;
+
     if (!response.ok) {
-      logger.error('[VehicleDB] VIN decode HTTP error', { status: response.status, vin });
       const errBody = await response.text().catch(() => '');
+      logger.error('[VehicleDB] VIN decode HTTP error', { status: response.status, vin, elapsed, body: errBody.substring(0, 300) });
       return { success: false, error: `HTTP ${response.status}: ${errBody.substring(0, 200)}` };
     }
 
     const data = await response.json();
+    logger.info('[VehicleDB] VIN decode response', {
+      vin,
+      elapsed,
+      status: data.status,
+      hasData: !!data.data,
+      make: data.data?.make || null,
+      model: data.data?.model || null,
+      message: data.message || null
+    });
 
     if (data.status === 'success' && data.data) {
       const d = data.data;
@@ -228,7 +240,7 @@ export async function decodeVIN(vin) {
 
     return { success: false, error: data.message || 'VIN decode failed' };
   } catch (error) {
-    logger.error('[VehicleDB] VIN decode error', { error: error.message });
+    logger.error('[VehicleDB] VIN decode error', { error: error.message, name: error.name, vin });
     // Always return year from VIN even if API fails
     const fallbackYear = decodeVINYear(vin);
     if (fallbackYear) {
@@ -945,18 +957,15 @@ export async function isServiceDue(vin, currentMileage, serviceType) {
  * Only makes 1-3 API calls instead of 6
  */
 export async function getVehicleIntelligence(vin, currentMileage = null) {
-  // VIN decode returns embedded recalls, warranties, and maintenance — no separate calls needed
-  // Only repair costs and market value require separate API calls
-  const parallelCalls = [
-    decodeVIN(vin),
-    getRepairCosts(vin)
-  ];
+  // VIN decode first (largest response, most important) — serialize to avoid rate limits
+  const vinResult = await decodeVIN(vin);
 
+  // After VIN decode completes, fire remaining calls in parallel
+  const secondaryCalls = [getRepairCosts(vin)];
   if (currentMileage) {
-    parallelCalls.push(getMarketValue(vin, currentMileage));
+    secondaryCalls.push(getMarketValue(vin, currentMileage));
   }
-
-  const [vinResult, repairCostsResult, marketValueResult] = await Promise.all(parallelCalls);
+  const [repairCostsResult, marketValueResult] = await Promise.all(secondaryCalls);
 
   // Fetch Transport Canada recalls in parallel (needs make/model/year from VIN decode)
   let canadianRecallsResult = { success: false };
