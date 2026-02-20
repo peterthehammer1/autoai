@@ -754,26 +754,35 @@ router.post('/book_appointment', async (req, res, next) => {
 
     const customerName = customer.first_name || customer_first_name || 'there';
 
-    // 9. Send confirmation SMS (async, don't block response)
-    sendConfirmationSMS({
-      customerPhone: customer_phone,
-      customerName,
-      appointmentDate: appointment_date,
-      appointmentTime: appointment_time,
-      services: serviceNames,
-      vehicleDescription,
-      customerId: customer.id,
-      appointmentId: appointment.id
-    }).then(result => {
-      if (result.success) {
-        // Mark confirmation as sent
-        supabase
-          .from('appointments')
-          .update({ confirmation_sent_at: new Date().toISOString() })
-          .eq('id', appointment.id)
-          .then(() => logger.info('[SMS] Confirmation sent for appointment', { data: appointment.id }));
+    // 9. Generate portal token + send confirmation SMS (async, don't block response)
+    (async () => {
+      try {
+        const { ensurePortalToken, portalUrl: buildPortalUrl } = await import('../portal.js');
+        const portalToken = await ensurePortalToken(customer.id);
+        const customerPortalUrl = buildPortalUrl(portalToken);
+
+        const result = await sendConfirmationSMS({
+          customerPhone: customer_phone,
+          customerName,
+          appointmentDate: appointment_date,
+          appointmentTime: appointment_time,
+          services: serviceNames,
+          vehicleDescription,
+          customerId: customer.id,
+          appointmentId: appointment.id,
+          portalUrl: customerPortalUrl,
+        });
+        if (result.success) {
+          await supabase
+            .from('appointments')
+            .update({ confirmation_sent_at: new Date().toISOString() })
+            .eq('id', appointment.id);
+          logger.info('[SMS] Confirmation sent for appointment', { data: appointment.id });
+        }
+      } catch (err) {
+        logger.error('SMS confirmation error:', { error: err });
       }
-    }).catch(err => logger.error('SMS confirmation error:', { error: err }));
+    })();
 
     // 10. Send confirmation email if we have an email address
     if (customerEmail) {
@@ -1350,8 +1359,9 @@ router.post('/send_confirmation', async (req, res, next) => {
       });
     }
 
-    // Import SMS service dynamically
+    // Import SMS service and portal helpers
     const { sendConfirmationSMS } = await import('../../services/sms.js');
+    const { ensurePortalToken, portalUrl: buildPortalUrl } = await import('../portal.js');
 
     const services = appointment.appointment_services.map(s => s.service_name).join(', ');
     const vehicleDesc = appointment.vehicle
@@ -1361,6 +1371,15 @@ router.post('/send_confirmation', async (req, res, next) => {
     // Use send_to_phone if provided, otherwise use customer's phone on file
     const targetPhone = send_to_phone ? normalizePhone(send_to_phone) : appointment.customer.phone;
 
+    // Generate portal link for the customer
+    let customerPortalUrl;
+    try {
+      const portalToken = await ensurePortalToken(appointment.customer.id);
+      customerPortalUrl = buildPortalUrl(portalToken);
+    } catch (err) {
+      logger.error('Portal token generation error in send_confirmation:', { error: err });
+    }
+
     const result = await sendConfirmationSMS({
       customerPhone: targetPhone,
       customerName: appointment.customer.first_name,
@@ -1369,7 +1388,8 @@ router.post('/send_confirmation', async (req, res, next) => {
       services,
       vehicleDescription: vehicleDesc,
       customerId: appointment.customer.id,
-      appointmentId: appointment.id
+      appointmentId: appointment.id,
+      portalUrl: customerPortalUrl,
     });
 
     if (result.success) {

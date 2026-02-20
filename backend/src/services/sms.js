@@ -127,7 +127,8 @@ export async function sendConfirmationSMS({
   services,
   vehicleDescription,
   customerId,
-  appointmentId
+  appointmentId,
+  portalUrl,
 }) {
   const date = typeof appointmentDate === 'string' ? parseISO(appointmentDate) : appointmentDate;
   const formattedDate = format(date, 'EEEE, MMMM do');
@@ -135,6 +136,7 @@ export async function sendConfirmationSMS({
   const firstName = customerName?.split(' ')[0] || 'there';
 
   const vehicleLine = vehicleDescription ? `${vehicleDescription}\n` : '';
+  const portalLine = portalUrl ? `\nTrack your appointment status online:\n${portalUrl}\n` : '';
 
   const message = `Hi ${firstName},
 
@@ -143,7 +145,7 @@ Here is a quick confirmation for your records:
 ${services}
 ${vehicleLine}${formattedDate} at ${formattedTime}
 ${BUSINESS.address}
-
+${portalLine}
 Reply CONFIRM to confirm, RESCHEDULE to reschedule, or CANCEL to cancel.
 
 Thanks for choosing ${BUSINESS.name}!
