@@ -104,6 +104,55 @@ export async function decodeVIN(vin) {
       // specifications.mpg is flat: {epa_city_economy, epa_hwy_economy, epa_combined_economy}
       const specMpg = specs.mpg || {};
 
+      // Parse embedded recalls
+      const recalls = (d.recalls || []).map(recall => ({
+        campaign_id: recall.campaign_id,
+        recall_date: recall.description?.date,
+        component: recall.description?.component,
+        summary: recall.description?.summary,
+        consequences: recall.description?.consequences,
+        remedy: recall.description?.remedy
+      }));
+
+      // Parse embedded warranties
+      const warranties = (d.warranties || []).map(w => ({
+        type: w.type,
+        months: w.months ? parseInt(w.months, 10) : null,
+        miles: w.miles ? w.miles.replace(/,/g, '') : null
+      }));
+
+      // Parse embedded maintenance schedule
+      const maintenanceIntervals = (d.maintenance || []).map(item => {
+        const mileage = typeof item.mileage === 'number'
+          ? item.mileage
+          : parseInt(String(item.mileage).replace(/,/g, ''), 10);
+        // Embedded format uses conditions[].description[] for service lists
+        const services = [];
+        if (Array.isArray(item.conditions)) {
+          for (const cond of item.conditions) {
+            if (Array.isArray(cond.description)) {
+              for (const svc of cond.description) {
+                if (svc && !svc.startsWith('"') && !services.includes(svc)) {
+                  services.push(svc);
+                }
+              }
+            }
+          }
+        }
+        return { mileage_miles: mileage, services };
+      });
+
+      const servicesByType = {};
+      maintenanceIntervals.forEach(interval => {
+        interval.services.forEach(service => {
+          const serviceLower = service.toLowerCase();
+          if (!servicesByType[serviceLower]) {
+            servicesByType[serviceLower] = [];
+          }
+          servicesByType[serviceLower].push({ mileage_miles: interval.mileage_miles });
+        });
+      });
+
       return {
         success: true,
         vehicle: {
@@ -135,6 +184,28 @@ export async function decodeVIN(vin) {
           },
           msrp: d.price?.base_msrp || null,
           summary: d.summary || null
+        },
+        recalls,
+        has_open_recalls: recalls.length > 0,
+        recall_count: recalls.length,
+        warranties,
+        maintenance: {
+          intervals: maintenanceIntervals,
+          services_by_type: servicesByType,
+          interval_count: maintenanceIntervals.length
+        },
+        safety_ratings: d.safety_ratings || [],
+        features: d.standard_features || [],
+        colors: {
+          exterior: (d.exterior_colors || []).map(c => ({
+            name: c.description || c.generic_name,
+            hex: c.hex_value,
+            type: c.color_type
+          })),
+          interior: (d.interior_colors || []).map(c => ({
+            name: c.description || c.generic_name,
+            hex: c.hex_value
+          }))
         }
       };
     }
@@ -222,6 +293,65 @@ export async function getMaintenanceSchedule(vin) {
     return { success: false, error: data.message || 'Maintenance lookup failed' };
   } catch (error) {
     logger.error('[VehicleDB] Maintenance schedule error', { error: error.message });
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Get OEM maintenance schedule by Year/Make/Model (no VIN needed)
+ * Fallback when caller doesn't have VIN
+ */
+export async function getMaintenanceByYMM(year, make, model) {
+  if (!VEHICLE_DB_API_KEY) {
+    return { success: false, error: 'API not configured' };
+  }
+
+  if (!year || !make || !model) {
+    return { success: false, error: 'Year, make, and model are required' };
+  }
+
+  try {
+    const response = await fetchWithTimeout(
+      `${BASE_URL}/vehicle-maintenance/${year}/${encodeURIComponent(make)}/${encodeURIComponent(model)}`,
+      { headers: { 'x-authkey': VEHICLE_DB_API_KEY } }
+    );
+
+    const data = await response.json();
+
+    if (data.status === 'success' && data.data) {
+      const schedule = {
+        year: data.data.year,
+        make: data.data.make,
+        model: data.data.model,
+        intervals: (data.data.maintenance || []).map(item => ({
+          mileage_miles: typeof item.mileage === 'number' ? item.mileage : parseInt(item.mileage, 10),
+          services: item.normal?.menus || item.service_items || []
+        }))
+      };
+
+      const servicesByType = {};
+      schedule.intervals.forEach(interval => {
+        interval.services.forEach(service => {
+          const serviceLower = service.toLowerCase();
+          if (!servicesByType[serviceLower]) {
+            servicesByType[serviceLower] = [];
+          }
+          servicesByType[serviceLower].push({
+            mileage_miles: interval.mileage_miles
+          });
+        });
+      });
+
+      return {
+        success: true,
+        schedule,
+        services_by_type: servicesByType
+      };
+    }
+
+    return { success: false, error: data.message || 'Maintenance by YMM lookup failed' };
+  } catch (error) {
+    logger.error('[VehicleDB] Maintenance by YMM error', { error: error.message });
     return { success: false, error: error.message };
   }
 }
@@ -716,13 +846,14 @@ export async function isServiceDue(vin, currentMileage, serviceType) {
 
 /**
  * Get combined vehicle intelligence for voice agent
- * Runs VIN decode + recalls + maintenance + repair costs + market value in parallel
+ * Optimized: uses embedded data from VIN decode (recalls, warranties, maintenance)
+ * Only makes 1-3 API calls instead of 6
  */
 export async function getVehicleIntelligence(vin, currentMileage = null) {
+  // VIN decode returns embedded recalls, warranties, and maintenance — no separate calls needed
+  // Only repair costs and market value require separate API calls
   const parallelCalls = [
     decodeVIN(vin),
-    getRecalls(vin),
-    currentMileage ? getNextService(vin, currentMileage) : getMaintenanceSchedule(vin),
     getRepairCosts(vin)
   ];
 
@@ -730,30 +861,68 @@ export async function getVehicleIntelligence(vin, currentMileage = null) {
     parallelCalls.push(getMarketValue(vin, currentMileage));
   }
 
-  const [vinResult, recallsResult, maintenanceResult, repairCostsResult, marketValueResult] = await Promise.all(parallelCalls);
+  const [vinResult, repairCostsResult, marketValueResult] = await Promise.all(parallelCalls);
 
-  // Fetch warranty if we got year/make/model from VIN decode
-  let warrantyResult = { success: false };
-  if (vinResult.success && vinResult.vehicle?.year && vinResult.vehicle?.make && vinResult.vehicle?.model) {
-    warrantyResult = await getWarranty(vinResult.vehicle.year, vinResult.vehicle.make, vinResult.vehicle.model);
+  // Use embedded data from VIN decode (no extra API calls)
+  const hasRecalls = vinResult.success && vinResult.has_open_recalls;
+  const embeddedRecalls = vinResult.success ? vinResult.recalls : [];
+  const embeddedWarranties = vinResult.success ? vinResult.warranties : [];
+  const embeddedMaintenance = vinResult.success ? vinResult.maintenance : null;
+
+  // Compute upcoming/overdue services if mileage provided
+  let maintenanceInfo = null;
+  if (embeddedMaintenance?.intervals?.length > 0) {
+    if (currentMileage) {
+      const upcoming = embeddedMaintenance.intervals
+        .filter(i => i.mileage_miles > currentMileage)
+        .slice(0, 3)
+        .map(i => ({
+          at_mileage: i.mileage_miles,
+          miles_until: i.mileage_miles - currentMileage,
+          services: i.services
+        }));
+      const recentlyDue = embeddedMaintenance.intervals
+        .filter(i => i.mileage_miles <= currentMileage)
+        .slice(-2)
+        .map(i => ({
+          at_mileage: i.mileage_miles,
+          miles_overdue: currentMileage - i.mileage_miles,
+          services: i.services
+        }));
+      maintenanceInfo = {
+        success: true,
+        current_mileage: currentMileage,
+        upcoming_services: upcoming,
+        recently_due: recentlyDue,
+        schedule: { intervals: embeddedMaintenance.intervals }
+      };
+    } else {
+      maintenanceInfo = {
+        success: true,
+        schedule: { intervals: embeddedMaintenance.intervals },
+        services_by_type: embeddedMaintenance.services_by_type
+      };
+    }
   }
 
   const intelligence = {
     success: true,
     vin,
     vehicle: vinResult.success ? vinResult.vehicle : null,
-    recalls: recallsResult.success ? {
-      has_open_recalls: recallsResult.has_open_recalls,
-      count: recallsResult.recall_count,
-      items: recallsResult.recalls?.slice(0, 3)
-    } : null,
-    maintenance: maintenanceResult.success ? maintenanceResult : null,
-    warranty: warrantyResult.success ? warrantyResult.warranty : null,
+    recalls: hasRecalls ? {
+      has_open_recalls: true,
+      count: vinResult.recall_count,
+      items: embeddedRecalls.slice(0, 3)
+    } : (vinResult.success ? { has_open_recalls: false, count: 0, items: [] } : null),
+    maintenance: maintenanceInfo,
+    warranty: embeddedWarranties.length > 0 ? embeddedWarranties : null,
     repair_costs: repairCostsResult?.success ? {
       count: repairCostsResult.repair_count,
       repairs: repairCostsResult.repairs?.slice(0, 10)
     } : null,
-    market_value: marketValueResult?.success ? marketValueResult.valuations : null
+    market_value: marketValueResult?.success ? marketValueResult.valuations : null,
+    features: vinResult.success ? vinResult.features : null,
+    colors: vinResult.success ? vinResult.colors : null
   };
 
   // Build voice-friendly summary
@@ -767,18 +936,15 @@ export async function getVehicleIntelligence(vin, currentMileage = null) {
     summaryParts.push(desc);
   }
 
-  if (recallsResult.success && recallsResult.has_open_recalls) {
-    summaryParts.push(`${recallsResult.recall_count} open recall${recallsResult.recall_count > 1 ? 's' : ''}`);
+  if (hasRecalls) {
+    summaryParts.push(`${vinResult.recall_count} open recall${vinResult.recall_count > 1 ? 's' : ''}`);
   }
 
-  if (maintenanceResult.success && currentMileage && maintenanceResult.upcoming_services?.length > 0) {
-    const nextService = maintenanceResult.upcoming_services[0];
+  if (maintenanceInfo?.upcoming_services?.length > 0) {
+    const nextService = maintenanceInfo.upcoming_services[0];
     summaryParts.push(`next service due in ${nextService.miles_until.toLocaleString()} miles`);
-  }
-
-  if (maintenanceResult.success && !currentMileage && maintenanceResult.schedule?.intervals?.length > 0) {
-    const intervalCount = maintenanceResult.schedule.intervals.length;
-    summaryParts.push(`${intervalCount} maintenance intervals on file`);
+  } else if (maintenanceInfo?.schedule?.intervals?.length > 0 && !currentMileage) {
+    summaryParts.push(`${maintenanceInfo.schedule.intervals.length} maintenance intervals on file`);
   }
 
   if (repairCostsResult?.success && repairCostsResult.repair_count > 0) {
@@ -794,6 +960,7 @@ export default {
   decodeVIN,
   decodeVINYear,
   getMaintenanceSchedule,
+  getMaintenanceByYMM,
   getRecalls,
   getWarranty,
   getRepairCosts,

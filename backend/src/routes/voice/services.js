@@ -627,6 +627,9 @@ router.post('/get_vehicle_info', async (req, res, next) => {
     const customer_phone = body.customer_phone;
     const current_mileage = body.current_mileage ? parseInt(body.current_mileage, 10) : null;
     const check_service = body.check_service; // Optional: specific service to check
+    const vehicle_year = body.vehicle_year;
+    const vehicle_make = body.vehicle_make;
+    const vehicle_model = body.vehicle_model;
 
     // If license plate provided, decode it to get VIN
     let vehicleVin = vin;
@@ -663,10 +666,53 @@ router.post('/get_vehicle_info', async (req, res, next) => {
       }
     }
 
+    // YMM fallback: if no VIN but caller provided year/make/model, return maintenance + warranty
+    if (!vehicleVin && vehicle_year && vehicle_make && vehicle_model) {
+      const vehicleDB = await import('../../services/vehicle-databases.js');
+      const [maintenanceResult, warrantyResult] = await Promise.all([
+        vehicleDB.getMaintenanceByYMM(vehicle_year, vehicle_make, vehicle_model),
+        vehicleDB.getWarranty(vehicle_year, vehicle_make, vehicle_model)
+      ]);
+
+      const messageParts = [`I don't have the VIN, but based on the ${vehicle_year} ${vehicle_make} ${vehicle_model}'s records`];
+
+      let maintenanceInfo = null;
+      if (maintenanceResult.success && maintenanceResult.schedule?.intervals?.length > 0) {
+        const intervalCount = maintenanceResult.schedule.intervals.length;
+        messageParts.push(`I have ${intervalCount} maintenance intervals on file`);
+
+        if (vehicleMileage) {
+          const upcoming = maintenanceResult.schedule.intervals
+            .filter(i => i.mileage_miles > vehicleMileage)
+            .slice(0, 3)
+            .map(i => ({
+              at_mileage: i.mileage_miles,
+              miles_until: i.mileage_miles - vehicleMileage,
+              services: i.services
+            }));
+          if (upcoming.length > 0 && upcoming[0].miles_until <= 5000) {
+            messageParts.push(`you're coming up on ${upcoming[0].services.slice(0, 3).join(' and ')} at ${upcoming[0].at_mileage.toLocaleString()} miles`);
+          }
+          maintenanceInfo = { success: true, upcoming_services: upcoming };
+        } else {
+          maintenanceInfo = { success: true, schedule: maintenanceResult.schedule };
+        }
+      }
+
+      return res.json({
+        success: true,
+        partial: true,
+        vehicle: { year: vehicle_year, make: vehicle_make, model: vehicle_model },
+        maintenance: maintenanceInfo,
+        warranty: warrantyResult.success ? warrantyResult.warranty : null,
+        message: messageParts.join('. ') + '. What service are you looking for?'
+      });
+    }
+
     if (!vehicleVin) {
       return res.json({
         success: false,
-        message: 'I need the VIN to look up detailed vehicle information. Do you have the VIN handy? It\'s usually on the driver\'s side dashboard or door jamb.'
+        message: 'I need a little more info to look up your vehicle. Do you have the VIN, license plate, or know the year, make, and model?'
       });
     }
 
@@ -779,6 +825,8 @@ router.post('/get_vehicle_info', async (req, res, next) => {
       recalls: intelligence.recalls,
       maintenance: intelligence.maintenance,
       warranty: intelligence.warranty,
+      repair_costs: intelligence.repair_costs,
+      market_value: intelligence.market_value,
       summary: intelligence.summary,
       message
     });
