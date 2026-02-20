@@ -28,6 +28,8 @@ import {
   CreditCard,
   Lock,
   Shield,
+  PhoneCall,
+  MapPin,
 } from 'lucide-react'
 
 const API_BASE = import.meta.env.VITE_API_URL || '/api'
@@ -155,40 +157,71 @@ export default function Portal() {
     )
   }
 
+  // Shared header component
+  const PortalHeader = ({ compact }) => (
+    <header className="bg-gradient-to-r from-slate-900 to-slate-800 sticky top-0 z-10">
+      <div className="max-w-lg mx-auto px-4 py-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <img src="/logo-light.png" alt="Premier Auto" className="h-8" />
+            {!compact && (
+              <div className="border-l border-slate-600 pl-3">
+                <p className="text-sm text-white font-medium">
+                  Welcome{customer?.first_name ? `, ${customer.first_name}` : ''}
+                </p>
+                <p className="text-[11px] text-slate-400">Customer Portal</p>
+              </div>
+            )}
+          </div>
+          <div className="h-9 w-9 rounded-full bg-teal-500 flex items-center justify-center ring-2 ring-teal-400/30">
+            <span className="text-white text-sm font-bold">
+              {(customer?.first_name?.[0] || 'P').toUpperCase()}
+            </span>
+          </div>
+        </div>
+      </div>
+    </header>
+  )
+
+  // Floating call button
+  const FloatingCallButton = () => (
+    <a
+      href="tel:+16473711990"
+      className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full bg-teal-600 text-white shadow-lg shadow-teal-600/30 flex items-center justify-center active:scale-95 transition-transform hover:bg-teal-700"
+      aria-label="Call Premier Auto Service"
+    >
+      <PhoneCall className="h-6 w-6" />
+    </a>
+  )
+
+  // Shared footer
+  const PortalFooter = () => (
+    <footer className="max-w-lg mx-auto px-4 py-8 pb-24 text-center space-y-3">
+      <div className="flex items-center justify-center gap-4 text-xs text-slate-500">
+        <a href="tel:+16473711990" className="flex items-center gap-1.5 hover:text-teal-600 transition-colors">
+          <Phone className="h-3.5 w-3.5" />
+          (647) 371-1990
+        </a>
+        <span className="text-slate-300">|</span>
+        <span className="flex items-center gap-1.5">
+          <MapPin className="h-3.5 w-3.5" />
+          1250 Industrial Blvd
+        </span>
+      </div>
+      <p className="text-[11px] text-slate-400">Mon\u2013Fri 7 AM \u2013 4 PM</p>
+    </footer>
+  )
+
   // Direct tracker view (from SMS deep link)
   if (workOrderId) {
     return (
       <div className="min-h-screen bg-slate-50">
-        <header className="bg-white border-b border-slate-200 sticky top-0 z-10">
-          <div className="max-w-lg mx-auto px-4 py-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-base font-bold text-slate-900">Premier Auto Service</h1>
-                <p className="text-xs text-slate-500">
-                  Hi {customer?.first_name || 'there'}
-                </p>
-              </div>
-              <div className="h-8 w-8 rounded-full bg-teal-600 flex items-center justify-center">
-                <span className="text-white text-xs font-bold">
-                  {(customer?.first_name?.[0] || 'P').toUpperCase()}
-                </span>
-              </div>
-            </div>
-          </div>
-        </header>
+        <PortalHeader compact />
         <main className="max-w-lg mx-auto px-4 py-4 space-y-4">
           <RepairTracker token={token} workOrderId={workOrderId} />
         </main>
-        <footer className="max-w-lg mx-auto px-4 py-6 text-center">
-          <a
-            href="tel:+16473711990"
-            className="inline-flex items-center gap-1.5 text-teal-600 text-xs font-medium hover:underline"
-          >
-            <Phone className="h-3 w-3" />
-            (647) 371-1990
-          </a>
-          <p className="text-xs text-slate-400 mt-1">Premier Auto Service</p>
-        </footer>
+        <PortalFooter />
+        <FloatingCallButton />
       </div>
     )
   }
@@ -197,36 +230,12 @@ export default function Portal() {
   if (inspectionId) {
     return (
       <div className="min-h-screen bg-slate-50">
-        <header className="bg-white border-b border-slate-200 sticky top-0 z-10">
-          <div className="max-w-lg mx-auto px-4 py-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-base font-bold text-slate-900">Premier Auto Service</h1>
-                <p className="text-xs text-slate-500">
-                  Hi {customer?.first_name || 'there'}
-                </p>
-              </div>
-              <div className="h-8 w-8 rounded-full bg-teal-600 flex items-center justify-center">
-                <span className="text-white text-xs font-bold">
-                  {(customer?.first_name?.[0] || 'P').toUpperCase()}
-                </span>
-              </div>
-            </div>
-          </div>
-        </header>
+        <PortalHeader compact />
         <main className="max-w-lg mx-auto px-4 py-4 space-y-4">
           <InspectionReport token={token} inspectionId={inspectionId} />
         </main>
-        <footer className="max-w-lg mx-auto px-4 py-6 text-center">
-          <a
-            href="tel:+16473711990"
-            className="inline-flex items-center gap-1.5 text-teal-600 text-xs font-medium hover:underline"
-          >
-            <Phone className="h-3 w-3" />
-            (647) 371-1990
-          </a>
-          <p className="text-xs text-slate-400 mt-1">Premier Auto Service</p>
-        </footer>
+        <PortalFooter />
+        <FloatingCallButton />
       </div>
     )
   }
@@ -242,27 +251,11 @@ export default function Portal() {
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Header */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-10">
-        <div className="max-w-lg mx-auto px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-base font-bold text-slate-900">Premier Auto Service</h1>
-              <p className="text-xs text-slate-500">
-                Hi {customer?.first_name || 'there'}
-              </p>
-            </div>
-            <div className="h-8 w-8 rounded-full bg-teal-600 flex items-center justify-center">
-              <span className="text-white text-xs font-bold">
-                {(customer?.first_name?.[0] || 'P').toUpperCase()}
-              </span>
-            </div>
-          </div>
-        </div>
-      </header>
+      <PortalHeader />
 
       {/* Tab Navigation */}
-      <nav className="bg-white border-b border-slate-200 sticky top-[57px] z-10">
-        <div className="max-w-lg mx-auto px-4 flex gap-1 overflow-x-auto scrollbar-hide">
+      <nav className="bg-white border-b border-slate-200 sticky top-[52px] z-10 shadow-sm">
+        <div className="max-w-lg mx-auto px-2 flex overflow-x-auto scrollbar-hide">
           {tabs.map(t => {
             const Icon = t.icon
             return (
@@ -271,13 +264,13 @@ export default function Portal() {
                 data-tab={t.key}
                 onClick={() => setTab(t.key)}
                 className={cn(
-                  'flex items-center gap-1.5 px-3 py-2.5 text-xs font-medium whitespace-nowrap border-b-2 transition-colors',
+                  'flex-1 flex flex-col items-center gap-1 py-3 text-[11px] font-medium whitespace-nowrap border-b-2 transition-colors min-w-0',
                   tab === t.key
                     ? 'border-teal-600 text-teal-700'
-                    : 'border-transparent text-slate-500 hover:text-slate-700'
+                    : 'border-transparent text-slate-400 active:text-slate-600'
                 )}
               >
-                <Icon className="h-3.5 w-3.5" />
+                <Icon className="h-5 w-5" />
                 {t.label}
               </button>
             )
@@ -286,7 +279,7 @@ export default function Portal() {
       </nav>
 
       {/* Content */}
-      <main className="max-w-lg mx-auto px-4 py-4 space-y-4">
+      <main className="max-w-lg mx-auto px-4 py-5 space-y-4">
         {tab === 'status' && <StatusTab token={token} />}
         {tab === 'estimate' && <EstimateTab token={token} customer={customer} />}
         {tab === 'inspection' && <InspectionTab token={token} />}
@@ -295,16 +288,10 @@ export default function Portal() {
       </main>
 
       {/* Footer */}
-      <footer className="max-w-lg mx-auto px-4 py-6 text-center">
-        <a
-          href="tel:+16473711990"
-          className="inline-flex items-center gap-1.5 text-teal-600 text-xs font-medium hover:underline"
-        >
-          <Phone className="h-3 w-3" />
-          (647) 371-1990
-        </a>
-        <p className="text-xs text-slate-400 mt-1">Premier Auto Service</p>
-      </footer>
+      <PortalFooter />
+
+      {/* Floating Call Button */}
+      <FloatingCallButton />
     </div>
   )
 }
@@ -378,25 +365,39 @@ function RepairTracker({ token, workOrderId }) {
   return (
     <div className="space-y-4">
       {/* Vehicle + WO header */}
-      <div className="bg-white rounded-xl border border-slate-200 p-4">
-        <div className="flex items-center justify-between mb-2">
+      <div className="bg-gradient-to-br from-slate-800 to-slate-700 rounded-2xl p-5 text-white shadow-lg">
+        <div className="flex items-center justify-between mb-3">
           <div>
-            <p className="text-sm font-semibold text-slate-900">{wo.work_order_display}</p>
-            <span className={cn('px-2 py-0.5 rounded-full text-xs font-medium', getWOStatusColor(wo.status))}>
-              {getWOStatusLabel(wo.status)}
-            </span>
+            <p className="text-lg font-bold">{wo.work_order_display}</p>
+            {vehicleLabel && (
+              <p className="text-sm text-slate-300 mt-0.5">{vehicleLabel}</p>
+            )}
           </div>
-          {vehicleLabel && (
-            <div className="flex items-center gap-1.5 text-xs text-slate-500">
-              <Car className="h-3.5 w-3.5 text-slate-400" />
-              {vehicleLabel}
-            </div>
-          )}
+          <span className={cn(
+            'px-3 py-1 rounded-full text-xs font-semibold',
+            wo.status === 'in_progress' ? 'bg-amber-400/20 text-amber-300' :
+            wo.status === 'completed' || wo.status === 'paid' ? 'bg-emerald-400/20 text-emerald-300' :
+            'bg-white/15 text-white'
+          )}>
+            {getWOStatusLabel(wo.status)}
+          </span>
+        </div>
+        {/* Inline progress bar */}
+        <div className="flex gap-1.5">
+          {WO_TRACKER_STEPS.map((step, i) => (
+            <div
+              key={step.key}
+              className={cn(
+                'h-2 flex-1 rounded-full',
+                i <= stepIndex ? 'bg-teal-400' : 'bg-white/15'
+              )}
+            />
+          ))}
         </div>
       </div>
 
       {/* Progress Stepper */}
-      <div className="bg-white rounded-xl border border-slate-200 p-4">
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
         <h3 className="text-xs font-medium uppercase tracking-wider text-slate-400 mb-4">Repair Progress</h3>
         <div className="space-y-0">
           {WO_TRACKER_STEPS.map((step, i) => {
@@ -453,29 +454,29 @@ function RepairTracker({ token, workOrderId }) {
 
       {/* Service Summary */}
       {items.length > 0 && (
-        <div className="bg-white rounded-xl border border-slate-200 divide-y divide-slate-100">
-          <div className="px-4 py-3">
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm divide-y divide-slate-100 overflow-hidden">
+          <div className="px-5 py-3.5">
             <h3 className="text-xs font-medium uppercase tracking-wider text-slate-400">Services</h3>
           </div>
           {items.map(item => (
-            <div key={item.id} className="px-4 py-3 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Wrench className="h-3.5 w-3.5 text-slate-400" />
-                <span className="text-sm text-slate-700">{item.description}</span>
+            <div key={item.id} className="px-5 py-3.5 flex items-center justify-between">
+              <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                <Wrench className="h-4 w-4 text-teal-500 flex-shrink-0" />
+                <span className="text-sm text-slate-700 truncate">{item.description}</span>
               </div>
-              <span className="text-sm font-medium text-slate-900">{formatCents(item.total_cents)}</span>
+              <span className="text-sm font-semibold text-slate-900 ml-3">{formatCents(item.total_cents)}</span>
             </div>
           ))}
-          <div className="px-4 py-3 flex items-center justify-between bg-slate-50">
-            <span className="text-sm font-semibold text-slate-900">Total</span>
-            <span className="text-sm font-semibold text-slate-900">{formatCents(wo.total_cents)}</span>
+          <div className="px-5 py-4 flex items-center justify-between bg-slate-50">
+            <span className="text-base font-bold text-slate-900">Total</span>
+            <span className="text-base font-bold text-slate-900">{formatCents(wo.total_cents)}</span>
           </div>
         </div>
       )}
 
       {/* Timeline Feed */}
       {history.length > 0 && (
-        <div className="bg-white rounded-xl border border-slate-200 p-4">
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
           <h3 className="text-xs font-medium uppercase tracking-wider text-slate-400 mb-3">Activity</h3>
           <div className="space-y-3">
             {[...history].reverse().map(entry => (
@@ -555,9 +556,9 @@ function StatusTab({ token }) {
       <div className="space-y-3">
         <button
           onClick={() => setTrackerWOId(null)}
-          className="flex items-center gap-1 text-xs text-teal-600 hover:underline"
+          className="flex items-center gap-1.5 text-sm text-teal-600 font-medium active:text-teal-800 py-1"
         >
-          <ArrowLeft className="h-3 w-3" />
+          <ArrowLeft className="h-4 w-4" />
           Back to status
         </button>
         <RepairTracker token={token} workOrderId={trackerWOId} />
@@ -577,56 +578,89 @@ function StatusTab({ token }) {
 
   if (activeWOs.length === 0 && !activeApt) {
     return (
-      <EmptyState
-        icon={Clock}
-        title="No active services"
-        message="You don't have any upcoming appointments or active repairs right now."
-      />
+      <div className="space-y-4">
+        <div className="bg-gradient-to-br from-teal-50 to-emerald-50 rounded-2xl border border-teal-100 p-6 text-center space-y-3">
+          <div className="mx-auto w-14 h-14 rounded-full bg-white shadow-sm flex items-center justify-center">
+            <CheckCircle2 className="h-7 w-7 text-teal-500" />
+          </div>
+          <h3 className="text-base font-semibold text-slate-900">All caught up!</h3>
+          <p className="text-sm text-slate-500">No active appointments or repairs right now. Need service?</p>
+          <a
+            href="tel:+16473711990"
+            className="inline-flex items-center gap-2 bg-teal-600 text-white text-sm font-medium px-5 py-2.5 rounded-full active:bg-teal-700 transition-colors shadow-sm"
+          >
+            <PhoneCall className="h-4 w-4" />
+            Call to Book
+          </a>
+        </div>
+      </div>
     )
   }
 
   return (
-    <div className="space-y-4">
-      {/* Active Work Orders — Repair Tracker Cards */}
+    <div className="space-y-5">
+      {/* Active Work Orders — Hero Cards */}
       {activeWOs.length > 0 && (
         <div className="space-y-3">
-          <h3 className="text-xs font-medium uppercase tracking-wider text-slate-400">Active Repairs</h3>
+          <h3 className="text-xs font-medium uppercase tracking-wider text-slate-400 px-1">Active Repairs</h3>
           {activeWOs.map(wo => {
             const stepIndex = getTrackerStepIndex(wo.status)
             const vehicle = wo.vehicle
             const vehicleLabel = vehicle ? `${vehicle.year} ${vehicle.make} ${vehicle.model}` : null
+            const isInProgress = wo.status === 'in_progress'
             return (
               <button
                 key={wo.id}
                 onClick={() => setTrackerWOId(wo.id)}
-                className="w-full bg-white rounded-xl border border-slate-200 p-4 text-left hover:border-teal-300 transition-colors"
+                className={cn(
+                  'w-full rounded-2xl p-5 text-left transition-all active:scale-[0.98]',
+                  isInProgress
+                    ? 'bg-gradient-to-br from-teal-600 to-teal-700 text-white shadow-lg shadow-teal-600/20'
+                    : 'bg-white border border-slate-200 hover:border-teal-300 shadow-sm'
+                )}
               >
-                <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center justify-between mb-4">
                   <div>
-                    <p className="text-sm font-semibold text-slate-900">{wo.work_order_display}</p>
+                    <p className={cn('text-base font-bold', isInProgress ? 'text-white' : 'text-slate-900')}>
+                      {wo.work_order_display}
+                    </p>
                     {vehicleLabel && (
-                      <p className="text-xs text-slate-500">{vehicleLabel}</p>
+                      <p className={cn('text-sm mt-0.5', isInProgress ? 'text-teal-100' : 'text-slate-500')}>
+                        {vehicleLabel}
+                      </p>
                     )}
                   </div>
-                  <span className={cn('px-2 py-0.5 rounded-full text-xs font-medium', getWOStatusColor(wo.status))}>
+                  <span className={cn(
+                    'px-3 py-1 rounded-full text-xs font-semibold',
+                    isInProgress
+                      ? 'bg-white/20 text-white'
+                      : getWOStatusColor(wo.status)
+                  )}>
                     {getWOStatusLabel(wo.status)}
                   </span>
                 </div>
-                {/* Mini progress bar */}
-                <div className="flex gap-1">
+                {/* Progress bar */}
+                <div className="flex gap-1.5 mb-3">
                   {WO_TRACKER_STEPS.map((step, i) => (
                     <div
                       key={step.key}
                       className={cn(
-                        'h-1.5 flex-1 rounded-full',
-                        i <= stepIndex ? 'bg-teal-500' : 'bg-slate-200'
+                        'h-2 flex-1 rounded-full',
+                        i <= stepIndex
+                          ? isInProgress ? 'bg-white' : 'bg-teal-500'
+                          : isInProgress ? 'bg-white/20' : 'bg-slate-200'
                       )}
                     />
                   ))}
                 </div>
-                <div className="flex items-center justify-between mt-2">
-                  <span className="text-xs text-teal-600 font-medium">Track progress</span>
-                  <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
+                <div className="flex items-center justify-between">
+                  <span className={cn(
+                    'text-sm font-medium',
+                    isInProgress ? 'text-teal-100' : 'text-teal-600'
+                  )}>
+                    {isInProgress ? 'Tap to track live' : 'View details'}
+                  </span>
+                  <ChevronRight className={cn('h-5 w-5', isInProgress ? 'text-white/60' : 'text-slate-400')} />
                 </div>
               </button>
             )
@@ -634,44 +668,68 @@ function StatusTab({ token }) {
         </div>
       )}
 
-      {/* Active Appointment (fallback when no active WOs) */}
+      {/* Active Appointment */}
       {activeApt && (
         <div className="space-y-3">
           {activeWOs.length > 0 && (
-            <h3 className="text-xs font-medium uppercase tracking-wider text-slate-400">Appointment</h3>
+            <h3 className="text-xs font-medium uppercase tracking-wider text-slate-400 px-1">Upcoming Appointment</h3>
           )}
-          <div className="bg-white rounded-xl border border-slate-200 p-4 space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-semibold text-slate-900">
-                  {format(parseDateLocal(activeApt.scheduled_date), 'EEEE, MMMM do')}
-                </p>
-                <p className="text-xs text-slate-500">
-                  {formatTime12Hour(activeApt.scheduled_time)}
-                </p>
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            {/* Date banner */}
+            <div className="bg-gradient-to-r from-slate-800 to-slate-700 px-5 py-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-white font-semibold">
+                    {format(parseDateLocal(activeApt.scheduled_date), 'EEEE, MMMM do')}
+                  </p>
+                  <p className="text-slate-300 text-sm">
+                    {formatTime12Hour(activeApt.scheduled_time)}
+                  </p>
+                </div>
+                <span className={cn('px-2.5 py-1 rounded-full text-xs font-semibold', getStatusColor(activeApt.status))}>
+                  {activeApt.status.replace(/_/g, ' ')}
+                </span>
               </div>
-              <span className={cn('px-2 py-0.5 rounded-full text-xs font-medium', getStatusColor(activeApt.status))}>
-                {activeApt.status.replace(/_/g, ' ')}
-              </span>
             </div>
 
-            {activeApt.vehicle && (
-              <div className="flex items-center gap-2 text-xs text-slate-600">
-                <Car className="h-3.5 w-3.5 text-slate-400" />
-                {activeApt.vehicle.year} {activeApt.vehicle.make} {activeApt.vehicle.model}
-              </div>
-            )}
+            <div className="p-5 space-y-4">
+              {activeApt.vehicle && (
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0">
+                    <Car className="h-5 w-5 text-slate-500" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900">
+                      {activeApt.vehicle.year} {activeApt.vehicle.make} {activeApt.vehicle.model}
+                    </p>
+                    {activeApt.vehicle.color && (
+                      <p className="text-xs text-slate-400">{activeApt.vehicle.color}</p>
+                    )}
+                  </div>
+                </div>
+              )}
 
-            {activeApt.appointment_services?.length > 0 && (
-              <div className="flex items-start gap-2 text-xs text-slate-600">
-                <ClipboardList className="h-3.5 w-3.5 text-slate-400 mt-0.5" />
-                <div>{activeApt.appointment_services.map(s => s.service_name).join(', ')}</div>
+              {activeApt.appointment_services?.length > 0 && (
+                <div className="space-y-2">
+                  {activeApt.appointment_services.map((s, i) => (
+                    <div key={i} className="flex items-center gap-2.5">
+                      <Wrench className="h-4 w-4 text-teal-500 flex-shrink-0" />
+                      <span className="text-sm text-slate-700">{s.service_name}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Location */}
+              <div className="flex items-center gap-2.5 pt-2 border-t border-slate-100">
+                <MapPin className="h-4 w-4 text-slate-400 flex-shrink-0" />
+                <span className="text-xs text-slate-500">1250 Industrial Blvd, Springfield</span>
               </div>
-            )}
+            </div>
           </div>
 
           {/* Appointment Timeline */}
-          <div className="bg-white rounded-xl border border-slate-200 p-4">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
             <h3 className="text-xs font-medium uppercase tracking-wider text-slate-400 mb-4">Progress</h3>
             <div className="space-y-0">
               {APPOINTMENT_STEPS.map((step, i) => {
@@ -682,26 +740,34 @@ function StatusTab({ token }) {
                   <div key={step.key} className="flex items-start gap-3">
                     <div className="flex flex-col items-center">
                       {isComplete ? (
-                        <CheckCircle2 className="h-5 w-5 text-teal-600" />
+                        <CheckCircle2 className="h-6 w-6 text-teal-600" />
                       ) : isCurrent ? (
-                        <div className="h-5 w-5 rounded-full border-2 border-teal-600 bg-teal-50 flex items-center justify-center">
-                          <div className="h-2 w-2 rounded-full bg-teal-600" />
+                        <div className="h-6 w-6 rounded-full border-2 border-teal-600 bg-teal-50 flex items-center justify-center">
+                          <div className="h-2.5 w-2.5 rounded-full bg-teal-600 animate-pulse" />
                         </div>
                       ) : (
-                        <Circle className="h-5 w-5 text-slate-300" />
+                        <Circle className="h-6 w-6 text-slate-300" />
                       )}
                       {i < APPOINTMENT_STEPS.length - 1 && (
                         <div className={cn(
-                          'w-0.5 h-6',
+                          'w-0.5 h-8',
                           isComplete ? 'bg-teal-600' : 'bg-slate-200'
                         )} />
                       )}
                     </div>
                     <p className={cn(
                       'text-sm pt-0.5',
-                      isCurrent ? 'font-semibold text-teal-700' : isComplete ? 'text-slate-600' : 'text-slate-400'
+                      isCurrent ? 'font-bold text-teal-700' : isComplete ? 'font-medium text-slate-600' : 'text-slate-400'
                     )}>
                       {step.label}
+                      {isCurrent && (
+                        <span className="ml-2 inline-flex items-center gap-1 text-xs font-normal text-teal-600">
+                          <span className="relative flex h-2 w-2">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75" />
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-teal-500" />
+                          </span>
+                        </span>
+                      )}
                     </p>
                   </div>
                 )
@@ -726,9 +792,9 @@ function PortalPaymentForm({ token, workOrderId, balanceDueCents, onPaymentCompl
 
   if (balanceDueCents <= 0 || paid) {
     return (
-      <div className="bg-emerald-50 rounded-xl border border-emerald-200 p-4 text-center space-y-1">
-        <CheckCircle2 className="h-6 w-6 text-emerald-600 mx-auto" />
-        <p className="text-sm font-semibold text-emerald-700">
+      <div className="bg-emerald-50 rounded-2xl border border-emerald-200 p-5 text-center space-y-2">
+        <CheckCircle2 className="h-7 w-7 text-emerald-600 mx-auto" />
+        <p className="text-base font-semibold text-emerald-700">
           {paid ? 'Payment received — thank you!' : 'Paid in full'}
         </p>
       </div>
@@ -752,8 +818,8 @@ function PortalPaymentForm({ token, workOrderId, balanceDueCents, onPaymentCompl
   }
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-      <div className="bg-slate-800 px-4 py-3 flex items-center justify-between">
+    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+      <div className="bg-slate-800 px-5 py-3.5 flex items-center justify-between">
         <div className="flex items-center gap-2 text-white">
           <CreditCard className="h-4 w-4" />
           <span className="text-sm font-medium">Pay Online</span>
@@ -763,41 +829,41 @@ function PortalPaymentForm({ token, workOrderId, balanceDueCents, onPaymentCompl
           <span className="text-xs">Secure</span>
         </div>
       </div>
-      <div className="p-4 space-y-3">
+      <div className="p-5 space-y-4">
         <div className="text-center pb-2">
           <p className="text-xs text-slate-500">Balance Due</p>
           <p className="text-2xl font-bold text-slate-800">{formatCents(balanceDueCents)}</p>
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-3">
           <div>
-            <label className="text-xs text-slate-500 block mb-1">Card Number</label>
+            <label className="text-xs text-slate-500 block mb-1.5">Card Number</label>
             <input
               type="text"
               value={cardNumber}
               onChange={(e) => setCardNumber(e.target.value)}
-              className="w-full h-10 px-3 rounded-lg border border-slate-200 text-sm bg-slate-50 font-mono"
+              className="w-full h-11 px-3 rounded-xl border border-slate-200 text-sm bg-slate-50 font-mono"
               placeholder="4242 4242 4242 4242"
             />
           </div>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs text-slate-500 block mb-1">Expiry</label>
+              <label className="text-xs text-slate-500 block mb-1.5">Expiry</label>
               <input
                 type="text"
                 value={expiry}
                 onChange={(e) => setExpiry(e.target.value)}
-                className="w-full h-10 px-3 rounded-lg border border-slate-200 text-sm bg-slate-50 font-mono"
+                className="w-full h-11 px-3 rounded-xl border border-slate-200 text-sm bg-slate-50 font-mono"
                 placeholder="MM/YY"
               />
             </div>
             <div>
-              <label className="text-xs text-slate-500 block mb-1">CVC</label>
+              <label className="text-xs text-slate-500 block mb-1.5">CVC</label>
               <input
                 type="text"
                 value={cvc}
                 onChange={(e) => setCvc(e.target.value)}
-                className="w-full h-10 px-3 rounded-lg border border-slate-200 text-sm bg-slate-50 font-mono"
+                className="w-full h-11 px-3 rounded-xl border border-slate-200 text-sm bg-slate-50 font-mono"
                 placeholder="123"
               />
             </div>
@@ -811,7 +877,7 @@ function PortalPaymentForm({ token, workOrderId, balanceDueCents, onPaymentCompl
         <Button
           onClick={handlePay}
           disabled={paying}
-          className="w-full bg-teal-600 hover:bg-teal-700 text-white py-3 text-base"
+          className="w-full bg-teal-600 hover:bg-teal-700 text-white py-3.5 text-base rounded-xl"
         >
           {paying ? (
             <>
@@ -929,18 +995,18 @@ function EstimateTab({ token, customer }) {
           <button
             key={wo.id}
             onClick={() => loadWODetail(wo.id)}
-            className="w-full bg-white rounded-xl border border-slate-200 p-4 text-left hover:border-teal-300 transition-colors"
+            className="w-full bg-white rounded-2xl border border-slate-200 shadow-sm p-5 text-left active:scale-[0.98] transition-all hover:border-teal-300"
           >
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-semibold text-slate-900">{wo.work_order_display}</p>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-slate-500 mt-0.5">
                   {wo.vehicle ? `${wo.vehicle.year} ${wo.vehicle.make} ${wo.vehicle.model}` : 'Vehicle'}
                 </p>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-sm font-semibold text-slate-900">{formatCents(wo.total_cents)}</span>
-                <ChevronRight className="h-4 w-4 text-slate-400" />
+                <span className="text-base font-bold text-slate-900">{formatCents(wo.total_cents)}</span>
+                <ChevronRight className="h-5 w-5 text-slate-400" />
               </div>
             </div>
           </button>
@@ -957,9 +1023,9 @@ function EstimateTab({ token, customer }) {
   // Approved confirmation
   if (approved) {
     return (
-      <div className="bg-white rounded-xl border border-emerald-200 p-6 text-center space-y-3">
-        <div className="mx-auto w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center">
-          <CheckCircle2 className="h-6 w-6 text-emerald-600" />
+      <div className="bg-white rounded-2xl border border-emerald-200 shadow-sm p-6 text-center space-y-3">
+        <div className="mx-auto w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center">
+          <CheckCircle2 className="h-7 w-7 text-emerald-600" />
         </div>
         <h3 className="text-base font-semibold text-slate-900">Estimate Approved</h3>
         <p className="text-sm text-slate-500">Thank you! We'll get started on your vehicle right away.</p>
@@ -982,11 +1048,11 @@ function EstimateTab({ token, customer }) {
   return (
     <div className="space-y-4">
       {/* WO header */}
-      <div className="bg-white rounded-xl border border-slate-200 p-4">
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
         <div className="flex items-center justify-between mb-2">
           <div>
             <p className="text-sm font-semibold text-slate-900">{woDetail.work_order_display}</p>
-            <span className={cn('px-2 py-0.5 rounded-full text-xs font-medium', getWOStatusColor(woDetail.status))}>
+            <span className={cn('px-2.5 py-0.5 rounded-full text-xs font-medium mt-1 inline-block', getWOStatusColor(woDetail.status))}>
               {getWOStatusLabel(woDetail.status)}
             </span>
           </div>
@@ -1005,35 +1071,35 @@ function EstimateTab({ token, customer }) {
       </div>
 
       {/* Line items */}
-      <div className="bg-white rounded-xl border border-slate-200 divide-y divide-slate-100">
-        <div className="px-4 py-3">
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm divide-y divide-slate-100 overflow-hidden">
+        <div className="px-5 py-3.5">
           <h3 className="text-xs font-medium uppercase tracking-wider text-slate-400">Services & Parts</h3>
         </div>
         {items.map(item => {
           const itemStatus = itemStatuses[item.id] || 'approved'
           const isDeclined = itemStatus === 'declined'
           return (
-            <div key={item.id} className={cn('px-4 py-3 flex items-center gap-3', isDeclined && 'opacity-50')}>
+            <div key={item.id} className={cn('px-5 py-3.5 flex items-center gap-3', isDeclined && 'opacity-50')}>
               <button
                 onClick={() => toggleItem(item.id)}
                 className={cn(
-                  'flex-shrink-0 w-5 h-5 rounded border flex items-center justify-center transition-colors',
+                  'flex-shrink-0 w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-colors',
                   isDeclined
                     ? 'border-slate-300 bg-white'
                     : 'border-teal-600 bg-teal-600'
                 )}
               >
-                {!isDeclined && <Check className="h-3 w-3 text-white" />}
+                {!isDeclined && <Check className="h-3.5 w-3.5 text-white" />}
               </button>
               <div className="flex-1 min-w-0">
                 <p className={cn('text-sm text-slate-900', isDeclined && 'line-through')}>
                   {item.description}
                 </p>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-slate-400 mt-0.5">
                   {item.item_type} {item.quantity > 1 ? `x${item.quantity}` : ''}
                 </p>
               </div>
-              <p className={cn('text-sm font-medium text-slate-900 whitespace-nowrap', isDeclined && 'line-through')}>
+              <p className={cn('text-sm font-semibold text-slate-900 whitespace-nowrap', isDeclined && 'line-through')}>
                 {formatCents(item.total_cents)}
               </p>
             </div>
@@ -1042,7 +1108,7 @@ function EstimateTab({ token, customer }) {
       </div>
 
       {/* Totals */}
-      <div className="bg-white rounded-xl border border-slate-200 p-4 space-y-2">
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-2">
         <div className="flex justify-between text-xs text-slate-500">
           <span>Subtotal</span>
           <span>{formatCents(woDetail.subtotal_cents)}</span>
@@ -1068,7 +1134,7 @@ function EstimateTab({ token, customer }) {
         <Button
           onClick={handleApprove}
           disabled={approving || approvedCount === 0}
-          className="w-full bg-teal-600 hover:bg-teal-700 text-white"
+          className="w-full bg-teal-600 hover:bg-teal-700 text-white py-3.5 text-base rounded-xl"
         >
           {approving ? (
             <>
@@ -1150,12 +1216,12 @@ function HistoryTab({ token }) {
             const vehicle = apt.vehicle
             const services = apt.appointment_services?.map(s => s.service_name) || []
             return (
-              <div key={apt.id} className="bg-white rounded-xl border border-slate-200 p-4">
+              <div key={apt.id} className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-sm font-medium text-slate-900">
+                  <p className="text-sm font-semibold text-slate-900">
                     {format(parseDateLocal(apt.scheduled_date), 'MMM d, yyyy')}
                   </p>
-                  <span className={cn('px-2 py-0.5 rounded-full text-xs font-medium', getStatusColor(apt.status))}>
+                  <span className={cn('px-2.5 py-0.5 rounded-full text-xs font-medium', getStatusColor(apt.status))}>
                     {apt.status.replace(/_/g, ' ')}
                   </span>
                 </div>
@@ -1176,10 +1242,10 @@ function HistoryTab({ token }) {
         <div className="space-y-3">
           <h3 className="text-xs font-medium uppercase tracking-wider text-slate-400">Work Orders</h3>
           {completedWOs.map(wo => (
-            <div key={wo.id} className="bg-white rounded-xl border border-slate-200 p-4">
+            <div key={wo.id} className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
               <div className="flex items-center justify-between mb-1">
-                <p className="text-sm font-medium text-slate-900">{wo.work_order_display}</p>
-                <span className={cn('px-2 py-0.5 rounded-full text-xs font-medium', getWOStatusColor(wo.status))}>
+                <p className="text-sm font-semibold text-slate-900">{wo.work_order_display}</p>
+                <span className={cn('px-2.5 py-0.5 rounded-full text-xs font-medium', getWOStatusColor(wo.status))}>
                   {getWOStatusLabel(wo.status)}
                 </span>
               </div>
@@ -1187,7 +1253,7 @@ function HistoryTab({ token }) {
                 <p className="text-xs text-slate-500">
                   {wo.vehicle ? `${wo.vehicle.year} ${wo.vehicle.make} ${wo.vehicle.model}` : ''}
                 </p>
-                <p className="text-sm font-semibold text-slate-900">{formatCents(wo.total_cents)}</p>
+                <p className="text-sm font-bold text-slate-900">{formatCents(wo.total_cents)}</p>
               </div>
             </div>
           ))}
@@ -1213,10 +1279,10 @@ function VehiclesTab({ vehicles }) {
   return (
     <div className="space-y-3">
       {vehicles.map(v => (
-        <div key={v.id} className="bg-white rounded-xl border border-slate-200 p-4">
+        <div key={v.id} className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center">
-              <Car className="h-5 w-5 text-slate-400" />
+            <div className="h-11 w-11 rounded-full bg-slate-100 flex items-center justify-center">
+              <Car className="h-5 w-5 text-slate-500" />
             </div>
             <div className="flex-1">
               <p className="text-sm font-semibold text-slate-900">
@@ -1229,7 +1295,7 @@ function VehiclesTab({ vehicles }) {
             </div>
           </div>
           {v.mileage && (
-            <p className="text-xs text-slate-400 mt-2 ml-13">
+            <p className="text-xs text-slate-400 mt-2 pl-14">
               {Number(v.mileage).toLocaleString()} km
             </p>
           )}
@@ -1237,14 +1303,13 @@ function VehiclesTab({ vehicles }) {
           {/* Link to inspection tab */}
           <button
             onClick={() => {
-              // Navigate to Inspection tab (parent sets tab via ref or we use a simple approach)
               const tabBtn = document.querySelector('[data-tab="inspection"]')
               if (tabBtn) tabBtn.click()
             }}
-            className="mt-3 w-full px-3 py-2 bg-teal-50 rounded-lg border border-teal-200 text-center hover:bg-teal-100 transition-colors"
+            className="mt-4 w-full px-3 py-2.5 bg-teal-50 rounded-xl border border-teal-200 text-center active:bg-teal-100 transition-colors"
           >
-            <p className="text-xs text-teal-700 font-medium flex items-center justify-center gap-1">
-              <ClipboardCheck className="h-3 w-3" />
+            <p className="text-xs text-teal-700 font-medium flex items-center justify-center gap-1.5">
+              <ClipboardCheck className="h-3.5 w-3.5" />
               View Vehicle Inspections
             </p>
           </button>
@@ -1321,16 +1386,16 @@ function InspectionTab({ token }) {
           <button
             key={insp.id}
             onClick={() => setSelectedId(insp.id)}
-            className="w-full bg-white rounded-xl border border-slate-200 p-4 text-left hover:border-teal-300 transition-colors"
+            className="w-full bg-white rounded-2xl border border-slate-200 shadow-sm p-5 text-left active:scale-[0.98] transition-all hover:border-teal-300"
           >
             <div className="flex items-center justify-between">
               <div>
                 {vehicleLabel && <p className="text-sm font-semibold text-slate-900">{vehicleLabel}</p>}
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-slate-500 mt-0.5">
                   {format(new Date(insp.completed_at || insp.created_at), 'MMM d, yyyy')}
                 </p>
               </div>
-              <ChevronRight className="h-4 w-4 text-slate-400" />
+              <ChevronRight className="h-5 w-5 text-slate-400" />
             </div>
           </button>
         )
@@ -1386,20 +1451,20 @@ function InspectionReport({ token, inspectionId }) {
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="bg-white rounded-xl border border-slate-200 p-4">
+      <div className="bg-gradient-to-br from-slate-800 to-slate-700 rounded-2xl p-5 text-white shadow-lg">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-full bg-teal-50 flex items-center justify-center">
-            <ClipboardCheck className="h-5 w-5 text-teal-600" />
+          <div className="h-11 w-11 rounded-full bg-white/15 flex items-center justify-center">
+            <ClipboardCheck className="h-5 w-5 text-white" />
           </div>
           <div>
-            <h3 className="text-sm font-semibold text-slate-900">Vehicle Inspection Report</h3>
+            <h3 className="text-base font-bold text-white">Vehicle Inspection</h3>
             {vehicle && (
-              <p className="text-xs text-slate-500">{vehicle.year} {vehicle.make} {vehicle.model}</p>
+              <p className="text-sm text-slate-300 mt-0.5">{vehicle.year} {vehicle.make} {vehicle.model}</p>
             )}
           </div>
         </div>
         {inspection.completed_at && (
-          <p className="text-xs text-slate-400 mt-2">
+          <p className="text-xs text-slate-400 mt-3">
             Completed {format(new Date(inspection.completed_at), 'MMM d, yyyy')}
           </p>
         )}
@@ -1414,7 +1479,7 @@ function InspectionReport({ token, inspectionId }) {
           return (
             <div
               key={key}
-              className={cn('rounded-xl border p-3 text-center', style.bg, count > 0 ? 'border-transparent' : 'border-slate-200 bg-white')}
+              className={cn('rounded-2xl border p-3.5 text-center shadow-sm', style.bg, count > 0 ? 'border-transparent' : 'border-slate-200 bg-white')}
             >
               <Icon className={cn('h-4 w-4 mx-auto mb-1', count > 0 ? style.text : 'text-slate-300')} />
               <p className={cn('text-lg font-bold', count > 0 ? style.text : 'text-slate-300')}>{count}</p>
@@ -1430,10 +1495,10 @@ function InspectionReport({ token, inspectionId }) {
           const expanded = expandedCategories[category]
           const hasFlagged = catItems.some(i => i.condition === 'needs_attention' || i.condition === 'urgent')
           return (
-            <div key={category} className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+            <div key={category} className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
               <button
                 onClick={() => toggleCategory(category)}
-                className="w-full flex items-center justify-between px-4 py-3 hover:bg-slate-50 transition-colors"
+                className="w-full flex items-center justify-between px-5 py-3.5 active:bg-slate-50 transition-colors"
               >
                 <div className="flex items-center gap-2">
                   {expanded ? <ChevronDown className="h-4 w-4 text-slate-400" /> : <ChevronRight className="h-4 w-4 text-slate-400" />}
@@ -1456,7 +1521,7 @@ function InspectionReport({ token, inspectionId }) {
                     const Icon = style?.icon
                     const photos = item.inspection_photos || []
                     return (
-                      <div key={item.id} className="px-4 py-3">
+                      <div key={item.id} className="px-5 py-3.5">
                         <div className="flex items-center justify-between mb-1">
                           <span className="text-sm text-slate-700">{item.item_name}</span>
                           {style && (
@@ -1480,7 +1545,7 @@ function InspectionReport({ token, inspectionId }) {
                                 <img
                                   src={photo.photo_url}
                                   alt={photo.caption || item.item_name}
-                                  className="h-16 w-16 object-cover rounded-lg border border-slate-200"
+                                  className="h-20 w-20 object-cover rounded-xl border border-slate-200"
                                 />
                               </button>
                             ))}
@@ -1523,20 +1588,20 @@ function InspectionReport({ token, inspectionId }) {
 
 function LoadingCard() {
   return (
-    <div className="bg-white rounded-xl border border-slate-200 p-8 flex items-center justify-center">
-      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-teal-600" />
+    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-10 flex items-center justify-center">
+      <div className="animate-spin rounded-full h-7 w-7 border-b-2 border-teal-600" />
     </div>
   )
 }
 
 function EmptyState({ icon: Icon, title, message }) {
   return (
-    <div className="bg-white rounded-xl border border-slate-200 p-8 text-center">
-      <div className="mx-auto w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center mb-3">
+    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 text-center">
+      <div className="mx-auto w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-3">
         <Icon className="h-5 w-5 text-slate-400" />
       </div>
-      <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
-      <p className="text-xs text-slate-500 mt-1">{message}</p>
+      <h3 className="text-base font-semibold text-slate-900">{title}</h3>
+      <p className="text-sm text-slate-500 mt-1">{message}</p>
     </div>
   )
 }
