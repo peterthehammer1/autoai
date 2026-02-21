@@ -389,7 +389,7 @@ export default function BayView() {
         <div className="bg-white shadow-lg rounded-xl border border-slate-200 overflow-hidden">
           {/* Time header */}
           <div className="flex border-b border-slate-200 bg-slate-50/80">
-            <div className="w-36 lg:w-48 shrink-0 px-3 py-2.5 border-r border-slate-200">
+            <div className="w-24 sm:w-36 lg:w-48 shrink-0 px-2 sm:px-3 py-2.5 border-r border-slate-200">
               <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">Service Bay</span>
             </div>
             <div className="flex-1 relative flex">
@@ -411,13 +411,13 @@ export default function BayView() {
             const firstTech = bay.appointments[0]?.technician
             return (
               <div key={bay.id} className={cn('flex border-b border-slate-100 last:border-b-0 h-20', rowIdx % 2 === 1 && 'bg-slate-50/40')}>
-                <div className="w-36 lg:w-48 shrink-0 px-3 py-2 border-r border-slate-200 flex flex-col justify-center gap-0.5">
-                  <div className="flex items-center gap-2">
+                <div className="w-24 sm:w-36 lg:w-48 shrink-0 px-2 sm:px-3 py-2 border-r border-slate-200 flex flex-col justify-center gap-0.5">
+                  <div className="flex items-center gap-1 sm:gap-2">
                     <BayIcon className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-                    <span className="text-sm font-semibold text-slate-800 truncate">{bay.name}</span>
+                    <span className="text-xs sm:text-sm font-semibold text-slate-800 truncate">{bay.name}</span>
                   </div>
-                  <span className="text-xs text-slate-400 capitalize pl-5.5">{bay.bay_type?.replace(/_/g, ' ')}</span>
-                  <div className="flex items-center gap-2 pl-5.5">
+                  <span className="text-xs text-slate-400 capitalize pl-5.5 hidden sm:block">{bay.bay_type?.replace(/_/g, ' ')}</span>
+                  <div className="flex items-center gap-2 pl-5.5 hidden sm:flex">
                     {firstTech && (
                       <span className="text-xs text-slate-500 truncate">
                         {firstTech.first_name} {(firstTech.last_name || '')[0]}.
@@ -442,12 +442,12 @@ export default function BayView() {
           {/* Unassigned row */}
           {unassigned.length > 0 && (
             <div className="flex border-t-2 border-amber-200 h-20 bg-amber-50/30">
-              <div className="w-36 lg:w-48 shrink-0 px-3 py-2 border-r border-slate-200 flex flex-col justify-center gap-0.5">
-                <div className="flex items-center gap-2">
+              <div className="w-24 sm:w-36 lg:w-48 shrink-0 px-2 sm:px-3 py-2 border-r border-slate-200 flex flex-col justify-center gap-0.5">
+                <div className="flex items-center gap-1 sm:gap-2">
                   <AlertCircle className="h-3.5 w-3.5 text-amber-500 shrink-0" />
-                  <span className="text-sm font-semibold text-amber-700">Unassigned</span>
+                  <span className="text-xs sm:text-sm font-semibold text-amber-700">Unassigned</span>
                 </div>
-                <span className="text-xs text-amber-500 pl-5.5">
+                <span className="text-xs text-amber-500 pl-5.5 hidden sm:block">
                   {unassigned.length} appointment{unassigned.length !== 1 ? 's' : ''} need a bay
                 </span>
               </div>

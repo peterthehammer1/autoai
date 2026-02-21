@@ -121,7 +121,7 @@ export default function RescheduleDialog({ appointment, open, onOpenChange }) {
                   <Loader2 className="h-5 w-5 animate-spin text-slate-400" />
                 </div>
               ) : timeSlots.length > 0 ? (
-                <div className="grid grid-cols-4 gap-2 max-h-48 overflow-y-auto">
+                <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-48 overflow-y-auto">
                   {timeSlots.map((slot) => (
                     <button
                       key={slot.start_time}

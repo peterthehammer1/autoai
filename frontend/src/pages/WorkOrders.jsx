@@ -158,7 +158,7 @@ export default function WorkOrders() {
                         <div className="h-7 w-7 rounded-full bg-slate-100 flex items-center justify-center">
                           <User className="h-3.5 w-3.5 text-slate-400" />
                         </div>
-                        <span className="text-sm text-slate-700 truncate max-w-[180px]">
+                        <span className="text-sm text-slate-700 truncate max-w-[120px] sm:max-w-[180px]">
                           {wo.customer
                             ? `${wo.customer.first_name || ''} ${wo.customer.last_name || ''}`.trim()
                             : '-'}
