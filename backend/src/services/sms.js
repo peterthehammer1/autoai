@@ -146,8 +146,6 @@ ${services}
 ${vehicleLine}${formattedDate} at ${formattedTime}
 ${BUSINESS.address}
 ${portalLine}
-Reply CONFIRM to confirm, RESCHEDULE to reschedule, or CANCEL to cancel.
-
 Thanks for choosing ${BUSINESS.name}!
 
 - ${BUSINESS.agentName}`;
@@ -187,8 +185,6 @@ ${services}
 ${vehicleLine}${formattedDate} at ${formattedTime}
 ${BUSINESS.address}
 
-Reply CONFIRM to confirm, or RESCHEDULE if you need to change the time.
-
 See you soon!
 
 - ${BUSINESS.agentName}`;
@@ -227,7 +223,7 @@ Your appointment has been cancelled:
 ${services}
 ${vehicleLine}${formattedDate} at ${formattedTime}
 
-If you'd like to rebook, reply RESCHEDULE or call us at ${BUSINESS.phone}.
+If you'd like to rebook, call us at ${BUSINESS.phone}.
 
 - ${BUSINESS.agentName}`;
 
