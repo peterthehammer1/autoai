@@ -20,8 +20,10 @@ const tools = [
     name: 'get_services',
     description: 'Get available services. Use when you need to find service IDs for booking, or when the customer asks about services or prices.',
     url: 'https://www.alignedai.dev/api/voice/get_services',
-    speak_during_execution: false,
-    speak_after_execution: false,
+    speak_during_execution: true,
+    execution_message_type: 'prompt',
+    execution_message_description: "Say a brief acknowledgment like 'One sec.' or 'Sure thing.' — 3 words max.",
+    speak_after_execution: true,
     parameters: {
       type: 'object',
       properties: {
@@ -36,7 +38,7 @@ const tools = [
     url: 'https://www.alignedai.dev/api/voice/check_availability',
     speak_during_execution: true,
     execution_message_type: 'prompt',
-    execution_message_description: "Say you're checking the schedule — e.g. 'Let me see what\\'s open.' Keep it under 6 words.",
+    execution_message_description: "Say you're checking the schedule — e.g. 'Checking the schedule now.' Keep it under 5 words. Do NOT repeat what you already said.",
     speak_after_execution: true,
     parameters: {
       type: 'object',
