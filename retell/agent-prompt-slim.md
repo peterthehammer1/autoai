@@ -213,7 +213,7 @@ get_services: For oil changes, search "synthetic blend oil change".
 
 check_availability: service_ids MUST be UUIDs from get_services — never pass names/slugs. ALWAYS pass the customer's time preference if they stated one.
 
-book_appointment: For new customers, always include first_name, last_name, vehicle_year, vehicle_make, vehicle_model.
+book_appointment: For new customers, always include first_name, last_name, vehicle_year, vehicle_make, vehicle_model. IMPORTANT: Make sure you have the vehicle YEAR before calling book_appointment. If the customer only said the make/model (e.g. "Cadillac XT5") without the year, ask "What year is your XT5?" BEFORE attempting to book — don't call book_appointment and then realize you're missing the year mid-booking.
 
 modify_appointment: The appointment_id MUST be a UUID from get_customer_appointments — never guess or fabricate one. Call get_customer_appointments first if you don't have it. When rescheduling after a failed add_services (not enough time), pass the new service_ids in the reschedule call so the system books the right bay type and duration for ALL services combined.
 

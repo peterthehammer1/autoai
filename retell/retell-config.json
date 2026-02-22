@@ -4,12 +4,13 @@
   "agent_id": "agent_98c68bf49ac79b86c517c5c2ba",
   "model": "gpt-4o-mini",
   "language": "en-US",
-  
+
   "notes": {
     "dynamic_variables": "These are set by the inbound webhook from caller ID: {{customer_phone}}, {{customer_id}}, {{customer_name}}, {{customer_first_name}}, {{customer_last_name}}, {{is_existing_customer}}, {{vehicle_info}}, {{vehicle_id}}",
-    "const_property": "Using 'const' in parameter definitions auto-fills the value from dynamic variables - the LLM doesn't need to provide it"
+    "const_property": "Using 'const' in parameter definitions auto-fills the value from dynamic variables - the LLM doesn't need to provide it",
+    "filler_strategy": "get_services has speak_after_execution: false because it is always followed by check_availability or book_appointment. All other tools speak during execution with a contextual filler prompt."
   },
-  
+
   "general_tools": [
     {
       "type": "end_call",
@@ -21,8 +22,10 @@
       "name": "get_services",
       "description": "Get available services. Use when you need to find service IDs for booking, or when the customer asks about services or prices.",
       "url": "https://www.alignedai.dev/api/voice/get_services",
-      "speak_during_execution": false,
-      "speak_after_execution": true,
+      "speak_during_execution": true,
+      "execution_message_type": "prompt",
+      "execution_message_prompt": "Say a very brief acknowledgment like 'One sec.' or 'Sure thing.' — 3 words max.",
+      "speak_after_execution": false,
       "parameters": {
         "type": "object",
         "properties": {
@@ -38,7 +41,9 @@
       "name": "check_availability",
       "description": "Check available appointment times. Call after you know what service they need.",
       "url": "https://www.alignedai.dev/api/voice/check_availability",
-      "speak_during_execution": false,
+      "speak_during_execution": true,
+      "execution_message_type": "prompt",
+      "execution_message_prompt": "Say you're checking the schedule — e.g. 'Let me see what's open.' Keep it under 6 words.",
       "speak_after_execution": true,
       "parameters": {
         "type": "object",
@@ -65,7 +70,9 @@
       "name": "book_appointment",
       "description": "Book the appointment after customer confirms date, time, and service.",
       "url": "https://www.alignedai.dev/api/voice/book_appointment",
-      "speak_during_execution": false,
+      "speak_during_execution": true,
+      "execution_message_type": "prompt",
+      "execution_message_prompt": "Say 'Great. One second please.' exactly.",
       "speak_after_execution": true,
       "parameters": {
         "type": "object",
@@ -126,7 +133,9 @@
       "name": "get_customer_appointments",
       "description": "Get customer existing appointments. Use when customer asks about their appointments, wants to check when it is, reschedule, or cancel.",
       "url": "https://www.alignedai.dev/api/voice/get_customer_appointments",
-      "speak_during_execution": false,
+      "speak_during_execution": true,
+      "execution_message_type": "prompt",
+      "execution_message_prompt": "Say you're pulling up their info — e.g. 'Let me pull that up.' Keep it under 6 words.",
       "speak_after_execution": true,
       "parameters": {
         "type": "object",
@@ -145,7 +154,9 @@
       "name": "modify_appointment",
       "description": "Cancel, reschedule, or add services to an existing appointment.",
       "url": "https://www.alignedai.dev/api/voice/modify_appointment",
-      "speak_during_execution": false,
+      "speak_during_execution": true,
+      "execution_message_type": "prompt",
+      "execution_message_prompt": "Say you're making the change — e.g. 'Updating that for you.' or 'Got it, one sec.' Keep it under 6 words.",
       "speak_after_execution": true,
       "parameters": {
         "type": "object",
@@ -181,7 +192,9 @@
       "name": "send_confirmation",
       "description": "Send SMS confirmation to customer with appointment details. Use when customer asks for a confirmation text or reminder.",
       "url": "https://www.alignedai.dev/api/voice/send_confirmation",
-      "speak_during_execution": false,
+      "speak_during_execution": true,
+      "execution_message_type": "prompt",
+      "execution_message_prompt": "Say you're sending the text — e.g. 'Sending that over now.' Keep it under 6 words.",
       "speak_after_execution": true,
       "parameters": {
         "type": "object",
@@ -204,7 +217,9 @@
       "name": "submit_tow_request",
       "description": "Submit a tow-in request when the customer needs a tow. Use after you have the pickup address (where the car is) and customer/vehicle info.",
       "url": "https://www.alignedai.dev/api/voice/submit_tow_request",
-      "speak_during_execution": false,
+      "speak_during_execution": true,
+      "execution_message_type": "prompt",
+      "execution_message_prompt": "Say you're setting up the tow — e.g. 'Getting that tow set up.' Keep it under 6 words.",
       "speak_after_execution": true,
       "parameters": {
         "type": "object",
@@ -241,7 +256,9 @@
       "name": "submit_lead",
       "description": "ONLY use when someone asks about the AI platform itself (who made this, how do I get this for my business, etc). NOT for auto service questions.",
       "url": "https://www.alignedai.dev/api/voice/submit_lead",
-      "speak_during_execution": false,
+      "speak_during_execution": true,
+      "execution_message_type": "prompt",
+      "execution_message_prompt": "Say you're passing their info along — e.g. 'Let me get that noted.' Keep it under 6 words.",
       "speak_after_execution": true,
       "parameters": {
         "type": "object",
@@ -272,7 +289,9 @@
       "name": "transfer_to_human",
       "description": "Transfer the call to a human service advisor. Use when: customer is frustrated and wants a person, complex issue you can't handle, customer explicitly asks for a person, or you've failed multiple times at a task.",
       "url": "https://www.alignedai.dev/api/voice/transfer_to_human",
-      "speak_during_execution": false,
+      "speak_during_execution": true,
+      "execution_message_type": "prompt",
+      "execution_message_prompt": "Say you're connecting them — e.g. 'Let me get you to someone.' Keep it under 7 words.",
       "speak_after_execution": true,
       "parameters": {
         "type": "object",
@@ -299,7 +318,9 @@
       "name": "request_callback",
       "description": "Request a callback from a service advisor. Use when customer wants someone to call them back rather than hold or transfer.",
       "url": "https://www.alignedai.dev/api/voice/request_callback",
-      "speak_during_execution": false,
+      "speak_during_execution": true,
+      "execution_message_type": "prompt",
+      "execution_message_prompt": "Say you're setting up the callback — e.g. 'I'll get that set up.' Keep it under 6 words.",
       "speak_after_execution": true,
       "parameters": {
         "type": "object",
@@ -330,7 +351,9 @@
       "name": "get_repair_status",
       "description": "Check status of a vehicle currently at the shop. Use when customer asks 'is my car ready?', 'what's the status?', 'how much longer?', or similar.",
       "url": "https://www.alignedai.dev/api/voice/get_repair_status",
-      "speak_during_execution": false,
+      "speak_during_execution": true,
+      "execution_message_type": "prompt",
+      "execution_message_prompt": "Say you're checking on their car — e.g. 'Let me check on that.' Keep it under 6 words.",
       "speak_after_execution": true,
       "parameters": {
         "type": "object",
@@ -349,7 +372,9 @@
       "name": "get_estimate",
       "description": "Get a price estimate for a service. Use when customer asks 'how much for...', 'what does X cost?', 'can I get a quote?'",
       "url": "https://www.alignedai.dev/api/voice/get_estimate",
-      "speak_during_execution": false,
+      "speak_during_execution": true,
+      "execution_message_type": "prompt",
+      "execution_message_prompt": "Say you're pulling up pricing — e.g. 'Let me grab that price.' Keep it under 6 words.",
       "speak_after_execution": true,
       "parameters": {
         "type": "object",
@@ -388,7 +413,9 @@
       "name": "get_vehicle_info",
       "description": "Get detailed vehicle information including maintenance schedule and open recalls by VIN. Use when: customer provides a VIN, you need to check if a service is due based on mileage, or customer asks about recalls on their vehicle.",
       "url": "https://www.alignedai.dev/api/voice/get_vehicle_info",
-      "speak_during_execution": false,
+      "speak_during_execution": true,
+      "execution_message_type": "prompt",
+      "execution_message_prompt": "Say you're looking up their vehicle — e.g. 'Pulling up your vehicle info.' Keep it under 6 words.",
       "speak_after_execution": true,
       "parameters": {
         "type": "object",
@@ -408,14 +435,14 @@
           },
           "check_service": {
             "type": "string",
-            "description": "Specific service to check if due (e.g., 'oil change', 'air filter', 'transmission fluid')"
+            "description": "Specific service to check if due (e.g., 'oil change', 'air filter', 'transmission fluid'
           }
         },
         "required": []
       }
     }
   ],
-  
+
   "webhooks": {
     "inbound": {
       "url": "https://www.alignedai.dev/api/webhooks/voice/inbound",
