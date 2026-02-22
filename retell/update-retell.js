@@ -36,9 +36,7 @@ const tools = [
     name: 'check_availability',
     description: 'Check available appointment times. Call after you know what service they need.',
     url: 'https://www.alignedai.dev/api/voice/check_availability',
-    speak_during_execution: true,
-    execution_message_type: 'prompt',
-    execution_message_description: "Say you're checking the schedule — e.g. 'Checking the schedule now.' Keep it under 5 words. Do NOT repeat what you already said.",
+    speak_during_execution: false,
     speak_after_execution: true,
     parameters: {
       type: 'object',
