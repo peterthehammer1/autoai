@@ -36,7 +36,7 @@ router.post('/check_availability', async (req, res, next) => {
     const serviceIdList = Array.isArray(service_ids) ? service_ids : [service_ids];
     logger.info('Looking for services:', { data: serviceIdList });
 
-    // Get services
+    // Get services and bays in parallel
     const { data: services, error: serviceError } = await supabase
       .from('services')
       .select('id, name, duration_minutes, required_bay_type')
@@ -73,6 +73,9 @@ router.post('/check_availability', async (req, res, next) => {
 
     const bayIds = bays.map(b => b.id);
 
+    // Smart date range: if specific date requested, check ±2 days; otherwise 7 days
+    const hasSpecificDate = !!preferred_date;
+
     // Determine date range - ALWAYS start from today or future, never past
     const today = nowEST();
     const todayDateStr = format(today, 'yyyy-MM-dd');
@@ -85,8 +88,8 @@ router.post('/check_availability', async (req, res, next) => {
       }
     }
 
-    // Use 14 days by default for wider search range
-    const searchDays = parseInt(days_to_check, 10) || 14;
+    // Smart date range: specific date = ±2 days (5 total), otherwise 7 days
+    const searchDays = hasSpecificDate ? 5 : (parseInt(days_to_check, 10) || 7);
     const endDate = addDays(startDate, searchDays);
     logger.info('Date range:', { data: { start: format(startDate, 'yyyy-MM-dd'), end: format(endDate, 'yyyy-MM-dd') } });
 
@@ -134,28 +137,43 @@ router.post('/check_availability', async (req, res, next) => {
     }
     logger.info('Time filter:', { data: { timeStart, timeEnd, preferred_time } });
 
-    // Get available slots
+    // Build list of weekday dates in range (skip weekends at query level)
+    const weekdayDates = [];
+    let d = new Date(startDate);
+    const end = new Date(endDate);
+    while (d <= end) {
+      const day = d.getDay();
+      if (day >= 1 && day <= 5) {
+        weekdayDates.push(format(d, 'yyyy-MM-dd'));
+      }
+      d = addDays(d, 1);
+    }
+
+    if (weekdayDates.length === 0) {
+      return res.json({
+        success: true,
+        available: false,
+        slots: [],
+        message: 'We\'re closed on weekends. Our service department is open Monday through Friday, 7 AM to 4 PM. Would you like a weekday instead?'
+      });
+    }
+
+    // Get available slots — weekdays only, capped at 200 rows
     const { data: rawSlots, error: slotError } = await supabase
       .from('time_slots')
       .select('slot_date, start_time, bay_id')
       .in('bay_id', bayIds)
       .eq('is_available', true)
-      .gte('slot_date', format(startDate, 'yyyy-MM-dd'))
-      .lte('slot_date', format(endDate, 'yyyy-MM-dd'))
+      .in('slot_date', weekdayDates)
       .gte('start_time', timeStart)
       .lt('start_time', timeEnd)
       .order('slot_date')
-      .order('start_time');
+      .order('start_time')
+      .limit(200);
 
     if (slotError) throw slotError;
 
-    // Weekdays only (no Saturday or Sunday)
-    const isWeekday = (dateStr) => {
-      const d = new Date(dateStr + 'T12:00:00');
-      const day = d.getDay();
-      return day >= 1 && day <= 5;
-    };
-    const slots = (rawSlots || []).filter(s => isWeekday(s.slot_date));
+    const slots = rawSlots || [];
 
     // Find consecutive slots for appointment duration
     const slotsNeeded = Math.ceil(totalDuration / 30);
@@ -174,11 +192,17 @@ router.post('/check_availability', async (req, res, next) => {
     const currentMinute = now.getMinutes();
     const todayStr = todayEST();
 
+    // Early exit: stop scanning once we have enough unique options
+    const MAX_OPTIONS = 4; // find up to 4, then dedup to 2
+    let foundEnough = false;
+
     for (const [key, baySlots] of Object.entries(slotsByDateBay)) {
+      if (foundEnough) break;
       const [slotDate] = key.split('_');
       baySlots.sort((a, b) => a.start_time.localeCompare(b.start_time));
 
       for (let i = 0; i <= baySlots.length - slotsNeeded; i++) {
+        if (foundEnough) break;
         const slotTime = baySlots[i].start_time;
         const [slotHour, slotMinute] = slotTime.split(':').map(Number);
 
@@ -213,6 +237,7 @@ router.post('/check_availability', async (req, res, next) => {
             time: baySlots[i].start_time.slice(0, 5),
             bay_id: baySlots[i].bay_id
           });
+          if (availableWindows.length >= MAX_OPTIONS) foundEnough = true;
         }
       }
     }

@@ -416,7 +416,7 @@
       "speak_during_execution": true,
       "execution_message_type": "prompt",
       "execution_message_prompt": "Say you're looking up their vehicle — e.g. 'Pulling up your vehicle info.' Keep it under 6 words.",
-      "speak_after_execution": true,
+      "speak_after_execution": false,
       "parameters": {
         "type": "object",
         "properties": {
