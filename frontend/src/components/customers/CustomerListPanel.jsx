@@ -53,22 +53,6 @@ export default function CustomerListPanel({
           <div>
             {/* Desktop: Table Layout */}
             <div className="hidden sm:block">
-              <div className="flex items-center gap-2 px-3 py-1.5 border-b border-slate-100">
-                <input
-                  type="checkbox"
-                  className="h-3.5 w-3.5 rounded border-slate-300 shrink-0"
-                  checked={selection.count > 0 && selection.count === sortedAndFilteredCustomers.length}
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      selection.selectAll(sortedAndFilteredCustomers.map(c => c.id))
-                    } else {
-                      selection.clearAll()
-                    }
-                  }}
-                />
-                <span className="flex-1 text-xs text-slate-400 font-medium uppercase tracking-wider">Name</span>
-                <span className="w-12 text-right text-xs text-slate-400 font-medium uppercase tracking-wider">Visits</span>
-              </div>
               <div className="divide-y divide-slate-100">
                 {sortedAndFilteredCustomers.map((customer) => (
                   <div
