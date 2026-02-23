@@ -301,7 +301,21 @@ router.post('/submit_lead', async (req, res, next) => {
     const business_name = req.body.business_name || req.body.args?.business_name;
 
     const phoneDisplay = customer_phone ? formatPhone(customer_phone) : 'No phone';
+    const normalizedPhone = customer_phone ? normalizePhone(customer_phone) : null;
     const businessInfo = business_name ? `\nBusiness: ${business_name}` : '';
+
+    // Save to leads table
+    const { error: dbError } = await supabase
+      .from('leads')
+      .insert({
+        name: customer_name,
+        phone: normalizedPhone,
+        business_name: business_name || null,
+        interest,
+        source: 'voice_call',
+        status: 'new',
+      });
+    if (dbError) logger.error('Failed to save lead to DB:', { error: dbError.message });
 
     // Send SMS to Pete
     const twilioClient = (await import('twilio')).default;
