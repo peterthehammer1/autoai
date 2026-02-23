@@ -675,7 +675,7 @@ export default function Landing() {
 
             {/* Right — Mobile portal mockup */}
             <div className="flex justify-center">
-              <div className="relative w-[320px]">
+              <div className="relative w-full max-w-[320px]">
                 {/* Phone frame */}
                 <div className="bg-slate-900 rounded-[2.5rem] p-3 shadow-2xl border border-slate-700">
                   {/* Notch */}
