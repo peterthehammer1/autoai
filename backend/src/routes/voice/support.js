@@ -335,8 +335,8 @@ router.post('/submit_lead', async (req, res, next) => {
       sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
       await sgMail.send({
-        to: 'pete@nucleus.com',
-        from: process.env.FROM_EMAIL || 'notifications@alignedai.dev',
+        to: process.env.LEAD_NOTIFY_EMAIL || 'pete@corp.nucleus.com',
+        from: process.env.SENDGRID_FROM_EMAIL || 'donotreply@nucleus.com',
         subject: `New AI Platform Lead: ${customer_name}`,
         text: `New lead from ${BUSINESS.name} demo:\n\nName: ${customer_name}\nPhone: ${phoneDisplay}${businessInfo}\nInterest: ${interest}\n\nThis person called the ${BUSINESS.name} demo line and expressed interest in the AI platform.`,
         html: `
