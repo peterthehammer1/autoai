@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { format, formatDistanceToNow } from 'date-fns'
 import { Button } from '@/components/ui/button'
-import { cn, formatCents, formatTime12Hour, parseDateLocal, getStatusColor } from '@/lib/utils'
+import { cn, centsToUSD, formatTime12Hour, parseDateLocal, getStatusColor } from '@/lib/utils'
 import {
   Car,
   Calendar,
@@ -475,12 +475,12 @@ function RepairTracker({ token, workOrderId }) {
                 <Wrench className="h-4 w-4 text-teal-500 flex-shrink-0" />
                 <span className="text-sm text-slate-700 truncate">{item.description}</span>
               </div>
-              <span className="text-sm font-semibold text-slate-900 ml-3">{formatCents(item.total_cents)}</span>
+              <span className="text-sm font-semibold text-slate-900 ml-3">{centsToUSD(item.total_cents)}</span>
             </div>
           ))}
           <div className="px-5 py-4 flex items-center justify-between bg-slate-50">
             <span className="text-base font-bold text-slate-900">Total</span>
-            <span className="text-base font-bold text-slate-900">{formatCents(wo.total_cents)}</span>
+            <span className="text-base font-bold text-slate-900">{centsToUSD(wo.total_cents)}</span>
           </div>
         </div>
       )}
@@ -850,7 +850,7 @@ function PortalPaymentForm({ token, workOrderId, balanceDueCents, onPaymentCompl
       <div className="p-5 space-y-4">
         <div className="text-center pb-2">
           <p className="text-xs text-slate-500">Balance Due</p>
-          <p className="text-2xl font-bold text-slate-800">{formatCents(balanceDueCents)}</p>
+          <p className="text-2xl font-bold text-slate-800">{centsToUSD(balanceDueCents)}</p>
         </div>
 
         <div className="space-y-3">
@@ -905,7 +905,7 @@ function PortalPaymentForm({ token, workOrderId, balanceDueCents, onPaymentCompl
           ) : (
             <>
               <Shield className="h-4 w-4 mr-2" />
-              Pay {formatCents(balanceDueCents)}
+              Pay {centsToUSD(balanceDueCents)}
             </>
           )}
         </Button>
@@ -1134,7 +1134,7 @@ function EstimateTab({ token, customer }) {
                 </p>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-base font-bold text-slate-900">{formatCents(wo.total_cents)}</span>
+                <span className="text-base font-bold text-slate-900">{centsToUSD(wo.total_cents)}</span>
                 <ChevronRight className="h-5 w-5 text-slate-400" />
               </div>
             </div>
@@ -1229,7 +1229,7 @@ function EstimateTab({ token, customer }) {
                 </p>
               </div>
               <p className={cn('text-sm font-semibold text-slate-900 whitespace-nowrap', isDeclined && 'line-through')}>
-                {formatCents(item.total_cents)}
+                {centsToUSD(item.total_cents)}
               </p>
             </div>
           )
@@ -1240,21 +1240,21 @@ function EstimateTab({ token, customer }) {
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-2">
         <div className="flex justify-between text-xs text-slate-500">
           <span>Subtotal</span>
-          <span>{formatCents(woDetail.subtotal_cents)}</span>
+          <span>{centsToUSD(woDetail.subtotal_cents)}</span>
         </div>
         {woDetail.discount_cents > 0 && (
           <div className="flex justify-between text-xs text-emerald-600">
             <span>Discount</span>
-            <span>-{formatCents(woDetail.discount_cents)}</span>
+            <span>-{centsToUSD(woDetail.discount_cents)}</span>
           </div>
         )}
         <div className="flex justify-between text-xs text-slate-500">
           <span>Tax</span>
-          <span>{formatCents(woDetail.tax_cents)}</span>
+          <span>{centsToUSD(woDetail.tax_cents)}</span>
         </div>
         <div className="flex justify-between text-sm font-semibold text-slate-900 pt-2 border-t border-slate-200">
           <span>Total</span>
-          <span>{formatCents(woDetail.total_cents)}</span>
+          <span>{centsToUSD(woDetail.total_cents)}</span>
         </div>
       </div>
 
@@ -1391,7 +1391,7 @@ function HistoryTab({ token }) {
                 <p className="text-xs text-slate-500">
                   {wo.vehicle ? `${wo.vehicle.year} ${wo.vehicle.make} ${wo.vehicle.model}` : ''}
                 </p>
-                <p className="text-sm font-bold text-slate-900">{formatCents(wo.total_cents)}</p>
+                <p className="text-sm font-bold text-slate-900">{centsToUSD(wo.total_cents)}</p>
               </div>
             </div>
           ))}

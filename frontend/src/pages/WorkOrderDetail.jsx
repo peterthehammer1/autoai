@@ -34,7 +34,7 @@ import {
   Clock,
   Timer,
 } from 'lucide-react'
-import { cn, formatCents, formatTime12Hour, parseDateLocal } from '@/lib/utils'
+import { cn, centsToUSD, formatCents, formatTime12Hour, parseDateLocal } from '@/lib/utils'
 import { useToast } from '@/hooks/use-toast'
 import { useBreadcrumbEntity } from '@/components/Breadcrumbs'
 import PhoneNumber from '@/components/PhoneNumber'
@@ -696,25 +696,25 @@ export default function WorkOrderDetail() {
             <div className="border-t border-slate-200 pt-3 mt-3 space-y-1">
               <div className="flex justify-between text-sm">
                 <span className="text-slate-500">Subtotal</span>
-                <span className="text-slate-700">{formatCents(wo.subtotal_cents)}</span>
+                <span className="text-slate-700">{centsToUSD(wo.subtotal_cents)}</span>
               </div>
               {wo.discount_cents > 0 && (
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-500">
                     Discount{wo.discount_reason && ` (${wo.discount_reason})`}
                   </span>
-                  <span className="text-red-600">-{formatCents(wo.discount_cents)}</span>
+                  <span className="text-red-600">-{centsToUSD(wo.discount_cents)}</span>
                 </div>
               )}
               <div className="flex justify-between text-sm">
                 <span className="text-slate-500">
                   Tax ({((wo.tax_rate || 0.13) * 100).toFixed(0)}%)
                 </span>
-                <span className="text-slate-700">{formatCents(wo.tax_cents)}</span>
+                <span className="text-slate-700">{centsToUSD(wo.tax_cents)}</span>
               </div>
               <div className="flex justify-between text-sm font-semibold border-t border-slate-100 pt-2">
                 <span className="text-slate-800">Total</span>
-                <span className="text-slate-800">{formatCents(wo.total_cents)}</span>
+                <span className="text-slate-800">{centsToUSD(wo.total_cents)}</span>
               </div>
             </div>
           )}
@@ -780,7 +780,7 @@ export default function WorkOrderDetail() {
                 </p>
               </div>
               <span className="text-sm font-medium text-green-700">
-                {formatCents(pmt.amount_cents)}
+                {centsToUSD(pmt.amount_cents)}
               </span>
             </div>
           ))}
@@ -798,12 +798,12 @@ export default function WorkOrderDetail() {
             <div className="border-t border-slate-200 pt-3 space-y-1">
               <div className="flex justify-between text-sm">
                 <span className="text-slate-500">Total Paid</span>
-                <span className="text-green-700">{formatCents(wo.total_paid_cents)}</span>
+                <span className="text-green-700">{centsToUSD(wo.total_paid_cents)}</span>
               </div>
               <div className="flex justify-between text-sm font-semibold">
                 <span className="text-slate-800">Balance Due</span>
                 <span className={balanceDue > 0 ? 'text-red-600' : 'text-green-700'}>
-                  {formatCents(balanceDue)}
+                  {centsToUSD(balanceDue)}
                 </span>
               </div>
             </div>
@@ -1304,10 +1304,10 @@ function LineItemRow({ item, editable, onDelete, deleting }) {
         <p className={cn("text-sm text-slate-700 truncate", item.status === 'declined' && 'line-through')}>{item.description}</p>
         <p className="text-xs text-slate-400">
           {item.quantity > 1 && `${item.quantity} x `}
-          {formatCents(item.unit_price_cents)}
+          {centsToUSD(item.unit_price_cents)}
           {item.cost_cents > 0 && (
             <span className="ml-2 text-slate-300">
-              Cost: {formatCents(item.cost_cents)}
+              Cost: {centsToUSD(item.cost_cents)}
               {' '}
               ({Math.round(((item.unit_price_cents - item.cost_cents) / item.cost_cents) * 100)}% margin)
             </span>
@@ -1325,7 +1325,7 @@ function LineItemRow({ item, editable, onDelete, deleting }) {
           )}
         >
           {item.item_type === 'discount' ? '-' : ''}
-          {formatCents(Math.abs(item.total_cents))}
+          {centsToUSD(Math.abs(item.total_cents))}
         </span>
         {editable && (
           <button

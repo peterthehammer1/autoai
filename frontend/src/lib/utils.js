@@ -35,6 +35,15 @@ export function formatCents(amount) {
   }).format(amount)
 }
 
+// Format cents values (stored as integer cents in DB, e.g. 4500 = $45.00)
+export function centsToUSD(cents) {
+  if (cents === null || cents === undefined) return '-'
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+  }).format(cents / 100)
+}
+
 export function formatDuration(minutes) {
   if (!minutes) return '-'
   const hours = Math.floor(minutes / 60)

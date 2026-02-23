@@ -12,7 +12,7 @@ import {
   Car,
   Calendar,
 } from 'lucide-react'
-import { cn, formatCents } from '@/lib/utils'
+import { cn, centsToUSD } from '@/lib/utils'
 
 const STATUS_TABS = [
   { value: 'all', label: 'All' },
@@ -184,7 +184,7 @@ export default function WorkOrders() {
                     </td>
                     <td className="px-4 py-3 text-right">
                       <span className="text-sm font-medium text-slate-800">
-                        {formatCents(wo.total_cents)}
+                        {centsToUSD(wo.total_cents)}
                       </span>
                     </td>
                     <td className="px-4 py-3 hidden sm:table-cell">
