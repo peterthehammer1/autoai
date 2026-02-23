@@ -181,7 +181,6 @@ const capabilities = [
   { text: 'Proactive service reminders when maintenance is due', icon: Wrench },
   { text: 'Live status texts during service', icon: Smartphone },
   { text: 'Multi-vehicle customer support', icon: Car },
-  { text: 'Digital vehicle inspections with photos', icon: ClipboardCheck },
   { text: 'Customer portal for estimates & payments', icon: Globe },
   { text: 'Automated review requests & marketing', icon: Megaphone },
 ]
@@ -204,7 +203,7 @@ const testimonials = [
 const faqs = [
   {
     question: 'How quickly can I get Amber set up for my shop?',
-    answer: 'Most shops are fully live within 48 hours. We configure Amber with your services, hours, and pricing, then port or forward your existing number. There\'s no hardware to install — everything runs in the cloud.',
+    answer: 'Most shops are fully live within 14 days. We configure Amber with your services, hours, and pricing, then port or forward your existing number. There\'s no hardware to install — everything runs in the cloud.',
   },
   {
     question: 'Will my customers know they\'re talking to AI?',
@@ -216,7 +215,7 @@ const faqs = [
   },
   {
     question: 'How does pricing work?',
-    answer: 'Pricing is based on your call volume and the features you need. There are no long-term contracts and you can cancel anytime. Request a demo and we\'ll walk you through a plan that fits your shop.',
+    answer: 'Pricing is based on your call volume and the features you need. Request a demo and we\'ll walk you through a plan that fits your shop.',
   },
   {
     question: 'Can I try it before committing?',
@@ -405,7 +404,7 @@ export default function Landing() {
               <div className="mt-10 flex items-center gap-6 justify-center lg:justify-start text-sm text-slate-500 flex-wrap">
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-                  <span>Set up in 48 hours</span>
+                  <span>Set up in 14 days</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="h-5 w-5 text-emerald-500" />
@@ -583,6 +582,206 @@ export default function Landing() {
                 )} />
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* "Is My Car Ready?" Spotlight */}
+      <section className="py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-slate-50 to-white">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <Badge className="mb-4 bg-teal-100 text-teal-700 hover:bg-teal-100">
+              #1 Shop Pain Point
+            </Badge>
+            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900">
+              "Is My Car Ready?" —{' '}
+              <span className="bg-gradient-to-r from-teal-600 to-emerald-600 bg-clip-text text-transparent">
+                Answered Instantly
+              </span>
+            </h2>
+            <p className="mt-4 text-lg text-slate-600 max-w-2xl mx-auto">
+              The average shop gets this call dozens of times a day. Amber checks the real-time
+              status and gives your customer an instant answer — so your team stays focused on the work.
+            </p>
+          </div>
+
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-start">
+            {/* Left — Voice conversation demo */}
+            <div>
+              <div className="bg-slate-900 rounded-2xl p-6 border border-slate-700">
+                <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-700">
+                  <div className="h-10 w-10 rounded-full bg-teal-500 flex items-center justify-center">
+                    <Phone className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-white">Incoming Call</p>
+                    <p className="text-sm text-slate-400">"Is my car ready?"</p>
+                  </div>
+                  <div className="ml-auto flex items-center gap-2">
+                    <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                    <span className="text-xs text-emerald-400">Active</span>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <ChatBubble agent>
+                    "Good afternoon! Thanks for calling Premier Auto Service, this is Amber. How can I help you?"
+                  </ChatBubble>
+
+                  <ChatBubble>
+                    "Hey, I dropped off my Camry this morning for brakes. Is it ready yet?"
+                  </ChatBubble>
+
+                  <div className="flex gap-3">
+                    <div className="h-8 w-8 rounded-full bg-violet-500/20 flex items-center justify-center shrink-0">
+                      <Bot className="h-4 w-4 text-violet-400" />
+                    </div>
+                    <div className="bg-teal-500/20 rounded-2xl rounded-tl-sm px-4 py-3 max-w-[80%] border border-teal-500/30">
+                      <p className="text-xs text-teal-400 mb-1 font-medium flex items-center gap-1.5">
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                        Checking repair status...
+                      </p>
+                    </div>
+                  </div>
+
+                  <ChatBubble agent>
+                    "Great news — your 2022 Camry is all done! They finished the front brake pads and rotor resurface. Your total is $387.50. You can pay online or when you pick up. We're open until 5 today!"
+                  </ChatBubble>
+
+                  <ChatBubble>
+                    "Awesome, I'll swing by in an hour!"
+                  </ChatBubble>
+
+                  <ChatBubble agent>
+                    "Sounds good! We'll have it ready at the front. See you soon!"
+                  </ChatBubble>
+                </div>
+              </div>
+
+              <div className="mt-6 grid grid-cols-3 gap-4">
+                {[
+                  { icon: Clock, label: '0 sec wait', desc: 'No hold time' },
+                  { icon: Wrench, label: 'Real-time', desc: 'Live WO status' },
+                  { icon: Users, label: '0 staff', desc: 'Pulled from work' },
+                ].map((item, i) => (
+                  <div key={i} className="text-center p-3 bg-white rounded-xl border border-slate-200">
+                    <item.icon className="h-5 w-5 text-teal-600 mx-auto mb-1.5" />
+                    <p className="text-sm font-semibold text-slate-900">{item.label}</p>
+                    <p className="text-xs text-slate-500">{item.desc}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Right — Mobile portal mockup */}
+            <div className="flex justify-center">
+              <div className="relative w-[320px]">
+                {/* Phone frame */}
+                <div className="bg-slate-900 rounded-[2.5rem] p-3 shadow-2xl border border-slate-700">
+                  {/* Notch */}
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-slate-900 rounded-b-2xl z-[5]" />
+                  {/* Screen */}
+                  <div className="bg-white rounded-[2rem] overflow-hidden">
+                    {/* Status bar */}
+                    <div className="bg-teal-600 px-6 pt-8 pb-4">
+                      <p className="text-white/70 text-xs font-medium">Premier Auto Service</p>
+                      <h3 className="text-white font-bold text-lg mt-0.5">Repair Status</h3>
+                      <div className="flex items-center gap-2 mt-2">
+                        <Car className="h-4 w-4 text-teal-200" />
+                        <span className="text-teal-100 text-sm">2022 Toyota Camry</span>
+                      </div>
+                    </div>
+
+                    {/* Work order card */}
+                    <div className="px-5 -mt-3 relative z-10">
+                      <div className="bg-white rounded-xl shadow-lg border border-slate-200 p-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="text-xs font-mono text-slate-400">WO-1847</span>
+                          <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">Ready for Pickup</span>
+                        </div>
+                        <p className="text-sm font-semibold text-slate-900 mb-1">Front Brake Service</p>
+                        <p className="text-xs text-slate-500">Brake pads + rotor resurface</p>
+                        <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-100">
+                          <span className="text-xs text-slate-500">Total</span>
+                          <span className="text-sm font-bold text-slate-900">$387.50</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Progress tracker */}
+                    <div className="px-5 py-5">
+                      <p className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-4">Live Progress</p>
+                      <div className="space-y-0">
+                        {[
+                          { label: 'Estimate Sent', time: '9:15 AM', done: true },
+                          { label: 'Approved', time: '9:42 AM', done: true },
+                          { label: 'In Progress', time: '10:30 AM', done: true },
+                          { label: 'Completed', time: '2:15 PM', done: true },
+                          { label: 'Ready for Pickup', time: '2:15 PM', done: true, current: true },
+                        ].map((step, i, arr) => (
+                          <div key={i} className="flex gap-3">
+                            <div className="flex flex-col items-center">
+                              {step.current ? (
+                                <div className="h-6 w-6 rounded-full bg-emerald-500 flex items-center justify-center ring-4 ring-emerald-100">
+                                  <CheckCircle2 className="h-4 w-4 text-white" />
+                                </div>
+                              ) : step.done ? (
+                                <div className="h-6 w-6 rounded-full bg-emerald-500 flex items-center justify-center">
+                                  <CheckCircle2 className="h-4 w-4 text-white" />
+                                </div>
+                              ) : (
+                                <div className="h-6 w-6 rounded-full border-2 border-slate-200 bg-white" />
+                              )}
+                              {i < arr.length - 1 && (
+                                <div className={cn(
+                                  "w-0.5 h-8",
+                                  step.done ? "bg-emerald-500" : "bg-slate-200"
+                                )} />
+                              )}
+                            </div>
+                            <div className={cn("pb-8", i === arr.length - 1 && "pb-0")}>
+                              <p className={cn(
+                                "text-sm font-medium",
+                                step.current ? "text-emerald-700" : step.done ? "text-slate-900" : "text-slate-400"
+                              )}>
+                                {step.label}
+                              </p>
+                              {step.time && (
+                                <p className="text-xs text-slate-400 mt-0.5">{step.time}</p>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Pay button */}
+                    <div className="px-5 pb-6">
+                      <div className="bg-teal-600 text-white text-center py-3 rounded-xl text-sm font-semibold">
+                        Pay Online — $387.50
+                      </div>
+                      <div className="flex items-center justify-center gap-2 mt-3">
+                        <Phone className="h-3.5 w-3.5 text-slate-400" />
+                        <span className="text-xs text-slate-500">Call shop: (647) 371-1990</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Floating SMS notification */}
+                <div className="absolute -top-3 -left-8 z-20 bg-white rounded-xl shadow-lg p-3 border border-slate-200 animate-float max-w-[220px] hidden sm:block">
+                  <div className="flex items-start gap-2.5">
+                    <div className="h-8 w-8 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
+                      <MessageSquare className="h-4 w-4 text-emerald-600" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold text-slate-900">SMS from Premier Auto</p>
+                      <p className="text-xs text-slate-500 mt-0.5">Your Camry is ready for pickup! Pay online or when you arrive.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -767,7 +966,7 @@ export default function Landing() {
                   'Personalized demo of the full platform',
                   'Custom walkthrough for your services and hours',
                   'See real AI conversations and analytics',
-                  'Live in as little as 48 hours after signup',
+                  'Live in as little as 14 days after signup',
                 ].map((item, i) => (
                   <div key={i} className="flex items-center gap-3">
                     <div className="h-6 w-6 rounded-full bg-emerald-500/20 flex items-center justify-center shrink-0">
