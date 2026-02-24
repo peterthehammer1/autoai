@@ -2,8 +2,8 @@ import { createClient } from '@supabase/supabase-js';
 import { format, subDays, addDays, subHours } from 'date-fns';
 
 const supabase = createClient(
-  'https://yvuvgpzywdyxybokjvfg.supabase.co',
-  'sb_secret_8H7RSh7FRreH-lPk2oytxQ_OhV0fIrK'
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_KEY
 );
 
 // Names for new customers
