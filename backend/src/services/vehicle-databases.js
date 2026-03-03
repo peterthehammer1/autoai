@@ -958,23 +958,24 @@ export async function isServiceDue(vin, currentMileage, serviceType) {
  * Only makes 1-3 API calls instead of 6
  */
 export async function getVehicleIntelligence(vin, currentMileage = null) {
-  // VIN decode first (largest response, most important) — serialize to avoid rate limits
+  // VIN decode first (largest response, most important)
+  // Embedded data includes recalls, warranties, and maintenance — no extra calls needed
   const vinResult = await decodeVIN(vin);
 
-  // After VIN decode completes, fire remaining calls in parallel
-  const secondaryCalls = [getRepairCosts(vin)];
-  if (currentMileage) {
-    secondaryCalls.push(getMarketValue(vin, currentMileage));
-  }
-  const [repairCostsResult, marketValueResult] = await Promise.all(secondaryCalls);
+  // Skip repair costs and market value — not needed for voice recommendations
+  // and they add ~6s latency. Use get_estimate endpoint when pricing is asked for.
+  const repairCostsResult = { success: false };
+  const marketValueResult = null;
 
-  // Fetch Transport Canada recalls in parallel (needs make/model/year from VIN decode)
+  // Fetch Transport Canada recalls with tight timeout (best-effort, non-blocking)
   let canadianRecallsResult = { success: false };
   if (vinResult.success && vinResult.vehicle?.year && vinResult.vehicle?.make && vinResult.vehicle?.model) {
-    // Fire and don't block — merge later
-    canadianRecallsResult = await getCanadianRecalls(
-      vinResult.vehicle.year, vinResult.vehicle.make, vinResult.vehicle.model
-    ).catch(() => ({ success: false }));
+    canadianRecallsResult = await Promise.race([
+      getCanadianRecalls(
+        vinResult.vehicle.year, vinResult.vehicle.make, vinResult.vehicle.model
+      ).catch(() => ({ success: false })),
+      new Promise(resolve => setTimeout(() => resolve({ success: false }), 3000))
+    ]);
   }
 
   // Use embedded data from VIN decode (no extra API calls for US recalls/warranties/maintenance)

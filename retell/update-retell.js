@@ -262,8 +262,8 @@ const tools = [
     url: 'https://www.alignedai.dev/api/voice/get_vehicle_info',
     speak_during_execution: true,
     execution_message_type: 'prompt',
-    execution_message_description: "Say you're looking up their vehicle — e.g. 'Pulling up your vehicle info.' Keep it under 6 words.",
-    speak_after_execution: false,
+    execution_message_description: "Say something like: 'Let me pull up your vehicle records — this takes a few seconds while I check the maintenance schedule and any open recalls.' Keep talking naturally to fill the wait.",
+    speak_after_execution: true,
     parameters: {
       type: 'object',
       properties: {
