@@ -258,7 +258,7 @@ const tools = [
   {
     type: 'custom',
     name: 'get_vehicle_info',
-    description: 'Get detailed vehicle information including maintenance schedule and open recalls by VIN. Use when: customer provides a VIN, you need to check if a service is due based on mileage, or customer asks about recalls on their vehicle.',
+    description: 'Get detailed vehicle information including maintenance schedule, open recalls, warranty, and repair costs. Accepts VIN, license plate + state, OR year/make/model. Use when: customer asks about maintenance recommendations, provides a VIN or plate, asks about recalls, or wants to know what services are due.',
     url: 'https://www.alignedai.dev/api/voice/get_vehicle_info',
     speak_during_execution: true,
     execution_message_type: 'prompt',
@@ -269,6 +269,11 @@ const tools = [
       properties: {
         customer_phone: { type: 'string', const: '{{customer_phone}}', description: 'Customer phone - auto-filled, used to look up vehicle on file' },
         vin: { type: 'string', description: '17-character VIN if customer provides it' },
+        license_plate: { type: 'string', description: 'License plate number, letters and digits only, no spaces or dashes (e.g. KD8728)' },
+        plate_state: { type: 'string', description: '2-letter US state code for the plate (e.g. NC, TX, CA). Always use abbreviation, not full name.' },
+        vehicle_year: { type: 'integer', description: 'Vehicle year (e.g. 2023)' },
+        vehicle_make: { type: 'string', description: 'Vehicle make (e.g. Ford, Toyota, Cadillac)' },
+        vehicle_model: { type: 'string', description: 'Vehicle model (e.g. F-250, Camry, XT5)' },
         current_mileage: { type: 'integer', description: 'Current vehicle mileage if customer mentions it' },
         check_service: { type: 'string', description: "Specific service to check if due (e.g., 'oil change', 'air filter', 'transmission fluid')" }
       },
