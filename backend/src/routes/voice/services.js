@@ -712,14 +712,33 @@ router.post('/get_vehicle_info', async (req, res, next) => {
     const vehicle_make = body.vehicle_make;
     const vehicle_model = body.vehicle_model;
 
+    // Normalize state name to 2-letter abbreviation
+    const STATE_ABBREVS = {
+      'alabama':'AL','alaska':'AK','arizona':'AZ','arkansas':'AR','california':'CA',
+      'colorado':'CO','connecticut':'CT','delaware':'DE','florida':'FL','georgia':'GA',
+      'hawaii':'HI','idaho':'ID','illinois':'IL','indiana':'IN','iowa':'IA',
+      'kansas':'KS','kentucky':'KY','louisiana':'LA','maine':'ME','maryland':'MD',
+      'massachusetts':'MA','michigan':'MI','minnesota':'MN','mississippi':'MS','missouri':'MO',
+      'montana':'MT','nebraska':'NE','nevada':'NV','new hampshire':'NH','new jersey':'NJ',
+      'new mexico':'NM','new york':'NY','north carolina':'NC','north dakota':'ND','ohio':'OH',
+      'oklahoma':'OK','oregon':'OR','pennsylvania':'PA','rhode island':'RI','south carolina':'SC',
+      'south dakota':'SD','tennessee':'TN','texas':'TX','utah':'UT','vermont':'VT',
+      'virginia':'VA','washington':'WA','west virginia':'WV','wisconsin':'WI','wyoming':'WY',
+      'district of columbia':'DC'
+    };
+    const normalizedState = plate_state
+      ? (STATE_ABBREVS[plate_state.toLowerCase().trim()] || plate_state.trim().toUpperCase())
+      : null;
+
     // If license plate provided, decode it to get VIN
     let vehicleVin = vin;
-    if (!vehicleVin && license_plate && plate_state) {
+    if (!vehicleVin && license_plate && normalizedState) {
       const vehicleDB = await import('../../services/vehicle-databases.js');
-      const plateResult = await vehicleDB.decodePlate(license_plate, plate_state);
+      const cleanPlate = license_plate.replace(/[\s-]/g, '').toUpperCase();
+      const plateResult = await vehicleDB.decodePlate(cleanPlate, normalizedState);
       if (plateResult.success && plateResult.vin) {
         vehicleVin = plateResult.vin;
-        logger.info('[Voice] Plate decoded to VIN', { plate: license_plate, state: plate_state, vin: vehicleVin });
+        logger.info('[Voice] Plate decoded to VIN', { plate: cleanPlate, state: normalizedState, vin: vehicleVin });
       } else {
         return res.json({
           success: false,
