@@ -146,7 +146,7 @@ ${services}
 ${vehicleLine}${formattedDate} at ${formattedTime}
 ${BUSINESS.address}
 ${portalLine}
-Thanks for choosing ${BUSINESS.name}!
+Powered by Nucleus AI | nucleus.com
 
 - ${BUSINESS.agentName}`;
 
@@ -185,7 +185,7 @@ ${services}
 ${vehicleLine}${formattedDate} at ${formattedTime}
 ${BUSINESS.address}
 
-See you soon!
+Powered by Nucleus AI | nucleus.com
 
 - ${BUSINESS.agentName}`;
 
