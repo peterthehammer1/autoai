@@ -18,14 +18,17 @@ const tools = [
   {
     type: 'custom',
     name: 'get_services',
-    description: 'Get available services. Use when you need to find service IDs for booking, or when the customer asks about services or prices.',
+    description: 'Get available services. Use when you need to find service IDs for booking, or when the customer asks about services or prices. IMPORTANT: Always pass vehicle_make and vehicle_model if you know them — the system checks if the service is compatible with the vehicle (e.g., EVs don\'t need oil changes).',
     url: 'https://www.alignedai.dev/api/voice/get_services',
     speak_during_execution: false,
     speak_after_execution: true,
     parameters: {
       type: 'object',
       properties: {
-        search: { type: 'string', description: 'Search term to find services (e.g., oil change, brakes, alignment)' }
+        search: { type: 'string', description: 'Search term to find services (e.g., oil change, brakes, alignment)' },
+        vehicle_year: { type: 'integer', description: 'Vehicle year if known (e.g. 2023)' },
+        vehicle_make: { type: 'string', description: 'Vehicle make if known (e.g. Tesla, Ford, Toyota)' },
+        vehicle_model: { type: 'string', description: 'Vehicle model if known (e.g. Model 3, F-150, Camry)' }
       }
     }
   },

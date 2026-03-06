@@ -1093,6 +1093,207 @@ export async function getVehicleIntelligence(vin, currentMileage = null) {
   return intelligence;
 }
 
+/**
+ * Detect powertrain type from make/model (local lookup, no API call)
+ * Returns: 'electric', 'hybrid', 'plug-in-hybrid', or 'gas'
+ */
+export function detectPowertrain(make, model) {
+  if (!make || !model) return 'unknown';
+  const m = make.toLowerCase().trim();
+  const mod = model.toLowerCase().trim();
+
+  // Fully electric brands (all models are EV)
+  const evBrands = ['tesla', 'rivian', 'lucid', 'polestar', 'fisker', 'lordstown', 'canoo', 'faraday future'];
+  if (evBrands.includes(m)) return 'electric';
+
+  // Known EV models by make
+  const evModels = {
+    'bmw':        ['i3', 'i4', 'i5', 'i7', 'ix'],
+    'mercedes-benz': ['eqa', 'eqb', 'eqc', 'eqe', 'eqs'],
+    'audi':       ['e-tron', 'e-tron gt', 'q4 e-tron', 'q6 e-tron', 'q8 e-tron'],
+    'volkswagen': ['id.4', 'id.buzz', 'id.3'],
+    'porsche':    ['taycan'],
+    'volvo':      ['ex30', 'ex40', 'ex90', 'ec40', 'c40 recharge', 'xc40 recharge'],
+    'hyundai':    ['ioniq 5', 'ioniq 6'],
+    'kia':        ['ev6', 'ev9', 'niro ev'],
+    'genesis':    ['gv60', 'electrified g80', 'electrified gv70'],
+    'nissan':     ['leaf', 'ariya'],
+    'chevrolet':  ['bolt', 'bolt euv', 'equinox ev', 'blazer ev', 'silverado ev'],
+    'ford':       ['mustang mach-e', 'f-150 lightning', 'e-transit'],
+    'gmc':        ['hummer ev', 'sierra ev'],
+    'cadillac':   ['lyriq', 'escalade iq', 'optiq', 'celestiq'],
+    'toyota':     ['bz4x'],
+    'subaru':     ['solterra'],
+    'honda':      ['prologue'],
+    'acura':      ['zdx'],
+    'mazda':      ['mx-30'],
+    'lexus':      ['rz', 'rz 450e'],
+    'mini':       ['cooper se', 'countryman se'],
+    'fiat':       ['500e'],
+    'chrysler':   ['pacifica ev'],
+    'dodge':      ['charger daytona'],
+    'jeep':       ['recon', 'wagoneer s'],
+    'ram':        ['rev'],
+  };
+
+  if (evModels[m]) {
+    for (const evModel of evModels[m]) {
+      // Exact match or input contains the EV model name (e.g., "model 3 long range" contains "model 3")
+      // Do NOT match if the list entry contains the input (e.g., "f-150 lightning" contains "f-150" — but base F-150 is gas)
+      if (mod === evModel || mod.includes(evModel)) return 'electric';
+    }
+  }
+
+  // Known hybrid/PHEV models
+  const hybridModels = {
+    'toyota':     ['prius', 'camry hybrid', 'rav4 hybrid', 'highlander hybrid', 'corolla hybrid', 'venza', 'sienna', 'crown'],
+    'honda':      ['insight', 'accord hybrid', 'cr-v hybrid'],
+    'hyundai':    ['ioniq hybrid', 'sonata hybrid', 'tucson hybrid', 'santa fe hybrid'],
+    'kia':        ['niro', 'niro hybrid', 'sorento hybrid', 'sportage hybrid'],
+    'ford':       ['escape hybrid', 'maverick hybrid', 'explorer hybrid'],
+    'chevrolet':  ['volt'],
+    'lexus':      ['rx hybrid', 'nx hybrid', 'es hybrid', 'ux hybrid', 'lc hybrid'],
+  };
+
+  if (hybridModels[m]) {
+    for (const hModel of hybridModels[m]) {
+      if (mod === hModel || mod.includes(hModel)) return 'hybrid';
+    }
+  }
+
+  // PHEV keywords in model name
+  if (mod.includes('plug-in') || mod.includes('phev') || mod.includes('prime')) return 'plug-in-hybrid';
+  if (mod.includes('hybrid')) return 'hybrid';
+
+  return 'gas';
+}
+
+/**
+ * Services that are NOT applicable to electric vehicles
+ */
+const EV_INCOMPATIBLE_SERVICES = [
+  'oil change', 'oil', 'conventional oil', 'synthetic blend oil', 'full synthetic oil', 'high mileage oil', 'diesel oil',
+  'transmission fluid', 'trans fluid', 'transmission service', 'transmission flush',
+  'spark plug', 'spark plugs', 'tune up', 'tune-up',
+  'exhaust', 'muffler', 'catalytic converter', 'catalytic',
+  'engine air filter',
+  'timing belt', 'timing chain',
+  'fuel filter', 'fuel pump', 'fuel injector', 'fuel system',
+  'radiator flush', 'coolant flush',
+  'emissions', 'emissions test', 'drive clean',
+  'alternator', 'starter motor',
+];
+
+/**
+ * Suggested EV-appropriate services
+ */
+const EV_ALTERNATIVE_SERVICES = [
+  'Tire Rotation',
+  'Brake Inspection (free)',
+  'Cabin Air Filter Replacement',
+  'Wheel Alignment',
+  'Wiper Blade Replacement',
+  'Suspension Inspection',
+  'Battery Health Check',
+];
+
+/**
+ * Check if a service is compatible with a vehicle's powertrain
+ * Returns { compatible, reason, alternatives }
+ */
+export function checkServiceCompatibility(serviceName, powertrain) {
+  if (!serviceName || !powertrain || powertrain === 'gas' || powertrain === 'unknown') {
+    return { compatible: true };
+  }
+
+  const serviceNameLower = serviceName.toLowerCase();
+
+  if (powertrain === 'electric') {
+    for (const incompatible of EV_INCOMPATIBLE_SERVICES) {
+      if (serviceNameLower.includes(incompatible) || incompatible.includes(serviceNameLower)) {
+        return {
+          compatible: false,
+          reason: `Electric vehicles don't require ${serviceName.toLowerCase()}. EVs have no internal combustion engine, so services like oil changes, spark plugs, and exhaust work don't apply.`,
+          alternatives: EV_ALTERNATIVE_SERVICES,
+          powertrain: 'electric'
+        };
+      }
+    }
+  }
+
+  if (powertrain === 'hybrid' || powertrain === 'plug-in-hybrid') {
+    // Hybrids still have engines — most services apply
+    // Only flag exhaust/emissions as potentially different
+    const hybridCautions = ['emissions test', 'drive clean'];
+    for (const caution of hybridCautions) {
+      if (serviceNameLower.includes(caution)) {
+        return {
+          compatible: true,
+          note: `Hybrid vehicles may have different emissions testing requirements. The technician will verify what's needed for your specific vehicle.`,
+          powertrain
+        };
+      }
+    }
+  }
+
+  return { compatible: true };
+}
+
+/**
+ * Detect powertrain with API fallback for unknown vehicles
+ * Uses local lookup first (instant), falls back to YMMT specs API if needed
+ */
+export async function detectPowertrainWithFallback(year, make, model) {
+  // Try local lookup first (covers ~95% of EVs/hybrids)
+  const localResult = detectPowertrain(make, model);
+  if (localResult !== 'unknown' && localResult !== 'gas') {
+    return { powertrain: localResult, source: 'local' };
+  }
+
+  // For 'gas' or 'unknown', try the YMMT API for edge cases
+  // (e.g., new EV models we haven't added to the local list yet)
+  if (VEHICLE_DB_API_KEY && year && make && model) {
+    try {
+      const response = await fetchWithTimeout(
+        `${BASE_URL}/ymm-specs/v3/${year}/${encodeURIComponent(make)}/${encodeURIComponent(model)}`,
+        { headers: { 'x-authkey': VEHICLE_DB_API_KEY } },
+        4000 // tight timeout — this is a secondary check
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.status === 'success' && data.data) {
+          const d = data.data;
+          // Extract fuel type from specifications
+          const specs = {};
+          if (Array.isArray(d.specifications)) {
+            for (const entry of d.specifications) {
+              const key = Object.keys(entry)[0];
+              if (key) specs[key] = entry[key];
+            }
+          }
+          const fuelType = (specs.fuel?.type || '').toLowerCase();
+
+          if (fuelType.includes('electric') && !fuelType.includes('hybrid')) {
+            return { powertrain: 'electric', source: 'api', fuel_type: specs.fuel?.type };
+          }
+          if (fuelType.includes('plug-in hybrid') || fuelType.includes('phev')) {
+            return { powertrain: 'plug-in-hybrid', source: 'api', fuel_type: specs.fuel?.type };
+          }
+          if (fuelType.includes('hybrid')) {
+            return { powertrain: 'hybrid', source: 'api', fuel_type: specs.fuel?.type };
+          }
+          return { powertrain: 'gas', source: 'api', fuel_type: specs.fuel?.type };
+        }
+      }
+    } catch (err) {
+      logger.warn('[VehicleDB] YMMT powertrain fallback failed', { error: err.message });
+    }
+  }
+
+  return { powertrain: localResult, source: 'local' };
+}
+
 export default {
   decodeVIN,
   decodeVINYear,
@@ -1109,5 +1310,8 @@ export default {
   getSpecsByYMMT,
   getNextService,
   isServiceDue,
-  getVehicleIntelligence
+  getVehicleIntelligence,
+  detectPowertrain,
+  detectPowertrainWithFallback,
+  checkServiceCompatibility
 };

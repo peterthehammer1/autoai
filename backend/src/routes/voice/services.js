@@ -12,7 +12,7 @@ const router = Router();
  */
 router.post('/get_services', async (req, res, next) => {
   try {
-    const { category, search, mileage } = req.body.args || req.body;
+    const { category, search, mileage, vehicle_year, vehicle_make, vehicle_model } = req.body.args || req.body;
 
     // Normalize search terms - map common synonyms to service names
     const synonymMap = {
@@ -202,6 +202,24 @@ router.post('/get_services', async (req, res, next) => {
       }
     }
 
+    // Check service-vehicle compatibility if vehicle info was provided
+    let compatibility = null;
+    if (search && vehicle_make && vehicle_model) {
+      try {
+        const { detectPowertrain, checkServiceCompatibility } = await import('../../services/vehicle-databases.js');
+        const powertrain = detectPowertrain(vehicle_make, vehicle_model);
+        const check = checkServiceCompatibility(search, powertrain);
+        if (!check.compatible) {
+          compatibility = check;
+          logger.info('[get_services] Service incompatible with vehicle powertrain', {
+            search, vehicle_make, vehicle_model, powertrain, reason: check.reason
+          });
+        }
+      } catch (err) {
+        logger.warn('[get_services] Compatibility check failed', { error: err.message });
+      }
+    }
+
     // Format for voice agent - use voice-friendly price_display
     const serviceList = services.map(s => ({
       id: s.id,
@@ -265,7 +283,11 @@ router.post('/get_services', async (req, res, next) => {
 
     // Build message - simple and direct
     let message;
-    if (services.length > 0) {
+    if (compatibility && !compatibility.compatible) {
+      // Service is incompatible with this vehicle's powertrain
+      const vehicleDesc = `${vehicle_year ? vehicle_year + ' ' : ''}${vehicle_make} ${vehicle_model}`;
+      message = `The ${vehicleDesc} is an electric vehicle, so it doesn't need ${search.toLowerCase()}. EVs don't have a combustion engine, so services like oil changes, spark plugs, and exhaust work don't apply. I'd recommend a tire rotation, brake inspection, or cabin air filter instead. Would any of those work?`;
+    } else if (services.length > 0) {
       message = `I found ${services.length} services. ${services.slice(0, 3).map(s => s.name).join(', ')}${services.length > 3 ? ', and more' : ''}.`;
     } else {
       message = notFoundMessage || 'Would you like me to list our available services?';
@@ -273,13 +295,17 @@ router.post('/get_services', async (req, res, next) => {
 
     res.json({
       success: true,
-      services: serviceList,
+      services: compatibility && !compatibility.compatible ? [] : serviceList,
       recommendations,
       suggestions,
       needs_clarification: needsClarification,
       clarification_options: oilChangeOptions,
       service_not_found: services.length === 0 && search ? true : false,
       searched_for: search || null,
+      service_incompatible: compatibility && !compatibility.compatible ? true : false,
+      incompatibility_reason: compatibility?.reason || null,
+      suggested_alternatives: compatibility?.alternatives || null,
+      vehicle_powertrain: compatibility?.powertrain || null,
       message
     });
 
