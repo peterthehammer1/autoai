@@ -97,6 +97,21 @@ router.post('/get_services', async (req, res, next) => {
       'interior clean': 'Interior',
       'oil change': 'Oil Change',
       'oil': 'Oil Change',
+      '30k': '30,000 KM',
+      '30k service': '30,000 KM',
+      '30000': '30,000 KM',
+      'thirty thousand': '30,000 KM',
+      '60k': '60,000 KM',
+      '60k service': '60,000 KM',
+      '60000': '60,000 KM',
+      'sixty thousand': '60,000 KM',
+      '90k': '90,000 KM',
+      '90k service': '90,000 KM',
+      '90000': '90,000 KM',
+      'ninety thousand': '90,000 KM',
+      'scheduled maintenance': 'KM Service',
+      'major service': '60,000 KM',
+      'full service': '60,000 KM',
     };
 
     // Apply synonym mapping
