@@ -482,12 +482,56 @@ async function handleCallEnded(call) {
     // Determine outcome based on call data
     let outcome = 'inquiry';
 
-    // Check if appointment was created during this call
-    const { data: appointment } = await supabase
+    // Check if appointment was created during this call (by call_id link)
+    let { data: appointment } = await supabase
       .from('appointments')
       .select('id')
       .eq('call_id', call_id)
       .single();
+
+    // Fallback: match by phone + creation time if call_id wasn't linked
+    // (Retell doesn't reliably send call_id in custom tool call bodies)
+    if (!appointment) {
+      const { data: callLog } = await supabase
+        .from('call_logs')
+        .select('phone_normalized, started_at')
+        .eq('retell_call_id', call_id)
+        .single();
+
+      if (callLog?.phone_normalized) {
+        const callStart = callLog.started_at;
+        const callEnd = new Date(end_timestamp).toISOString();
+        const { data: recentAppt } = await supabase
+          .from('appointments')
+          .select('id, call_id')
+          .eq('created_by', 'ai_agent')
+          .is('call_id', null)
+          .gte('created_at', callStart)
+          .lte('created_at', callEnd)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
+
+        if (recentAppt) {
+          // Verify the appointment belongs to this caller by checking customer phone
+          const { data: apptCustomer } = await supabase
+            .from('appointments')
+            .select('customer:customers(phone_normalized)')
+            .eq('id', recentAppt.id)
+            .single();
+
+          if (apptCustomer?.customer?.phone_normalized === callLog.phone_normalized) {
+            appointment = recentAppt;
+            // Backfill the call_id on the appointment
+            await supabase
+              .from('appointments')
+              .update({ call_id })
+              .eq('id', recentAppt.id);
+            logger.info('handleCallEnded: linked appointment by phone+time fallback', { appointmentId: recentAppt.id, callId: call_id });
+          }
+        }
+      }
+    }
 
     if (appointment) {
       outcome = 'booked';

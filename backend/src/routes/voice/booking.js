@@ -423,6 +423,26 @@ router.post('/book_appointment', async (req, res, next) => {
       }
     }
 
+    // Fallback 4: recover call_id from active call if we have phone but no call_id
+    // This is the most common case — Retell doesn't reliably send call_id for custom tools
+    if (!call_id && customer_phone) {
+      const normalizedLookup = normalizePhone(customer_phone);
+      const tenMinAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+      const { data: activeCall } = await supabase
+        .from('call_logs')
+        .select('retell_call_id')
+        .eq('phone_normalized', normalizedLookup)
+        .gte('started_at', tenMinAgo)
+        .is('ended_at', null)
+        .order('started_at', { ascending: false })
+        .limit(1)
+        .single();
+      if (activeCall?.retell_call_id) {
+        call_id = activeCall.retell_call_id;
+        logger.info('book_appointment: recovered call_id from active call by phone', { data: call_id });
+      }
+    }
+
     logger.info('Parsed values:', { data: { customer_phone, service_ids, appointment_date, appointment_time, vehicle_year, vehicle_make, vehicle_model } });
 
     // Validate required fields

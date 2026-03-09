@@ -32,6 +32,18 @@
           "search": {
             "type": "string",
             "description": "Search term to find services (e.g., oil change, brakes, alignment)"
+          },
+          "vehicle_year": {
+            "type": "integer",
+            "description": "Vehicle year if known (e.g. 2023)"
+          },
+          "vehicle_make": {
+            "type": "string",
+            "description": "Vehicle make if known (e.g. Tesla, Ford, Toyota)"
+          },
+          "vehicle_model": {
+            "type": "string",
+            "description": "Vehicle model if known (e.g. Model 3, F-150, Camry)"
           }
         }
       }
@@ -429,13 +441,33 @@
             "type": "string",
             "description": "17-character VIN if customer provides it"
           },
+          "license_plate": {
+            "type": "string",
+            "description": "License plate number, letters and digits only, no spaces or dashes (e.g. KD8728)"
+          },
+          "plate_state": {
+            "type": "string",
+            "description": "2-letter US state code for the plate (e.g. NC, TX, CA). Always use abbreviation, not full name."
+          },
+          "vehicle_year": {
+            "type": "integer",
+            "description": "Vehicle year (e.g. 2023)"
+          },
+          "vehicle_make": {
+            "type": "string",
+            "description": "Vehicle make (e.g. Ford, Toyota, Cadillac)"
+          },
+          "vehicle_model": {
+            "type": "string",
+            "description": "Vehicle model (e.g. F-250, Camry, XT5)"
+          },
           "current_mileage": {
             "type": "integer",
             "description": "Current vehicle mileage if customer mentions it"
           },
           "check_service": {
             "type": "string",
-            "description": "Specific service to check if due (e.g., 'oil change', 'air filter', 'transmission fluid'
+            "description": "Specific service to check if due (e.g., 'oil change', 'air filter', 'transmission fluid')"
           }
         },
         "required": []
