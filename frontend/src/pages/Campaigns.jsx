@@ -595,13 +595,13 @@ export default function Campaigns() {
       </div>
 
       {/* Type Tabs */}
-      <div className="flex gap-1 overflow-x-auto pb-1">
+      <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0">
         {TYPE_TABS.map((tab) => (
           <button
             key={tab.value}
             onClick={() => setActiveTab(tab.value)}
             className={cn(
-              'px-3 py-1.5 text-xs font-medium rounded-md whitespace-nowrap transition-colors',
+              'px-3 py-2.5 sm:py-1.5 text-xs font-medium rounded-md whitespace-nowrap transition-colors',
               activeTab === tab.value
                 ? 'bg-slate-800 text-white'
                 : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'

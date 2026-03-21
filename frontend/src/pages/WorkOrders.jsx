@@ -79,7 +79,7 @@ export default function WorkOrders() {
       </div>
 
       {/* Status Tabs */}
-      <div className="flex gap-1 overflow-x-auto pb-1">
+      <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0">
         {STATUS_TABS.map((tab) => (
           <button
             key={tab.value}
@@ -88,7 +88,7 @@ export default function WorkOrders() {
               setPage(0)
             }}
             className={cn(
-              'px-3 py-1.5 text-xs font-medium rounded-md whitespace-nowrap transition-colors',
+              'px-3 py-2.5 sm:py-1.5 text-xs font-medium rounded-md whitespace-nowrap transition-colors',
               activeTab === tab.value
                 ? 'bg-slate-800 text-white'
                 : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'
@@ -215,7 +215,7 @@ export default function WorkOrders() {
                 size="sm"
                 onClick={() => setPage((p) => p - 1)}
                 disabled={page === 0}
-                className="text-xs h-8"
+                className="text-xs h-10 sm:h-8 px-4"
               >
                 Previous
               </Button>
@@ -224,7 +224,7 @@ export default function WorkOrders() {
                 size="sm"
                 onClick={() => setPage((p) => p + 1)}
                 disabled={!pagination.has_more}
-                className="text-xs h-8"
+                className="text-xs h-10 sm:h-8 px-4"
               >
                 Next
               </Button>

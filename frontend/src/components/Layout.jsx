@@ -142,12 +142,12 @@ export default function Layout() {
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-white">{num.phone}</p>
-                  <p className="text-xs text-slate-400">{num.label} • AI Booking</p>
+                  <p className="text-xs text-slate-300">{num.label} • AI Booking</p>
                 </div>
               </a>
             ))}
           </div>
-          
+
           {/* Mobile Powered by Nucleus */}
           <div className="p-3 border-t border-slate-700/50">
             <a 
@@ -236,11 +236,11 @@ export default function Layout() {
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-white">{num.phone}</p>
-                  <p className="text-xs text-slate-400">{num.label} • AI Booking</p>
+                  <p className="text-xs text-slate-300">{num.label} • AI Booking</p>
                 </div>
               </a>
             ))}
-            
+
             {/* AI Status */}
             <div className="rounded-lg bg-slate-800 p-3">
               <div className="flex items-center gap-2 mb-1.5">
@@ -248,7 +248,7 @@ export default function Layout() {
                 <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">AI Active</span>
               </div>
               <p className="text-sm font-medium text-white">Voice Agent Online</p>
-              <p className="text-xs text-slate-400">Handling calls 24/7</p>
+              <p className="text-xs text-slate-300">Handling calls 24/7</p>
             </div>
             
             {/* Desktop Powered by Nucleus */}
@@ -287,7 +287,7 @@ export default function Layout() {
         </div>
 
         {/* Page content */}
-        <main id="main-content" className="px-4 sm:px-6 pb-4 sm:pb-6 max-w-full overflow-hidden" role="main">
+        <main id="main-content" className="px-4 sm:px-6 pt-2 pb-4 sm:pb-6 max-w-full overflow-hidden" role="main">
           <BreadcrumbProvider>
             <Breadcrumbs />
             <Suspense fallback={<PageLoader />}>

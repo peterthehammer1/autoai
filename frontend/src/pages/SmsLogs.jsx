@@ -155,7 +155,7 @@ export default function SmsLogs() {
   const activeFilterCount = [dateFrom, dateTo].filter(Boolean).length
 
   return (
-    <div className="h-[calc(100vh-4rem)] flex flex-col">
+    <div className="h-[calc(100dvh-4rem)] flex flex-col">
       {/* Page Header */}
       <div className="bg-gradient-to-r from-slate-800 to-slate-900 -mx-4 sm:-mx-6 px-4 pl-14 sm:px-6 lg:pl-6 py-4 mb-4">
         <div className="flex items-center justify-between">
@@ -170,7 +170,7 @@ export default function SmsLogs() {
             <button
               onClick={() => { setViewMode('messages'); setSelectedThread(null) }}
               className={cn(
-                'px-3 py-1.5 text-xs font-medium rounded-md transition-colors',
+                'px-3 py-2.5 sm:py-1.5 text-xs font-medium rounded-md transition-colors',
                 viewMode === 'messages'
                   ? 'bg-white text-slate-900 shadow-sm'
                   : 'text-slate-300 hover:text-white'
@@ -181,7 +181,7 @@ export default function SmsLogs() {
             <button
               onClick={() => { setViewMode('threads'); setSelectedSmsId(null) }}
               className={cn(
-                'px-3 py-1.5 text-xs font-medium rounded-md transition-colors',
+                'px-3 py-2.5 sm:py-1.5 text-xs font-medium rounded-md transition-colors',
                 viewMode === 'threads'
                   ? 'bg-white text-slate-900 shadow-sm'
                   : 'text-slate-300 hover:text-white'

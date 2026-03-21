@@ -48,7 +48,7 @@ function TodaysSchedule({ todayData, todayLoading, isWeekendDay, statusMutation,
               <Calendar className="h-5 w-5 text-blue-300" />
             </div>
             <div>
-              <CardTitle className="text-lg">
+              <CardTitle className="text-lg font-bold">
                 {isWeekendDay ? `${format(getNextBusinessDay(), 'EEEE')}'s Schedule` : "Today's Schedule"}
               </CardTitle>
               <CardDescription className="flex items-center gap-2">

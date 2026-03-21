@@ -1,4 +1,4 @@
-/* Inter font loaded via <link> in index.html for non-blocking render */
+/* Inter + Plus Jakarta Sans loaded via <link> in index.html for non-blocking render */
 
 @tailwind base;
 @tailwind components;
@@ -18,8 +18,8 @@
     --secondary: 201 15% 94%;
     --secondary-foreground: 201 75% 12%;
     --muted: 201 15% 94%;
-    --muted-foreground: 201 20% 45%;
-    --accent: 201 15% 94%;
+    --muted-foreground: 201 20% 40%;
+    --accent: 37 91% 55%;
     --accent-foreground: 201 75% 12%;
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
@@ -27,12 +27,12 @@
     --input: 201 15% 88%;
     --ring: 201 75% 12%;
     --radius: 0.5rem;
-    
-    /* Professional accent colors - muted versions */
+
+    /* Professional accent colors */
     --success: 158 40% 35%;
-    --warning: 32 60% 45%;
+    --warning: 37 91% 55%;
     --info: 201 50% 35%;
-    
+
     /* Sidebar-matching teal colors (based on #082438) */
     --sidebar: 201 75% 12%;
     --sidebar-light: 201 50% 18%;
@@ -53,7 +53,7 @@
     --secondary-foreground: 210 20% 98%;
     --muted: 222 30% 18%;
     --muted-foreground: 215 16% 60%;
-    --accent: 222 30% 18%;
+    --accent: 37 91% 55%;
     --accent-foreground: 210 20% 98%;
     --destructive: 0 62% 40%;
     --destructive-foreground: 0 0% 100%;
@@ -67,41 +67,55 @@
   * {
     @apply border-border;
   }
-  
+
   html {
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     scroll-behavior: smooth;
     overflow-x: hidden;
   }
-  
+
   body {
     @apply bg-background text-foreground;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     font-feature-settings: "cv11", "ss01";
   }
-  
-  h1, h2, h3, h4, h5, h6 {
+
+  /* Typography hierarchy — display font for headings */
+  h1, h2, h3 {
+    font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+    @apply font-bold tracking-tight;
+  }
+
+  h4, h5, h6 {
     @apply font-semibold tracking-tight;
   }
-  
+
   @media screen and (max-width: 768px) {
     input, select, textarea {
       font-size: 16px !important;
     }
   }
-  
+
   button, a, [role="button"] {
     touch-action: manipulation;
   }
-  
+
+  /* Focus styles for accessibility */
+  a:focus-visible,
+  button:focus-visible,
+  [role="button"]:focus-visible {
+    @apply outline-2 outline-offset-2 outline-blue-600;
+  }
+
+  /* Thin scrollbar on mobile — visible but unobtrusive */
   @media screen and (max-width: 768px) {
     ::-webkit-scrollbar {
-      display: none;
+      width: 3px;
+      height: 3px;
     }
     * {
-      -ms-overflow-style: none;
-      scrollbar-width: none;
+      scrollbar-width: thin;
     }
   }
 }
@@ -128,78 +142,78 @@
 @layer utilities {
   /* Professional shadows */
   .shadow-soft {
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1),
                 0 1px 2px -1px rgba(0, 0, 0, 0.1);
   }
-  
+
   .shadow-soft-lg {
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
                 0 2px 4px -2px rgba(0, 0, 0, 0.1);
   }
-  
+
   .shadow-card {
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08),
                 0 1px 2px rgba(0, 0, 0, 0.06);
   }
-  
+
   /* Premier Auto gradient - based on sidebar teal */
   .gradient-primary {
     background: linear-gradient(135deg, #0a3a54 0%, #082438 100%);
   }
-  
+
   .gradient-header {
     background: linear-gradient(90deg, #082438 0%, #0d4a6a 100%);
   }
-  
-  /* Professional stat card backgrounds - unified teal theme */
+
+  /* Professional stat card backgrounds - differentiated */
   .stat-blue {
-    background: linear-gradient(135deg, #F4F6F9 0%, #EEF1F6 100%);
+    background: linear-gradient(135deg, #f0f4f8 0%, #e8eef4 100%);
     border-left: 3px solid #082438;
   }
-  
+
   .stat-green {
-    background: linear-gradient(135deg, #F4F6F9 0%, #EEF1F6 100%);
-    border-left: 3px solid #0a3a54;
+    background: linear-gradient(135deg, #f0faf4 0%, #e6f7ed 100%);
+    border-left: 3px solid #059669;
   }
-  
+
   .stat-purple {
-    background: linear-gradient(135deg, #F4F6F9 0%, #EEF1F6 100%);
-    border-left: 3px solid #0d4a6a;
+    background: linear-gradient(135deg, #f5f0ff 0%, #ede5ff 100%);
+    border-left: 3px solid #7c3aed;
   }
-  
+
   .stat-slate-blue {
-    background: linear-gradient(135deg, #F4F6F9 0%, #EEF1F6 100%);
-    border-left: 3px solid #475569;
+    background: linear-gradient(135deg, #fef9ee 0%, #fef3cd 100%);
+    border-left: 3px solid #d97706;
   }
-  
+
   .stat-slate {
     background: linear-gradient(135deg, #F4F6F9 0%, #EEF1F6 100%);
     border-left: 3px solid #64748b;
   }
-  
+
   /* Professional card styles */
   .card-professional {
     @apply bg-white rounded-lg border border-slate-200 shadow-card;
   }
-  
+
   .card-professional-hover {
     @apply card-professional transition-all duration-200;
   }
-  
+
   .card-professional-hover:hover {
     @apply shadow-soft-lg border-slate-300;
   }
-  
+
   /* Navigation active indicator */
   .nav-active-bar {
     @apply relative;
   }
-  
+
   .nav-active-bar::before {
     content: '';
     @apply absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-6 rounded-r-full bg-primary;
   }
-  
+
   /* Status colors - professional */
   .status-scheduled { @apply bg-slate-100 text-slate-700; }
   .status-confirmed { @apply bg-blue-50 text-blue-700; }
@@ -219,12 +233,23 @@
   to { opacity: 1; transform: translateX(0); }
 }
 
+@keyframes staggerFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .animate-fade-in {
   animation: fadeIn 0.3s ease-out forwards;
 }
 
 .animate-slide-in {
   animation: slideIn 0.25s ease-out forwards;
+}
+
+/* Staggered card entrance — use with style="animation-delay: Xms" */
+.animate-stagger {
+  opacity: 0;
+  animation: staggerFadeIn 0.4s ease-out forwards;
 }
 
 /* Landing page floating cards */
@@ -246,9 +271,32 @@
   animation: float-delayed 3s ease-in-out infinite 0.5s;
 }
 
+/* Finite pulse — 3 pulses then holds */
+@keyframes pulse-finite {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.animate-pulse-3 {
+  animation: pulse-finite 2s ease-in-out 3;
+}
+
+/* Reduced motion — respect user preferences */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in,
+  .animate-slide-in,
+  .animate-stagger,
+  .animate-float,
+  .animate-float-delayed,
+  .animate-pulse-3 {
+    animation: none !important;
+    opacity: 1 !important;
+  }
+}
+
 /* Driver.js Tour Overrides */
 .dashboard-tour-popover {
-  font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+  font-family: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif !important;
   border-radius: 0.75rem !important;
   box-shadow: 0 20px 60px -12px rgba(8, 36, 56, 0.25),
               0 8px 20px -8px rgba(8, 36, 56, 0.15) !important;
@@ -260,7 +308,7 @@
   font-size: 15px !important;
   font-weight: 600 !important;
   color: #082438 !important;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+  font-family: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif !important;
 }
 
 .dashboard-tour-popover .driver-popover-description {

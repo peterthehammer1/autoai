@@ -127,7 +127,7 @@ export default function RescheduleDialog({ appointment, open, onOpenChange }) {
                       key={slot.start_time}
                       onClick={() => setSelectedTime(slot.start_time)}
                       className={cn(
-                        "px-2 py-2 text-xs font-medium rounded-md border transition-colors",
+                        "px-2 py-3 sm:py-2 text-sm sm:text-xs font-medium rounded-md border transition-colors",
                         selectedTime === slot.start_time
                           ? "bg-blue-600 text-white border-blue-600"
                           : "bg-white text-slate-700 border-slate-200 hover:border-blue-300 hover:bg-blue-50"

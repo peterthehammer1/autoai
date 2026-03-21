@@ -29,7 +29,6 @@ import {
   Smartphone,
   HeartPulse,
   FileSearch,
-  Truck,
   Bell,
   Loader2,
   ClipboardList,
@@ -37,6 +36,10 @@ import {
   ClipboardCheck,
   Megaphone,
   CreditCard,
+  Columns,
+  Timer,
+  FileDown,
+  Target,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -45,65 +48,65 @@ const features = [
     icon: Bot,
     title: '24/7 AI Voice Agent',
     description: 'Amber answers calls around the clock — booking appointments, answering questions, providing quotes, and handling reschedules.',
-    color: 'from-violet-500 to-purple-600',
-    bgColor: 'bg-violet-50',
-    iconColor: 'text-violet-600',
+    color: 'from-teal-600 to-teal-800',
+    bgColor: 'bg-teal-50',
+    iconColor: 'text-teal-700',
   },
   {
     icon: Calendar,
     title: 'Smart Scheduling',
     description: 'Real-time bay availability, automatic technician assignment based on skill level, and atomic booking that prevents double-booking.',
-    color: 'from-blue-500 to-cyan-500',
-    bgColor: 'bg-blue-50',
-    iconColor: 'text-blue-600',
+    color: 'from-teal-600 to-teal-800',
+    bgColor: 'bg-teal-50',
+    iconColor: 'text-teal-700',
   },
   {
     icon: Smartphone,
     title: 'Two-Way SMS & Live Updates',
     description: 'Customers get real-time status texts when work starts on their vehicle and can reply to manage appointments. Proactive reminders reach out when maintenance is due.',
-    color: 'from-emerald-500 to-teal-500',
-    bgColor: 'bg-emerald-50',
-    iconColor: 'text-emerald-600',
+    color: 'from-amber-500 to-amber-600',
+    bgColor: 'bg-amber-50',
+    iconColor: 'text-amber-700',
   },
   {
     icon: Brain,
     title: 'Call Intelligence',
     description: 'Every call is transcribed, summarized, and scored for sentiment. Searchable transcripts, recordings, and intent detection across all conversations.',
-    color: 'from-amber-500 to-orange-500',
-    bgColor: 'bg-amber-50',
-    iconColor: 'text-amber-600',
+    color: 'from-teal-600 to-teal-800',
+    bgColor: 'bg-teal-50',
+    iconColor: 'text-teal-700',
   },
   {
     icon: Car,
     title: 'Vehicle Intelligence',
     description: 'VIN decoding, manufacturer recall checking, and mileage-based maintenance recommendations. Know what each vehicle needs before the customer asks.',
-    color: 'from-pink-500 to-rose-500',
-    bgColor: 'bg-pink-50',
-    iconColor: 'text-pink-600',
+    color: 'from-amber-500 to-amber-600',
+    bgColor: 'bg-amber-50',
+    iconColor: 'text-amber-700',
   },
   {
     icon: HeartPulse,
     title: 'Customer Health Scoring',
     description: 'RFM-based health scores track recency, frequency, and spend. Identify at-risk customers and get AI-powered recommendations to re-engage them.',
-    color: 'from-red-500 to-rose-600',
-    bgColor: 'bg-red-50',
-    iconColor: 'text-red-600',
+    color: 'from-teal-600 to-teal-800',
+    bgColor: 'bg-teal-50',
+    iconColor: 'text-teal-700',
   },
   {
     icon: BarChart3,
     title: 'Analytics & Insights',
     description: 'Real-time dashboards for conversion rates, revenue, sentiment trends, bay utilization, and peak call hours. Missed revenue tracking shows exactly what you\'re leaving on the table.',
-    color: 'from-indigo-500 to-blue-600',
-    bgColor: 'bg-indigo-50',
-    iconColor: 'text-indigo-600',
+    color: 'from-amber-500 to-amber-600',
+    bgColor: 'bg-amber-50',
+    iconColor: 'text-amber-700',
   },
   {
     icon: Users,
     title: 'Full CRM',
     description: 'Complete customer profiles with multiple vehicles, service history, call and SMS logs, appointment timeline, and lifetime value tracking.',
-    color: 'from-teal-500 to-cyan-600',
+    color: 'from-teal-600 to-teal-800',
     bgColor: 'bg-teal-50',
-    iconColor: 'text-teal-600',
+    iconColor: 'text-teal-700',
   },
   {
     icon: Shield,
@@ -117,49 +120,81 @@ const features = [
     icon: ClipboardList,
     title: 'Estimates & Work Orders',
     description: 'Full estimate-to-invoice pipeline with line items, tax calculation, status tracking, and digital authorization. Track every job from quote to payment.',
-    color: 'from-cyan-500 to-blue-600',
-    bgColor: 'bg-cyan-50',
-    iconColor: 'text-cyan-600',
+    color: 'from-amber-500 to-amber-600',
+    bgColor: 'bg-amber-50',
+    iconColor: 'text-amber-700',
   },
   {
     icon: Globe,
     title: 'Customer Portal',
     description: 'Customers view estimates, approve work, track repair status, and pay invoices \u2014 all from a secure magic-link portal sent via SMS.',
-    color: 'from-teal-500 to-emerald-600',
+    color: 'from-teal-600 to-teal-800',
     bgColor: 'bg-teal-50',
-    iconColor: 'text-teal-600',
+    iconColor: 'text-teal-700',
   },
   {
     icon: ClipboardCheck,
     title: 'Digital Vehicle Inspection',
     description: 'Technicians photograph and grade every component. Customers get a visual traffic-light report with photos \u2014 boosting approval rates by 20-30%.',
-    color: 'from-lime-500 to-green-600',
-    bgColor: 'bg-lime-50',
-    iconColor: 'text-lime-600',
+    color: 'from-amber-500 to-amber-600',
+    bgColor: 'bg-amber-50',
+    iconColor: 'text-amber-700',
   },
   {
     icon: CreditCard,
     title: 'Online Payments',
     description: 'Send payment links via SMS and let customers pay invoices online. Split payments, deposits, and multiple payment methods supported.',
-    color: 'from-green-500 to-emerald-600',
-    bgColor: 'bg-green-50',
-    iconColor: 'text-green-600',
+    color: 'from-teal-600 to-teal-800',
+    bgColor: 'bg-teal-50',
+    iconColor: 'text-teal-700',
   },
   {
     icon: Star,
     title: 'Reputation Management',
     description: 'Automatically request Google reviews after completed services. Track click-through rates, manage feedback, and grow your online presence.',
-    color: 'from-yellow-500 to-amber-600',
-    bgColor: 'bg-yellow-50',
-    iconColor: 'text-yellow-600',
+    color: 'from-amber-500 to-amber-600',
+    bgColor: 'bg-amber-50',
+    iconColor: 'text-amber-700',
   },
   {
     icon: Megaphone,
     title: 'Marketing Automation',
     description: 'Automated welcome, follow-up, and win-back campaigns. Build custom seasonal promotions with audience targeting and template variables.',
-    color: 'from-fuchsia-500 to-pink-600',
-    bgColor: 'bg-fuchsia-50',
-    iconColor: 'text-fuchsia-600',
+    color: 'from-teal-600 to-teal-800',
+    bgColor: 'bg-teal-50',
+    iconColor: 'text-teal-700',
+  },
+  {
+    icon: Columns,
+    title: 'Bay View & Shop Floor',
+    description: 'Real-time visual dashboard of every service bay — see what\'s in progress, what\'s next, and which bays are open at a glance.',
+    color: 'from-amber-500 to-amber-600',
+    bgColor: 'bg-amber-50',
+    iconColor: 'text-amber-700',
+  },
+  {
+    icon: Timer,
+    title: 'Tech Time Tracking',
+    description: 'Technicians clock in and out per job with a simple tap. Track labor hours, flag efficiency issues, and tie time directly to work orders.',
+    color: 'from-teal-600 to-teal-800',
+    bgColor: 'bg-teal-50',
+    iconColor: 'text-teal-700',
+  },
+  {
+    icon: FileDown,
+    title: 'Custom Reports',
+    description: 'Export-ready reports for revenue, technician productivity, service mix, and customer retention. Download CSV or view on screen.',
+    color: 'from-amber-500 to-amber-600',
+    bgColor: 'bg-amber-50',
+    iconColor: 'text-amber-700',
+  },
+  {
+    icon: Target,
+    title: 'Lead Capture & Tracking',
+    description: 'Capture leads from your website, phone calls, and walk-ins. Track follow-ups and conversion rates so no prospect slips through the cracks.',
+    color: 'from-teal-600 to-teal-800',
+    bgColor: 'bg-teal-50',
+    iconColor: 'text-teal-700',
   },
 ]
 
@@ -175,7 +210,6 @@ const capabilities = [
   { text: 'VIN decoding & recall checking', icon: FileSearch },
   { text: 'Two-way SMS appointment management', icon: Smartphone },
   { text: 'Service quotes & mileage recommendations', icon: Wrench },
-  { text: 'Tow request scheduling', icon: Truck },
   { text: 'Call transcripts with sentiment analysis', icon: Brain },
   { text: 'Automated reminders & confirmations', icon: Bell },
   { text: 'Proactive service reminders when maintenance is due', icon: Wrench },
@@ -183,6 +217,7 @@ const capabilities = [
   { text: 'Multi-vehicle customer support', icon: Car },
   { text: 'Customer portal for estimates & payments', icon: Globe },
   { text: 'Automated review requests & marketing', icon: Megaphone },
+  { text: 'Lead capture from calls, web & walk-ins', icon: Target },
 ]
 
 const testimonials = [
@@ -248,16 +283,16 @@ export default function Landing() {
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-xl shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center h-32">
+          <div className="flex items-center h-16 sm:h-18">
             <a href="/" className="shrink-0 mr-8">
-              <img src="/logo-light.png" alt="Premier Auto Service" width="256" height="256" className="h-28 sm:h-32 object-contain" />
+              <img src="/logo-light.png" alt="Premier Auto Service" width="256" height="256" className="h-12 sm:h-14 object-contain" />
             </a>
 
             <div className="hidden lg:flex items-center gap-7 mr-auto">
-              <a href="#features" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">Features</a>
-              <a href="#how-it-works" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">How It Works</a>
-              <a href="#faq" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">FAQ</a>
-              <a href="#testimonials" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">Testimonials</a>
+              <a href="#features" className="text-sm font-medium text-slate-600 hover:text-slate-900 focus-visible:text-slate-900 transition-colors rounded-md px-1 -mx-1">Features</a>
+              <a href="#how-it-works" className="text-sm font-medium text-slate-600 hover:text-slate-900 focus-visible:text-slate-900 transition-colors rounded-md px-1 -mx-1">How It Works</a>
+              <a href="#faq" className="text-sm font-medium text-slate-600 hover:text-slate-900 focus-visible:text-slate-900 transition-colors rounded-md px-1 -mx-1">FAQ</a>
+              <a href="#testimonials" className="text-sm font-medium text-slate-600 hover:text-slate-900 focus-visible:text-slate-900 transition-colors rounded-md px-1 -mx-1">Testimonials</a>
             </div>
 
             <div className="hidden lg:flex items-center gap-4">
@@ -269,7 +304,7 @@ export default function Landing() {
               <Button variant="ghost" size="sm" asChild className="text-slate-600 hover:text-slate-900">
                 <Link to="/dashboard">Dashboard</Link>
               </Button>
-              <Button asChild className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-md shadow-blue-500/25 px-6">
+              <Button asChild className="bg-gradient-to-r from-teal-700 to-teal-800 hover:from-teal-800 hover:to-teal-900 shadow-md shadow-teal-800/25 px-6">
                 <a href="#contact">
                   Join Waitlist
                 </a>
@@ -348,7 +383,7 @@ export default function Landing() {
                 <Phone className="h-4 w-4" />
                 (647) 371-1990
               </a>
-              <Button className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 h-11" asChild>
+              <Button className="w-full bg-gradient-to-r from-teal-700 to-teal-800 hover:from-teal-800 hover:to-teal-900 h-11" asChild>
                 <a href="#contact" onClick={() => setMobileMenuOpen(false)}>
                   Join Waitlist
                 </a>
@@ -359,18 +394,18 @@ export default function Landing() {
       </nav>
 
       {/* Hero */}
-      <section className="pt-48 pb-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
+      <section className="pt-28 sm:pt-32 pb-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="text-center lg:text-left">
-              <Badge className="mb-4 bg-violet-100 text-violet-700 hover:bg-violet-100 px-4 py-1.5">
+              <Badge className="mb-4 bg-amber-100 text-amber-800 hover:bg-amber-100 px-4 py-1.5 font-medium">
                 <Sparkles className="h-3.5 w-3.5 mr-1.5" />
                 AI-Powered Receptionist for Auto Shops
               </Badge>
 
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-slate-900 leading-tight" itemProp="name">
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-slate-900 leading-[1.1]" itemProp="name">
                 Never Miss Another Call.{' '}
-                <span className="bg-gradient-to-r from-blue-600 to-violet-600 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-teal-700 to-teal-500 bg-clip-text text-transparent">
                   Never Lose Another Booking.
                 </span>
               </h1>
@@ -382,7 +417,7 @@ export default function Landing() {
               </p>
 
               <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                <Button size="lg" className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-base sm:text-lg px-6 sm:px-8 h-12 sm:h-14" asChild>
+                <Button size="lg" className="bg-gradient-to-r from-teal-700 to-teal-800 hover:from-teal-800 hover:to-teal-900 text-base sm:text-lg px-6 sm:px-8 h-12 sm:h-14" asChild>
                   <a href="#contact">
                     Request a Demo
                   </a>
@@ -396,7 +431,7 @@ export default function Landing() {
                 </Button>
               </div>
               <div className="mt-4 text-center lg:text-left">
-                <Link to="/dashboard" className="text-sm text-blue-600 hover:text-blue-700 font-medium inline-flex items-center gap-1 transition-colors">
+                <Link to="/dashboard" className="text-sm text-teal-700 hover:text-teal-800 font-medium inline-flex items-center gap-1 transition-colors">
                   Explore the live dashboard <ArrowRight className="h-4 w-4" />
                 </Link>
               </div>
@@ -419,7 +454,7 @@ export default function Landing() {
 
             {/* Dashboard preview */}
             <div className="relative" role="img" aria-label="Premier Auto Service dashboard showing today's schedule, AI agent status, and key metrics like 15+ hours saved per week, 30% more bookings captured, and 24/7 after-hours coverage">
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-violet-500/20 rounded-3xl blur-3xl" />
+              <div className="absolute inset-0 bg-gradient-to-r from-teal-500/20 to-amber-500/15 rounded-3xl blur-3xl" />
               <div className="relative bg-slate-900 rounded-2xl shadow-2xl overflow-hidden border border-slate-700">
                 <div className="flex items-center gap-2 px-4 py-3 bg-slate-800 border-b border-slate-700">
                   <div className="flex gap-1.5">
@@ -437,7 +472,7 @@ export default function Landing() {
                   <div className="grid grid-cols-4 gap-2 sm:gap-3 mb-4">
                     {stats.map((stat, i) => (
                       <div key={i} className="bg-slate-800/50 rounded-lg p-2 sm:p-3 text-center border border-slate-700">
-                        <stat.icon className="h-4 w-4 sm:h-5 sm:w-5 text-blue-400 mx-auto mb-1" />
+                        <stat.icon className="h-4 w-4 sm:h-5 sm:w-5 text-amber-400 mx-auto mb-1" />
                         <p className="text-sm sm:text-lg font-bold text-white">{stat.value}</p>
                         <p className="text-xs sm:text-xs text-slate-400 leading-tight">{stat.label}</p>
                       </div>
@@ -446,7 +481,7 @@ export default function Landing() {
                   <div className="grid grid-cols-3 gap-2 sm:gap-3">
                     <div className="col-span-2 bg-slate-800/50 rounded-lg p-3 sm:p-4 border border-slate-700">
                       <div className="flex items-center gap-2 mb-3">
-                        <Calendar className="h-4 w-4 text-blue-400" />
+                        <Calendar className="h-4 w-4 text-amber-400" />
                         <span className="text-sm font-medium text-white">Today's Schedule</span>
                       </div>
                       <div className="space-y-2">
@@ -511,8 +546,8 @@ export default function Landing() {
 
               <div className="absolute -bottom-4 -left-4 bg-white rounded-xl shadow-lg p-4 border border-slate-200 animate-float-delayed hidden sm:block">
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-violet-100 flex items-center justify-center">
-                    <Mic className="h-5 w-5 text-violet-600" />
+                  <div className="h-10 w-10 rounded-full bg-amber-100 flex items-center justify-center">
+                    <Mic className="h-5 w-5 text-amber-600" />
                   </div>
                   <div>
                     <p className="text-sm font-medium text-slate-900">Amber is speaking...</p>
@@ -531,7 +566,7 @@ export default function Landing() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {stats.map((stat, i) => (
               <div key={i} className="text-center">
-                <div className="inline-flex items-center justify-center h-12 w-12 rounded-xl bg-blue-100 text-blue-600 mb-4">
+                <div className="inline-flex items-center justify-center h-12 w-12 rounded-xl bg-teal-100 text-teal-700 mb-4">
                   <stat.icon className="h-6 w-6" />
                 </div>
                 <p className="text-3xl sm:text-4xl font-bold text-slate-900">{stat.value}</p>
@@ -546,7 +581,7 @@ export default function Landing() {
       <section id="features" className="py-24 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <Badge className="mb-4 bg-blue-100 text-blue-700 hover:bg-blue-100">
+            <Badge className="mb-4 bg-teal-100 text-teal-700 hover:bg-teal-100">
               Platform Features
             </Badge>
             <h2 className="text-3xl sm:text-4xl font-bold text-slate-900">
@@ -633,8 +668,8 @@ export default function Landing() {
                   </ChatBubble>
 
                   <div className="flex gap-3">
-                    <div className="h-8 w-8 rounded-full bg-violet-500/20 flex items-center justify-center shrink-0">
-                      <Bot className="h-4 w-4 text-violet-400" />
+                    <div className="h-8 w-8 rounded-full bg-teal-500/20 flex items-center justify-center shrink-0">
+                      <Bot className="h-4 w-4 text-teal-400" />
                     </div>
                     <div className="bg-teal-500/20 rounded-2xl rounded-tl-sm px-4 py-3 max-w-[80%] border border-teal-500/30">
                       <p className="text-xs text-teal-400 mb-1 font-medium flex items-center gap-1.5">
@@ -810,15 +845,15 @@ export default function Landing() {
               <div className="grid sm:grid-cols-2 gap-4">
                 {capabilities.map((cap, i) => (
                   <div key={i} className="flex items-center gap-3 bg-white/5 rounded-lg p-4 border border-white/10">
-                    <cap.icon className="h-5 w-5 text-blue-400 shrink-0" />
+                    <cap.icon className="h-5 w-5 text-amber-400 shrink-0" />
                     <span className="text-slate-300 text-sm">{cap.text}</span>
                   </div>
                 ))}
               </div>
 
-              <div className="mt-8 p-6 bg-gradient-to-r from-violet-500/20 to-purple-500/20 rounded-xl border border-violet-500/30">
+              <div className="mt-8 p-6 bg-gradient-to-r from-amber-500/15 to-amber-400/10 rounded-xl border border-amber-500/25">
                 <div className="flex items-start gap-4">
-                  <div className="h-12 w-12 rounded-full bg-violet-500 flex items-center justify-center shrink-0">
+                  <div className="h-12 w-12 rounded-full bg-amber-500 flex items-center justify-center shrink-0">
                     <Bot className="h-6 w-6 text-white" />
                   </div>
                   <div>
@@ -836,7 +871,7 @@ export default function Landing() {
             {/* Conversation demo */}
             <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700">
               <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-700">
-                <div className="h-10 w-10 rounded-full bg-violet-500 flex items-center justify-center">
+                <div className="h-10 w-10 rounded-full bg-teal-600 flex items-center justify-center">
                   <Mic className="h-5 w-5 text-white" />
                 </div>
                 <div>
@@ -901,29 +936,29 @@ export default function Landing() {
 
           <div className="grid md:grid-cols-3 gap-8">
             <div className="bg-white rounded-2xl p-8 border border-slate-200">
-              <div className="h-12 w-12 rounded-xl bg-blue-100 flex items-center justify-center mb-5">
-                <BarChart3 className="h-6 w-6 text-blue-600" />
+              <div className="h-12 w-12 rounded-xl bg-teal-100 flex items-center justify-center mb-5">
+                <BarChart3 className="h-6 w-6 text-teal-700" />
               </div>
-              <h3 className="text-lg font-semibold text-slate-900 mb-3">Real-Time Analytics</h3>
+              <h3 className="text-lg font-semibold text-slate-900 mb-3">Analytics & Reporting</h3>
               <ul className="space-y-2.5 text-sm text-slate-600">
                 <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />Conversion rate & revenue tracking</li>
                 <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />Customer sentiment trends</li>
                 <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />Peak call hours heatmap</li>
-                <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />Tech efficiency & labor utilization</li>
-                <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />Reputation & review metrics</li>
+                <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />Custom export-ready reports (CSV)</li>
+                <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />Lead capture & conversion tracking</li>
               </ul>
             </div>
 
             <div className="bg-white rounded-2xl p-8 border border-slate-200">
-              <div className="h-12 w-12 rounded-xl bg-violet-100 flex items-center justify-center mb-5">
-                <Wrench className="h-6 w-6 text-violet-600" />
+              <div className="h-12 w-12 rounded-xl bg-amber-100 flex items-center justify-center mb-5">
+                <Wrench className="h-6 w-6 text-amber-600" />
               </div>
               <h3 className="text-lg font-semibold text-slate-900 mb-3">Shop Management</h3>
               <ul className="space-y-2.5 text-sm text-slate-600">
                 <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />Estimate-to-invoice work orders</li>
                 <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />Digital vehicle inspections (DVI)</li>
                 <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />Tech time tracking & clock-in/out</li>
-                <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />Customer authorization (text-to-approve)</li>
+                <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />Real-time bay view dashboard</li>
                 <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />Bay & technician scheduling</li>
               </ul>
             </div>
@@ -1016,7 +1051,7 @@ export default function Landing() {
                         required
                         value={leadForm.name}
                         onChange={e => setLeadForm(f => ({ ...f, name: e.target.value }))}
-                        className="w-full px-3.5 py-2.5 rounded-lg bg-slate-700/40 border border-slate-600/80 text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
+                        className="w-full px-3.5 py-2.5 rounded-lg bg-slate-700/40 border border-slate-600/80 text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500 transition-all"
                       />
                     </div>
                     <div>
@@ -1028,7 +1063,7 @@ export default function Landing() {
                         required
                         value={leadForm.email}
                         onChange={e => setLeadForm(f => ({ ...f, email: e.target.value }))}
-                        className="w-full px-3.5 py-2.5 rounded-lg bg-slate-700/40 border border-slate-600/80 text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
+                        className="w-full px-3.5 py-2.5 rounded-lg bg-slate-700/40 border border-slate-600/80 text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500 transition-all"
                       />
                     </div>
                     <div>
@@ -1039,7 +1074,7 @@ export default function Landing() {
                         placeholder="(555) 123-4567"
                         value={leadForm.phone}
                         onChange={e => setLeadForm(f => ({ ...f, phone: e.target.value }))}
-                        className="w-full px-3.5 py-2.5 rounded-lg bg-slate-700/40 border border-slate-600/80 text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
+                        className="w-full px-3.5 py-2.5 rounded-lg bg-slate-700/40 border border-slate-600/80 text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500 transition-all"
                       />
                     </div>
 
@@ -1051,7 +1086,7 @@ export default function Landing() {
                       type="submit"
                       size="lg"
                       disabled={leadStatus === 'submitting'}
-                      className="w-full bg-blue-600 hover:bg-blue-500 text-white h-11 text-sm font-semibold mt-1"
+                      className="w-full bg-teal-600 hover:bg-teal-500 text-white h-11 text-sm font-semibold mt-1"
                     >
                       {leadStatus === 'submitting' ? (
                         <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Submitting...</>
@@ -1101,7 +1136,7 @@ export default function Landing() {
                   "{testimonial.quote}"
                 </p>
                 <div className="flex items-center gap-3">
-                  <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-500 to-violet-500 flex items-center justify-center text-white font-semibold">
+                  <div className="h-12 w-12 rounded-full bg-gradient-to-br from-teal-600 to-teal-800 flex items-center justify-center text-white font-semibold">
                     {testimonial.author.split(' ').map(n => n[0]).join('').slice(0, 2)}
                   </div>
                   <div>
@@ -1119,7 +1154,7 @@ export default function Landing() {
       <section id="faq" className="py-24 px-4 sm:px-6 lg:px-8">
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-16">
-            <Badge className="mb-4 bg-blue-100 text-blue-700 hover:bg-blue-100">
+            <Badge className="mb-4 bg-teal-100 text-teal-700 hover:bg-teal-100">
               FAQ
             </Badge>
             <h2 className="text-3xl sm:text-4xl font-bold text-slate-900">
@@ -1165,11 +1200,11 @@ export default function Landing() {
                 books appointments, and keeps your schedule full.
               </p>
               <div className="flex items-center gap-6">
-                <a href="tel:+17164122499" className="flex items-center gap-2 text-white hover:text-blue-400 transition-colors text-sm">
+                <a href="tel:+17164122499" className="flex items-center gap-2 text-white hover:text-amber-400 transition-colors text-sm">
                   <Phone className="h-4 w-4" />
                   (716) 412-2499
                 </a>
-                <a href="tel:+16473711990" className="flex items-center gap-2 text-white hover:text-blue-400 transition-colors text-sm">
+                <a href="tel:+16473711990" className="flex items-center gap-2 text-white hover:text-amber-400 transition-colors text-sm">
                   <Phone className="h-4 w-4" />
                   (647) 371-1990
                 </a>
@@ -1230,10 +1265,10 @@ function ChatBubble({ agent, children }) {
   if (agent) {
     return (
       <div className="flex gap-3">
-        <div className="h-8 w-8 rounded-full bg-violet-500/20 flex items-center justify-center shrink-0">
-          <Bot className="h-4 w-4 text-violet-400" />
+        <div className="h-8 w-8 rounded-full bg-teal-500/20 flex items-center justify-center shrink-0">
+          <Bot className="h-4 w-4 text-teal-400" />
         </div>
-        <div className="bg-violet-500/20 rounded-2xl rounded-tl-sm px-4 py-3 max-w-[80%]">
+        <div className="bg-teal-500/20 rounded-2xl rounded-tl-sm px-4 py-3 max-w-[80%]">
           <p className="text-sm text-slate-200">{children}</p>
         </div>
       </div>
@@ -1241,7 +1276,7 @@ function ChatBubble({ agent, children }) {
   }
   return (
     <div className="flex gap-3 justify-end">
-      <div className="bg-blue-600 rounded-2xl rounded-tr-sm px-4 py-3 max-w-[80%]">
+      <div className="bg-teal-700 rounded-2xl rounded-tr-sm px-4 py-3 max-w-[80%]">
         <p className="text-sm text-white">{children}</p>
       </div>
       <div className="h-8 w-8 rounded-full bg-blue-500/20 flex items-center justify-center shrink-0">

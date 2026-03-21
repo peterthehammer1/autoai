@@ -82,12 +82,12 @@ export default function Dashboard() {
   return (
     <div className="flex flex-col gap-4 min-w-0">
       {/* Page Header */}
-      <div data-tour="dashboard-header" className="bg-gradient-to-r from-slate-800 to-slate-900 -mx-4 sm:-mx-6 px-4 pl-14 sm:px-6 lg:pl-6 py-4">
+      <div data-tour="dashboard-header" className="bg-gradient-to-r from-[#082438] to-[#0d4a6a] -mx-4 sm:-mx-6 px-4 pl-14 sm:px-6 lg:pl-6 py-5 rounded-b-xl sm:rounded-none">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <GreetingIcon className={cn("h-5 w-5", greeting.color)} aria-hidden="true" />
             <div>
-              <h1 className="text-lg font-semibold text-white">{greeting.text}</h1>
+              <h1 className="text-xl font-bold text-white">{greeting.text}</h1>
               <p className="text-xs text-slate-400">
                 {format(new Date(), 'EEEE, MMMM d, yyyy')}
                 {isWeekendDay && (

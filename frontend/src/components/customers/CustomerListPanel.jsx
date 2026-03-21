@@ -64,7 +64,7 @@ export default function CustomerListPanel({
                   >
                     <input
                       type="checkbox"
-                      className="h-3.5 w-3.5 rounded border-slate-300 shrink-0"
+                      className="h-5 w-5 sm:h-4 sm:w-4 rounded border-slate-300 shrink-0"
                       checked={selection.isSelected(customer.id)}
                       onChange={() => selection.toggle(customer.id)}
                     />
@@ -112,7 +112,7 @@ export default function CustomerListPanel({
                 >
                   <input
                     type="checkbox"
-                    className="h-3.5 w-3.5 rounded border-slate-300 shrink-0"
+                    className="h-5 w-5 sm:h-4 sm:w-4 rounded border-slate-300 shrink-0"
                     checked={selection.isSelected(customer.id)}
                     onChange={() => selection.toggle(customer.id)}
                   />

@@ -257,7 +257,7 @@ export default function BayView() {
             <Button
               variant="outline"
               size="icon"
-              className="h-8 w-8 border-slate-600 bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white"
+              className="h-10 w-10 sm:h-8 sm:w-8 border-slate-600 bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white"
               onClick={() => navigateDate('prev')}
             >
               <ChevronLeft className="h-4 w-4" />
@@ -265,7 +265,7 @@ export default function BayView() {
             <Button
               variant="outline"
               size="sm"
-              className="text-xs border-slate-600 bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white"
+              className="text-xs h-10 sm:h-8 border-slate-600 bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white"
               onClick={goToday}
             >
               Today
@@ -273,7 +273,7 @@ export default function BayView() {
             <Button
               variant="outline"
               size="icon"
-              className="h-8 w-8 border-slate-600 bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white"
+              className="h-10 w-10 sm:h-8 sm:w-8 border-slate-600 bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white"
               onClick={() => navigateDate('next')}
             >
               <ChevronRight className="h-4 w-4" />
@@ -282,7 +282,7 @@ export default function BayView() {
               type="date"
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
-              className="h-8 px-2 text-xs bg-slate-700 border border-slate-600 text-slate-200 rounded-md"
+              className="h-10 sm:h-8 px-2 text-sm sm:text-xs bg-slate-700 border border-slate-600 text-slate-200 rounded-md"
             />
           </div>
         </div>
@@ -294,7 +294,7 @@ export default function BayView() {
           <CardContent className="p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-[11px] font-medium text-slate-500 uppercase tracking-wider">Appointments</p>
+                <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Appointments</p>
                 <p className="text-2xl font-bold text-slate-800 mt-0.5">{stats.total}</p>
               </div>
               <CalendarClock className="h-8 w-8 text-blue-200" />
@@ -305,7 +305,7 @@ export default function BayView() {
           <CardContent className="p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-[11px] font-medium text-slate-500 uppercase tracking-wider">Bays Active</p>
+                <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Bays Active</p>
                 <p className="text-2xl font-bold text-slate-800 mt-0.5">
                   {stats.baysInUse}<span className="text-sm font-normal text-slate-400">/{stats.totalBays}</span>
                 </p>
@@ -318,7 +318,7 @@ export default function BayView() {
           <CardContent className="p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-[11px] font-medium text-slate-500 uppercase tracking-wider">In Progress</p>
+                <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">In Progress</p>
                 <p className="text-2xl font-bold text-slate-800 mt-0.5">{stats.inProgress}</p>
               </div>
               <Play className="h-8 w-8 text-amber-200" />
@@ -329,7 +329,7 @@ export default function BayView() {
           <CardContent className="p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-[11px] font-medium text-slate-500 uppercase tracking-wider">Completed</p>
+                <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Completed</p>
                 <p className="text-2xl font-bold text-slate-800 mt-0.5">{stats.completed}</p>
               </div>
               <CheckCircle2 className="h-8 w-8 text-slate-200" />
@@ -343,7 +343,7 @@ export default function BayView() {
         <button
           onClick={() => setStatusFilter(null)}
           className={cn(
-            'px-3 py-1 rounded-full text-xs font-medium transition-colors border',
+            'px-3 py-2 sm:py-1 rounded-full text-xs font-medium transition-colors border',
             !statusFilter
               ? 'bg-slate-800 text-white border-slate-800'
               : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
@@ -356,7 +356,7 @@ export default function BayView() {
             key={key}
             onClick={() => setStatusFilter(statusFilter === key ? null : key)}
             className={cn(
-              'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-colors border',
+              'inline-flex items-center gap-1.5 px-3 py-2 sm:py-1 rounded-full text-xs font-medium transition-colors border',
               statusFilter === key
                 ? cn(cfg.bg, cfg.text, 'border-current')
                 : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
@@ -386,7 +386,8 @@ export default function BayView() {
           </p>
         </div>
       ) : (
-        <div className="bg-white shadow-lg rounded-xl border border-slate-200 overflow-hidden">
+        <div className="bg-white shadow-lg rounded-xl border border-slate-200 overflow-hidden overflow-x-auto -mx-4 sm:mx-0 rounded-none sm:rounded-xl">
+          <div className="min-w-[640px]">
           {/* Time header */}
           <div className="flex border-b border-slate-200 bg-slate-50/80">
             <div className="w-24 sm:w-36 lg:w-48 shrink-0 px-2 sm:px-3 py-2.5 border-r border-slate-200">
@@ -458,6 +459,7 @@ export default function BayView() {
               </div>
             </div>
           )}
+          </div>
         </div>
       )}
 

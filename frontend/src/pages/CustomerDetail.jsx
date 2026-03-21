@@ -187,7 +187,7 @@ export default function CustomerDetail() {
       {/* Header - Dark Theme */}
       <div data-tour="custdetail-header" className="bg-gradient-to-r from-slate-800 to-slate-900 -mx-4 sm:-mx-6 px-4 pl-14 sm:px-6 lg:pl-6 py-4">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" asChild className="h-8 w-8 text-slate-400 hover:text-white hover:bg-slate-700">
+          <Button variant="ghost" size="icon" asChild className="h-10 w-10 sm:h-8 sm:w-8 text-slate-400 hover:text-white hover:bg-slate-700">
             <Link to="/customers">
               <ArrowLeft className="h-4 w-4" />
             </Link>
