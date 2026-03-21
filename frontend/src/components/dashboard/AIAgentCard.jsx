@@ -29,7 +29,7 @@ function AIAgentCard({ overview }) {
               <CardDescription className="text-slate-400 text-xs">Performance this week</CardDescription>
             </div>
           </div>
-          <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30 hover:bg-amber-500/30">
+          <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 hover:bg-blue-500/30">
             Live
           </Badge>
         </div>
@@ -39,7 +39,7 @@ function AIAgentCard({ overview }) {
         <div className="grid grid-cols-2 gap-4 mb-5">
           <div className="bg-white/5 rounded-xl p-4 border border-white/10">
             <div className="flex items-center gap-2 mb-2">
-              <Phone className="h-4 w-4 text-amber-400" />
+              <Phone className="h-4 w-4 text-blue-400" />
               <span className="text-xs text-slate-400">Calls Handled</span>
             </div>
             <p className="text-2xl font-bold text-white">
@@ -48,7 +48,7 @@ function AIAgentCard({ overview }) {
           </div>
           <div className="bg-white/5 rounded-xl p-4 border border-white/10">
             <div className="flex items-center gap-2 mb-2">
-              <CheckCircle2 className="h-4 w-4 text-amber-400" />
+              <CheckCircle2 className="h-4 w-4 text-blue-400" />
               <span className="text-xs text-slate-400">Bookings Made</span>
             </div>
             <p className="text-2xl font-bold text-white">
@@ -61,11 +61,11 @@ function AIAgentCard({ overview }) {
         <div className="mb-5">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm text-slate-400">Conversion Rate</span>
-            <span className="text-lg font-bold text-amber-400">{overview?.week?.conversion_rate ?? 0}%</span>
+            <span className="text-lg font-bold text-blue-400">{overview?.week?.conversion_rate ?? 0}%</span>
           </div>
           <div className="h-2 bg-white/10 rounded-full overflow-hidden" role="progressbar" aria-valuenow={overview?.week?.conversion_rate ?? 0} aria-valuemin={0} aria-valuemax={100} aria-label="Conversion rate">
             <div
-              className="h-full bg-gradient-to-r from-amber-500 to-amber-400 rounded-full transition-all duration-1000"
+              className="h-full bg-gradient-to-r from-blue-500 to-blue-400 rounded-full transition-all duration-1000"
               style={{ width: `${Math.min(overview?.week?.conversion_rate ?? 0, 100)}%` }}
             />
           </div>
@@ -85,7 +85,7 @@ function AIAgentCard({ overview }) {
               <Smile className="h-4 w-4 text-slate-500" />
               <span className="text-sm text-slate-400">Satisfaction</span>
             </div>
-            <span className="text-sm font-semibold text-amber-400">{overview?.week?.satisfaction ?? '94'}%</span>
+            <span className="text-sm font-semibold text-blue-400">{overview?.week?.satisfaction ?? '94'}%</span>
           </div>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
