@@ -287,7 +287,7 @@ export default function Layout() {
         </div>
 
         {/* Page content */}
-        <main id="main-content" className="px-4 sm:px-6 pt-2 pb-4 sm:pb-6 max-w-full overflow-hidden" role="main">
+        <main id="main-content" className="px-4 sm:px-6 pb-4 sm:pb-6 max-w-full overflow-hidden" role="main">
           <BreadcrumbProvider>
             <Breadcrumbs />
             <Suspense fallback={<PageLoader />}>
