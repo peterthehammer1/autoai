@@ -38,8 +38,29 @@ const Campaigns = lazyWithRetry(() => import('@/pages/Campaigns'))
 
 export function PageLoader() {
   return (
-    <div className="flex items-center justify-center h-64 opacity-0 animate-[fadeIn_0.3s_ease-in_0.15s_forwards]">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+    <div className="space-y-5 pt-4 opacity-0 animate-[fadeIn_0.3s_ease-in_0.1s_forwards]">
+      {/* Header skeleton */}
+      <div className="bg-slate-200 rounded-lg h-16 -mx-4 sm:-mx-6 animate-pulse" />
+      {/* Card grid skeleton */}
+      <div className="grid gap-5 lg:grid-cols-3">
+        <div className="lg:col-span-2 space-y-5">
+          <div className="bg-white rounded-lg border border-slate-200 h-64 animate-pulse">
+            <div className="p-5 space-y-3">
+              <div className="h-4 bg-slate-200 rounded w-1/3" />
+              <div className="h-3 bg-slate-100 rounded w-1/4" />
+              <div className="space-y-2 mt-6">
+                <div className="h-10 bg-slate-100 rounded" />
+                <div className="h-10 bg-slate-50 rounded" />
+                <div className="h-10 bg-slate-100 rounded" />
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="space-y-5">
+          <div className="bg-slate-800 rounded-lg h-48 animate-pulse" />
+          <div className="bg-white rounded-lg border border-slate-200 h-40 animate-pulse" />
+        </div>
+      </div>
     </div>
   )
 }

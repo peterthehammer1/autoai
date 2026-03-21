@@ -40,27 +40,8 @@
     --sidebar-muted: 201 25% 45%;
   }
 
-  .dark {
-    --background: 222 47% 8%;
-    --foreground: 210 20% 98%;
-    --card: 222 47% 11%;
-    --card-foreground: 210 20% 98%;
-    --popover: 222 47% 11%;
-    --popover-foreground: 210 20% 98%;
-    --primary: 213 94% 50%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 222 30% 18%;
-    --secondary-foreground: 210 20% 98%;
-    --muted: 222 30% 18%;
-    --muted-foreground: 215 16% 60%;
-    --accent: 37 91% 55%;
-    --accent-foreground: 210 20% 98%;
-    --destructive: 0 62% 40%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 222 30% 22%;
-    --input: 222 30% 22%;
-    --ring: 213 94% 50%;
-  }
+  /* Dark mode vars — disabled until a toggle is built.
+     Kept here for future use; class="dark" is never applied. */
 }
 
 @layer base {

@@ -118,33 +118,45 @@ export default function Dashboard() {
       <div className="grid gap-5 lg:grid-cols-3 lg:items-stretch min-w-0">
         {/* Left Column - 2/3 width */}
         <div className="lg:col-span-2 flex flex-col gap-5 min-w-0">
-          <TodaysSchedule
-            todayData={todayData}
-            todayLoading={todayLoading}
-            isWeekendDay={isWeekendDay}
-            statusMutation={statusMutation}
-            setRescheduleAppointment={setRescheduleAppointment}
-          />
+          <div className="animate-stagger" style={{ animationDelay: '0ms' }}>
+            <TodaysSchedule
+              todayData={todayData}
+              todayLoading={todayLoading}
+              isWeekendDay={isWeekendDay}
+              statusMutation={statusMutation}
+              setRescheduleAppointment={setRescheduleAppointment}
+            />
+          </div>
 
-          <SentimentChart callTrends={callTrends} />
+          <div className="animate-stagger" style={{ animationDelay: '150ms' }}>
+            <SentimentChart callTrends={callTrends} />
+          </div>
         </div>
 
         {/* Right Column - 1/3 width */}
         <div className="flex flex-col gap-5 min-h-0 min-w-0">
-          <AIAgentCard overview={overview} />
+          <div className="animate-stagger" style={{ animationDelay: '75ms' }}>
+            <AIAgentCard overview={overview} />
+          </div>
 
-          <RevenueGeneratedCard aiRevenue={aiRevenue} />
+          <div className="animate-stagger" style={{ animationDelay: '150ms' }}>
+            <RevenueGeneratedCard aiRevenue={aiRevenue} />
+          </div>
 
           {/* Mini Calendar - Enhanced */}
-          <Card data-tour="mini-calendar" className="shadow-lg border-0 overflow-hidden flex-1 flex flex-col">
-            <MiniCalendar />
-          </Card>
+          <div className="animate-stagger flex-1 flex flex-col" style={{ animationDelay: '225ms' }}>
+            <Card data-tour="mini-calendar" className="shadow-lg border-0 overflow-hidden flex-1 flex flex-col">
+              <MiniCalendar />
+            </Card>
+          </div>
 
         </div>
       </div>
 
       {/* AI Insights Panel */}
-      <AIInsightsPanel insightsData={insightsData} />
+      <div className="animate-stagger" style={{ animationDelay: '300ms' }}>
+        <AIInsightsPanel insightsData={insightsData} />
+      </div>
 
       {/* Reschedule Dialog */}
       <RescheduleDialog
