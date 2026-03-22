@@ -306,7 +306,7 @@ export default function Landing() {
               </Button>
               <Button asChild className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-md shadow-blue-500/25 px-6">
                 <a href="#contact">
-                  Join Waitlist
+                  Request a Demo
                 </a>
               </Button>
             </div>
@@ -385,7 +385,7 @@ export default function Landing() {
               </a>
               <Button className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 h-11" asChild>
                 <a href="#contact" onClick={() => setMobileMenuOpen(false)}>
-                  Join Waitlist
+                  Request a Demo
                 </a>
               </Button>
             </div>
@@ -405,7 +405,7 @@ export default function Landing() {
 
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-slate-900 leading-[1.1]" itemProp="name">
                 Never Miss Another Call.{' '}
-                <span className="bg-gradient-to-r from-blue-600 to-blue-500 bg-clip-text text-transparent">
+                <span className="text-blue-600">
                   Never Lose Another Booking.
                 </span>
               </h1>
@@ -581,9 +581,6 @@ export default function Landing() {
       <section id="features" className="py-24 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <Badge className="mb-4 bg-blue-100 text-blue-700 hover:bg-blue-100">
-              Platform Features
-            </Badge>
             <h2 className="text-3xl sm:text-4xl font-bold text-slate-900">
               Everything You Need to Run Your Shop
             </h2>
@@ -624,17 +621,17 @@ export default function Landing() {
       {/* "Is My Car Ready?" Spotlight */}
       <section className="py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-slate-50 to-white">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
+          <div className="mb-12 max-w-2xl">
             <Badge className="mb-4 bg-blue-100 text-blue-700 hover:bg-blue-100">
               #1 Shop Pain Point
             </Badge>
             <h2 className="text-3xl sm:text-4xl font-bold text-slate-900">
               "Is My Car Ready?" —{' '}
-              <span className="bg-gradient-to-r from-teal-600 to-emerald-600 bg-clip-text text-transparent">
+              <span className="text-blue-600">
                 Answered Instantly
               </span>
             </h2>
-            <p className="mt-4 text-lg text-slate-600 max-w-2xl mx-auto">
+            <p className="mt-4 text-lg text-slate-600">
               The average shop gets this call dozens of times a day. Amber checks the real-time
               status and gives your customer an instant answer — so your team stays focused on the work.
             </p>
@@ -987,7 +984,7 @@ export default function Landing() {
             {/* Left — copy */}
             <div className="lg:col-span-3">
               <Badge className="mb-4 bg-white/10 text-white hover:bg-white/10 border-white/20">
-                Early Access
+                Get Started
               </Badge>
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6">
                 See How Amber Works for Your Shop
@@ -1032,8 +1029,8 @@ export default function Landing() {
                   <div className="h-14 w-14 rounded-full bg-emerald-500/20 flex items-center justify-center mx-auto mb-5">
                     <CheckCircle2 className="h-7 w-7 text-emerald-400" />
                   </div>
-                  <h3 className="text-2xl font-semibold mb-2">You're on the list!</h3>
-                  <p className="text-slate-400">We'll reach out as soon as a spot opens up.</p>
+                  <h3 className="text-2xl font-semibold mb-2">Demo requested!</h3>
+                  <p className="text-slate-400">We'll be in touch within one business day.</p>
                 </div>
               ) : (
                 <form onSubmit={handleLeadSubmit} className="bg-slate-800/80 backdrop-blur rounded-2xl border border-slate-700/80 shadow-xl shadow-black/20 overflow-hidden">
@@ -1091,7 +1088,7 @@ export default function Landing() {
                       {leadStatus === 'submitting' ? (
                         <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Submitting...</>
                       ) : (
-                        <>Add Me To The Waitlist!</>
+                        <>Request a Demo</>
                       )}
                     </Button>
 
@@ -1110,9 +1107,6 @@ export default function Landing() {
       <section id="testimonials" className="py-24 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <Badge className="mb-4 bg-amber-100 text-amber-700 hover:bg-amber-100">
-              Testimonials
-            </Badge>
             <h2 className="text-3xl sm:text-4xl font-bold text-slate-900">
               Loved by Businesses Everywhere
             </h2>
@@ -1154,9 +1148,6 @@ export default function Landing() {
       <section id="faq" className="py-24 px-4 sm:px-6 lg:px-8">
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-16">
-            <Badge className="mb-4 bg-blue-100 text-blue-700 hover:bg-blue-100">
-              FAQ
-            </Badge>
             <h2 className="text-3xl sm:text-4xl font-bold text-slate-900">
               Frequently Asked Questions
             </h2>
