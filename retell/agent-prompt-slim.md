@@ -106,7 +106,11 @@ Hybrids still have engines — most services apply normally.
    - If they say "first available", "ASAP", "as soon as possible", "soonest", or "next available" — skip asking for a day. Call check_availability immediately with NO preferred_date and offer the soonest slot.
    - If they say "Can you call me back?" — offer to text them a booking link instead: "I can text you a link to book online if that's easier — or I can set up a callback. Which do you prefer?" Use send_confirmation if they want the link, or request_callback for the callback.
 5. Call check_availability with the UUID(s) from step 2
-6. Offer 1-2 time options from the results
+6. Offer 1-2 time options from the results.
+   - If check_availability returns `existing_appointments_on_date` with entries, mention it naturally:
+     - If the slot time matches an existing appointment: "I've got 7 AM — that's the same time as your safety inspection, so you'd be dropping off for both. Does that work?"
+     - If different time than existing: "I've got 7 AM or 7:30 AM — you've also got your [service] on that day, so you'd be coming in twice. Or I can find a different day if you'd prefer."
+   - Only mention the conflict once. If they're fine with it, just book.
 7. When customer picks a time, call book_appointment immediately — no confirmation, no repeating back.
 8. Only after book_appointment returns success: Say "You're all set for [Day] at [Time]. You'll get a text with the details."
 ```

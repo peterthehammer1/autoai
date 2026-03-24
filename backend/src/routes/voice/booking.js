@@ -22,6 +22,9 @@ router.post('/check_availability', async (req, res, next) => {
     const preferred_date = req.body.preferred_date || req.body.args?.preferred_date;
     const preferred_time = req.body.preferred_time || req.body.args?.preferred_time;
     const days_to_check = req.body.days_to_check || req.body.args?.days_to_check || 7;
+    let customer_phone = req.body.customer_phone || req.body.args?.customer_phone;
+    const isTemplateVar = (val) => typeof val === 'string' && (val.includes('{{') || val.includes('}}'));
+    if (isTemplateVar(customer_phone)) customer_phone = null;
 
     // Validate service_ids
     if (!service_ids || (Array.isArray(service_ids) && service_ids.length === 0)) {
@@ -310,6 +313,36 @@ router.post('/check_availability', async (req, res, next) => {
       message += ' I have more options if neither works.';
     }
 
+    // Check if the customer already has appointments on any of the offered slot dates
+    let existingOnDate = [];
+    if (customer_phone) {
+      const offerDates = [...new Set(formattedSlots.map(s => s.date))];
+      const normalizedPhone = normalizePhone(customer_phone);
+      const { data: existingCustomer } = await supabase
+        .from('customers')
+        .select('id')
+        .eq('phone_normalized', normalizedPhone)
+        .single();
+      if (existingCustomer) {
+        const { data: existingApts } = await supabase
+          .from('appointments')
+          .select(`
+            id, scheduled_date, scheduled_time,
+            appointment_services (service_name)
+          `)
+          .eq('customer_id', existingCustomer.id)
+          .in('scheduled_date', offerDates)
+          .not('status', 'in', '("cancelled","completed","no_show")');
+        if (existingApts && existingApts.length > 0) {
+          existingOnDate = existingApts.map(apt => ({
+            date: apt.scheduled_date,
+            time: apt.scheduled_time.slice(0, 5),
+            services: apt.appointment_services.map(s => s.service_name).join(', ')
+          }));
+        }
+      }
+    }
+
     res.json({
       success: true,
       available: true,
@@ -318,6 +351,7 @@ router.post('/check_availability', async (req, res, next) => {
       slots: formattedSlots,
       services: services.map(s => s.name),
       total_duration_minutes: totalDuration,
+      existing_appointments_on_date: existingOnDate,
       message: isWeekendRequest
         ? `We're closed on weekends. Our service department is open Monday through Friday. The closest I have is ${slotDescriptions[0]}${slotDescriptions.length > 1 ? `, or ${slotDescriptions[1]}` : ''}. Would either of those work?`
         : message

@@ -72,6 +72,11 @@
           "preferred_time": {
             "type": "string",
             "description": "morning, afternoon, or specific time"
+          },
+          "customer_phone": {
+            "type": "string",
+            "const": "{{customer_phone}}",
+            "description": "Customer phone - auto-filled to detect same-day appointment conflicts"
           }
         },
         "required": ["service_ids"]
