@@ -26,7 +26,12 @@ function AnimatedNumber({ value, prefix = '', suffix = '', duration = 1000 }) {
 
   return (
     <span>
-      {prefix}{Math.round(displayValue).toLocaleString()}{suffix}
+      <span aria-hidden="true">
+        {prefix}{Math.round(displayValue).toLocaleString()}{suffix}
+      </span>
+      <span className="sr-only" aria-live="polite" aria-atomic="true">
+        {prefix}{numericValue.toLocaleString()}{suffix}
+      </span>
     </span>
   )
 }

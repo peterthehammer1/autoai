@@ -58,7 +58,14 @@ function StatCard({ title, value, change, changeLabel, icon: Icon, iconColor, ic
               <div className="h-6 w-16 bg-slate-100 animate-pulse rounded" />
             ) : (
               <p className="text-lg sm:text-xl font-bold text-slate-900 truncate">
-                {prefix}{animateValue && typeof value === 'number' ? animatedNum.toLocaleString() : (typeof value === 'number' ? value.toLocaleString() : value)}{suffix}
+                {animateValue && typeof value === 'number' ? (
+                  <>
+                    <span aria-hidden="true">{prefix}{animatedNum.toLocaleString()}{suffix}</span>
+                    <span className="sr-only" aria-live="polite" aria-atomic="true">{prefix}{value.toLocaleString()}{suffix}</span>
+                  </>
+                ) : (
+                  <>{prefix}{typeof value === 'number' ? value.toLocaleString() : value}{suffix}</>
+                )}
               </p>
             )}
             {change !== undefined && change !== null && (
@@ -74,7 +81,14 @@ function StatCard({ title, value, change, changeLabel, icon: Icon, iconColor, ic
             )}
             {targetPercent !== null && (
               <div className="mt-2">
-                <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                <div
+                  role="progressbar"
+                  aria-valuenow={Math.min(targetPercent, 100)}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-label={`${title}: ${targetPercent}% of target`}
+                  className="h-1.5 rounded-full bg-slate-100 overflow-hidden"
+                >
                   <div
                     className={cn(
                       "h-full rounded-full transition-all",
@@ -84,7 +98,7 @@ function StatCard({ title, value, change, changeLabel, icon: Icon, iconColor, ic
                     style={{ width: `${Math.min(targetPercent, 100)}%` }}
                   />
                 </div>
-                <p className="text-xs text-slate-400 mt-0.5">{targetPercent}% of target</p>
+                <p className="text-xs text-slate-400 mt-0.5" aria-hidden="true">{targetPercent}% of target</p>
               </div>
             )}
           </div>

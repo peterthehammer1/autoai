@@ -87,7 +87,7 @@
   a:focus-visible,
   button:focus-visible,
   [role="button"]:focus-visible {
-    @apply outline-2 outline-offset-2 outline-blue-600;
+    @apply outline-2 outline-offset-2 outline-primary;
   }
 
   /* Thin scrollbar on mobile — visible but unobtrusive */
@@ -140,22 +140,22 @@
 
   /* Premier Auto gradient - based on sidebar teal */
   .gradient-primary {
-    background: linear-gradient(135deg, #0a3a54 0%, #082438 100%);
+    background: linear-gradient(135deg, theme('colors.teal.DEFAULT') 0%, theme('colors.teal.dark') 100%);
   }
 
   .gradient-header {
-    background: linear-gradient(90deg, #082438 0%, #0d4a6a 100%);
+    background: linear-gradient(90deg, theme('colors.teal.dark') 0%, theme('colors.teal.medium') 100%);
   }
 
   /* Professional stat card backgrounds - differentiated */
   .stat-blue {
     background: linear-gradient(135deg, #f0f4f8 0%, #e8eef4 100%);
-    border-left: 3px solid #082438;
+    border-left: 3px solid theme('colors.teal.dark');
   }
 
   .stat-green {
     background: linear-gradient(135deg, #f0faf4 0%, #e6f7ed 100%);
-    border-left: 3px solid #059669;
+    border-left: 3px solid theme('colors.emerald.dark');
   }
 
   .stat-purple {
@@ -165,7 +165,7 @@
 
   .stat-slate-blue {
     background: linear-gradient(135deg, #fef9ee 0%, #fef3cd 100%);
-    border-left: 3px solid #d97706;
+    border-left: 3px solid theme('colors.amber.dark');
   }
 
   .stat-slate {
@@ -289,7 +289,7 @@
 .dashboard-tour-popover .driver-popover-title {
   font-size: 15px !important;
   font-weight: 600 !important;
-  color: #082438 !important;
+  color: hsl(var(--primary)) !important;
   font-family: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif !important;
 }
 
@@ -307,7 +307,7 @@
 }
 
 .dashboard-tour-popover .driver-popover-next-btn {
-  background-color: #082438 !important;
+  background-color: hsl(var(--primary)) !important;
   color: #fff !important;
   border: none !important;
   border-radius: 0.5rem !important;
@@ -319,12 +319,12 @@
 }
 
 .dashboard-tour-popover .driver-popover-next-btn:hover {
-  background-color: #0a3a54 !important;
+  background-color: hsl(var(--sidebar-light)) !important;
 }
 
 .dashboard-tour-popover .driver-popover-prev-btn {
   background-color: transparent !important;
-  color: #082438 !important;
+  color: hsl(var(--primary)) !important;
   border: 1px solid hsl(201 15% 88%) !important;
   border-radius: 0.5rem !important;
   font-size: 13px !important;

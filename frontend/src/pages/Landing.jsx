@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -264,6 +264,31 @@ export default function Landing() {
   const [leadStatus, setLeadStatus] = useState('idle') // idle | submitting | success | error
   const [leadError, setLeadError] = useState('')
   const [openFaq, setOpenFaq] = useState(null)
+  const [showAllFeatures, setShowAllFeatures] = useState(false)
+  const mobilePanelRef = useRef(null)
+
+  // Focus trap for mobile menu
+  useEffect(() => {
+    if (!mobileMenuOpen) return
+    const panel = mobilePanelRef.current
+    if (!panel) return
+    const focusableSelectors = 'a[href], button:not([disabled]), input, [tabindex]:not([tabindex="-1"])'
+    const focusable = [...panel.querySelectorAll(focusableSelectors)]
+    if (focusable.length) focusable[0].focus()
+    function handleKeyDown(e) {
+      if (e.key === 'Escape') { setMobileMenuOpen(false); return }
+      if (e.key !== 'Tab') return
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      if (e.shiftKey) {
+        if (document.activeElement === first) { e.preventDefault(); last.focus() }
+      } else {
+        if (document.activeElement === last) { e.preventDefault(); first.focus() }
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [mobileMenuOpen])
 
   async function handleLeadSubmit(e) {
     e.preventDefault()
@@ -283,7 +308,7 @@ export default function Landing() {
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-xl shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center h-16 sm:h-18">
+          <div className="flex items-center h-16 sm:h-20">
             <a href="/" className="shrink-0 mr-8">
               <img src="/logo-light.png" alt="Premier Auto Service" width="256" height="256" className="h-12 sm:h-14 object-contain" />
             </a>
@@ -304,7 +329,7 @@ export default function Landing() {
               <Button variant="ghost" size="sm" asChild className="text-slate-600 hover:text-slate-900">
                 <Link to="/dashboard">Dashboard</Link>
               </Button>
-              <Button asChild className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-md shadow-blue-500/25 px-6">
+              <Button asChild className="bg-primary hover:bg-teal text-white shadow-sm shadow-primary/20 px-6">
                 <a href="#contact">
                   Request a Demo
                 </a>
@@ -312,7 +337,7 @@ export default function Landing() {
             </div>
 
             <button
-              className="lg:hidden p-2 rounded-lg hover:bg-slate-100"
+              className="lg:hidden p-2.5 rounded-lg hover:bg-slate-100"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
             >
@@ -335,15 +360,18 @@ export default function Landing() {
             onClick={() => setMobileMenuOpen(false)}
           />
           {/* Panel */}
-          <div className={cn(
-            "absolute top-0 right-0 h-full w-72 bg-white shadow-2xl transition-transform duration-300 ease-out flex flex-col",
-            mobileMenuOpen ? "translate-x-0" : "translate-x-full"
-          )}>
+          <div
+            ref={mobilePanelRef}
+            className={cn(
+              "absolute top-0 right-0 h-full w-72 bg-white shadow-2xl transition-transform duration-300 ease-out flex flex-col",
+              mobileMenuOpen ? "translate-x-0" : "translate-x-full"
+            )}
+          >
             <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
               <span className="text-sm font-semibold text-slate-900 uppercase tracking-wide">Menu</span>
               <button
                 onClick={() => setMobileMenuOpen(false)}
-                className="p-2 rounded-lg hover:bg-slate-100 transition-colors"
+                className="p-3 rounded-lg hover:bg-slate-100 transition-colors"
                 aria-label="Close menu"
               >
                 <X className="h-5 w-5 text-slate-500" />
@@ -383,7 +411,7 @@ export default function Landing() {
                 <Phone className="h-4 w-4" />
                 (647) 371-1990
               </a>
-              <Button className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 h-11" asChild>
+              <Button className="w-full bg-primary hover:bg-teal text-white h-11" asChild>
                 <a href="#contact" onClick={() => setMobileMenuOpen(false)}>
                   Request a Demo
                 </a>
@@ -394,18 +422,18 @@ export default function Landing() {
       </nav>
 
       {/* Hero */}
-      <section className="pt-28 sm:pt-32 pb-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
+      <section id="main-content" className="pt-28 sm:pt-32 pb-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="text-center lg:text-left">
-              <Badge className="mb-4 bg-blue-100 text-blue-700 hover:bg-blue-100 px-4 py-1.5 font-medium">
+              <Badge className="mb-4 bg-secondary text-primary hover:bg-secondary px-4 py-1.5 font-medium">
                 <Sparkles className="h-3.5 w-3.5 mr-1.5" />
                 AI-Powered Receptionist for Auto Shops
               </Badge>
 
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-slate-900 leading-[1.1]" itemProp="name">
                 Never Miss Another Call.{' '}
-                <span className="text-blue-600">
+                <span className="text-info">
                   Never Lose Another Booking.
                 </span>
               </h1>
@@ -417,7 +445,7 @@ export default function Landing() {
               </p>
 
               <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                <Button size="lg" className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-base sm:text-lg px-6 sm:px-8 h-12 sm:h-14" asChild>
+                <Button size="lg" className="bg-primary hover:bg-teal text-white text-base sm:text-lg px-6 sm:px-8 h-12 sm:h-14" asChild>
                   <a href="#contact">
                     Request a Demo
                   </a>
@@ -431,7 +459,7 @@ export default function Landing() {
                 </Button>
               </div>
               <div className="mt-4 text-center lg:text-left">
-                <Link to="/dashboard" className="text-sm text-blue-600 hover:text-blue-700 font-medium inline-flex items-center gap-1 transition-colors">
+                <Link to="/dashboard" className="text-sm text-info hover:text-primary font-medium inline-flex items-center gap-1 transition-colors">
                   Explore the live dashboard <ArrowRight className="h-4 w-4" />
                 </Link>
               </div>
@@ -454,9 +482,9 @@ export default function Landing() {
 
             {/* Dashboard preview */}
             <div className="relative" role="img" aria-label="Premier Auto Service dashboard showing today's schedule, AI agent status, and key metrics like 15+ hours saved per week, 30% more bookings captured, and 24/7 after-hours coverage">
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-slate-500/10 rounded-3xl blur-3xl scale-110" />
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-slate-500/10 rounded-3xl blur-3xl scale-110" />
               <div className="relative bg-slate-900 rounded-2xl shadow-[0_20px_60px_-15px_rgba(8,36,56,0.5)] overflow-hidden border border-slate-700/80 sm:rotate-[-1deg] sm:hover:rotate-0 transition-transform duration-500">
-                <div className="bg-gradient-to-r from-[#082438] to-[#0d4a6a] px-4 py-3 border-b border-white/10">
+                <div className="bg-gradient-to-r from-teal-dark to-teal-medium px-4 py-3 border-b border-white/10">
                   <div className="flex items-center gap-2">
                     <div className="h-6 w-6 rounded-md bg-white/10 flex items-center justify-center">
                       <BarChart3 className="h-3.5 w-3.5 text-blue-300" />
@@ -532,47 +560,7 @@ export default function Landing() {
                 </div>
               </div>
 
-              <div className="absolute -top-4 -right-4 bg-white rounded-xl shadow-lg p-4 border border-slate-200 animate-float hidden sm:block">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-emerald-100 flex items-center justify-center">
-                    <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-slate-900">Appointment Booked!</p>
-                    <p className="text-xs text-slate-500">Oil change - Tomorrow 9 AM</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="absolute -bottom-4 -left-4 bg-white rounded-xl shadow-lg p-4 border border-slate-200 animate-float-delayed hidden sm:block">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-amber-100 flex items-center justify-center">
-                    <Mic className="h-5 w-5 text-amber-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-slate-900">Amber is speaking...</p>
-                    <p className="text-xs text-slate-500">"I have 9 AM available..."</p>
-                  </div>
-                </div>
-              </div>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Stats */}
-      <section className="py-16 bg-slate-50 border-y border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {stats.map((stat, i) => (
-              <div key={i} className="text-center">
-                <div className="inline-flex items-center justify-center h-12 w-12 rounded-xl bg-teal-100 text-teal-700 mb-4">
-                  <stat.icon className="h-6 w-6" />
-                </div>
-                <p className="text-3xl sm:text-4xl font-bold text-slate-900">{stat.value}</p>
-                <p className="text-sm text-slate-600 mt-1">{stat.label}</p>
-              </div>
-            ))}
           </div>
         </div>
       </section>
@@ -591,7 +579,7 @@ export default function Landing() {
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {features.map((feature, i) => (
+            {(showAllFeatures ? features : features.slice(0, 6)).map((feature, i) => (
               <div
                 key={i}
                 className="group relative bg-white rounded-2xl p-8 border border-slate-200 hover:border-slate-300 hover:shadow-lg transition-all duration-300"
@@ -615,6 +603,18 @@ export default function Landing() {
               </div>
             ))}
           </div>
+
+          {!showAllFeatures && (
+            <div className="mt-12 text-center">
+              <button
+                onClick={() => setShowAllFeatures(true)}
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-lg border border-slate-200 bg-white text-slate-600 text-sm font-medium hover:border-slate-300 hover:text-slate-900 hover:shadow-sm transition-all"
+              >
+                See all {features.length} features
+                <ChevronDown className="h-4 w-4" aria-hidden="true" />
+              </button>
+            </div>
+          )}
         </div>
       </section>
 
@@ -622,12 +622,12 @@ export default function Landing() {
       <section className="py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-slate-50 to-white">
         <div className="max-w-7xl mx-auto">
           <div className="mb-12 max-w-2xl">
-            <Badge className="mb-4 bg-blue-100 text-blue-700 hover:bg-blue-100">
+            <Badge className="mb-4 bg-secondary text-primary hover:bg-secondary">
               #1 Shop Pain Point
             </Badge>
             <h2 className="text-3xl sm:text-4xl font-bold text-slate-900">
               "Is My Car Ready?" —{' '}
-              <span className="text-blue-600">
+              <span className="text-info">
                 Answered Instantly
               </span>
             </h2>
@@ -842,7 +842,7 @@ export default function Landing() {
               <div className="grid sm:grid-cols-2 gap-4">
                 {capabilities.map((cap, i) => (
                   <div key={i} className="flex items-center gap-3 bg-white/5 rounded-lg p-4 border border-white/10">
-                    <cap.icon className="h-5 w-5 text-blue-400 shrink-0" />
+                    <cap.icon className="h-5 w-5 text-emerald-400 shrink-0" />
                     <span className="text-slate-300 text-sm">{cap.text}</span>
                   </div>
                 ))}
@@ -1048,7 +1048,7 @@ export default function Landing() {
                         required
                         value={leadForm.name}
                         onChange={e => setLeadForm(f => ({ ...f, name: e.target.value }))}
-                        className="w-full px-3.5 py-2.5 rounded-lg bg-slate-700/40 border border-slate-600/80 text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
+                        className="w-full px-3.5 py-2.5 rounded-lg bg-slate-700/40 border border-slate-600/80 text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                       />
                     </div>
                     <div>
@@ -1060,7 +1060,7 @@ export default function Landing() {
                         required
                         value={leadForm.email}
                         onChange={e => setLeadForm(f => ({ ...f, email: e.target.value }))}
-                        className="w-full px-3.5 py-2.5 rounded-lg bg-slate-700/40 border border-slate-600/80 text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
+                        className="w-full px-3.5 py-2.5 rounded-lg bg-slate-700/40 border border-slate-600/80 text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                       />
                     </div>
                     <div>
@@ -1071,19 +1071,19 @@ export default function Landing() {
                         placeholder="(555) 123-4567"
                         value={leadForm.phone}
                         onChange={e => setLeadForm(f => ({ ...f, phone: e.target.value }))}
-                        className="w-full px-3.5 py-2.5 rounded-lg bg-slate-700/40 border border-slate-600/80 text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
+                        className="w-full px-3.5 py-2.5 rounded-lg bg-slate-700/40 border border-slate-600/80 text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                       />
                     </div>
 
                     {leadError && (
-                      <p className="text-sm text-red-400">{leadError}</p>
+                      <p className="text-sm text-red-400" role="alert">{leadError}</p>
                     )}
 
                     <Button
                       type="submit"
                       size="lg"
                       disabled={leadStatus === 'submitting'}
-                      className="w-full bg-blue-600 hover:bg-blue-500 text-white h-11 text-sm font-semibold mt-1"
+                      className="w-full bg-primary hover:bg-teal text-white h-11 text-sm font-semibold mt-1"
                     >
                       {leadStatus === 'submitting' ? (
                         <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Submitting...</>
@@ -1121,9 +1121,9 @@ export default function Landing() {
                 key={i}
                 className="bg-white rounded-2xl p-8 border border-slate-200 hover:shadow-lg transition-shadow"
               >
-                <div className="flex gap-1 mb-4">
+                <div className="flex gap-1 mb-4" role="img" aria-label={`${testimonial.rating} out of 5 stars`}>
                   {[...Array(testimonial.rating)].map((_, j) => (
-                    <Star key={j} className="h-5 w-5 fill-amber-400 text-amber-400" />
+                    <Star key={j} className="h-5 w-5 fill-amber-400 text-amber-400" aria-hidden="true" />
                   ))}
                 </div>
                 <p className="text-slate-700 mb-6 leading-relaxed text-lg">
@@ -1161,17 +1161,19 @@ export default function Landing() {
               <div key={i}>
                 <button
                   onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                  aria-expanded={openFaq === i}
+                  aria-controls={`faq-answer-${i}`}
                   className="flex w-full items-center justify-between py-5 text-left"
                 >
                   <span className="text-lg font-medium text-slate-900 pr-4">{faq.question}</span>
                   <ChevronDown className={cn(
                     "h-5 w-5 text-slate-500 shrink-0 transition-transform duration-200",
                     openFaq === i && "rotate-180"
-                  )} />
+                  )} aria-hidden="true" />
                 </button>
-                {openFaq === i && (
+                <div id={`faq-answer-${i}`} hidden={openFaq !== i}>
                   <p className="pb-5 text-slate-600 leading-relaxed">{faq.answer}</p>
-                )}
+                </div>
               </div>
             ))}
           </div>
@@ -1191,11 +1193,11 @@ export default function Landing() {
                 books appointments, and keeps your schedule full.
               </p>
               <div className="flex items-center gap-6">
-                <a href="tel:+17164122499" className="flex items-center gap-2 text-white hover:text-blue-400 transition-colors text-sm">
+                <a href="tel:+17164122499" className="flex items-center gap-2 text-white hover:text-white transition-colors text-sm">
                   <Phone className="h-4 w-4" />
                   (716) 412-2499
                 </a>
-                <a href="tel:+16473711990" className="flex items-center gap-2 text-white hover:text-blue-400 transition-colors text-sm">
+                <a href="tel:+16473711990" className="flex items-center gap-2 text-white hover:text-white transition-colors text-sm">
                   <Phone className="h-4 w-4" />
                   (647) 371-1990
                 </a>
@@ -1217,12 +1219,12 @@ export default function Landing() {
               <h4 className="font-semibold text-white mb-4">Contact</h4>
               <ul className="space-y-3">
                 <li className="flex items-center gap-2">
-                  <Phone className="h-4 w-4 shrink-0" />
-                  (647) 371-1990
+                  <Phone className="h-4 w-4 shrink-0" aria-hidden="true" />
+                  <a href="tel:+16473711990" className="hover:text-white transition-colors">(647) 371-1990</a>
                 </li>
                 <li className="flex items-center gap-2">
-                  <MessageSquare className="h-4 w-4 shrink-0" />
-                  service@premierauto.ai
+                  <MessageSquare className="h-4 w-4 shrink-0" aria-hidden="true" />
+                  <a href="mailto:service@premierauto.ai" className="hover:text-white transition-colors">service@premierauto.ai</a>
                 </li>
                 <li className="flex items-start gap-2">
                   <Car className="h-4 w-4 mt-0.5 shrink-0" />

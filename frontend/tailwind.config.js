@@ -58,6 +58,7 @@ export default {
           lighter: "hsl(var(--sidebar-lighter))",
           muted: "hsl(var(--sidebar-muted))",
         },
+        info: "hsl(var(--info))",
         teal: {
           dark: "#082438",
           DEFAULT: "#0a3a54",

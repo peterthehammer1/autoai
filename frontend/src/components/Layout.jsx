@@ -1,4 +1,4 @@
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect, useRef, Suspense } from 'react'
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom'
 import { PageLoader } from '@/App'
 import { cn } from '@/lib/utils'
@@ -52,6 +52,7 @@ export default function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const location = useLocation()
+  const mobileSidebarRef = useRef(null)
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -63,6 +64,29 @@ export default function Layout() {
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [])
+
+  // Focus trap for mobile sidebar
+  useEffect(() => {
+    if (!sidebarOpen) return
+    const sidebar = mobileSidebarRef.current
+    if (!sidebar) return
+    const focusableSelectors = 'a[href], button:not([disabled]), input, [tabindex]:not([tabindex="-1"])'
+    const focusable = [...sidebar.querySelectorAll(focusableSelectors)]
+    if (focusable.length) focusable[0].focus()
+    function handleKeyDown(e) {
+      if (e.key === 'Escape') { setSidebarOpen(false); return }
+      if (e.key !== 'Tab') return
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      if (e.shiftKey) {
+        if (document.activeElement === first) { e.preventDefault(); last.focus() }
+      } else {
+        if (document.activeElement === last) { e.preventDefault(); first.focus() }
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [sidebarOpen])
 
   const isActive = (href) =>
     location.pathname === href || location.pathname.startsWith(href + '/')
@@ -83,18 +107,21 @@ export default function Layout() {
         />
         
         {/* Mobile sidebar */}
-        <div className={cn(
-          'fixed inset-y-0 left-0 w-72 max-w-[85vw] shadow-xl transition-transform duration-300 ease-out bg-sidebar',
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        )}>
+        <div
+          ref={mobileSidebarRef}
+          className={cn(
+            'fixed inset-y-0 left-0 w-72 max-w-[85vw] shadow-xl transition-transform duration-300 ease-out bg-sidebar',
+            sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+          )}
+        >
           <div className="flex h-20 items-center justify-between px-2 overflow-hidden">
             <div className="h-20 w-56 overflow-hidden flex items-center justify-center">
-              <img src="/logo-dark.png" alt="Premier Auto Service" className="w-56 scale-[1.4]" />
+              <img src="/logo.svg" alt="Premier Auto Service" className="w-56 scale-[1.4]" />
             </div>
             <Button
               variant="ghost"
               size="icon"
-              className="h-10 w-10 text-slate-400 hover:text-white hover:bg-slate-800"
+              className="h-11 w-11 text-slate-400 hover:text-white hover:bg-slate-800"
               onClick={() => setSidebarOpen(false)}
               aria-label="Close menu"
             >
@@ -105,7 +132,7 @@ export default function Layout() {
             {/* Mobile search trigger */}
             <button
               onClick={() => { setSidebarOpen(false); setSearchOpen(true) }}
-              className="flex items-center gap-3 rounded-lg px-3 py-2.5 mb-2 text-sm text-slate-500 bg-slate-800/60 border border-slate-700/50 hover:bg-slate-800 hover:text-slate-300 transition-colors"
+              className="flex items-center gap-3 rounded-lg px-3 py-2.5 mb-2 min-h-[44px] text-sm text-slate-500 bg-slate-800/60 border border-slate-700/50 hover:bg-slate-800 hover:text-slate-300 transition-colors"
             >
               <Search className="h-4 w-4" />
               <span className="flex-1 text-left">Search...</span>
@@ -174,7 +201,7 @@ export default function Layout() {
         <div className="flex flex-col flex-grow bg-sidebar">
           {/* Logo - scaled to show full logo while minimizing extra background */}
           <div className="h-20 overflow-hidden flex items-center justify-center">
-            <img src="/logo-dark.png" alt="Premier Auto Service" className="w-56 scale-100 lg:scale-[1.4]" />
+            <img src="/logo.svg" alt="Premier Auto Service" className="w-56 scale-100 lg:scale-[1.4]" />
           </div>
           
           {/* Navigation */}
