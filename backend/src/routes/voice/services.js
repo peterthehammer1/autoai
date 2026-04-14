@@ -136,10 +136,27 @@ router.post('/get_services', async (req, res, next) => {
     let normalizedSearch = search;
     if (search) {
       const searchLower = search.toLowerCase().trim();
-      for (const [synonym, replacement] of Object.entries(synonymMap)) {
-        if (searchLower.includes(synonym)) {
-          normalizedSearch = replacement;
-          break;
+
+      // Oil-change subtype narrowing: must run BEFORE the generic synonym map
+      // collapses any "oil change" phrase to "Oil Change" (which returns all 3 types)
+      const oilSubtypeMap = [
+        { match: 'full synthetic', name: 'Full Synthetic Oil Change' },
+        { match: 'synthetic blend', name: 'Synthetic Blend Oil Change' },
+        { match: 'high mileage', name: 'High Mileage Oil Change' },
+        { match: 'diesel', name: 'Diesel Oil Change' },
+        { match: 'conventional', name: 'Conventional Oil Change' },
+      ];
+      const oilSubtype = oilSubtypeMap.find(o => searchLower.includes(o.match));
+      const mentionsOil = /\boil\b/.test(searchLower);
+
+      if (oilSubtype && mentionsOil) {
+        normalizedSearch = oilSubtype.name;
+      } else {
+        for (const [synonym, replacement] of Object.entries(synonymMap)) {
+          if (searchLower.includes(synonym)) {
+            normalizedSearch = replacement;
+            break;
+          }
         }
       }
     }

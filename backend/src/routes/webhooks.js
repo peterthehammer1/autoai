@@ -687,6 +687,32 @@ async function handleCallAnalyzed(call) {
 }
 
 /**
+ * POST /api/webhooks/twilio/status
+ * Twilio delivery status callback — updates sms_logs with actual delivery outcome.
+ * Fires for each status transition (queued → sent → delivered | undelivered | failed).
+ */
+router.post('/twilio/status', async (req, res) => {
+  try {
+    const { MessageSid, MessageStatus, ErrorCode, ErrorMessage } = req.body || {};
+    if (MessageSid && MessageStatus) {
+      const update = { status: MessageStatus };
+      if (ErrorCode || ErrorMessage) {
+        update.error_message = ErrorCode ? `Twilio ${ErrorCode}: ${ErrorMessage || ''}`.trim() : ErrorMessage;
+      }
+      await supabase.from('sms_logs').update(update).eq('twilio_sid', MessageSid);
+
+      if (MessageStatus === 'failed' || MessageStatus === 'undelivered') {
+        logger.warn('[SMS] Delivery failed', { sid: MessageSid, status: MessageStatus, errorCode: ErrorCode });
+      }
+    }
+    res.sendStatus(204);
+  } catch (error) {
+    logger.error('Twilio status callback error', { error });
+    res.sendStatus(204);
+  }
+});
+
+/**
  * POST /api/webhooks/twilio/sms
  * Handle inbound SMS (STOP opt-out only — conversational replies handled by Amber chat agent)
  */

@@ -1514,7 +1514,14 @@ router.post('/send_confirmation', async (req, res, next) => {
     if (result.success) {
       return res.json({
         success: true,
-        message: 'I\'ve sent you a confirmation text with all the details.'
+        message: 'The confirmation text is on its way — you should see it within a minute.'
+      });
+    } else if (result.blocked) {
+      // Test mode allowlist blocked the send — surface to the agent so it doesn't claim success
+      return res.json({
+        success: false,
+        message: 'I wasn\'t able to send the text right now — this number isn\'t set up to receive our messages in the current mode. Your appointment is still confirmed.',
+        error_detail: result.error
       });
     } else {
       const payload = {

@@ -17,6 +17,20 @@ if (accountSid && authToken && accountSid !== 'your-account-sid') {
   twilioClient = twilio(accountSid, authToken);
 }
 
+// TEST MODE: if SMS_TEST_ALLOWLIST is set, only send to those numbers (comma-separated E.164)
+// Intent: prevent accidental sends to real customers during client/demo testing.
+const TEST_ALLOWLIST = process.env.SMS_TEST_ALLOWLIST
+  ? process.env.SMS_TEST_ALLOWLIST.split(',')
+      .map(n => n.trim().replace(/\D/g, ''))
+      .filter(Boolean)
+  : null;
+
+function isAllowlisted(formattedTo) {
+  if (!TEST_ALLOWLIST) return true;
+  const digits = formattedTo.replace(/\D/g, '');
+  return TEST_ALLOWLIST.some(n => digits.endsWith(n));
+}
+
 /**
  * Log SMS to database
  */
@@ -75,28 +89,52 @@ export async function sendSMS(to, body, options = {}) {
     return { success: false, error: 'Twilio not configured' };
   }
 
+  // Block sends outside the test allowlist when SMS_TEST_ALLOWLIST is set
+  if (!isAllowlisted(formattedTo)) {
+    logger.info('[SMS] Blocked by test allowlist', { to: formattedTo });
+    await logSMS({
+      toPhone: formattedTo,
+      body,
+      messageType,
+      status: 'blocked',
+      errorMessage: 'test mode: number not in SMS_TEST_ALLOWLIST',
+      customerId,
+      appointmentId,
+      workOrderId
+    });
+    return { success: false, error: 'test mode: number not in allowlist', blocked: true };
+  }
+
   try {
-    const message = await twilioClient.messages.create({
+    // Status callback lets Twilio notify us when delivery actually completes/fails
+    const publicUrl = process.env.PUBLIC_API_URL
+      || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null);
+    const createParams = {
       body,
       from: fromNumber,
-      to: formattedTo
-    });
+      to: formattedTo,
+    };
+    if (publicUrl) {
+      createParams.statusCallback = `${publicUrl}/api/webhooks/twilio/status`;
+    }
 
-    logger.info('[SMS] Sent successfully', { sid: message.sid });
+    const message = await twilioClient.messages.create(createParams);
 
-    // Log successful SMS
+    logger.info('[SMS] Accepted by Twilio', { sid: message.sid, status: message.status });
+
+    // Log with real Twilio status (queued/accepted/sending) — final status arrives via webhook
     await logSMS({
       toPhone: formattedTo,
       body,
       messageType,
       twilioSid: message.sid,
-      status: 'sent',
+      status: message.status || 'queued',
       customerId,
       appointmentId,
       workOrderId
     });
 
-    return { success: true, messageId: message.sid };
+    return { success: true, messageId: message.sid, status: message.status };
   } catch (error) {
     logger.error('[SMS] Error sending', { error });
 
