@@ -13,6 +13,7 @@ dotenv.config();
 import customerRoutes from './routes/customers.js';
 import serviceRoutes from './routes/services.js';
 import appointmentRoutes from './routes/appointments.js';
+import invoiceRoutes from './routes/invoices.js';
 import availabilityRoutes from './routes/availability.js';
 import webhookRoutes from './routes/webhooks.js';
 import analyticsRoutes from './routes/analytics.js';
@@ -149,6 +150,7 @@ app.get('/health', async (req, res) => {
 app.use('/api/customers', generalLimiter, requireApiKey, customerRoutes);
 app.use('/api/services', generalLimiter, requireApiKey, serviceRoutes);
 app.use('/api/appointments', bookingLimiter, requireApiKey, appointmentRoutes);
+app.use('/api/invoices', generalLimiter, requireApiKey, invoiceRoutes);
 app.use('/api/availability', generalLimiter, requireApiKey, availabilityRoutes);
 app.use('/api/analytics', generalLimiter, requireApiKey, analyticsRoutes);
 app.use('/api/call-logs', generalLimiter, requireApiKey, callLogRoutes);
