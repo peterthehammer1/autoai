@@ -348,6 +348,25 @@ router.patch('/:id', async (req, res, next) => {
       }
     }
 
+    // Auto-generate invoice when WO transitions to 'invoiced'. Idempotent
+    // (one invoice per WO enforced by unique index); silent no-op if already
+    // generated. Runs before SMS so a downstream SMS can reference the
+    // invoice number eventually.
+    if (updates.status === 'invoiced') {
+      try {
+        const { generateInvoiceFromWorkOrder } = await import('./invoices.js');
+        const inv = await generateInvoiceFromWorkOrder(id);
+        if (inv && !inv.already_existed) {
+          logger.info('[WO → Invoice] Auto-generated on status=invoiced', {
+            work_order_id: id, invoice_number: inv.invoice_number, total_cents: inv.total_cents
+          });
+        }
+      } catch (invErr) {
+        // Non-blocking — the WO status change still succeeds.
+        logger.error('[WO → Invoice] Auto-generation failed', { error: invErr.message, work_order_id: id });
+      }
+    }
+
     // Auto-SMS on key status transitions
     const SMS_TRIGGERS = ['sent_to_customer', 'in_progress', 'completed', 'invoiced'];
     if (updates.status && SMS_TRIGGERS.includes(updates.status) && fullWO.customer?.phone) {

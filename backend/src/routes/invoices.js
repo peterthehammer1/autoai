@@ -191,11 +191,118 @@ router.post('/generate/:appointmentId', async (req, res, next) => {
   }
 });
 
+// ─── Generate Invoice from Work Order ──────────────────────────────────────
+//
+// Work orders carry richer line items than appointments (parts, fees,
+// discounts — not just services). When a WO is finalized, we generate an
+// invoice that mirrors its line items exactly rather than walking back to
+// the originating appointment_services. Also called automatically by the
+// WO PATCH handler when status transitions to 'invoiced'.
+
+export async function generateInvoiceFromWorkOrder(workOrderId, { createdBy = null } = {}) {
+  const { data: wo, error: woErr } = await supabase
+    .from('work_orders')
+    .select(`
+      id, status, appointment_id, customer_id, vehicle_id, tax_rate, notes, internal_notes,
+      customer:customers (id, first_name, last_name, phone, email,
+        address_line1, address_line2, city, province, postal_code, is_tax_exempt),
+      vehicle:vehicles (id, year, make, model, vin, mileage),
+      work_order_items (id, item_type, sort_order, description, quantity, unit_price_cents, cost_cents, service_id)
+    `)
+    .eq('id', workOrderId)
+    .single();
+  if (woErr || !wo) throw new Error('Work order not found');
+
+  // Idempotency — one invoice per WO.
+  const { data: existing } = await supabase
+    .from('invoices').select('id, invoice_number').eq('work_order_id', workOrderId).maybeSingle();
+  if (existing) {
+    return { ...existing, already_existed: true };
+  }
+
+  const invoiceNumber = await nextInvoiceNumber();
+  const c = wo.customer || {};
+  const v = wo.vehicle || {};
+
+  const { data: inv, error: invErr } = await supabase
+    .from('invoices')
+    .insert({
+      invoice_number: invoiceNumber,
+      work_order_id: wo.id,
+      appointment_id: wo.appointment_id,
+      customer_id: wo.customer_id,
+      vehicle_id: wo.vehicle_id,
+      customer_name: [c.first_name, c.last_name].filter(Boolean).join(' '),
+      customer_phone: c.phone,
+      customer_email: c.email,
+      customer_address: formatAddress(c),
+      vehicle_description: [v.year, v.make, v.model].filter(Boolean).join(' ') || null,
+      vehicle_vin: v.vin,
+      vehicle_km: v.mileage,
+      is_tax_exempt: c.is_tax_exempt || false,
+      tax_rate: wo.tax_rate || 0.13,
+      notes: wo.notes || null,
+      internal_notes: wo.internal_notes || null,
+      created_by: createdBy,
+    })
+    .select('*')
+    .single();
+  if (invErr) throw new Error(`Invoice insert failed: ${invErr.message}`);
+
+  // Copy WO line items → invoice line items. Both sides use cents; `item_type`
+  // on WO maps to `line_type` on invoice ('labor'|'part'|'fee'|'discount').
+  const woItems = (wo.work_order_items || []).sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+  const invRows = woItems.map((item, idx) => {
+    const qty = parseFloat(item.quantity) || 1;
+    const unit = item.unit_price_cents || 0;
+    // Map 'sublet' (WO) → 'fee' (invoice); the constraint on invoice_line_items
+    // only allows labor/part/fee/discount.
+    const lineType = item.item_type === 'sublet' ? 'fee' : item.item_type;
+    return {
+      invoice_id: inv.id,
+      line_type: lineType,
+      sort_order: item.sort_order ?? idx,
+      description: item.description,
+      quantity: qty,
+      unit_price_cents: unit,
+      line_total_cents: Math.round(qty * unit),
+      cost_cents: item.cost_cents != null ? item.cost_cents : null,
+      is_taxable: lineType !== 'discount',
+    };
+  });
+  if (invRows.length > 0) {
+    const { error: insErr } = await supabase.from('invoice_line_items').insert(invRows);
+    if (insErr) throw new Error(`Line item insert failed: ${insErr.message}`);
+  }
+
+  const totals = await recalculateTotals(inv.id);
+  return { ...inv, ...totals };
+}
+
+router.post('/from-work-order/:workOrderId', async (req, res, next) => {
+  try {
+    const inv = await generateInvoiceFromWorkOrder(req.params.workOrderId);
+    if (inv.already_existed) {
+      return res.status(409).json({
+        error: 'Invoice already exists for this work order',
+        invoice_id: inv.id,
+        invoice_number: inv.invoice_number,
+      });
+    }
+    const { data: lineItems } = await supabase
+      .from('invoice_line_items').select('*').eq('invoice_id', inv.id).order('sort_order');
+    res.status(201).json({ ...inv, line_items: lineItems || [] });
+  } catch (err) {
+    logger.error('generate invoice from WO error', { error: err });
+    next(err);
+  }
+});
+
 // ─── List ───────────────────────────────────────────────────────────────────
 
 router.get('/', async (req, res, next) => {
   try {
-    const { status, customer_id, appointment_id, from, to } = req.query;
+    const { status, customer_id, appointment_id, work_order_id, from, to } = req.query;
     const limit = Math.min(parseInt(req.query.limit || '100', 10), 500);
 
     let q = supabase
@@ -206,6 +313,7 @@ router.get('/', async (req, res, next) => {
     if (status) q = q.eq('status', status);
     if (customer_id) q = q.eq('customer_id', customer_id);
     if (appointment_id) q = q.eq('appointment_id', appointment_id);
+    if (work_order_id) q = q.eq('work_order_id', work_order_id);
     if (from) q = q.gte('invoice_date', from);
     if (to) q = q.lte('invoice_date', to);
 
