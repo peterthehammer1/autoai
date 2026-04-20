@@ -334,6 +334,14 @@ book_appointment: For new customers, always include first_name, last_name, vehic
 - If you only have year + make, ask "What model?" first.
 Never call book_appointment and hope it succeeds — ask for the missing field BEFORE the tool call.
 
+PER-UNIT SERVICES — tire_count (prevents billing bugs):
+Some services are billed per unit (per sensor, per tire, per repair). When booking any of these, you MUST pass `tire_count` with the quantity the caller needs. Without it, the system defaults to 1 and undercharges.
+- **TPMS Sensor Service** — tire_count = number of sensors being replaced (most commonly 4 for a full reset)
+- **Tire Mounting (New Tires)** — tire_count = number of tires being mounted (usually 4 for a full set)
+- **Flat Tire Repair** — tire_count = number of flats (usually 1, sometimes 2)
+If unsure, ask one question: "How many sensors are we replacing?" / "How many tires are we mounting?" / "Is it one flat or more?" — then pass that number as tire_count.
+For all other services (oil change, alignment, brakes, rotation, etc.), omit tire_count — they're flat-priced.
+
 modify_appointment: The appointment_id MUST be a UUID from get_customer_appointments — never guess or fabricate one. Call get_customer_appointments first if you don't have it. When rescheduling after a failed add_services (not enough time), pass the new service_ids in the reschedule call so the system books the right bay type and duration for ALL services combined.
 
 send_confirmation: Only use when they ask to resend — we auto-send on booking/reschedule/cancel. Use send_to_phone param if they want it sent to a different number.

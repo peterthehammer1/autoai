@@ -387,6 +387,25 @@ router.post('/check_availability', async (req, res, next) => {
   }
 });
 
+// Parse voice-agent tire_count: "1-2" → 2, "3-4" → 4, "4" → 4. Ranges use the
+// upper bound. Out-of-range or unparseable → null (caller decides fallback).
+function parseTireCount(tc) {
+  if (tc == null) return null;
+  const s = String(tc).trim();
+  const range = s.match(/^(\d+)-(\d+)$/);
+  if (range) return parseInt(range[2], 10);
+  const n = parseInt(s, 10);
+  return (Number.isFinite(n) && n >= 1 && n <= 6) ? n : null;
+}
+
+// Services priced per unit — tire_count multiplies quoted_price. Without this,
+// booking e.g. 4 TPMS sensors charges for 1.
+const PER_UNIT_SERVICE_PATTERNS = ['tpms', 'tire mounting', 'flat tire'];
+function isPerUnitService(name) {
+  const n = (name || '').toLowerCase();
+  return PER_UNIT_SERVICE_PATTERNS.some(p => n.includes(p));
+}
+
 /**
  * POST /api/voice/book_appointment
  * Nucleus AI function: Book an appointment
@@ -421,6 +440,7 @@ router.post('/book_appointment', async (req, res, next) => {
     const loaner_requested = body.loaner_requested;
     const shuttle_requested = body.shuttle_requested;
     const notes = cleanNull(body.notes);
+    const tire_count = cleanNull(body.tire_count);
     // Retell sends call_id at req.body top level, not inside args
     let call_id = cleanNull(req.body.call_id) || cleanNull(body.call_id);
     if (isTemplateVar(call_id)) call_id = null;
@@ -684,6 +704,15 @@ router.post('/book_appointment', async (req, res, next) => {
 
     const totalDuration = services.reduce((sum, s) => sum + s.duration_minutes, 0);
 
+    // Per-unit quantity per service. Defaults to 1; for TPMS / tire mounting /
+    // flat tire repairs, use parseTireCount(tire_count) when the caller told
+    // us how many. Falls back to 1 (not 4) to avoid accidentally overcharging
+    // if the LLM omits the count on a single-unit job.
+    const qtyForService = (svc) => {
+      if (!isPerUnitService(svc.name)) return 1;
+      return parseTireCount(tire_count) || 1;
+    };
+
     // 3b. Service department: Mon-Fri 7am-4pm only (no weekends, no after 4pm)
     const appointmentDay = new Date(appointment_date + 'T12:00:00').getDay();
     if (appointmentDay === 0 || appointmentDay === 6) {
@@ -783,7 +812,7 @@ router.post('/book_appointment', async (req, res, next) => {
       loaner_requested: loaner_requested || false,
       shuttle_requested: shuttle_requested || false,
       customer_notes: notes,
-      quoted_total: services.reduce((sum, s) => sum + (s.price_min || 0), 0),
+      quoted_total: services.reduce((sum, s) => sum + (s.price_min || 0) * qtyForService(s), 0),
       created_by: 'ai_agent',
       call_id,
       status: 'scheduled'
@@ -798,16 +827,22 @@ router.post('/book_appointment', async (req, res, next) => {
 
     if (aptError) throw aptError;
 
-    // 6. Add services to appointment
+    // 6. Add services to appointment. For per-unit services, quoted_price is
+    // the per-unit price × quantity. Quantity is stored in notes until the
+    // schema gets a dedicated column.
     await supabase
       .from('appointment_services')
-      .insert(services.map(s => ({
-        appointment_id: appointment.id,
-        service_id: s.id,
-        service_name: s.name,
-        quoted_price: s.price_min,
-        duration_minutes: s.duration_minutes
-      })));
+      .insert(services.map(s => {
+        const qty = qtyForService(s);
+        return {
+          appointment_id: appointment.id,
+          service_id: s.id,
+          service_name: s.name,
+          quoted_price: (s.price_min || 0) * qty,
+          duration_minutes: s.duration_minutes,
+          notes: qty > 1 ? `quantity: ${qty}` : null,
+        };
+      }));
 
     // 6b. Link customer to call log if this came from a call
     if (call_id) {
@@ -1255,6 +1290,7 @@ router.post('/modify_appointment', async (req, res, next) => {
 
     if (action === 'add_services') {
       const service_ids = req.body.service_ids || req.body.args?.service_ids;
+      const tire_count = req.body.tire_count || req.body.args?.tire_count || null;
 
       logger.info('[add_services] Received service_ids:', { data: JSON.stringify(service_ids) });
 
@@ -1291,14 +1327,23 @@ router.post('/modify_appointment', async (req, res, next) => {
         });
       }
 
-      // Add each service to appointment_services
-      const newServices = services.map(svc => ({
-        appointment_id,
-        service_id: svc.id,
-        service_name: svc.name,
-        quoted_price: svc.price_min,
-        duration_minutes: svc.duration_minutes
-      }));
+      // Add each service to appointment_services. Per-unit services (TPMS,
+      // tire mounting, flat tire) use tire_count × price.
+      const qtyForAdded = (svc) => {
+        if (!isPerUnitService(svc.name)) return 1;
+        return parseTireCount(tire_count) || 1;
+      };
+      const newServices = services.map(svc => {
+        const qty = qtyForAdded(svc);
+        return {
+          appointment_id,
+          service_id: svc.id,
+          service_name: svc.name,
+          quoted_price: (svc.price_min || 0) * qty,
+          duration_minutes: svc.duration_minutes,
+          notes: qty > 1 ? `quantity: ${qty}` : null,
+        };
+      });
 
       const { error: insertError } = await supabase
         .from('appointment_services')
@@ -1314,7 +1359,7 @@ router.post('/modify_appointment', async (req, res, next) => {
 
       // Calculate new totals
       const additionalDuration = services.reduce((sum, s) => sum + (s.duration_minutes || 0), 0);
-      const additionalPrice = services.reduce((sum, s) => sum + (s.price_min || 0), 0);
+      const additionalPrice = services.reduce((sum, s) => sum + (s.price_min || 0) * qtyForAdded(s), 0);
 
       // Update appointment totals
       await supabase

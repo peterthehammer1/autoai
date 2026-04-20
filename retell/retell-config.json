@@ -140,6 +140,10 @@
           "vehicle_model": {
             "type": "string",
             "description": "For new customers only"
+          },
+          "tire_count": {
+            "type": "string",
+            "description": "Quantity for per-unit services (TPMS sensors, new-tire mounting, flat tire repairs). Accepts a number ('2', '4') or range ('1-2', '3-4'). Omit for non-per-unit services."
           }
         },
         "required": ["customer_phone", "service_ids", "appointment_date", "appointment_time"]
@@ -199,6 +203,10 @@
             "type": "array",
             "items": {"type": "string"},
             "description": "Service IDs to add (required for add_services)"
+          },
+          "tire_count": {
+            "type": "string",
+            "description": "Quantity for per-unit services being added (TPMS sensors, new-tire mounting, flat tire repairs). Same format as book_appointment."
           }
         },
         "required": ["appointment_id", "action"]
