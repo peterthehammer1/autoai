@@ -32,6 +32,8 @@ router.post('/check_availability', async (req, res, next) => {
       return res.json({
         success: false,
         available: false,
+        error: 'missing_service_ids',
+        recovery: 'Call get_services first to get a UUID, then call check_availability again with that UUID in service_ids. Do NOT retry this call with the same arguments.',
         message: 'Please let me know what service you need so I can check availability.'
       });
     }
