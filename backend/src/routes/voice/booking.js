@@ -221,8 +221,10 @@ router.post('/check_availability', async (req, res, next) => {
     const currentMinute = now.getMinutes();
     const todayStr = todayEST();
 
-    // Early exit: stop scanning once we have enough unique options
-    const MAX_OPTIONS = 4; // find up to 4, then dedup to 2
+    // Scan enough windows to give the agent real choice across the day.
+    // Was capped at 4 (then deduped to 2), which is why every call came back
+    // with only 7 AM / 7:30 AM even when the rest of the day was wide open.
+    const MAX_OPTIONS = 60;
     let foundEnough = false;
 
     for (const [key, baySlots] of Object.entries(slotsByDateBay)) {
@@ -271,7 +273,11 @@ router.post('/check_availability', async (req, res, next) => {
       }
     }
 
-    // Remove duplicates and limit to 2 options only (to prevent AI from listing many)
+    // Dedup by (date, time) — different bays offering the same time collapse
+    // to one slot; whichever bay hit first wins (it'll be re-checked at booking).
+    // Return up to 10 unique slots so the agent has real choice across the day.
+    // The prompt rule tells Amber to offer ONE first and hold alternatives in
+    // reserve — returning 10 gives her the material to do that.
     const uniqueSlots = [];
     const seen = new Set();
     for (const slot of availableWindows) {
@@ -280,7 +286,7 @@ router.post('/check_availability', async (req, res, next) => {
         seen.add(key);
         uniqueSlots.push(slot);
       }
-      if (uniqueSlots.length >= 2) break; // Only return 2 options at a time
+      if (uniqueSlots.length >= 10) break;
     }
 
     // Check if the requested date was a weekend (even if we found weekday slots)
@@ -328,15 +334,24 @@ router.post('/check_availability', async (req, res, next) => {
       };
     });
 
-    // Build voice-friendly message - only offer 2 options at a time
-    const slotDescriptions = formattedSlots.slice(0, 2).map(s => s.formatted);
-    let message = `I have ${slotDescriptions[0]}`;
-    if (slotDescriptions.length > 1) {
-      message += `, or ${slotDescriptions[1]}`;
+    // Voice message: lead with ONE slot (usually the earliest), then suggest a
+    // spread of alternatives if the day has more. The agent opens with the
+    // first option per the prompt rule "offer ONE time first, hold alternatives
+    // in reserve"; showing a mid-day and late-day sample in the fallback line
+    // helps the LLM suggest something relevant if the caller declines the first.
+    const primary = formattedSlots[0];
+    const laterSameDay = formattedSlots.filter(s => s.date === primary.date && s.time > primary.time);
+    let alternativeDescriptors = [];
+    if (laterSameDay.length >= 2) {
+      const mid = laterSameDay[Math.floor(laterSameDay.length / 2)];
+      const late = laterSameDay[laterSameDay.length - 1];
+      alternativeDescriptors = [mid.time_formatted, late.time_formatted];
+    } else if (laterSameDay.length === 1) {
+      alternativeDescriptors = [laterSameDay[0].time_formatted];
     }
-    message += '. Which works better for you?';
-    if (formattedSlots.length > 2) {
-      message += ' I have more options if neither works.';
+    let message = `I've got ${primary.formatted} — does that work?`;
+    if (alternativeDescriptors.length > 0) {
+      message += ` Other options today: ${alternativeDescriptors.join(' or ')}.`;
     }
 
     // Check if the customer already has appointments on any of the offered slot dates
