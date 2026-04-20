@@ -343,11 +343,31 @@ router.post('/check_availability', async (req, res, next) => {
       }
     }
 
+    // Did we hit the caller's exact requested time? Only meaningful when they gave a specific HH:MM
+    // (e.g. "10:00", "10 AM", "3pm"). Fuzzy terms ("morning", "after 3") leave the flag null — any
+    // returned slot satisfies them.
+    let requested_time_matched = null;
+    if (preferred_time) {
+      const t = preferred_time.toLowerCase().trim();
+      const exactMatch = t.match(/^(\d{1,2}):?(\d{2})?\s*(am|pm)?$/);
+      if (exactMatch) {
+        let hour = parseInt(exactMatch[1], 10);
+        const min = exactMatch[2] ? parseInt(exactMatch[2], 10) : 0;
+        const ampm = exactMatch[3];
+        if (ampm === 'pm' && hour < 12) hour += 12;
+        if (ampm === 'am' && hour === 12) hour = 0;
+        const requested_time_normalized = `${String(hour).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
+        requested_time_matched = formattedSlots.some(s => s.time === requested_time_normalized);
+      }
+    }
+
     res.json({
       success: true,
       available: true,
       requested_date_closed: isWeekendRequest || false,
       closed_reason: isWeekendRequest ? 'weekend' : null,
+      requested_time: preferred_time || null,
+      requested_time_matched,
       slots: formattedSlots,
       services: services.map(s => s.name),
       total_duration_minutes: totalDuration,
