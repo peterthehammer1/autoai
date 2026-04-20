@@ -18,22 +18,46 @@ router.post('/check_availability', async (req, res, next) => {
     logger.info('check_availability received:', { data: JSON.stringify(req.body) });
 
     // Handle both direct params and nested args from Nucleus AI
-    const service_ids = req.body.service_ids || req.body.args?.service_ids;
-    const preferred_date = req.body.preferred_date || req.body.args?.preferred_date;
-    const preferred_time = req.body.preferred_time || req.body.args?.preferred_time;
-    const days_to_check = req.body.days_to_check || req.body.args?.days_to_check || 7;
-    let customer_phone = req.body.customer_phone || req.body.args?.customer_phone;
+    const body = req.body.args || req.body;
+    let service_ids = req.body.service_ids || body.service_ids;
+    const keyword = req.body.keyword || body.keyword || body.search;
+    const preferred_date = req.body.preferred_date || body.preferred_date;
+    const preferred_time = req.body.preferred_time || body.preferred_time;
+    const days_to_check = req.body.days_to_check || body.days_to_check || 7;
+    let customer_phone = req.body.customer_phone || body.customer_phone;
     const isTemplateVar = (val) => typeof val === 'string' && (val.includes('{{') || val.includes('}}'));
     if (isTemplateVar(customer_phone)) customer_phone = null;
 
-    // Validate service_ids
+    // Keyword fallback: if caller passed a keyword instead of service_ids, look it up here
+    // (Dynasty pattern — collapses the get_services → check_availability chain into one tool call).
+    let resolved_from_keyword = null;
+    if ((!service_ids || (Array.isArray(service_ids) && service_ids.length === 0)) && keyword) {
+      const kw = String(keyword).toLowerCase().trim();
+      // Oil change shortcut: if the caller said "oil change" without a type, pick Synthetic Blend
+      // (the shop's standard oil). Matches the prompt's default-to-blend rule.
+      const isOilChangeGeneric = /\boil\s*change\b/.test(kw) && !/(synthetic|blend|conventional|full)/.test(kw);
+      const searchTerm = isOilChangeGeneric ? 'synthetic blend oil change' : kw;
+      const { data: matches } = await supabase
+        .from('services')
+        .select('id, name, duration_minutes, required_bay_type')
+        .eq('is_active', true)
+        .or(`name.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`)
+        .limit(5);
+      if (matches && matches.length > 0) {
+        service_ids = [matches[0].id];
+        resolved_from_keyword = { keyword: searchTerm, service_name: matches[0].name };
+        logger.info('check_availability keyword resolved:', { data: resolved_from_keyword });
+      }
+    }
+
+    // Validate service_ids (after keyword fallback)
     if (!service_ids || (Array.isArray(service_ids) && service_ids.length === 0)) {
-      logger.info('No service_ids found');
+      logger.info('No service_ids found and no keyword match');
       return res.json({
         success: false,
         available: false,
         error: 'missing_service_ids',
-        recovery: 'Call get_services first to get a UUID, then call check_availability again with that UUID in service_ids. Do NOT retry this call with the same arguments.',
+        recovery: 'Pass either service_ids (UUIDs from get_services) OR a keyword like "synthetic blend oil change" / "alignment" / "tire rotation". Do NOT retry with the same empty arguments.',
         message: 'Please let me know what service you need so I can check availability.'
       });
     }
@@ -371,7 +395,9 @@ router.post('/check_availability', async (req, res, next) => {
       requested_time: preferred_time || null,
       requested_time_matched,
       slots: formattedSlots,
+      service_ids: services.map(s => s.id),
       services: services.map(s => s.name),
+      resolved_from_keyword,
       total_duration_minutes: totalDuration,
       existing_appointments_on_date: existingOnDate,
       message: isWeekendRequest

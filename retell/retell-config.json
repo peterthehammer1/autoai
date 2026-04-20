@@ -48,7 +48,7 @@
     {
       "type": "custom",
       "name": "check_availability",
-      "description": "Check available appointment times. Call after you know what service they need.",
+      "description": "Check available appointment times. Pass EITHER a keyword (e.g. 'oil change', 'synthetic blend oil change', 'alignment', 'tire rotation') — the backend will resolve it to a service — OR service_ids if you already have them from get_services. Using keyword skips the get_services call entirely, saving time.",
       "url": "https://www.alignedai.dev/api/voice/check_availability",
       "speak_during_execution": false,
       "execution_message_type": "static_text",
@@ -56,12 +56,16 @@
       "parameters": {
         "type": "object",
         "properties": {
+          "keyword": {
+            "type": "string",
+            "description": "Service keyword ('oil change', 'alignment', 'tire rotation', 'brake inspection', etc). Preferred — skips the get_services round-trip. For oil changes just say 'oil change' — backend defaults to Synthetic Blend."
+          },
           "service_ids": {
             "type": "array",
             "items": {
               "type": "string"
             },
-            "description": "Service IDs from get_services"
+            "description": "Service UUIDs from get_services — only needed if the caller asked for something ambiguous and you already ran get_services to disambiguate."
           },
           "preferred_date": {
             "type": "string",
@@ -76,10 +80,7 @@
             "const": "{{customer_phone}}",
             "description": "Customer phone - auto-filled to detect same-day appointment conflicts"
           }
-        },
-        "required": [
-          "service_ids"
-        ]
+        }
       }
     },
     {
