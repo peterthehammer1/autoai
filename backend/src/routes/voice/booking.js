@@ -1134,28 +1134,31 @@ router.post('/modify_appointment', async (req, res, next) => {
         });
       }
 
-      // If service_ids provided with reschedule, include them in bay type + duration calc
+      // If service_ids provided with reschedule, REPLACE the service list — not append.
+      // Semantic: "reschedule" = do the same thing at a different time. If the caller is
+      // changing what they're booking (e.g. Winter → Summer changeover), that's a swap;
+      // the new list is authoritative. Callers who want to ADD a service should use the
+      // separate action: "add_services". This avoids the append bug where repeated
+      // reschedules stack duplicate services on one appointment.
       const service_ids = req.body.service_ids || req.body.args?.service_ids;
-      const addServiceIds = Array.isArray(service_ids) ? service_ids.filter(Boolean) : [];
+      const replaceServiceIds = Array.isArray(service_ids) ? service_ids.filter(Boolean) : [];
+      const isReplacingServices = replaceServiceIds.length > 0;
 
-      // Combine existing + new service IDs for bay type determination
       const existingServiceIds = appointmentServices.map(s => s.service_id);
-      const allServiceIds = [...new Set([...existingServiceIds, ...addServiceIds])];
+      const effectiveServiceIds = isReplacingServices ? replaceServiceIds : existingServiceIds;
 
-      // Get the required bay type from ALL services (use most specialized)
+      // Get the required bay type from the effective service list
       const { data: services } = await supabase
         .from('services')
         .select('id, name, required_bay_type, duration_minutes, price_min')
-        .in('id', allServiceIds);
+        .in('id', effectiveServiceIds);
 
       const bayType = getBestBayType(services || []);
 
-      // If adding services, recalculate total duration
-      if (addServiceIds.length > 0) {
-        const addedServices = (services || []).filter(s => addServiceIds.includes(s.id));
-        const additionalDuration = addedServices.reduce((sum, s) => sum + (s.duration_minutes || 0), 0);
-        apptDuration = apptDuration + additionalDuration;
-        logger.info('Reschedule with added services:', { data: { addServiceIds, additionalDuration, totalDuration: apptDuration } });
+      // If replacing services, recalculate duration from the new list
+      if (isReplacingServices) {
+        apptDuration = (services || []).reduce((sum, s) => sum + (s.duration_minutes || 0), 0);
+        logger.info('Reschedule replacing services:', { data: { replaceServiceIds, newDuration: apptDuration } });
       }
 
       // Get compatible bays
@@ -1233,33 +1236,40 @@ router.post('/modify_appointment', async (req, res, next) => {
         });
       }
 
-      // If reschedule includes new services, add them to the appointment
-      const addedServiceNames = [];
-      if (addServiceIds.length > 0) {
-        const addedServices = (services || []).filter(s => addServiceIds.includes(s.id));
-        const newServiceRows = addedServices.map(svc => ({
+      // If reschedule is replacing services, delete the old rows and insert the new ones.
+      // Pure time-only reschedule (no service_ids) leaves appointment_services untouched.
+      const replacedServiceNames = [];
+      if (isReplacingServices) {
+        await supabase
+          .from('appointment_services')
+          .delete()
+          .eq('appointment_id', appointment_id);
+
+        const newServices = (services || []).filter(s => replaceServiceIds.includes(s.id));
+        const newServiceRows = newServices.map(svc => ({
           appointment_id,
           service_id: svc.id,
           service_name: svc.name,
           quoted_price: svc.price_min,
           duration_minutes: svc.duration_minutes
         }));
-        await supabase.from('appointment_services').insert(newServiceRows);
-        addedServiceNames.push(...addedServices.map(s => s.name));
+        if (newServiceRows.length > 0) {
+          await supabase.from('appointment_services').insert(newServiceRows);
+        }
+        replacedServiceNames.push(...newServices.map(s => s.name));
       }
 
-      // Update appointment record (including new duration if services were added)
+      // Update appointment record (recompute duration + total if services changed)
       const updateFields = {
         scheduled_date: new_date,
         scheduled_time: new_time,
         bay_id: slot.bay_id
       };
-      if (addServiceIds.length > 0) {
+      if (isReplacingServices) {
         updateFields.estimated_duration_minutes = apptDuration;
-        const additionalPrice = (services || [])
-          .filter(s => addServiceIds.includes(s.id))
+        updateFields.quoted_total = (services || [])
+          .filter(s => replaceServiceIds.includes(s.id))
           .reduce((sum, s) => sum + (s.price_min || 0), 0);
-        updateFields.quoted_total = (appointment.quoted_total || 0) + additionalPrice;
       }
       await supabase
         .from('appointments')
@@ -1304,15 +1314,15 @@ router.post('/modify_appointment', async (req, res, next) => {
 
       const date = parseISO(new_date);
       const smsNote = send_to_phone ? ` I'm sending the confirmation to ${formatPhone(send_to_phone)}.` : '';
-      const addedNote = addedServiceNames.length > 0 ? ` I've also added ${addedServiceNames.join(' and ')} to your appointment.` : '';
+      const swapNote = replacedServiceNames.length > 0 ? ` Service updated to ${replacedServiceNames.join(' and ')}.` : '';
 
       return res.json({
         success: true,
         action: 'rescheduled',
         new_date,
         new_time,
-        added_services: addedServiceNames.length > 0 ? addedServiceNames : undefined,
-        message: `I've rescheduled your appointment to ${formatDateSpoken(date)} at ${formatTime12Hour(new_time)}.${addedNote}${smsNote} You'll get a text with the updated details.`
+        replaced_services: replacedServiceNames.length > 0 ? replacedServiceNames : undefined,
+        message: `I've rescheduled your appointment to ${formatDateSpoken(date)} at ${formatTime12Hour(new_time)}.${swapNote}${smsNote} You'll get a text with the updated details.`
       });
     }
 

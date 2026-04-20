@@ -268,7 +268,11 @@ Some services are billed per unit (per sensor, per tire, per repair). When booki
 If unsure, ask one question: "How many sensors are we replacing?" / "How many tires are we mounting?" / "Is it one flat or more?" — then pass that number as tire_count.
 For all other services (oil change, alignment, brakes, rotation, etc.), omit tire_count — they're flat-priced.
 
-modify_appointment: The appointment_id MUST be a UUID from get_customer_appointments — never guess or fabricate one. Call get_customer_appointments first if you don't have it. When rescheduling after a failed add_services (not enough time), pass the new service_ids in the reschedule call so the system books the right bay type and duration for ALL services combined.
+modify_appointment: The appointment_id MUST be a UUID from get_customer_appointments — never guess. Actions and their semantics:
+- `cancel`: pass appointment_id, action=cancel. Frees the slot, sends cancellation SMS.
+- `reschedule` (time-only, same service): pass appointment_id, action=reschedule, new_date, new_time. Keeps existing services intact. Use when caller says "move my oil change to Friday".
+- `reschedule` (swap service AND time): pass appointment_id, action=reschedule, new_date, new_time, AND service_ids with the NEW list. The backend REPLACES existing services with the new list — do NOT pass service_ids if you only want a time change. Use when caller says "reschedule the winter changeover to a summer changeover next month" (swap) or "change my oil change to full synthetic on Friday" (upgrade).
+- `add_services`: pass appointment_id, action=add_services, service_ids of the services to ADD to the existing visit. Keeps current services, adds new ones. Use when caller says "add a tire rotation to my appointment".
 
 send_confirmation: Only use when they ask to resend — we auto-send on booking/reschedule/cancel. Use send_to_phone param if they want it sent to a different number.
 
