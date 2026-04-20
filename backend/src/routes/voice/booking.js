@@ -916,35 +916,44 @@ router.post('/book_appointment', async (req, res, next) => {
 
     const customerName = customer.first_name || customer_first_name || 'there';
 
-    // 9. Generate portal token + send confirmation SMS (async, don't block response)
-    (async () => {
+    // 9. Generate portal token + send confirmation SMS BEFORE res.json.
+    // Previously this was a fire-and-forget IIFE; Vercel's serverless runtime
+    // would sometimes spin the instance down after res.json before the SMS
+    // actually fired, leaving the booking with no confirmation text and no
+    // sms_logs row. Awaiting here adds ~300-500ms to the response but
+    // guarantees delivery. Individual steps are try/catch-wrapped so a portal
+    // or SMS failure doesn't fail the booking itself.
+    try {
+      let customerPortalUrl = null;
       try {
         const { ensurePortalToken, portalUrl: buildPortalUrl } = await import('../portal.js');
         const portalToken = await ensurePortalToken(customer.id);
-        const customerPortalUrl = await buildPortalUrl(portalToken);
-
-        const result = await sendConfirmationSMS({
-          customerPhone: customer_phone,
-          customerName,
-          appointmentDate: appointment_date,
-          appointmentTime: appointment_time,
-          services: serviceNames,
-          vehicleDescription,
-          customerId: customer.id,
-          appointmentId: appointment.id,
-          portalUrl: customerPortalUrl,
-        });
-        if (result.success) {
-          await supabase
-            .from('appointments')
-            .update({ confirmation_sent_at: new Date().toISOString() })
-            .eq('id', appointment.id);
-          logger.info('[SMS] Confirmation sent for appointment', { data: appointment.id });
-        }
+        customerPortalUrl = await buildPortalUrl(portalToken);
       } catch (err) {
-        logger.error('SMS confirmation error:', { error: err });
+        logger.warn('Portal URL generation failed, sending SMS without link', { error: err.message });
       }
-    })();
+
+      const result = await sendConfirmationSMS({
+        customerPhone: customer_phone,
+        customerName,
+        appointmentDate: appointment_date,
+        appointmentTime: appointment_time,
+        services: serviceNames,
+        vehicleDescription,
+        customerId: customer.id,
+        appointmentId: appointment.id,
+        portalUrl: customerPortalUrl,
+      });
+      if (result.success) {
+        await supabase
+          .from('appointments')
+          .update({ confirmation_sent_at: new Date().toISOString() })
+          .eq('id', appointment.id);
+        logger.info('[SMS] Confirmation sent for appointment', { data: appointment.id });
+      }
+    } catch (err) {
+      logger.error('SMS confirmation error:', { error: err });
+    }
 
     // 10. Send confirmation email if we have an email address
     if (customerEmail) {
@@ -1276,7 +1285,8 @@ router.post('/modify_appointment', async (req, res, next) => {
         .update(updateFields)
         .eq('id', appointment_id);
 
-      // Send updated confirmation SMS (async, don't block response)
+      // Send updated confirmation SMS — awaited (see book_appointment note on
+      // Vercel killing fire-and-forget async work).
       const { data: aptForSms } = await supabase
         .from('appointments')
         .select(`
@@ -1288,7 +1298,6 @@ router.post('/modify_appointment', async (req, res, next) => {
         `)
         .eq('id', appointment_id)
         .single();
-      // Check if caller wants SMS sent to a different number
       const send_to_phone = req.body.send_to_phone || req.body.args?.send_to_phone;
 
       if (aptForSms?.customer) {
@@ -1296,20 +1305,24 @@ router.post('/modify_appointment', async (req, res, next) => {
         const vehicleDesc = aptForSms.vehicle
           ? `${aptForSms.vehicle.year} ${aptForSms.vehicle.make} ${aptForSms.vehicle.model}`
           : null;
-        // Use send_to_phone if provided, otherwise use customer's phone on file
         const targetPhone = send_to_phone ? normalizePhone(send_to_phone) : aptForSms.customer.phone;
-        sendConfirmationSMS({
-          customerPhone: targetPhone,
-          customerName: aptForSms.customer.first_name,
-          appointmentDate: aptForSms.scheduled_date,
-          appointmentTime: aptForSms.scheduled_time,
-          services,
-          vehicleDescription: vehicleDesc,
-          customerId: aptForSms.customer.id,
-          appointmentId: appointment_id
-        }).then(() => {
-          supabase.from('appointments').update({ confirmation_sent_at: new Date().toISOString() }).eq('id', appointment_id).then(() => {});
-        }).catch(err => logger.error('Reschedule confirmation SMS error:', { error: err }));
+        try {
+          const smsResult = await sendConfirmationSMS({
+            customerPhone: targetPhone,
+            customerName: aptForSms.customer.first_name,
+            appointmentDate: aptForSms.scheduled_date,
+            appointmentTime: aptForSms.scheduled_time,
+            services,
+            vehicleDescription: vehicleDesc,
+            customerId: aptForSms.customer.id,
+            appointmentId: appointment_id
+          });
+          if (smsResult.success) {
+            await supabase.from('appointments').update({ confirmation_sent_at: new Date().toISOString() }).eq('id', appointment_id);
+          }
+        } catch (err) {
+          logger.error('Reschedule confirmation SMS error:', { error: err });
+        }
       }
 
       const date = parseISO(new_date);
@@ -1443,7 +1456,8 @@ router.post('/modify_appointment', async (req, res, next) => {
         }
       }
 
-      // Send updated confirmation SMS (async, don't block response)
+      // Send updated confirmation SMS — awaited (see book_appointment note on
+      // Vercel killing fire-and-forget async work).
       const { data: aptForSms } = await supabase
         .from('appointments')
         .select(`
@@ -1460,18 +1474,23 @@ router.post('/modify_appointment', async (req, res, next) => {
         const vehicleDesc = aptForSms.vehicle
           ? `${aptForSms.vehicle.year} ${aptForSms.vehicle.make} ${aptForSms.vehicle.model}`
           : null;
-        sendConfirmationSMS({
-          customerPhone: aptForSms.customer.phone,
-          customerName: aptForSms.customer.first_name,
-          appointmentDate: aptForSms.scheduled_date,
-          appointmentTime: aptForSms.scheduled_time,
-          services: servicesList,
-          vehicleDescription: vehicleDesc,
-          customerId: aptForSms.customer.id,
-          appointmentId: appointment_id
-        }).then(() => {
-          supabase.from('appointments').update({ confirmation_sent_at: new Date().toISOString() }).eq('id', appointment_id).then(() => {});
-        }).catch(err => logger.error('Add-services confirmation SMS error:', { error: err }));
+        try {
+          const smsResult = await sendConfirmationSMS({
+            customerPhone: aptForSms.customer.phone,
+            customerName: aptForSms.customer.first_name,
+            appointmentDate: aptForSms.scheduled_date,
+            appointmentTime: aptForSms.scheduled_time,
+            services: servicesList,
+            vehicleDescription: vehicleDesc,
+            customerId: aptForSms.customer.id,
+            appointmentId: appointment_id
+          });
+          if (smsResult.success) {
+            await supabase.from('appointments').update({ confirmation_sent_at: new Date().toISOString() }).eq('id', appointment_id);
+          }
+        } catch (err) {
+          logger.error('Add-services confirmation SMS error:', { error: err });
+        }
       }
 
       const serviceNames = services.map(s => s.name).join(' and ');
