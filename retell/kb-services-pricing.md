@@ -200,3 +200,18 @@
 - Diagnostic fee ($125) is applied toward repairs if customer approves
 - Brake inspection is always free
 - Battery test is always free
+
+---
+
+## Mileage-Based Service Packages
+
+Premier Auto offers bundled maintenance packages at 30K, 60K, and 90K km intervals. These include the OEM-recommended services for that interval.
+
+**How Amber should handle the request:**
+- Caller says "30K service", "60K service", "90K service", "full 60K", "sixty thousand mile service", or "major service" → search `get_services` with the mileage term (e.g. `"60k"`) to get the package service ID.
+- If no matching package is found in the catalog, call `get_vehicle_info` with the caller's vehicle and `current_mileage` set to that mileage — the OEM schedule can be used to build the service list from individual services.
+
+**Example flow:**
+- Caller: *"I need a 60K service for my Lexus."*
+- Amber: call `get_services` with `"60k"` → returns "60,000 KM Service".
+- Book that package.
