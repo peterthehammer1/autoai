@@ -289,7 +289,10 @@ router.patch('/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
     if (!isValidUUID(id)) return validationError(res, 'Invalid customer ID');
-    const { first_name, last_name, email, phone, preferred_contact, notes } = req.body;
+    const {
+      first_name, last_name, email, phone, preferred_contact, notes,
+      address_line1, address_line2, city, province, postal_code, is_tax_exempt,
+    } = req.body;
 
     if (phone !== undefined && !isValidPhone(phone)) {
       return validationError(res, 'Invalid phone number format');
@@ -308,6 +311,13 @@ router.patch('/:id', async (req, res, next) => {
     }
     if (preferred_contact !== undefined) updates.preferred_contact = preferred_contact;
     if (notes !== undefined) updates.notes = notes;
+    // Billing address + tax-exempt — used when invoices snapshot the customer
+    if (address_line1 !== undefined) updates.address_line1 = address_line1 || null;
+    if (address_line2 !== undefined) updates.address_line2 = address_line2 || null;
+    if (city !== undefined) updates.city = city || null;
+    if (province !== undefined) updates.province = province || null;
+    if (postal_code !== undefined) updates.postal_code = postal_code || null;
+    if (is_tax_exempt !== undefined) updates.is_tax_exempt = !!is_tax_exempt;
     updates.updated_at = new Date().toISOString();
 
     const { data: customer, error } = await supabase

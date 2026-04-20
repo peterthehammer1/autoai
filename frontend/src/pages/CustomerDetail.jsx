@@ -143,6 +143,12 @@ export default function CustomerDetail() {
         last_name: customer.last_name || '',
         email: customer.email || '',
         phone: customer.phone || '',
+        address_line1: customer.address_line1 || '',
+        address_line2: customer.address_line2 || '',
+        city: customer.city || '',
+        province: customer.province || '',
+        postal_code: customer.postal_code || '',
+        is_tax_exempt: customer.is_tax_exempt || false,
       })
       setIsEditOpen(true)
     }
@@ -253,6 +259,27 @@ export default function CustomerDetail() {
                 </div>
               )}
             </div>
+
+            {/* Billing address — shown only when at least one field is set. */}
+            {(customer.address_line1 || customer.city || customer.is_tax_exempt) && (
+              <div className="pt-3 mt-3 border-t border-slate-100 space-y-1.5 text-sm">
+                <div className="text-xs font-medium text-slate-500 uppercase">Billing</div>
+                {customer.address_line1 && (
+                  <div className="text-slate-600 text-xs leading-5">
+                    {customer.address_line1}
+                    {customer.address_line2 && <><br/>{customer.address_line2}</>}
+                    {(customer.city || customer.province || customer.postal_code) && (
+                      <><br/>{[customer.city, customer.province, customer.postal_code].filter(Boolean).join(', ')}</>
+                    )}
+                  </div>
+                )}
+                {customer.is_tax_exempt && (
+                  <span className="inline-block text-xs px-2 py-0.5 rounded bg-amber-100 text-amber-800 font-medium">
+                    Tax-exempt
+                  </span>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
@@ -525,6 +552,64 @@ export default function CustomerDetail() {
                   value={editForm.email}
                   onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
                 />
+              </div>
+
+              {/* Billing address — used for invoice snapshots */}
+              <div className="pt-3 border-t border-slate-200 space-y-4">
+                <div className="text-xs font-medium text-slate-500 uppercase">Billing Address</div>
+                <div className="space-y-2">
+                  <Label htmlFor="address_line1">Address</Label>
+                  <Input
+                    id="address_line1"
+                    placeholder="Street address"
+                    value={editForm.address_line1 || ''}
+                    onChange={(e) => setEditForm({ ...editForm, address_line1: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Input
+                    id="address_line2"
+                    placeholder="Apt, suite, unit (optional)"
+                    value={editForm.address_line2 || ''}
+                    onChange={(e) => setEditForm({ ...editForm, address_line2: e.target.value })}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="city">City</Label>
+                    <Input
+                      id="city"
+                      value={editForm.city || ''}
+                      onChange={(e) => setEditForm({ ...editForm, city: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="province">Province/State</Label>
+                    <Input
+                      id="province"
+                      placeholder="ON, NY, etc."
+                      value={editForm.province || ''}
+                      onChange={(e) => setEditForm({ ...editForm, province: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="postal_code">Postal / ZIP</Label>
+                  <Input
+                    id="postal_code"
+                    value={editForm.postal_code || ''}
+                    onChange={(e) => setEditForm({ ...editForm, postal_code: e.target.value })}
+                  />
+                </div>
+                <label className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={editForm.is_tax_exempt || false}
+                    onChange={(e) => setEditForm({ ...editForm, is_tax_exempt: e.target.checked })}
+                    className="h-4 w-4 rounded border-slate-300"
+                  />
+                  <span>Tax-exempt customer <span className="text-xs text-slate-500">(e.g. government, non-profit — HST not applied on invoices)</span></span>
+                </label>
               </div>
             </div>
             <DialogFooter>
