@@ -340,22 +340,22 @@ router.post('/check_availability', async (req, res, next) => {
       });
     }
 
-    // Format for voice
+    // Format for voice — kept lean. day_of_month and month_name used to be
+    // here but are already present in `formatted` and `date_formatted`, so
+    // returning them separately was just token bloat (~7 tokens × 10 slots).
     const formattedSlots = uniqueSlots.map(s => {
       const date = parseISO(s.date);
       const dayName = format(date, 'EEEE');
       const dayOfMonth = format(date, 'd');
       const monthName = format(date, 'MMMM');
+      const ordinal = getOrdinalSuffix(parseInt(dayOfMonth));
       return {
         ...s,
-        formatted: `${dayName}, ${monthName} ${dayOfMonth}${getOrdinalSuffix(parseInt(dayOfMonth))} at ${formatTime12Hour(s.time)}`,
+        formatted: `${dayName}, ${monthName} ${dayOfMonth}${ordinal} at ${formatTime12Hour(s.time)}`,
         day_name: dayName,
-        day_of_month: dayOfMonth,
-        month_name: monthName,
-        date_formatted: `${monthName} ${dayOfMonth}${getOrdinalSuffix(parseInt(dayOfMonth))}`,
+        date_formatted: `${monthName} ${dayOfMonth}${ordinal}`,
         time_formatted: formatTime12Hour(s.time),
-        // Explicit: "Monday the 9th" format for voice
-        spoken_date: `${dayName} the ${dayOfMonth}${getOrdinalSuffix(parseInt(dayOfMonth))}`
+        spoken_date: `${dayName} the ${dayOfMonth}${ordinal}`,
       };
     });
 

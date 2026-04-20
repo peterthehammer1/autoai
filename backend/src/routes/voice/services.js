@@ -270,15 +270,15 @@ router.post('/get_services', async (req, res, next) => {
       }
     }
 
-    // Format for voice agent - use voice-friendly price_display
+    // Format for voice agent. Kept lean — only fields Amber actually speaks
+    // or passes to the next tool. price_numeric, description, category used
+    // to be here but added ~50 tokens per service × up to 7 services =
+    // ~350 tokens of ingest per get_services call that the LLM never used.
     const serviceList = services.map(s => ({
       id: s.id,
       name: s.name,
       duration: `${s.duration_minutes} minutes`,
-      price: s.price_display, // This is now voice-friendly like "forty dollars"
-      price_numeric: s.price_min,
-      description: s.description,
-      category: s.category?.name
+      price: s.price_display, // voice-friendly, e.g. "forty dollars"
     }));
 
     // Mileage-based recommendations
@@ -343,21 +343,23 @@ router.post('/get_services', async (req, res, next) => {
       message = notFoundMessage || 'Would you like me to list our available services?';
     }
 
-    res.json({
+    // Build response — include only fields that are populated / meaningful.
+    // Empty arrays and always-null/false fields just bloat the LLM's ingest
+    // with no signal.
+    const response = {
       success: true,
       services: compatibility && !compatibility.compatible ? [] : serviceList,
-      recommendations,
-      suggestions,
-      needs_clarification: needsClarification,
-      clarification_options: oilChangeOptions,
-      service_not_found: services.length === 0 && search ? true : false,
-      searched_for: search || null,
-      service_incompatible: compatibility && !compatibility.compatible ? true : false,
-      incompatibility_reason: compatibility?.reason || null,
-      suggested_alternatives: compatibility?.alternatives || null,
-      vehicle_powertrain: compatibility?.powertrain || null,
-      message
-    });
+      message,
+    };
+    if (services.length === 0 && search) response.service_not_found = true;
+    if (compatibility && !compatibility.compatible) {
+      response.service_incompatible = true;
+      if (compatibility.reason) response.incompatibility_reason = compatibility.reason;
+      if (compatibility.alternatives) response.suggested_alternatives = compatibility.alternatives;
+    }
+    if (recommendations.length > 0) response.recommendations = recommendations;
+    if (suggestions.length > 0) response.suggestions = suggestions;
+    res.json(response);
 
   } catch (error) {
     logger.error('get_services error:', { error });
