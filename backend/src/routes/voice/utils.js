@@ -251,4 +251,23 @@ async function getShopClosures(dateStrings) {
   }
 }
 
-export { SKILL_RANK, BAY_TYPE_RANK, getBestBayType, getRequiredSkillLevel, assignTechnician, addMinutesToTime, getOrdinalSuffix, formatDateSpoken, formatTime12Hour, getShopClosures };
+// Parse voice-agent tire_count: "1-2" → 2, "3-4" → 4, "4" → 4. Ranges use the
+// upper bound. Out-of-range or unparseable → null (caller decides fallback).
+function parseTireCount(tc) {
+  if (tc == null) return null;
+  const s = String(tc).trim();
+  const range = s.match(/^(\d+)-(\d+)$/);
+  if (range) return parseInt(range[2], 10);
+  const n = parseInt(s, 10);
+  return (Number.isFinite(n) && n >= 1 && n <= 6) ? n : null;
+}
+
+// Services priced per unit — tire_count multiplies quoted_price. Without this,
+// booking e.g. 4 TPMS sensors charges for 1.
+const PER_UNIT_SERVICE_PATTERNS = ['tpms', 'tire mounting', 'flat tire'];
+function isPerUnitService(name) {
+  const n = (name || '').toLowerCase();
+  return PER_UNIT_SERVICE_PATTERNS.some(p => n.includes(p));
+}
+
+export { SKILL_RANK, BAY_TYPE_RANK, getBestBayType, getRequiredSkillLevel, assignTechnician, addMinutesToTime, getOrdinalSuffix, formatDateSpoken, formatTime12Hour, getShopClosures, parseTireCount, isPerUnitService, PER_UNIT_SERVICE_PATTERNS };
