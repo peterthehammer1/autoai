@@ -225,4 +225,30 @@ function formatDateSpoken(date) {
   return `${dayName}, ${monthName} ${dayOfMonth}${getOrdinalSuffix(dayOfMonth)}`;
 }
 
-export { SKILL_RANK, BAY_TYPE_RANK, getBestBayType, getRequiredSkillLevel, assignTechnician, addMinutesToTime, getOrdinalSuffix, formatDateSpoken, formatTime12Hour };
+/**
+ * Look up which of the given dates are flagged as shop closures (holidays,
+ * vacation, maintenance). Returns a Map keyed by YYYY-MM-DD with the closure
+ * row. Empty Map when table is missing or query fails — we treat absence as
+ * "no closures" to avoid blocking bookings on a transient DB issue.
+ */
+async function getShopClosures(dateStrings) {
+  if (!Array.isArray(dateStrings) || dateStrings.length === 0) return new Map();
+  try {
+    const { data, error } = await supabase
+      .from('shop_closures')
+      .select('closure_date, reason, spoken_reason')
+      .in('closure_date', dateStrings);
+    if (error) {
+      logger.info('getShopClosures: query failed (treating as no closures)', { error: error.message });
+      return new Map();
+    }
+    const m = new Map();
+    (data || []).forEach(row => m.set(row.closure_date, row));
+    return m;
+  } catch (e) {
+    logger.info('getShopClosures exception (treating as no closures)', { error: e.message });
+    return new Map();
+  }
+}
+
+export { SKILL_RANK, BAY_TYPE_RANK, getBestBayType, getRequiredSkillLevel, assignTechnician, addMinutesToTime, getOrdinalSuffix, formatDateSpoken, formatTime12Hour, getShopClosures };

@@ -5,7 +5,7 @@ import { sendConfirmationSMS } from '../../services/sms.js';
 import { sendConfirmationEmail } from '../../services/email.js';
 import { nowEST, todayEST } from '../../utils/timezone.js';
 import { logger } from '../../utils/logger.js';
-import { assignTechnician, getBestBayType, getRequiredSkillLevel, addMinutesToTime, getOrdinalSuffix, formatDateSpoken, formatTime12Hour } from './utils.js';
+import { assignTechnician, getBestBayType, getRequiredSkillLevel, addMinutesToTime, getOrdinalSuffix, formatDateSpoken, formatTime12Hour, getShopClosures } from './utils.js';
 
 const router = Router();
 
@@ -187,13 +187,38 @@ router.post('/check_availability', async (req, res, next) => {
       });
     }
 
+    // Remove any dates flagged as shop closures (holidays, vacation, etc.).
+    // If the caller's exact requested date is closed, short-circuit with a
+    // friendly message so Amber can explain rather than searching blindly.
+    const closureMap = await getShopClosures(weekdayDates);
+    if (preferred_date && closureMap.has(preferred_date)) {
+      const closure = closureMap.get(preferred_date);
+      return res.json({
+        success: true,
+        available: false,
+        requested_date_closed: true,
+        closed_reason: 'shop_closure',
+        closure_reason: closure.reason,
+        message: `We're closed on ${format(parseISO(preferred_date), 'EEEE, MMMM do')} — ${closure.spoken_reason || closure.reason}. Want to try a different day?`
+      });
+    }
+    const openWeekdayDates = weekdayDates.filter(ds => !closureMap.has(ds));
+    if (openWeekdayDates.length === 0) {
+      return res.json({
+        success: true,
+        available: false,
+        slots: [],
+        message: 'All the days I checked are closed for holidays or scheduled closures. Want to try a different range?'
+      });
+    }
+
     // Get available slots — weekdays only, capped at 200 rows
     const { data: rawSlots, error: slotError } = await supabase
       .from('time_slots')
       .select('slot_date, start_time, bay_id')
       .in('bay_id', bayIds)
       .eq('is_available', true)
-      .in('slot_date', weekdayDates)
+      .in('slot_date', openWeekdayDates)
       .gte('start_time', timeStart)
       .lt('start_time', timeEnd)
       .order('slot_date')
@@ -763,6 +788,18 @@ router.post('/book_appointment', async (req, res, next) => {
         success: false,
         booked: false,
         message: 'Our service department is closed on weekends. We\'re open Monday through Friday, 7 AM to 4 PM. Would you like a different day?'
+      });
+    }
+    // 3c. Reject if the date is flagged as a shop closure (holiday, vacation, etc.)
+    const bookingClosures = await getShopClosures([appointment_date]);
+    if (bookingClosures.has(appointment_date)) {
+      const closure = bookingClosures.get(appointment_date);
+      return res.json({
+        success: false,
+        booked: false,
+        closed_reason: 'shop_closure',
+        closure_reason: closure.reason,
+        message: `We're closed on ${format(parseISO(appointment_date), 'EEEE, MMMM do')} — ${closure.spoken_reason || closure.reason}. Would you like a different day?`
       });
     }
     const [aptH, aptM] = appointment_time.split(':').map(Number);
