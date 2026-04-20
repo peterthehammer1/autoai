@@ -30,6 +30,8 @@ const Settings = lazyWithRetry(() => import('@/pages/Settings'))
 const BayView = lazyWithRetry(() => import('@/pages/BayView'))
 const WorkOrders = lazyWithRetry(() => import('@/pages/WorkOrders'))
 const WorkOrderDetail = lazyWithRetry(() => import('@/pages/WorkOrderDetail'))
+const Invoices = lazyWithRetry(() => import('@/pages/Invoices'))
+const InvoiceDetail = lazyWithRetry(() => import('@/pages/InvoiceDetail'))
 const Reviews = lazyWithRetry(() => import('@/pages/Reviews'))
 const Portal = lazyWithRetry(() => import('@/pages/Portal'))
 const InspectionEditor = lazyWithRetry(() => import('@/pages/InspectionEditor'))
@@ -170,6 +172,8 @@ function App() {
           <Route path="bay-view" element={<BayView />} />
           <Route path="work-orders" element={<WorkOrders />} />
           <Route path="work-orders/:id" element={<WorkOrderDetail />} />
+          <Route path="invoices" element={<Invoices />} />
+          <Route path="invoices/:id" element={<InvoiceDetail />} />
           <Route path="inspections/:id" element={<InspectionEditor />} />
           <Route path="reviews" element={<Reviews />} />
           <Route path="campaigns" element={<Campaigns />} />

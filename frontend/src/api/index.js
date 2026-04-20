@@ -361,6 +361,47 @@ export const leads = {
   },
 }
 
+// Invoices
+export const invoices = {
+  list: (params = {}) => {
+    const cleanParams = Object.fromEntries(
+      Object.entries(params).filter(([_, v]) => v != null && v !== '')
+    )
+    const query = new URLSearchParams(cleanParams).toString()
+    return fetchAPI(`/invoices${query ? `?${query}` : ''}`)
+  },
+
+  get: (id) => fetchAPI(`/invoices/${id}`),
+
+  generate: (appointmentId) => fetchAPI(`/invoices/generate/${appointmentId}`, {
+    method: 'POST',
+  }),
+
+  update: (id, data) => fetchAPI(`/invoices/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  }),
+
+  setStatus: (id, status) => fetchAPI(`/invoices/${id}/status`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status }),
+  }),
+
+  addLine: (id, data) => fetchAPI(`/invoices/${id}/line-items`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+
+  updateLine: (id, itemId, data) => fetchAPI(`/invoices/${id}/line-items/${itemId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  }),
+
+  deleteLine: (id, itemId) => fetchAPI(`/invoices/${id}/line-items/${itemId}`, {
+    method: 'DELETE',
+  }),
+}
+
 // Inspections
 export const inspections = {
   list: (params = {}) => {

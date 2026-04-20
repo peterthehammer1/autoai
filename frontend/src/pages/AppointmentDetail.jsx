@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { format } from 'date-fns'
-import { appointments, workOrders, reviews } from '@/api'
+import { appointments, workOrders, reviews, invoices } from '@/api'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -86,6 +86,21 @@ export default function AppointmentDetail() {
     onError: (err) => {
       if (err.message?.includes('already has work order')) {
         toast({ title: 'Work order already exists', description: err.message, variant: 'destructive' })
+      } else {
+        toast({ title: 'Error', description: err.message, variant: 'destructive' })
+      }
+    },
+  })
+
+  const generateInvoiceMutation = useMutation({
+    mutationFn: () => invoices.generate(id),
+    onSuccess: (inv) => {
+      toast({ title: `Invoice ${inv.invoice_number} created` })
+      navigate(`/invoices/${inv.id}`)
+    },
+    onError: (err) => {
+      if (err.message?.includes('already exists')) {
+        toast({ title: 'Invoice already exists', description: err.message, variant: 'destructive' })
       } else {
         toast({ title: 'Error', description: err.message, variant: 'destructive' })
       }
@@ -232,6 +247,16 @@ export default function AppointmentDetail() {
                 disabled={confirmMutation.isPending}
               >
                 Send Confirmation SMS
+              </Button>
+            )}
+            {apt.status === 'completed' && (
+              <Button
+                size="sm"
+                onClick={() => generateInvoiceMutation.mutate()}
+                disabled={generateInvoiceMutation.isPending}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                Generate Invoice
               </Button>
             )}
             <Button

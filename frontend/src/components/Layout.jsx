@@ -15,6 +15,7 @@ import {
   FileDown,
   Columns,
   ClipboardList,
+  FileText,
   Wrench,
   Settings,
   Megaphone,
@@ -41,6 +42,7 @@ const navigation = [
   { name: 'Call Logs', href: '/call-logs', icon: Phone },
   { name: 'SMS Messages', href: '/sms-logs', icon: MessageSquare },
   { name: 'Work Orders', href: '/work-orders', icon: ClipboardList },
+  { name: 'Invoices', href: '/invoices', icon: FileText },
   { name: 'Reports', href: '/reports', icon: FileDown },
   { name: 'Campaigns', href: '/campaigns', icon: Megaphone },
   // Hidden for now - pages still accessible via direct URL
