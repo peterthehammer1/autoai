@@ -416,7 +416,7 @@ router.post('/check_availability', async (req, res, next) => {
       total_duration_minutes: totalDuration,
       existing_appointments_on_date: existingOnDate,
       message: isWeekendRequest
-        ? `We're closed on weekends. Our service department is open Monday through Friday. The closest I have is ${slotDescriptions[0]}${slotDescriptions.length > 1 ? `, or ${slotDescriptions[1]}` : ''}. Would either of those work?`
+        ? `We're closed on weekends. Our service department is open Monday through Friday. The closest I have is ${primary.formatted}${alternativeDescriptors.length > 0 ? `, or ${alternativeDescriptors[0]}` : ''}. Would that work?`
         : message
     });
 
