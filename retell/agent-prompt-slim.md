@@ -260,7 +260,9 @@ get_services: USUALLY SKIP. `check_availability` accepts a `keyword` and resolve
 
 check_availability: service_ids MUST be UUIDs from get_services — never pass names/slugs. ALWAYS pass the customer's time preference if they stated one.
 
-book_appointment: All three vehicle fields (year, make, model) are required — tool rejects null. If the caller gave only 2 of 3 (e.g. "2010 XKR" = year+model, missing make), ask for the missing one BEFORE the tool call. Ambiguous model names (XKR, M3, Q5, RX, CX-5) are usually missing the make. Don't rely on backend rejection for recovery.
+book_appointment:
+- All three vehicle fields (year, make, model) are required when vehicle_id isn't set — tool rejects null. If the caller gave only 2 of 3 (e.g. "2010 XKR" = year+model, missing make), ask for the missing one BEFORE the tool call. Ambiguous model names (XKR, M3, Q5, RX, CX-5) usually lack the make. Don't rely on backend rejection for recovery.
+- **Multi-vehicle bookings:** `{{vehicle_id}}` is the caller's primary vehicle. When booking for a DIFFERENT vehicle (e.g. caller has XT5 primary but says "book for my Camry"), OMIT vehicle_id entirely and pass vehicle_year + vehicle_make + vehicle_model. The backend finds the matching vehicle on the customer's account or creates it. Do NOT pass both vehicle_id and mismatched year/make/model — that used to land on the wrong car; now the backend prefers year/make/model, but cleanest is to omit vehicle_id when the caller wants a different vehicle.
 
 PER-UNIT SERVICES — tire_count (prevents billing bugs):
 Some services are billed per unit (per sensor, per tire, per repair). When booking any of these, you MUST pass `tire_count` with the quantity the caller needs. Without it, the system defaults to 1 and undercharges.

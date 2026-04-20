@@ -101,8 +101,7 @@
           },
           "vehicle_id": {
             "type": "string",
-            "const": "{{vehicle_id}}",
-            "description": "Vehicle ID - auto-filled for returning customers"
+            "description": "Vehicle UUID. Pass {{vehicle_id}} for the caller's primary vehicle. For a DIFFERENT vehicle (e.g. caller says 'book for my Camry' when primary is an XT5), OMIT this field and pass vehicle_year + vehicle_make + vehicle_model instead — the system finds or creates the matching vehicle."
           },
           "service_ids": {
             "type": "array",

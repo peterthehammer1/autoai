@@ -215,32 +215,58 @@ export default async function bookAppointment(req, res) {
       customerEmail = customer_email || customer.email;
     }
 
-    // 2. Handle vehicle
+    // 2. Handle vehicle. Priority:
+    //   a. If year+make+model are all explicitly provided: find-or-create that
+    //      vehicle for this customer and use it — even if a stale vehicle_id
+    //      was auto-filled from {{vehicle_id}} for a different car. Fixes the
+    //      multi-vehicle bug where booking for a Camry landed on the Cadillac.
+    //   b. Else if vehicle_id is provided: use it.
+    //   c. Else: no vehicle attached.
     let vehicleId = vehicle_id;
     let vehicleDescription = '';
     const validYear = vehicle_year && parseInt(vehicle_year) > 1900;
+    const hasExplicitVehicle = validYear && vehicle_make && vehicle_model;
 
-    if (!vehicleId && validYear && vehicle_make && vehicle_model) {
-      logger.info('Creating new vehicle:', { data: { vehicle_year, vehicle_make, vehicle_model } });
-      const { data: newVehicle, error } = await supabase
+    if (hasExplicitVehicle) {
+      // Look for an existing vehicle on this customer's account matching year/make/model
+      const { data: matches } = await supabase
         .from('vehicles')
-        .insert({
-          customer_id: customer.id,
-          year: parseInt(vehicle_year),
-          make: vehicle_make,
-          model: vehicle_model,
-          mileage: vehicle_mileage,
-          mileage_updated_at: vehicle_mileage ? new Date().toISOString() : null,
-          is_primary: true
-        })
         .select('id, year, make, model')
-        .single();
-      if (!error && newVehicle) {
-        vehicleId = newVehicle.id;
-        vehicleDescription = `${newVehicle.year} ${newVehicle.make} ${newVehicle.model}`;
-        logger.info('Vehicle created:', { data: vehicleDescription });
+        .eq('customer_id', customer.id)
+        .eq('year', parseInt(vehicle_year))
+        .ilike('make', vehicle_make)
+        .ilike('model', vehicle_model)
+        .limit(1);
+      if (matches && matches.length > 0) {
+        vehicleId = matches[0].id;
+        vehicleDescription = `${matches[0].year} ${matches[0].make} ${matches[0].model}`;
+        logger.info('Vehicle matched existing:', { data: { vehicleId, vehicleDescription } });
       } else {
-        logger.info('Vehicle creation failed:', { data: error });
+        logger.info('Creating new vehicle:', { data: { vehicle_year, vehicle_make, vehicle_model } });
+        // New customer gets is_primary; existing customers adding a 2nd vehicle do not.
+        const { data: existingVehicles } = await supabase
+          .from('vehicles').select('id').eq('customer_id', customer.id).limit(1);
+        const isPrimary = !existingVehicles || existingVehicles.length === 0;
+        const { data: newVehicle, error } = await supabase
+          .from('vehicles')
+          .insert({
+            customer_id: customer.id,
+            year: parseInt(vehicle_year),
+            make: vehicle_make,
+            model: vehicle_model,
+            mileage: vehicle_mileage,
+            mileage_updated_at: vehicle_mileage ? new Date().toISOString() : null,
+            is_primary: isPrimary,
+          })
+          .select('id, year, make, model')
+          .single();
+        if (!error && newVehicle) {
+          vehicleId = newVehicle.id;
+          vehicleDescription = `${newVehicle.year} ${newVehicle.make} ${newVehicle.model}`;
+          logger.info('Vehicle created:', { data: vehicleDescription });
+        } else {
+          logger.info('Vehicle creation failed:', { data: error });
+        }
       }
     } else if (vehicleId) {
       const { data: vehicle } = await supabase
