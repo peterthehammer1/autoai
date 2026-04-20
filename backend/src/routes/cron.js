@@ -160,6 +160,66 @@ router.get('/regenerate-slots', async (req, res) => {
 });
 
 /**
+ * GET /api/cron/close-out-stale
+ * Auto-transitions past-date `scheduled` appointments to `no_show`.
+ * Anything scheduled for yesterday or earlier that's still `scheduled` is by
+ * definition a no-show (check-in would have moved it to in_progress/completed).
+ * Keeps the dashboard's active-appointments view honest and prevents Amber's
+ * `get_customer_appointments` from surfacing ancient rows.
+ * Requires CRON_SECRET. Runs daily.
+ */
+router.get('/close-out-stale', async (req, res) => {
+  if (!verifyCronAuth(req, res)) return;
+
+  try {
+    // 2-day grace period so a same-day forgotten check-in doesn't get
+    // auto-closed before staff can reclassify it.
+    const cutoff = formatDate(addDays(nowEST(), -2));
+    const { data: stale, error: selErr } = await supabase
+      .from('appointments')
+      .select('id, scheduled_date, scheduled_time, customer_id')
+      .eq('status', 'scheduled')
+      .lt('scheduled_date', cutoff);
+
+    if (selErr) throw selErr;
+
+    if (!stale || stale.length === 0) {
+      logger.info('[cron close-out-stale] No stale appointments found');
+      return res.json({ success: true, closed: 0 });
+    }
+
+    const ids = stale.map(a => a.id);
+    const { error: updErr } = await supabase
+      .from('appointments')
+      .update({
+        status: 'no_show',
+        internal_notes: 'Auto-closed by daily cron (past scheduled date with no check-in)',
+      })
+      .in('id', ids);
+
+    if (updErr) throw updErr;
+
+    // Free any time_slots still linked, preserving blocked_reason invariant
+    await supabase
+      .from('time_slots')
+      .update({ is_available: true, appointment_id: null })
+      .in('appointment_id', ids)
+      .is('blocked_reason', null);
+
+    logger.info('[cron close-out-stale] Closed stale appointments', { count: stale.length });
+    res.json({
+      success: true,
+      closed: stale.length,
+      earliest: stale.reduce((min, a) => a.scheduled_date < min ? a.scheduled_date : min, stale[0].scheduled_date),
+      cutoff,
+    });
+  } catch (err) {
+    logger.error('Cron close-out-stale failed', { error: err });
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
  * GET /api/cron/send-reminders
  * Called by Vercel Cron daily at 9am EST to send 24-hour appointment reminders.
  * Requires CRON_SECRET in Authorization header.
