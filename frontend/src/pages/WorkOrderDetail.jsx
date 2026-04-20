@@ -122,12 +122,15 @@ function AddItemForm({ workOrderId, onClose }) {
   const handleSubmit = (e) => {
     e.preventDefault()
     if (!description || !unitPrice) return
+    // Form fields are labeled "Unit Price ($)" — user enters dollars.
+    // Backend stores integer cents. Convert via × 100 and round to avoid
+    // float precision (parseFloat('1.15') * 100 = 114.99999…).
     addMutation.mutate({
       item_type: itemType,
       description,
       quantity: parseFloat(quantity) || 1,
-      unit_price_cents: parseFloat(unitPrice) || 0,
-      cost_cents: costPrice ? parseFloat(costPrice) : 0,
+      unit_price_cents: Math.round((parseFloat(unitPrice) || 0) * 100),
+      cost_cents: costPrice ? Math.round(parseFloat(costPrice) * 100) : 0,
     })
   }
 
