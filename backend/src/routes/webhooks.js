@@ -9,6 +9,49 @@ import { BUSINESS } from '../config/business.js';
 
 const router = Router();
 
+// Cache the pricing summary so every inbound call doesn't hit the services table.
+// Invalidates after PRICING_TTL_MS. Services rarely change mid-day; an hour is safe.
+const PRICING_TTL_MS = 60 * 60 * 1000;
+let _pricingCache = { text: null, fetched_at: 0 };
+
+async function fetchPricingSummary() {
+  if (_pricingCache.text && Date.now() - _pricingCache.fetched_at < PRICING_TTL_MS) {
+    return _pricingCache.text;
+  }
+  try {
+    const { data } = await supabase
+      .from('services')
+      .select('name, price_min, price_max, duration_minutes, is_popular')
+      .eq('is_active', true)
+      .order('is_popular', { ascending: false })
+      .order('sort_order')
+      .order('name')
+      .limit(40);
+    if (!data || data.length === 0) return '';
+    const lines = data.map(s => {
+      const priceStr = (s.price_max && s.price_max !== s.price_min)
+        ? `$${s.price_min}-${s.price_max}`
+        : (s.price_min === 0 ? 'FREE' : `$${s.price_min}`);
+      return `${s.name}: ${priceStr} (${s.duration_minutes}m)`;
+    });
+    const text = lines.join('\n');
+    _pricingCache = { text, fetched_at: Date.now() };
+    return text;
+  } catch (e) {
+    logger.warn('fetchPricingSummary failed', { error: e.message });
+    return '';
+  }
+}
+
+// Format all customer vehicles into a single string for the agent to use directly.
+// Format: "2023 Cadillac XT5 (vid:abc-123) | 2021 Honda Civic (vid:def-456)"
+function formatAllVehicles(vehicles) {
+  if (!vehicles || vehicles.length === 0) return '';
+  return vehicles
+    .map(v => `${v.year} ${v.make} ${v.model} (vid:${v.id})`)
+    .join(' | ');
+}
+
 // Webhook signature verification uses a dedicated secret (different from the API key)
 const RETELL_WEBHOOK_SECRET = process.env.RETELL_WEBHOOK_SECRET || process.env.NUCLEUS_API_KEY || process.env.RETELL_API_KEY;
 const RETELL_SKIP_WEBHOOK_VERIFY = process.env.RETELL_SKIP_WEBHOOK_VERIFY === 'true' || process.env.RETELL_SKIP_WEBHOOK_VERIFY === '1';
@@ -147,6 +190,7 @@ router.post('/voice/inbound', async (req, res) => {
     if (error || !customer) {
       logger.info('Customer not found, new caller');
       const dateInfo = getCurrentDateInfo();
+      const pricing_summary = await fetchPricingSummary();
       // New customer - pass info so agent knows
       return res.json({
         call_inbound: {
@@ -169,6 +213,9 @@ router.post('/voice/inbound', async (req, res) => {
             vehicle_mileage: '',
             vehicle_recalls: '',
             maintenance_suggestions: '',
+            all_vehicles: '',
+            vehicle_count: '0',
+            pricing_summary,
             ...dateInfo
           }
         }
@@ -238,6 +285,8 @@ router.post('/voice/inbound', async (req, res) => {
     if (!isComplete) {
       logger.info('Customer record incomplete', { customerId: customer.id, missingName: !hasName, missingVehicle: !hasVehicle });
       const dateInfo = getCurrentDateInfo();
+      const pricing_summary = await fetchPricingSummary();
+      const all_vehicles = formatAllVehicles(customer.vehicles);
       return res.json({
         call_inbound: {
           agent_override: {
@@ -263,6 +312,9 @@ router.post('/voice/inbound', async (req, res) => {
             vehicle_mileage: vehicleMileage,
             vehicle_recalls: vehicleRecalls,
             maintenance_suggestions: maintenanceSuggestions,
+            all_vehicles,
+            vehicle_count: String(customer.vehicles?.length || 0),
+            pricing_summary,
             ...dateInfo
           }
         }
@@ -351,6 +403,12 @@ router.post('/voice/inbound', async (req, res) => {
       serviceHistorySummary = Object.values(serviceMap).join('; ');
     }
     
+    // Preload pricing catalog + all vehicles for the agent to use directly without tool calls.
+    // Dynasty pattern — lets Amber answer price questions and disambiguate which car the caller
+    // is bringing in (multi-vehicle customers) from preloaded data.
+    const pricing_summary = await fetchPricingSummary();
+    const all_vehicles = formatAllVehicles(customer.vehicles);
+
     // Return customer info as dynamic variables with professional greeting
     return res.json({
       call_inbound: {
@@ -375,9 +433,10 @@ router.post('/voice/inbound', async (req, res) => {
           vehicle_mileage: vehicleMileage,
           vehicle_recalls: vehicleRecalls,
           maintenance_suggestions: maintenanceSuggestions,
-          // NEW: Upcoming appointments (e.g., "Oil Change on Friday, February 6 at 7:30 AM")
+          all_vehicles,
+          vehicle_count: String(customer.vehicles?.length || 0),
+          pricing_summary,
           upcoming_appointments: upcomingApptsSummary,
-          // NEW: Service history (e.g., "Oil Change 25 days ago; Tire Rotation 90 days ago")
           service_history: serviceHistorySummary,
           ...dateInfo
         }
