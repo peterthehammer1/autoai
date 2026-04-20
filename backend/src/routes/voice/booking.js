@@ -36,12 +36,21 @@ router.post('/check_availability', async (req, res, next) => {
       // Oil change shortcut: if the caller said "oil change" without a type, pick Synthetic Blend
       // (the shop's standard oil). Matches the prompt's default-to-blend rule.
       const isOilChangeGeneric = /\boil\s*change\b/.test(kw) && !/(synthetic|blend|conventional|full)/.test(kw);
-      const searchTerm = isOilChangeGeneric ? 'synthetic blend oil change' : kw;
+      // Mileage-package synonyms — callers say "60k", "60k service", "sixty thousand"
+      // but the DB names are "30,000 KM Service" / "60,000 KM Service" etc., which
+      // ILIKE doesn't match directly. Normalize here.
+      let searchTerm = kw;
+      if (isOilChangeGeneric) searchTerm = 'synthetic blend oil change';
+      else if (/\b(30k|thirty thousand|30000)\b/.test(kw)) searchTerm = '30,000 KM';
+      else if (/\b(60k|sixty thousand|60000)\b/.test(kw) || /\bmajor service\b/.test(kw) || /\bfull service\b/.test(kw)) searchTerm = '60,000 KM';
+      else if (/\b(90k|ninety thousand|90000)\b/.test(kw)) searchTerm = '90,000 KM';
       const { data: matches } = await supabase
         .from('services')
         .select('id, name, duration_minutes, required_bay_type')
         .eq('is_active', true)
-        .or(`name.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`)
+        // Double-quote for PostgREST comma-safety — values like "60,000 KM"
+        // contain commas that otherwise get parsed as filter separators.
+        .or(`name.ilike."%${searchTerm}%",description.ilike."%${searchTerm}%"`)
         .limit(5);
       if (matches && matches.length > 0) {
         service_ids = [matches[0].id];

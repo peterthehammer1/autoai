@@ -189,7 +189,12 @@ router.post('/get_services', async (req, res, next) => {
     }
 
     if (normalizedSearch) {
-      query = query.or(`name.ilike.%${normalizedSearch}%,description.ilike.%${normalizedSearch}%`);
+      // PostgREST uses comma as a filter separator in .or(), so any value that
+      // contains a comma (e.g. the synonym map turns "60k" → "60,000 KM")
+      // needs to be double-quoted. Failing to escape throws
+      //   "failed to parse logic tree (...name.ilike.%60,000 KM%,description...)"
+      // which bubbles to the outer catch as a generic "trouble retrieving".
+      query = query.or(`name.ilike."%${normalizedSearch}%",description.ilike."%${normalizedSearch}%"`);
     }
 
     let { data: services, error } = await query.order('is_popular', { ascending: false }).limit(15);
@@ -198,7 +203,8 @@ router.post('/get_services', async (req, res, next) => {
     if ((!services || services.length === 0) && normalizedSearch && normalizedSearch.includes(' ')) {
       const words = normalizedSearch.split(/\s+/).filter(w => w.length > 2);
       if (words.length > 1) {
-        const wordFilters = words.map(w => `name.ilike.%${w}%`).join(',');
+        // Double-quote each pattern for PostgREST comma-safety (see note above).
+        const wordFilters = words.map(w => `name.ilike."%${w}%"`).join(',');
         const { data: wordServices } = await supabase
           .from('services')
           .select('id, name, description, duration_minutes, price_min, price_display, is_popular, mileage_interval, category:service_categories(name)')
@@ -432,7 +438,7 @@ router.post('/get_estimate', async (req, res, next) => {
       .from('services')
       .select('id, name, price_min, price_max, price_display, duration_minutes, description, requires_diagnosis')
       .eq('is_active', true)
-      .or(`name.ilike.%${service_search}%,description.ilike.%${service_search}%`)
+      .or(`name.ilike."%${service_search}%",description.ilike."%${service_search}%"`)
       .order('is_popular', { ascending: false })
       .limit(3);
 
