@@ -128,12 +128,20 @@ export default function Appointments() {
     enabled: activeTab === 'upcoming',
   })
 
+  // Default-shown statuses: everything except cancelled / no_show / booking_failed.
+  // Those are still findable via the status dropdown (or explicit ?status= URL).
+  // Without this filter the calendar and by-date list were rendering cancelled
+  // appointments alongside live ones — confusing for shop staff at a glance.
+  const ACTIVE_STATUSES = 'scheduled,confirmed,checked_in,in_progress,completed'
+
   // Fetch appointments for specific date (By Date tab)
   const { data: dateData, isLoading: dateLoading } = useQuery({
     queryKey: ['appointments', dateFilter, statusFilter],
     queryFn: () => {
       const params = { date: dateFilter }
-      if (statusFilter) params.status = statusFilter
+      // Empty filter → show active by default. Explicit "all" → truly all.
+      if (statusFilter && statusFilter !== 'all') params.status = statusFilter
+      else if (!statusFilter) params.status = ACTIVE_STATUSES
       return appointments.list(params)
     },
     enabled: activeTab === 'by-date',
@@ -146,10 +154,17 @@ export default function Appointments() {
     ? { start: calendarDay, end: calendarDay }
     : { start: format(startOfMonth(calendarMonth), 'yyyy-MM-dd'), end: format(endOfMonth(calendarMonth), 'yyyy-MM-dd') }
 
-  // Fetch appointments for calendar view
+  // Fetch appointments for calendar view — always exclude cancelled/no_show.
+  // The calendar is a "what's actually happening" view; cancelled rows have no
+  // physical bay/tech reservation anymore.
   const { data: calendarData, isLoading: calendarLoading } = useQuery({
     queryKey: ['appointments', 'calendar', calViewRange.start, calViewRange.end],
-    queryFn: () => appointments.list({ start_date: calViewRange.start, end_date: calViewRange.end, limit: 200 }),
+    queryFn: () => appointments.list({
+      start_date: calViewRange.start,
+      end_date: calViewRange.end,
+      status: ACTIVE_STATUSES,
+      limit: 200,
+    }),
     enabled: activeTab === 'calendar',
   })
 
@@ -186,7 +201,10 @@ export default function Appointments() {
   }
 
   const handleStatusChange = (status) => {
-    setSearchParams({ date: dateFilter, status: status === 'all' ? '' : status })
+    // 'active' is the default — stored as empty URL param (query expands to
+    // ACTIVE_STATUSES). 'all' explicitly requests truly-everything. Anything
+    // else is a specific status.
+    setSearchParams({ date: dateFilter, status: status === 'active' ? '' : status })
   }
 
   const handleToday = () => {
@@ -709,12 +727,12 @@ export default function Appointments() {
                 </Button>
               </div>
 
-              <Select value={statusFilter || 'all'} onValueChange={handleStatusChange}>
+              <Select value={statusFilter || 'active'} onValueChange={handleStatusChange}>
                 <SelectTrigger className="w-full sm:w-[140px] h-10 text-sm border-slate-300">
-                  <SelectValue placeholder="All Statuses" />
+                  <SelectValue placeholder="Active" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
                   <SelectItem value="scheduled">Scheduled</SelectItem>
                   <SelectItem value="confirmed">Confirmed</SelectItem>
                   <SelectItem value="checked_in">Checked In</SelectItem>
@@ -722,6 +740,7 @@ export default function Appointments() {
                   <SelectItem value="completed">Completed</SelectItem>
                   <SelectItem value="cancelled">Cancelled</SelectItem>
                   <SelectItem value="no_show">No Show</SelectItem>
+                  <SelectItem value="all">All (incl. cancelled)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
