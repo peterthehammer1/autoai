@@ -169,7 +169,7 @@ function AddItemForm({ workOrderId, onClose }) {
               className="w-full text-left px-3 py-2 text-sm hover:bg-slate-50 border-b border-slate-50 last:border-0 flex justify-between"
             >
               <span className="text-slate-700">{svc.name}</span>
-              <span className="text-slate-400">{formatCents(svc.price_min)}</span>
+              <span className="text-slate-400">{svc.price_min != null ? `$${svc.price_min}` : ''}</span>
             </button>
           ))}
           {(catalogData?.services || []).length === 0 && (
@@ -253,7 +253,8 @@ function AddItemForm({ workOrderId, onClose }) {
 function RecordPaymentForm({ workOrderId, balanceDue, onClose }) {
   const queryClient = useQueryClient()
   const { toast } = useToast()
-  const [amount, setAmount] = useState(balanceDue > 0 ? String(balanceDue) : '')
+  // balanceDue is integer cents; the input is labeled "Amount ($)" — seed in dollars.
+  const [amount, setAmount] = useState(balanceDue > 0 ? (balanceDue / 100).toFixed(2) : '')
   const [method, setMethod] = useState('card')
   const [reference, setReference] = useState('')
   const [notes, setNotes] = useState('')
@@ -274,7 +275,7 @@ function RecordPaymentForm({ workOrderId, balanceDue, onClose }) {
     e.preventDefault()
     if (!amount || parseFloat(amount) <= 0) return
     paymentMutation.mutate({
-      amount_cents: parseFloat(amount),
+      amount_cents: Math.round((parseFloat(amount) || 0) * 100),
       method,
       reference_number: reference || undefined,
       notes: notes || undefined,

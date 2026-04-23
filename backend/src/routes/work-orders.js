@@ -126,16 +126,22 @@ router.post('/', async (req, res, next) => {
         .eq('appointment_id', appointment_id);
 
       if (aptServices && aptServices.length > 0) {
-        const items = aptServices.map((svc, idx) => ({
-          work_order_id: wo.id,
-          item_type: 'labor',
-          service_id: svc.service_id,
-          description: svc.service_name,
-          quantity: 1,
-          unit_price_cents: svc.quoted_price || 0,
-          total_cents: svc.quoted_price || 0,
-          sort_order: idx,
-        }));
+        // appointment_services.quoted_price is stored as DECIMAL dollars
+        // (sourced from services.price_min, also dollars). WO items are
+        // integer cents, so multiply by 100 and round.
+        const items = aptServices.map((svc, idx) => {
+          const cents = Math.round((parseFloat(svc.quoted_price) || 0) * 100);
+          return {
+            work_order_id: wo.id,
+            item_type: 'labor',
+            service_id: svc.service_id,
+            description: svc.service_name,
+            quantity: 1,
+            unit_price_cents: cents,
+            total_cents: cents,
+            sort_order: idx,
+          };
+        });
 
         await supabase.from('work_order_items').insert(items);
         await recalculateTotals(wo.id);
