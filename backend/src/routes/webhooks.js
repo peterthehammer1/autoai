@@ -19,14 +19,20 @@ async function fetchPricingSummary() {
     return _pricingCache.text;
   }
   try {
+    // Preload only popular services. The agent uses {{pricing_summary}} to
+    // answer price questions without a tool call, but preloading all 97 active
+    // services puts ~1.3KB of catalog into every turn — measurably slows the
+    // booking LLM round-trips (saw 8.7s LLM latency on book_appointment in
+    // call_086a2dd73c531f9938bc7e4e406). For anything off-list the agent
+    // falls back to get_estimate per the prompt.
     const { data } = await supabase
       .from('services')
       .select('name, price_min, price_max, duration_minutes, is_popular')
       .eq('is_active', true)
-      .order('is_popular', { ascending: false })
+      .eq('is_popular', true)
       .order('sort_order')
       .order('name')
-      .limit(40);
+      .limit(30);
     if (!data || data.length === 0) return '';
     const lines = data.map(s => {
       const priceStr = (s.price_max && s.price_max !== s.price_min)
